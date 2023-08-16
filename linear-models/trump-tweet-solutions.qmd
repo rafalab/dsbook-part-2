@@ -1,0 +1,65 @@
+6\. Compute an odds ratio comparing Android to iPhone for each sentiment and add it to the table.
+
+
+
+```{r}
+sentiment_counts |>
+  mutate(Android = Android / (sum(Android) - Android) , 
+         iPhone = iPhone / (sum(iPhone) - iPhone), 
+         or = Android/iPhone) |>
+  arrange(desc(or))
+```
+ 
+7\. Compute a 95\% confidence interval for each odds ratio. 
+
+
+```{r}
+log_or <- sentiment_counts |>
+  mutate(log_or = log((Android / (sum(Android) - Android)) / 
+      (iPhone / (sum(iPhone) - iPhone))),
+          se = sqrt(1/Android + 1/(sum(Android) - Android) + 
+                      1/iPhone + 1/(sum(iPhone) - iPhone)),
+          conf.low = log_or - qnorm(0.975)*se,
+          conf.high = log_or + qnorm(0.975)*se) |>
+  arrange(desc(log_or))
+  
+log_or
+```
+
+8\. Generate a plot showing the estimated odds ratios along with their confidence intervals.
+
+
+```{r}
+log_or |>
+  mutate(sentiment = reorder(sentiment, log_or)) |>
+  ggplot(aes(x = sentiment, ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar() +
+  geom_point(aes(sentiment, log_or)) +
+  ylab("Log odds ratio for association between Android and sentiment") +
+  coord_flip() 
+```
+
+9\. Test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.
+
+```{r}
+log_or |> filter(conf.low > 0)
+```
+
+10\. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2. Hint: Use the small cell correction to avoid undefined log ratios.
+
+```{r}
+levels <- log_or$sentiment ##log_or defined in previous exercise
+x=android_iphone |> 
+  count(word, source) |>
+  pivot_wider(names_from = "source", values_from = "n", values_fill = 0) |>
+  inner_join(nrc, by = "word") |>
+  filter(Android + iPhone > 25) |>
+  mutate(log_or = log( (Android + 0.5) / (sum(Android) - Android + 0.5) / 
+      ((iPhone + 0.5) / (sum(iPhone) - iPhone + 0.5)))) |>
+  mutate(sentiment = factor(sentiment, levels = levels)) |>
+  mutate(word = reorder(word, log_or)) |>
+  ggplot(aes(word, log_or, fill = log_or < 0)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_x", nrow = 2) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+``` 
