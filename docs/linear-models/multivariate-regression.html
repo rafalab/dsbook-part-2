@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>Advanced Data Science - 14&nbsp; Multivariate Regression</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../linear-models/measurement-error-models.html" rel="next">
+<link href="../linear-models/regression.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script><script src="../site_libs/kePrint-0.0.1/kePrint.js"></script><link href="../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../linear-models/intro-to-linear-models.html">Linear Models</a></li><li class="breadcrumb-item"><a href="../linear-models/multivariate-regression.html"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Advanced Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/robust-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Robust summaries</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Discrete probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical inference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/parameters-estimates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-driven models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchichal Models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariate-regression.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/measurement-error-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Treatment effect models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Association tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Association is not causation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High dimensional data</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Matrix factorization</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Evaluation metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li>
+<a href="#case-study-moneyball" id="toc-case-study-moneyball" class="nav-link active" data-scroll-target="#case-study-moneyball"><span class="header-section-number">14.1</span> Case study: Moneyball</a>
+  <ul class="collapse">
+<li><a href="#baseball-basics" id="toc-baseball-basics" class="nav-link" data-scroll-target="#baseball-basics"><span class="header-section-number">14.1.1</span> Baseball basics</a></li>
+  <li><a href="#no-awards-for-bb" id="toc-no-awards-for-bb" class="nav-link" data-scroll-target="#no-awards-for-bb"><span class="header-section-number">14.1.2</span> No awards for BB</a></li>
+  <li><a href="#base-on-balls-or-stolen-bases" id="toc-base-on-balls-or-stolen-bases" class="nav-link" data-scroll-target="#base-on-balls-or-stolen-bases"><span class="header-section-number">14.1.3</span> Base on balls or stolen bases?</a></li>
+  <li><a href="#regression-applied-to-baseball-statistics" id="toc-regression-applied-to-baseball-statistics" class="nav-link" data-scroll-target="#regression-applied-to-baseball-statistics"><span class="header-section-number">14.1.4</span> Regression applied to baseball statistics</a></li>
+  </ul>
+</li>
+  <li><a href="#the-broom-package" id="toc-the-broom-package" class="nav-link" data-scroll-target="#the-broom-package"><span class="header-section-number">14.2</span> The broom package</a></li>
+  <li>
+<a href="#confounding" id="toc-confounding" class="nav-link" data-scroll-target="#confounding"><span class="header-section-number">14.3</span> Confounding</a>
+  <ul class="collapse">
+<li><a href="#understanding-confounding-through-stratification" id="toc-understanding-confounding-through-stratification" class="nav-link" data-scroll-target="#understanding-confounding-through-stratification"><span class="header-section-number">14.3.1</span> Understanding confounding through stratification</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#sec-regression-in-r" id="toc-sec-regression-in-r" class="nav-link" data-scroll-target="#sec-regression-in-r"><span class="header-section-number">14.4</span> Multivariable regression</a>
+  <ul class="collapse">
+<li><a href="#building-a-baseball-team" id="toc-building-a-baseball-team" class="nav-link" data-scroll-target="#building-a-baseball-team"><span class="header-section-number">14.4.1</span> Building a baseball team</a></li>
+  </ul>
+</li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">14.5</span> Exercises</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/edit/main/linear-models/multivariate-regression.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-multivariate-regression" class="quarto-section-identifier"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p>Since Galton’s original development, regression has become one of the most widely used tools in data analysis. One reason has to do with the fact that an adaptation of the original regression approach, based on linear models, permits us to find relationships between two variables taking into account the effects of other variables that affect both. This has been particularly popular in fields where randomized experiments are hard to run, such as economics and epidemiology.</p>
+<p>When we are not able to randomly assign each individual to a treatment or control group, confounding is particularly prevalent. For example, consider estimating the effect of eating fast foods on life expectancy using data collected from a random sample of people in a jurisdiction. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Therefore, a naive regression model may lead to an overestimate of the negative health effect of fast food. So how do we account for confounding in practice? In this chapter we learn how <em>multivariate regression</em> can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource limited sports team.</p>
+<section id="case-study-moneyball" class="level2" data-number="14.1"><h2 data-number="14.1" class="anchored" data-anchor-id="case-study-moneyball">
+<span class="header-section-number">14.1</span> Case study: Moneyball</h2>
+<p><em>Moneyball: The Art of Winning an Unfair Game</em> is a book by Michael Lewis about the Oakland Athletics (A’s) baseball team and its general manager, the person tasked with building the team, Billy Beane.</p>
+<p>Traditionally, baseball teams use <em>scouts</em> to help them decide what players to hire. These scouts evaluate players by observing them perform. Scouts tend to favor athletic players with observable physical abilities. For this reason, scouts tend to agree on who the best players are and, as a result, these players tend to be in high demand. This in turn drives up their salaries.</p>
+<p>From 1989 to 1991, the A’s had one of the highest payrolls in baseball. They were able to buy the best players and, during that time, they were one of the best teams. However, in 1995 the A’s team owner changed and the new management cut the budget drastically, leaving then general manager, Sandy Alderson, with one of the lowest payrolls in baseball. He could no longer afford the most sought-after players. Alderson began using a statistical approach to find inefficiencies in the market. Alderson was a mentor to Billy Beane, who succeeded him in 1998 and fully embraced data science, as opposed to scouts, as a method for finding low-cost players that data predicted would help the team win. Today, this strategy has been adapted by most baseball teams. As we will see, regression plays a large role in this approach.</p>
+<p>As motivation for this part of the book, we will pretend it is 2002 and try to build a baseball team with a limited budget, just like the A’s had to do. To appreciate what you are up against, note that in 2002 the Yankees’ payroll of $125,928,583 more than tripled the Oakland A’s $39,679,746:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/mlb-2002-payroll_b2e9bc1aa8e3fa2c2fc8a989178bd3fe">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/mlb-2002-payroll-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Statistics have been used in baseball since its beginnings. The dataset we will be using, included in the <strong>Lahman</strong> library, goes back to the 19th century. For example, a summary statistics we will describe soon, the <em>batting average</em>, has been used for decades to summarize a batter’s success. Other statistics<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> such as home runs (HR), runs batted in (RBI), and stolen bases (SB) are reported for each player in the game summaries included in the sports section of newspapers, with players rewarded for high numbers. Although summary statistics such as these were widely used in baseball, data analysis per se was not. These statistics were arbitrarily decided on without much thought as to whether they actually predicted anything or were related to helping a team win.</p>
+<p>This changed with Bill James<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>. In the late 1970s, this aspiring writer and baseball fan started publishing articles describing more in-depth analysis of baseball data. He named the approach of using data to predict what outcomes best predicted if a team would win <em>sabermetrics</em><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. Until Billy Beane made sabermetrics the center of his baseball operation, Bill James’ work was mostly ignored by the baseball world. Currently, sabermetrics popularity is no longer limited to just baseball; other sports have started to use this approach as well.</p>
+<p>To simplify the exercise, we will focus on scoring runs and ignore the two other important aspects of the game: pitching and fielding. We will see how regression analysis can help develop strategies to build a competitive baseball team with a constrained budget. The approach can be divided into two separate data analyses. In the first, we determine which recorded player-specific statistics predict runs. In the second, we examine if players were undervalued based on what our first analysis predicts.</p>
+<section id="baseball-basics" class="level3" data-number="14.1.1"><h3 data-number="14.1.1" class="anchored" data-anchor-id="baseball-basics">
+<span class="header-section-number">14.1.1</span> Baseball basics</h3>
+<p>To see how regression will help us find undervalued players, we actually don’t need to understand all the details about the game of baseball, which has over 100 rules. Here, we distill the sport to the basic knowledge one needs to know how to effectively attack the data science problem.</p>
+<p>The goal of a baseball game is to score more runs (points) than the other team. Each team has 9 batters that have an opportunity to hit a ball with a bat in a predetermined order. After the 9th batter has had their turn, the first batter bats again, then the second, and so on. Each time a batter has an opportunity to bat, we call it a plate appearance (PA). At each PA, the other team’s <em>pitcher</em> throws the ball and the batter tries to hit it. The PA ends with an binary outcome: the batter either makes an <em>out</em> (failure) and returns to the bench or the batter doesn’t (success) and can run around the bases, and potentially score a run (reach all 4 bases). Each team gets nine tries, referred to as <em>innings</em>, to score runs and each inning ends after three outs (three failures).</p>
+<p>Here is a video showing a success: <a href="https://www.youtube.com/watch?v=HL-XjMCPfio" class="uri">https://www.youtube.com/watch?v=HL-XjMCPfio</a>. And here is one showing a failure: <a href="https://www.youtube.com/watch?v=NeloljCx-1g" class="uri">https://www.youtube.com/watch?v=NeloljCx-1g</a>. In these videos, we see how luck is involved in the process. When at bat, the batter wants to hit the ball hard. If the batter hits it hard enough, it is a HR, the best possible outcome as the batter gets at least one automatic run. But sometimes, due to chance, the batter hits the ball very hard and a defender catches it, resulting in an out. In contrast, sometimes the batter hits the ball softly, but it lands just in the right place. The fact that there is chance involved hints at why probability models will be involved.</p>
+<p>Now there are several ways to succeed. Understanding this distinction will be important for our analysis. When the batter hits the ball, the batter wants to pass as many <em>bases</em> as possible. There are four bases with the fourth one called <em>home plate</em>. Home plate is where batters start by trying to hit, so the bases form a cycle.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-2_7bbe9ee6c5880afb93a446c0f3fe0f39">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="img/Baseball_Diamond1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>(Courtesy of Cburnett<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a>. CC BY-SA 3.0 license<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a>.) <!--Source: [Wikipedia Commons](https://commons.wikimedia.org/wiki/File:Baseball_diamond_simplified.svg))--></p>
+<p>A batter who <em>goes around the bases</em> and arrives home, scores a run.</p>
+<p>We are simplifying a bit, but there are five ways a batter can succeed, that is, not make an out:</p>
+<ul>
+<li>Bases on balls (BB) - the pitcher fails to throw the ball through a predefined area considered to be hittable (the strikezone), so the batter is permitted to go to first base.</li>
+<li>Single - Batter hits the ball and gets to first base.</li>
+<li>Double (2B) - Batter hits the ball and gets to second base.</li>
+<li>Triple (3B) - Batter hits the ball and gets to third base.</li>
+<li>Home Run (HR) - Batter hits the ball and goes all the way home and scores a run.</li>
+</ul>
+<p>Here is an example of a HR: <a href="https://www.youtube.com/watch?v=xYxSZJ9GZ-w" class="uri">https://www.youtube.com/watch?v=xYxSZJ9GZ-w</a>. If a batter gets to a base, the batter still has a chance of getting home and scoring a run if the next batter hits successfully. While the batter is <em>on base</em>, the batter can also try to steal a base (SB). If a batter runs fast enough, the batter can try to go from one base to the next without the other team tagging the runner. [Here] is an example of a stolen base: <a href="https://www.youtube.com/watch?v=JSE5kfxkzfk" class="uri">https://www.youtube.com/watch?v=JSE5kfxkzfk</a>.</p>
+<p>All these events are kept track of during the season and are available to us through the <strong>Lahman</strong> package. Now we will start discussing how data analysis can help us decide how to use these statistics to evaluate players.</p>
+</section><section id="no-awards-for-bb" class="level3" data-number="14.1.2"><h3 data-number="14.1.2" class="anchored" data-anchor-id="no-awards-for-bb">
+<span class="header-section-number">14.1.2</span> No awards for BB</h3>
+<p>Historically, the <em>batting average</em> has been considered the most important offensive statistic. To define this average, we define a <em>hit</em> (H) and an <em>at bat</em> (AB). Singles, doubles, triples, and home runs are hits. The fifth way to be successful, BB, is not a hit. An AB is the number of times you either get a hit or make an out; BBs are excluded. The batting average is simply H/AB and is considered the main measure of a success rate. Today this success rate ranges from 20% to 38%. We refer to the batting average in thousands so, for example, if your success rate is 28%, we call it <em>batting 280</em>.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-3_7dd2cf97e1bbfb125026da1928b680f8">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="img/JumboTron.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>(Picture courtesy of Keith Allison<a href="#fn6" class="footnote-ref" id="fnref6" role="doc-noteref"><sup>6</sup></a>. CC BY-SA 2.0 license<a href="#fn7" class="footnote-ref" id="fnref7" role="doc-noteref"><sup>7</sup></a>.)</p>
+<p>One of Bill James’ first important insights is that the batting average ignores BB, but a BB is a success. He proposed we use the <em>on base percentage</em> (OBP) instead of batting average. He defined OBP as (H+BB)/(AB+BB) which is simply the proportion of plate appearances that don’t result in an out, a very intuitive measure. He noted that a player that gets many more BB than the average player might not be recognized if the batter does not excel in batting average. But is this player not helping produce runs? No award is given to the player with the most BB. However, bad habits are hard to break and baseball did not immediately adopt OBP as an important statistic. In contrast, total stolen bases were considered important and an award<a href="#fn8" class="footnote-ref" id="fnref8" role="doc-noteref"><sup>8</sup></a> given to the player with the most. But players with high totals of SB also made more outs as they did not always succeed. Does a player with high SB total help produce runs? Can we use data science to determine if it’s better to pay for players with high BB or SB?</p>
+</section><section id="base-on-balls-or-stolen-bases" class="level3" data-number="14.1.3"><h3 data-number="14.1.3" class="anchored" data-anchor-id="base-on-balls-or-stolen-bases">
+<span class="header-section-number">14.1.3</span> Base on balls or stolen bases?</h3>
+<p>One of the challenges in this analysis is that it is not obvious how to determine if a player produces runs because so much depends on his teammates. We do keep track of the number of runs scored by a player. However, remember that if a player X bats right before someone who hits many HRs, batter X will score many runs. But these runs don’t necessarily happen if we hire player X but not his HR hitting teammate. However, we can examine team-level statistics. How do teams with many SB compare to teams with few? How about BB? We have data! Let’s examine some. We start by creating with statistics from 1962, the first year all teams played 162 games (like today) instead of 154, to 2001, the year before the year for which we will construct a team. We convert the data to a <em>per game</em> rate because a small proportion of seasons had less games than usual due to strikes, and some teams played extra games due to tie breakers.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://CRAN.R-project.org/package=Lahman">Lahman</a></span><span class="op">)</span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">Teams</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fl">1962</span><span class="op">:</span><span class="fl">2002</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>team <span class="op">=</span> <span class="va">teamID</span>, year <span class="op">=</span> <span class="va">yearID</span>, r <span class="op">=</span> <span class="va">R</span><span class="op">/</span><span class="va">G</span>, </span>
+<span>         singles <span class="op">=</span> <span class="op">(</span><span class="va">H</span> <span class="op">-</span> <span class="va">X2B</span> <span class="op">-</span> <span class="va">X3B</span> <span class="op">-</span> <span class="va">HR</span><span class="op">)</span><span class="op">/</span><span class="va">G</span>, doubles <span class="op">=</span> <span class="va">X2B</span><span class="op">/</span><span class="va">G</span>, triples <span class="op">=</span> <span class="va">X3B</span><span class="op">/</span><span class="va">G</span>, hr <span class="op">=</span> <span class="va">HR</span><span class="op">/</span><span class="va">G</span>,</span>
+<span>         sb <span class="op">=</span> <span class="va">SB</span><span class="op">/</span><span class="va">G</span>, bb <span class="op">=</span> <span class="va">BB</span><span class="op">/</span><span class="va">G</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">team</span>, <span class="va">year</span>, <span class="va">r</span>, <span class="va">singles</span>, <span class="va">doubles</span>, <span class="va">triples</span>, <span class="va">hr</span>, <span class="va">sb</span>, <span class="va">bb</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now let’s start with a obvious question: does teams that hit more home runs score more runs? The visualization of choice when exploring the relationship between two variables is a scatter plot.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/runs-vs-hrs_ae55c10a54e62946759f245a736dc9cf">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">hr</span>, <span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">p</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/runs-vs-hrs-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We defined <code>p</code> because we will add to this plot latter. The plot shows a strong association: teams with more HRs tend to score more runs. Now let’s examine the relationship between stolen bases and runs:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/runs-vs-sb_830566348b7af3f6d748f853e94f445e">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">sb</span>, <span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/runs-vs-sb-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here the relationship is not as clear. Finally, let’s examine the relationship between BB and runs:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/runs-vs-bb_669aac5397b570a07bbafc704c4c4a8f">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/runs-vs-bb-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here again we see a clear association. But does this mean that increasing a team’s BBs <strong>causes</strong> an increase in runs? One of the most important lessons you learn in this book is that <strong>association is not causation.</strong> In fact, it looks like BBs and HRs are also associated:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/bb-vs-hrs_33763f0880b03c29ff2c2870e16eb593">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">hr</span>, <span class="va">bb</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/bb-vs-hrs-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We know that HRs cause runs because when a player hits a HR they are guaranteed at least one run. Could it be that HRs also cause BB and this makes it appear as if BB cause runs? When this happens we say there is <em>confounding</em>, an important concept we will learn more about throughout this chapter.</p>
+<p>Linear regression will help us parse all this out and quantify the associations. This will then help us determine what players to recruit. Specifically, we will try to predict things like how many more runs will a team score if we increase the number of BBs, but keep the HRs fixed? Regression will help us answer questions like this one.</p>
+</section><section id="regression-applied-to-baseball-statistics" class="level3" data-number="14.1.4"><h3 data-number="14.1.4" class="anchored" data-anchor-id="regression-applied-to-baseball-statistics">
+<span class="header-section-number">14.1.4</span> Regression applied to baseball statistics</h3>
+<p>Can we use regression with these data? First, notice that the HR and Run data, shown above, appear to be bivariate normal. Specifically, the qq-plots confirm that the normal approximation for each HR strata is useful here:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/hr-by-runs-qq_dd8bfaf678872239efb8372529af1d5f">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>z_hr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">hr</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">z_hr</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="op">-</span><span class="fl">2</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>  </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html">stat_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">z_hr</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/hr-by-runs-qq-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we are ready to use linear regression to predict the number of runs a team will score if we know how many home runs the team hits using regression:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/hr-versus-runs-regression_e7678d87f03682694e9b35894e2ad535">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">hr_fit</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">hr</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span><span class="op">$</span><span class="va">coef</span></span>
+<span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_abline</a></span><span class="op">(</span>intercept <span class="op">=</span> <span class="va">hr_fit</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, slope <span class="op">=</span> <span class="va">hr_fit</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/hr-versus-runs-regression-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that we can obtain the same plot quicker by using the <strong>ggplot2</strong> function <code>geom_smooth</code> which computes and adds a regression line to plot along with confidence intervals. We use the argument <code>method = "lm"</code> which stands for <em>linear model</em>, the title of an upcoming section. So we can simplify the code above like this:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/hr-versus-runs-regression-easy_f9e0a9a4bfb963473eb6938ee2f4730f">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/hr-versus-runs-regression-easy-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In the example above, the slope is 1.8517449. So this tells us that teams that hit 1 more HR per game than the average team, score 1.8517449 more runs per game than the average team. Given that the most common final score is a difference of a run, this can certainly lead to a large increase in wins. Not surprisingly, HR hitters are very expensive. Because we are working on a budget, we will need to find some other way to increase wins. In the next chapter, we introuce <em>linear models</em>, which provide an framework for performing this analysis. In chapter @ref{<span class="citation" data-cites="moneyball">@moneyball</span>} we apply what have learned to build a baseball team.</p>
+</section></section><section id="the-broom-package" class="level2" data-number="14.2"><h2 data-number="14.2" class="anchored" data-anchor-id="the-broom-package">
+<span class="header-section-number">14.2</span> The broom package</h2>
+<p>The <strong>broom</strong> package facilitates the use of R function such as <code>lm</code> within the tidyverse. Recall the that <code>lm</code> does not take a data frame as a first argument and does not return a data frame, which makes using <code>lm</code> in conjunction with the <strong>tidyverse</strong> difficult. It has three main functions, all of which extract information from the object returned by <code>lm</code> and returns it in a <strong>tidyverse</strong> friendly data frame. These functions are <code>tidy</code>, <code>glance</code>, and <code>augment</code>. The <code>tidy</code> function returns estimates and related information as a data frame:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-5_0be28ace367b248bac94eb7f765e71e8">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/">broom</a></span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">bb</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 2 × 5</span></span>
+<span><span class="co">#&gt;   term        estimate std.error statistic  p.value</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 (Intercept)    1.93     0.116       16.7 1.91e-55</span></span>
+<span><span class="co">#&gt; 2 bb             0.739    0.0348      21.2 1.90e-83</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can add other important summaries, such as confidence intervals:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-6_c20eb3666e0ff8e417ea265de2115980">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 2 × 7</span></span>
+<span><span class="co">#&gt;   term        estimate std.error statistic  p.value conf.low conf.high</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 (Intercept)    1.93     0.116       16.7 1.91e-55    1.70      2.15 </span></span>
+<span><span class="co">#&gt; 2 bb             0.739    0.0348      21.2 1.90e-83    0.671     0.807</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the outcome is a data frame, we can immediately use it with <code>summarize</code> to string together the commands that produce the table we are after. Because a data frame is returned, we can filter and select the rows and columns we want, as we will see in the next section.</p>
+<p>Now we return to discussing our original task of determining if slopes changed. The plot we just made, using <code>summarize</code> and <code>tidy</code>, shows that the confidence intervals overlap, which provides a nice visual confirmation that our assumption that the slope does not change is safe.</p>
+<p>The other functions provided by <strong>broom</strong>, <code>glance</code>, and <code>augment</code>, relate to model-specific and observation-specific outcomes, respectively. Here, we can see the model fit summaries <code>glance</code> returns:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-7_f8722febe44c207fa51aa2da8b2478e5">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 12</span></span>
+<span><span class="co">#&gt;   r.squared adj.r.squared sigma statistic  p.value    df logLik   AIC</span></span>
+<span><span class="co">#&gt;       &lt;dbl&gt;         &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1     0.304         0.303 0.493      451. 1.90e-83     1  -737. 1480.</span></span>
+<span><span class="co">#&gt; # ℹ 4 more variables: BIC &lt;dbl&gt;, deviance &lt;dbl&gt;, df.residual &lt;int&gt;,</span></span>
+<span><span class="co">#&gt; #   nobs &lt;int&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>You can learn more about these summaries in any regression text book.</p>
+</section><section id="confounding" class="level2" data-number="14.3"><h2 data-number="14.3" class="anchored" data-anchor-id="confounding">
+<span class="header-section-number">14.3</span> Confounding</h2>
+<p>Previously, we noted a strong relationship between Runs and BB. If we find the regression line for predicting runs from bases on balls, we a get slope of:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-8_16c2f15780d41b991bbeac59cefc0707">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bb_slope</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">bb</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span><span class="op">$</span><span class="va">coef</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="va">bb_slope</span> </span>
+<span><span class="co">#&gt;    bb </span></span>
+<span><span class="co">#&gt; 0.739</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>So does this mean that if we go and hire low salary players with many BB, and who therefore increase the number of walks per game by 2, our team will score 1.5 more runs per game?</p>
+<p>We are again reminded that association is not causation. The data does provide strong evidence that a team with two more BB per game than the average team, scores 1.5 runs per game. But this does not mean that BB are the cause.</p>
+<p>Note that if we compute the regression line slope for singles we get:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-9_539daee69f5190a115a3fee27ede9cf1">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">singles</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span><span class="op">$</span><span class="va">coef</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="co">#&gt; singles </span></span>
+<span><span class="co">#&gt;   0.432</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>which is a lower value than what we obtain for BB. Notice that a single gets you to first base just like a BB. Those that know about baseball will tell you that with a single, runners on base have a better chance of scoring than with a BB. So how can BB be more predictive of runs? The reason this happen is because of confounding. Here we show the correlation between HR, BB, and singles:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-10_5d188ac2ee75efcb7f4d4d14fafdad76">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">hr</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">singles</span>, <span class="va">hr</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">singles</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   cor(bb, hr) cor(singles, hr) cor(bb, singles)</span></span>
+<span><span class="co">#&gt; 1       0.406           -0.186          -0.0513</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It turns out that pitchers, afraid of HRs, will sometimes avoid throwing strikes to HR hitters. As a result, HR hitters tend to have more BBs and a team with many HRs will also have more BBs. Although it may appear that BBs cause runs, it is actually the HRs that cause most of these runs. We say that BBs are <em>confounded</em> with HRs. Nonetheless, could it be that BBs still help? To find out, we somehow have to adjust for the HR effect. Regression can help with this as well.</p>
+<section id="understanding-confounding-through-stratification" class="level3" data-number="14.3.1"><h3 data-number="14.3.1" class="anchored" data-anchor-id="understanding-confounding-through-stratification">
+<span class="header-section-number">14.3.1</span> Understanding confounding through stratification</h3>
+<p>A first approach is to keep HRs fixed at a certain value and then examine the relationship between BB and runs. As we did when we stratified fathers by rounding to the closest inch, here we can stratify HR per game to the closest ten. We filter out the strata with few points to avoid highly variable estimates and then make a scatterplot for each strata:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/runs-vs-bb-by-hr-strata_d5857b198d174227a22f96dc15ce532f">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>hr_strata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">hr</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">hr_strata</span> <span class="op">&gt;=</span> <span class="fl">0.4</span> <span class="op">&amp;</span> <span class="va">hr_strata</span> <span class="op">&lt;=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">bb</span>, <span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>  </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">hr_strata</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/runs-vs-bb-by-hr-strata-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Remember that the regression slope for predicting runs with BB was 0.7. Once we stratify by HR, these slopes are substantially reduced:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-11_a57773b27bb74c6c6092836dd0ccdda6">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>hr_strata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">hr</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">hr_strata</span> <span class="op">&gt;=</span> <span class="fl">0.5</span> <span class="op">&amp;</span> <span class="va">hr_strata</span> <span class="op">&lt;=</span> <span class="fl">1.2</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">hr_strata</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reframe.html">reframe</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">bb</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">term</span> <span class="op">==</span> <span class="st">"bb"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 8 × 6</span></span>
+<span><span class="co">#&gt;   hr_strata term  estimate std.error statistic      p.value</span></span>
+<span><span class="co">#&gt;       &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;        &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1       0.5 bb       0.566    0.110       5.14 0.00000302  </span></span>
+<span><span class="co">#&gt; 2       0.6 bb       0.405    0.0984      4.12 0.0000746   </span></span>
+<span><span class="co">#&gt; 3       0.7 bb       0.284    0.0717      3.96 0.000113    </span></span>
+<span><span class="co">#&gt; 4       0.8 bb       0.378    0.0638      5.92 0.0000000175</span></span>
+<span><span class="co">#&gt; 5       0.9 bb       0.254    0.0762      3.33 0.00108     </span></span>
+<span><span class="co">#&gt; # ℹ 3 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Note we use <code>reframe</code> instead of <code>summarize</code> because <code>tidy</code> returns a data frame with two rows.</p>
+</div>
+</div>
+</div>
+<p>The slopes are reduced, but they are not 0, which indicates that BBs are helpful for producing runs, just not as much as previously thought. In fact, the values above are closer to the slope we obtained from singles, 0.4, which is more consistent with our intuition. Since both singles and BB get us to first base, they should have about the same predictive power.</p>
+<p>Although our understanding of the application tells us that HR cause BB but not the other way around, we can still check if stratifying by BB makes the effect of BB go down. To do this, we use the same code except that we swap HR and BBs. In this case, the slopes do not change much from the original:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-12_1b6e1e95e524560d541cc56630c1c774">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>bb_strata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">bb</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">bb_strata</span> <span class="op">&gt;=</span> <span class="fl">3</span> <span class="op">&amp;</span> <span class="va">bb_strata</span> <span class="op">&lt;=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">bb_strata</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/reframe.html">reframe</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">hr</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">term</span> <span class="op">==</span> <span class="st">"hr"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 11 × 6</span></span>
+<span><span class="co">#&gt;   bb_strata term  estimate std.error statistic  p.value</span></span>
+<span><span class="co">#&gt;       &lt;dbl&gt; &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1       3   hr        1.51     0.182      8.31 1.47e-12</span></span>
+<span><span class="co">#&gt; 2       3.1 hr        1.49     0.168      8.87 3.10e-14</span></span>
+<span><span class="co">#&gt; 3       3.2 hr        1.61     0.150     10.8  6.96e-18</span></span>
+<span><span class="co">#&gt; 4       3.3 hr        1.57     0.167      9.39 5.73e-15</span></span>
+<span><span class="co">#&gt; 5       3.4 hr        1.55     0.153     10.1  3.77e-16</span></span>
+<span><span class="co">#&gt; # ℹ 6 more rows</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>They are reduced a bit from 1.8517449, which is consistent with the fact that BB do in fact cause some runs.</p>
+<p>Regardless, it seems that if we stratify by HR, we have bivariate distributions for runs versus BB. Similarly, if we stratify by BB, we have approximate bivariate normal distributions for HR versus runs.</p>
+</section></section><section id="sec-regression-in-r" class="level2" data-number="14.4"><h2 data-number="14.4" class="anchored" data-anchor-id="sec-regression-in-r">
+<span class="header-section-number">14.4</span> Multivariable regression</h2>
+<p>It is somewhat complex to be computing regression lines for each strata. We are essentially fitting models like this:</p>
+<p><span class="math display">\[
+\mbox{E}[R \mid BB = x_1, \, HR = x_2] = \beta_0 + \beta_1(x_2) x_1 + \beta_2(x_1) x_2
+\]</span></p>
+<p>with the slopes for <span class="math inline">\(x_1\)</span> changing for different values of <span class="math inline">\(x_2\)</span> and vice versa. But is there an easier approach?</p>
+<p>If we take random variability into account, the slopes in the strata don’t appear to change much. If these slopes are in fact the same, this implies that <span class="math inline">\(\beta_1(x_2)\)</span> and <span class="math inline">\(\beta_2(x_1)\)</span> are constants. This in turn implies that the expectation of runs conditioned on HR and BB can be written like this:</p>
+<p><span class="math display">\[
+\mbox{E}[R \mid BB = x_1, \, HR = x_2] = \beta_0 + \beta_1 x_1 + \beta_2 x_2
+\]</span></p>
+<p>This model suggests that if the number of HR is fixed at <span class="math inline">\(x_2\)</span>, we observe a linear relationship between runs and BB with an intercept of <span class="math inline">\(\beta_0 + \beta_2 x_2\)</span>. Our exploratory data analysis suggested that this is the case. The model also suggests that as the number of HR grows, the intercept growth is linear as well and determined by <span class="math inline">\(\beta_1\)</span>. In this analysis, referred to as <em>multivariable regression</em>, you will often hear people say that the BB slope <span class="math inline">\(\beta_1\)</span> is <em>adjusted</em> for the HR effect.</p>
+<p>Because the data is approximately normal and conditional distributions were also normal we are justified in using a linear model:</p>
+<p><span class="math display">\[
+Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
+\]</span></p>
+<p>with <span class="math inline">\(Y_i\)</span> runs per game for team <span class="math inline">\(i\)</span>, <span class="math inline">\(x_{i,1}\)</span> walks per game, and <span class="math inline">\(x_{i,2}\)</span>. To use <code>lm</code> here, we need to let the function know we have two predictor variables. So we use the <code>+</code> symbol as follows:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-13_2a7ff2c61a38d38b627945af3fe3e0c6">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">bb</span> <span class="op">+</span> <span class="va">hr</span>, data <span class="op">=</span> <span class="va">dat</span><span class="op">)</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span>
+<span><span class="co">#&gt; # A tibble: 3 × 7</span></span>
+<span><span class="co">#&gt;   term        estimate std.error statistic   p.value conf.low conf.high</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 (Intercept)    1.74     0.0820      21.2 3.38e- 83    1.58      1.90 </span></span>
+<span><span class="co">#&gt; 2 bb             0.387    0.0269      14.4 8.41e- 43    0.334     0.440</span></span>
+<span><span class="co">#&gt; 3 hr             1.57     0.0488      32.1 1.39e-157    1.47      1.66</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>When we fit the model with only one variable, the estimated slopes were 0.7388725 and 1.8517449 for BB and HR, respectively. Note that when fitting the multivariable model both go down, with the BB effect decreasing much more.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>You are ready to do exercises 1-12 if you want to practice before continuing.</p>
+</div>
+</div>
+</div>
+<section id="building-a-baseball-team" class="level3" data-number="14.4.1"><h3 data-number="14.4.1" class="anchored" data-anchor-id="building-a-baseball-team">
+<span class="header-section-number">14.4.1</span> Building a baseball team</h3>
+<p>Now we want to construct a metric to pick players, and we need to consider singles, doubles, and triples as well. Can we build a model that predicts runs based on all these outcomes? We take somewhat of a “leap of faith” and assume that these five variables are jointly normal. This means that if we pick any one of them, and hold the other four fixed, the relationship with the outcome is linear and the slope does not depend on the four values held constant. If this is true, then a linear model for our data is:</p>
+<p><span class="math display">\[
+Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \beta_3 x_{i,3}+ \beta_4 x_{i,4} + \beta_5 x_{i,5} + \varepsilon_i
+\]</span></p>
+<p>with <span class="math inline">\(x_{i,1}, x_{i,2}, x_{i,3}, x_{i,4}, x_{i,5}\)</span> representing BB, singles, doubles, triples, and HR respectively.</p>
+<p>Using <code>lm</code>, we can quickly find the LSE for the parameters using:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">dat</span> <span class="op">|&gt;</span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">year</span> <span class="op">&lt;=</span> <span class="fl">2001</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">r</span> <span class="op">~</span> <span class="va">bb</span> <span class="op">+</span> <span class="va">singles</span> <span class="op">+</span> <span class="va">doubles</span> <span class="op">+</span> <span class="va">triples</span> <span class="op">+</span> <span class="va">hr</span>, data <span class="op">=</span> <span class="va">_</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note we fit the model to data up until 2001, the year before we will construct our team. We can see the coefficients using <code>tidy</code>:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-15_f712c8428a75a017290e99efeccd2c56">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">term</span> <span class="op">!=</span> <span class="st">"(Intercept)"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 5 × 7</span></span>
+<span><span class="co">#&gt;   term    estimate std.error statistic   p.value conf.low conf.high</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 bb         0.370    0.0119      31.2 1.00e-149    0.347     0.393</span></span>
+<span><span class="co">#&gt; 2 singles    0.517    0.0128      40.5 5.29e-213    0.492     0.543</span></span>
+<span><span class="co">#&gt; 3 doubles    0.775    0.0229      33.8 7.09e-168    0.730     0.820</span></span>
+<span><span class="co">#&gt; 4 triples    1.24     0.0778      15.9 4.62e- 51    1.09      1.39 </span></span>
+<span><span class="co">#&gt; 5 hr         1.44     0.0248      58.1 1.98e-323    1.39      1.49</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To see how well our metric actually predicts runs, we can predict the number of runs for each team in 2002 using the function <code>predict</code>, then make a plot:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/model-predicts-runs_01b78ca9487e9ef92a5ccec309037327">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>r_hat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, newdata <span class="op">=</span> <span class="va">dat</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">year</span> <span class="op">==</span> <span class="fl">2002</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">r_hat</span>, <span class="va">r</span>, label <span class="op">=</span> <span class="va">team</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html">geom_text</a></span><span class="op">(</span>nudge_x <span class="op">=</span> <span class="fl">0.1</span>, cex <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_abline</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/model-predicts-runs-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Our model does quite a good job as demonstrated by the fact that points from the observed versus predicted plot fall close to the identity line.</p>
+<p>So instead of using batting average, or just number of HR, as a measure of picking players, we can use our fitted model to form a metric that relates more directly to run production. Specifically, to define a metric for player A, we imagine a team made up of players just like player A and use our fitted regression model to predict how many runs this team would produce. The formula would look like this: -2.7580763 + 0.3699921 <span class="math inline">\(\times\)</span> BB + 0.5174284 <span class="math inline">\(\times\)</span> singles + 0.7750757 <span class="math inline">\(\times\)</span> doubles + 1.2387738 <span class="math inline">\(\times\)</span> triples + 1.4419724 <span class="math inline">\(\times\)</span> HR.</p>
+<p>To define a player-specific metric, we have a bit more work to do. A challenge here is that we derived the metric for teams, based on team-level summary statistics. For example, the HR value that is entered into the equation is HR per game for the entire team. If we compute the HR per game for a player, it will be much lower since the total is accumulated by 9 batters. Furthermore, if a player only plays part of the game and gets fewer opportunities than average, it is still considered a game played. For players, a rate that takes into account opportunities is the per-plate-appearance rate.</p>
+<p>To make the per-game team rate comparable to the per-plate-appearance player rate, we compute the average number of team plate appearances per game:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-16_6976a0df76d282170b2a76c470b9b562">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pa_per_game</span> <span class="op">&lt;-</span> <span class="va">Batting</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op">==</span> <span class="fl">2002</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">teamID</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>pa_per_game <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">AB</span> <span class="op">+</span> <span class="va">BB</span><span class="op">)</span><span class="op">/</span><span class="fl">162</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html">pull</a></span><span class="op">(</span><span class="va">pa_per_game</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We compute the per-plate-appearance rates for players available in 2002 on data from 1997-2001. To avoid small sample artifacts, we filter players with less than 1,000 plate appearances per year. Here is the entire calculation in one line:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-17_fc240d6eede1519f463f927ea5c6ce63">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">players</span> <span class="op">&lt;-</span> <span class="va">Batting</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fl">1997</span><span class="op">:</span><span class="fl">2001</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">playerID</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>pa <span class="op">=</span> <span class="va">BB</span> <span class="op">+</span> <span class="va">AB</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">pa</span><span class="op">)</span><span class="op">/</span><span class="va">pa_per_game</span>,</span>
+<span>    bb <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">BB</span><span class="op">)</span><span class="op">/</span><span class="va">g</span>,</span>
+<span>    singles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">H</span> <span class="op">-</span> <span class="va">X2B</span> <span class="op">-</span> <span class="va">X3B</span> <span class="op">-</span> <span class="va">HR</span><span class="op">)</span><span class="op">/</span><span class="va">g</span>,</span>
+<span>    doubles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">X2B</span><span class="op">)</span><span class="op">/</span><span class="va">g</span>, </span>
+<span>    triples <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">X3B</span><span class="op">)</span><span class="op">/</span><span class="va">g</span>, </span>
+<span>    hr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">HR</span><span class="op">)</span><span class="op">/</span><span class="va">g</span>,</span>
+<span>    avg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">H</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">AB</span><span class="op">)</span>,</span>
+<span>    pa <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">pa</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">pa</span> <span class="op">&gt;=</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">g</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">players</span><span class="op">$</span><span class="va">r_hat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, newdata <span class="op">=</span> <span class="va">players</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The player-specific predicted runs computed here can be interpreted as the number of runs we predict a team will score if all batters are exactly like that player. The distribution shows that there is wide variability across players:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/r-hat-hist_15f6ba10466e59079dae81152b560024">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">players</span><span class="op">$</span><span class="va">r_hat</span>, main <span class="op">=</span> <span class="st">"Predicted runs per game"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/r-hat-hist-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>To actually build the team, we will need to know their salaries as well as their defensive position. For this, we use the <code>righ_join</code> function to combine the <code>players</code> data frame we just created with the player information data frame included in some of the other Lahman data tables.</p>
+<p>Start by adding the 2002 salary of each player:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-18_1b931e61e099448beb9f9ebb5eee33a5">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">players</span> <span class="op">&lt;-</span> <span class="va">Salaries</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op">==</span> <span class="fl">2002</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">playerID</span>, <span class="va">salary</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">right_join</a></span><span class="op">(</span><span class="va">players</span>, by <span class="op">=</span> <span class="st">"playerID"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, we add their defensive position. This is a somewhat complicated task because players play more than one position each year. The <strong>Lahman</strong> package table <code>Appearances</code> tells how many games each player played in each position, so we can pick the position that was most played using <code>which.max</code> on each row. We use <code>apply</code> to do this. However, because some players are traded, they appear more than once on the table, so we first sum their appearances across teams. Here, we pick the one position the player most played using the <code>top_n</code> function. To make sure we only pick one position, in the case of ties, we pick the first row of the resulting data frame. We also remove the <code>OF</code> position which stands for outfielder, a generalization of three positions: left field (LF), center field (CF), and right field (RF). We also remove pitchers since they don’t bat in the league in which the A’s play.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-19_f9c529354af682a57fe440a1c3f23d23">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">position_names</span> <span class="op">&lt;-</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="st">"G_"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"p"</span>,<span class="st">"c"</span>,<span class="st">"1b"</span>,<span class="st">"2b"</span>,<span class="st">"3b"</span>,<span class="st">"ss"</span>,<span class="st">"lf"</span>,<span class="st">"cf"</span>,<span class="st">"rf"</span>, <span class="st">"dh"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">tmp</span> <span class="op">&lt;-</span> <span class="va">Appearances</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op">==</span> <span class="fl">2002</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">playerID</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise_all.html">summarize_at</a></span><span class="op">(</span><span class="va">position_names</span>, <span class="va">sum</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  </span>
+<span><span class="va">pos</span> <span class="op">&lt;-</span> <span class="va">tmp</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="fu"><a href="https://tidyselect.r-lib.org/reference/all_of.html">all_of</a></span><span class="op">(</span><span class="va">position_names</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">_</span>, <span class="fl">1</span>, <span class="va">which.max</span><span class="op">)</span> </span>
+<span></span>
+<span><span class="va">players</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>playerID <span class="op">=</span> <span class="va">tmp</span><span class="op">$</span><span class="va">playerID</span>, POS <span class="op">=</span> <span class="va">position_names</span><span class="op">[</span><span class="va">pos</span><span class="op">]</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>POS <span class="op">=</span> <span class="fu"><a href="https://stringr.tidyverse.org/reference/case.html">str_to_upper</a></span><span class="op">(</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_remove.html">str_remove</a></span><span class="op">(</span><span class="va">POS</span>, <span class="st">"G_"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">POS</span> <span class="op">!=</span> <span class="st">"P"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">right_join</a></span><span class="op">(</span><span class="va">players</span>, by <span class="op">=</span> <span class="st">"playerID"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">POS</span><span class="op">)</span>  <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">salary</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Finally, we add their first and last name:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-20_197369711bae0b72b7d0515bee2dea0e">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">players</span> <span class="op">&lt;-</span> <span class="va">People</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">playerID</span>, <span class="va">nameFirst</span>, <span class="va">nameLast</span>, <span class="va">debut</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>debut <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="va">debut</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">right_join</a></span><span class="op">(</span><span class="va">players</span>, by <span class="op">=</span> <span class="st">"playerID"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If you are a baseball fan, you will recognize the top 10 players:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-21_4e45daf9697ab13b099ac2fbb2488692">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">players</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">nameFirst</span>, <span class="va">nameLast</span>, <span class="va">POS</span>, <span class="va">salary</span>, <span class="va">r_hat</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html">desc</a></span><span class="op">(</span><span class="va">r_hat</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span> </span>
+<span><span class="co">#&gt;    nameFirst nameLast POS   salary r_hat</span></span>
+<span><span class="co">#&gt; 1      Barry    Bonds  LF 15000000  8.05</span></span>
+<span><span class="co">#&gt; 2      Larry   Walker  RF 12666667  7.96</span></span>
+<span><span class="co">#&gt; 3       Todd   Helton  1B  5000000  7.40</span></span>
+<span><span class="co">#&gt; 4      Manny  Ramirez  LF 15462727  7.35</span></span>
+<span><span class="co">#&gt; 5      Sammy     Sosa  RF 15000000  7.20</span></span>
+<span><span class="co">#&gt; 6       Jeff  Bagwell  1B 11000000  7.05</span></span>
+<span><span class="co">#&gt; 7       Mike   Piazza   C 10571429  6.99</span></span>
+<span><span class="co">#&gt; 8      Jason   Giambi  1B 10428571  6.92</span></span>
+<span><span class="co">#&gt; 9      Edgar Martinez  DH  7086668  6.91</span></span>
+<span><span class="co">#&gt; 10       Jim    Thome  1B  8000000  6.89</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>On average, players with a higher metric have higher salaries:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/predicted-runs-vs-salary_7811c2265ba51044a846a0cc121938a1">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">players</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">salary</span>, <span class="va">r_hat</span>, color <span class="op">=</span> <span class="va">POS</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html">scale_x_log10</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="multivariate-regression_files/figure-html/predicted-runs-vs-salary-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can search for good deals by looking at players who produce many more runs than others with similar salaries. We can use this table to decide what players to pick and keep our total salary below the 40 million dollars Billy Beane had to work with. This can be done using what computer scientists call linear programming. This is not something we teach, but here are the position players selected with this approach:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<table class="table table-striped table-sm small" data-quarto-postprocess="true">
+<thead><tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">nameFirst</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">nameLast</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">POS</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">salary</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">r_hat</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Todd</td>
+<td style="text-align: left;">Helton</td>
+<td style="text-align: left;">1B</td>
+<td style="text-align: right;">5000000</td>
+<td style="text-align: right;">7.40</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Mike</td>
+<td style="text-align: left;">Piazza</td>
+<td style="text-align: left;">C</td>
+<td style="text-align: right;">10571429</td>
+<td style="text-align: right;">6.99</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Edgar</td>
+<td style="text-align: left;">Martinez</td>
+<td style="text-align: left;">DH</td>
+<td style="text-align: right;">7086668</td>
+<td style="text-align: right;">6.91</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Jim</td>
+<td style="text-align: left;">Edmonds</td>
+<td style="text-align: left;">CF</td>
+<td style="text-align: right;">7333333</td>
+<td style="text-align: right;">6.23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Jeff</td>
+<td style="text-align: left;">Kent</td>
+<td style="text-align: left;">2B</td>
+<td style="text-align: right;">6000000</td>
+<td style="text-align: right;">6.08</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Phil</td>
+<td style="text-align: left;">Nevin</td>
+<td style="text-align: left;">3B</td>
+<td style="text-align: right;">2600000</td>
+<td style="text-align: right;">5.86</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Matt</td>
+<td style="text-align: left;">Stairs</td>
+<td style="text-align: left;">RF</td>
+<td style="text-align: right;">500000</td>
+<td style="text-align: right;">5.76</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Henry</td>
+<td style="text-align: left;">Rodriguez</td>
+<td style="text-align: left;">LF</td>
+<td style="text-align: right;">300000</td>
+<td style="text-align: right;">5.64</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">John</td>
+<td style="text-align: left;">Valentin</td>
+<td style="text-align: left;">SS</td>
+<td style="text-align: right;">550000</td>
+<td style="text-align: right;">5.00</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>We see that all these players have above average BB and most have above average HR rates, while the same is not true for singles and batting average. Here is a table with statistics standardized across players so that, for example, above average HR hitters have values above 0.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-23_5cf8dc31e3f03b77ac12edcab94083dd">
+<div class="cell-output-display">
+<table class="table table-striped table-sm small" data-quarto-postprocess="true">
+<thead><tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">nameLast</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">bb</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">singles</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">doubles</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">triples</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">hr</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">avg</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">r_hat</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Helton</td>
+<td style="text-align: right;">0.909</td>
+<td style="text-align: right;">-0.215</td>
+<td style="text-align: right;">2.649</td>
+<td style="text-align: right;">-0.311</td>
+<td style="text-align: right;">1.522</td>
+<td style="text-align: right;">2.670</td>
+<td style="text-align: right;">2.542</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Piazza</td>
+<td style="text-align: right;">0.328</td>
+<td style="text-align: right;">0.423</td>
+<td style="text-align: right;">0.204</td>
+<td style="text-align: right;">-1.418</td>
+<td style="text-align: right;">1.825</td>
+<td style="text-align: right;">2.199</td>
+<td style="text-align: right;">2.093</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Martinez</td>
+<td style="text-align: right;">2.135</td>
+<td style="text-align: right;">-0.005</td>
+<td style="text-align: right;">1.265</td>
+<td style="text-align: right;">-1.224</td>
+<td style="text-align: right;">0.808</td>
+<td style="text-align: right;">2.203</td>
+<td style="text-align: right;">2.004</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Edmonds</td>
+<td style="text-align: right;">1.071</td>
+<td style="text-align: right;">-0.558</td>
+<td style="text-align: right;">0.791</td>
+<td style="text-align: right;">-1.152</td>
+<td style="text-align: right;">0.973</td>
+<td style="text-align: right;">0.854</td>
+<td style="text-align: right;">1.259</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kent</td>
+<td style="text-align: right;">0.232</td>
+<td style="text-align: right;">-0.732</td>
+<td style="text-align: right;">2.011</td>
+<td style="text-align: right;">0.448</td>
+<td style="text-align: right;">0.766</td>
+<td style="text-align: right;">0.787</td>
+<td style="text-align: right;">1.093</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nevin</td>
+<td style="text-align: right;">0.307</td>
+<td style="text-align: right;">-0.905</td>
+<td style="text-align: right;">0.479</td>
+<td style="text-align: right;">-1.191</td>
+<td style="text-align: right;">1.193</td>
+<td style="text-align: right;">0.105</td>
+<td style="text-align: right;">0.850</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Stairs</td>
+<td style="text-align: right;">1.100</td>
+<td style="text-align: right;">-1.513</td>
+<td style="text-align: right;">-0.046</td>
+<td style="text-align: right;">-1.129</td>
+<td style="text-align: right;">1.121</td>
+<td style="text-align: right;">-0.561</td>
+<td style="text-align: right;">0.742</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Rodriguez</td>
+<td style="text-align: right;">0.201</td>
+<td style="text-align: right;">-1.596</td>
+<td style="text-align: right;">0.332</td>
+<td style="text-align: right;">-0.782</td>
+<td style="text-align: right;">1.320</td>
+<td style="text-align: right;">-0.672</td>
+<td style="text-align: right;">0.613</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Valentin</td>
+<td style="text-align: right;">0.180</td>
+<td style="text-align: right;">-0.929</td>
+<td style="text-align: right;">1.794</td>
+<td style="text-align: right;">-0.435</td>
+<td style="text-align: right;">-0.045</td>
+<td style="text-align: right;">-0.472</td>
+<td style="text-align: right;">-0.088</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section></section><section id="exercises" class="level2" data-number="14.5"><h2 data-number="14.5" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">14.5</span> Exercises</h2>
+<p>We have shown how BB and singles have similar predictive power for scoring runs. Another way to compare the usefulness of these baseball metrics is by assessing how stable they are across the years. Since we have to pick players based on their previous performances, we will prefer metrics that are more stable. In these exercises, we will compare the stability of singles and BBs.</p>
+<p>1. Before we get started, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. Here is how we create the 2017 table. Keeping only players with more than 100 plate appearances.</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-24_95aed0c09e6716590330144d6e048366">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://CRAN.R-project.org/package=Lahman">Lahman</a></span><span class="op">)</span></span>
+<span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="va">Batting</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">yearID</span> <span class="op">==</span> <span class="fl">2002</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>pa <span class="op">=</span> <span class="va">AB</span> <span class="op">+</span> <span class="va">BB</span>, </span>
+<span>         singles <span class="op">=</span> <span class="op">(</span><span class="va">H</span> <span class="op">-</span> <span class="va">X2B</span> <span class="op">-</span> <span class="va">X3B</span> <span class="op">-</span> <span class="va">HR</span><span class="op">)</span> <span class="op">/</span> <span class="va">pa</span>, bb <span class="op">=</span> <span class="va">BB</span> <span class="op">/</span> <span class="va">pa</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">pa</span> <span class="op">&gt;=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="va">playerID</span>, <span class="va">singles</span>, <span class="va">bb</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now compute a similar table but with rates computed over 1999-2001.</p>
+<p>2. You can use the <code>inner_join</code> function to combine the 2001 data and averages in the same table:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-25_eece570403ea70bf5580a3e78834b30c">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html">inner_join</a></span><span class="op">(</span><span class="va">dat</span>, <span class="va">avg</span>, by <span class="op">=</span> <span class="st">"playerID"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Compute the correlation between 2002 and the previous seasons for singles and BB.</p>
+<p>3. Note that the correlation is higher for BB. To quickly get an idea of the uncertainty associated with this correlation estimate, we will fit a linear model and compute confidence intervals for the slope coefficient. However, first make scatterplots to confirm that fitting a linear model is appropriate.</p>
+<p>4. Now fit a linear model for each metric and use the <code>confint</code> function to compare the estimates.</p>
+<p>5. In a previous section, we computed the correlation between mothers and daughters, mothers and sons, fathers and daughters, and fathers and sons, and noticed that the highest correlation is between fathers and sons and the lowest is between mothers and sons. We can compute these correlations using:</p>
+<div class="cell" data-layout-align="center" data-hash="multivariate-regression_cache/html/unnamed-chunk-26_b9367675a8e74bc6c6ac28299be91bbf">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">HistData</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">galton_heights</span> <span class="op">&lt;-</span> <span class="va">GaltonFamilies</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">family</span>, <span class="va">gender</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/sample_n.html">sample_n</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">ungroup</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cors</span> <span class="op">&lt;-</span> <span class="va">galton_heights</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html">pivot_longer</a></span><span class="op">(</span><span class="va">father</span><span class="op">:</span><span class="va">mother</span>, names_to <span class="op">=</span> <span class="st">"parent"</span>, values_to <span class="op">=</span> <span class="st">"parentHeight"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>child <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">gender</span> <span class="op">==</span> <span class="st">"female"</span>, <span class="st">"daughter"</span>, <span class="st">"son"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/unite.html">unite</a></span><span class="op">(</span><span class="va">pair</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"parent"</span>, <span class="st">"child"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">pair</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>cor <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">parentHeight</span>, <span class="va">childHeight</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Are these differences statistically significant? To answer this, we will compute the slopes of the regression line along with their standard errors. Start by using <code>lm</code> and the <strong>broom</strong> package to compute the slopes LSE and the standard errors.</p>
+<p>6. Repeat the exercise above, but compute a confidence interval as well.</p>
+<p>7. Plot the confidence intervals and notice that they overlap, which implies that the data is consistent with the inheritance of height being independent of sex.</p>
+<p>8. Because we are selecting children at random, we can actually do something like a permutation test here. Repeat the computation of correlations 100 times taking a different sample each time. Hint: use similar code to what we used with simulations.</p>
+<p>9. Fit a linear regression model to obtain the effects of BB and HR on Runs (at the team level) in 1971. Use the <code>tidy</code> function in the <strong>broom</strong> package to obtain the results in a data frame.</p>
+<p>10. Now let’s repeat the above for each year since 1962 and make a plot. Use <code>summarize</code> and the <strong>broom</strong> package to fit this model for every year since 1962.</p>
+<p>11. Use the results of the previous exercise to plot the estimated effects of BB on runs.</p>
+<p>12. <strong>Advanced</strong>. Write a function that takes R, HR, and BB as arguments and fits two linear models: <code>R ~ BB</code> and <code>R~BB+HR</code>. Then use the <code>summary</code> function to obtain the <code>BB</code> for both models for each year since 1962. Then plot these against each other as a function of time.</p>
+<p>13. Since the 1980s, sabermetricians have used a summary statistic different from batting average to evaluate players. They realized walks were important and that doubles, triples, and HRs, should be weighed more than singles. As a result, they proposed the following metric:</p>
+<p><span class="math display">\[
+\frac{\mbox{BB}}{\mbox{PA}} + \frac{\mbox{Singles} + 2 \mbox{Doubles} + 3 \mbox{Triples} + 4\mbox{HR}}{\mbox{AB}}
+\]</span></p>
+<p>They called this on-base-percentage plus slugging percentage (OPS). Although the sabermetricians probably did not use regression, here we show how this metric is close to what one gets with regression.</p>
+<p>Compute the OPS for each team in the 2001 season. Then plot Runs per game versus OPS.</p>
+<p>14. For every year since 1962, compute the correlation between runs per game and OPS; then plot these correlations as a function of year.</p>
+<p>15. Note that we can rewrite OPS as a weighted average of BBs, singles, doubles, triples, and HRs. We know that the weights for doubles, triples, and HRs are 2, 3, and 4 times that of singles. But what about BB? What is the weight for BB relative to singles? Hint: the weight for BB relative to singles will be a function of AB and PA.</p>
+<p>16. Note that the weight for BB, <span class="math inline">\(\frac{\mbox{AB}}{\mbox{PA}}\)</span>, will change from team to team. To see how variable it is, compute and plot this quantity for each team for each year since 1962. Then plot it again, but instead of computing it for every team, compute and plot the ratio for the entire year. Then, once you are convinced that there is not much of a time or team trend, report the overall average.</p>
+<p>17. So now we know that the formula for OPS is proportional to <span class="math inline">\(0.91 \times \mbox{BB} + \mbox{singles} + 2 \times \mbox{doubles} + 3 \times \mbox{triples} + 4 \times \mbox{HR}\)</span>. Let’s see how these coefficients compare to those obtained with regression. Fit a regression model to the data after 1962, as done earlier: using per game statistics for each year for each team. After fitting this model, report the coefficients as weights relative to the coefficient for singles.</p>
+<p>18. We see that our linear regression model coefficients follow the same general trend as those used by OPS, but with slightly less weight for metrics other than singles. For each team in years after 1962, compute the OPS, the predicted runs with the regression model and compute the correlation between the two as well as the correlation with runs per game.</p>
+<p>19. We see that using the regression approach predicts runs slightly better than OPS, but not that much. However, note that we have been computing OPS and predicting runs for teams when these measures are used to evaluate players. Let’s show that OPS is quite similar to what one obtains with regression at the player level. For the 1962 season and after, compute the OPS and the predicted runs from our model for each player and plot them. Use the PA per game correction we used in the previous chapter:</p>
+<p>20. What players have show the largest difference between their rank by predicted runs and OPS?</p>
+
+
+</section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><hr>
+<ol>
+<li id="fn1"><p>http://mlb.mlb.com/stats/league_leaders.jsp<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>https://en.wikipedia.org/wiki/Bill_James<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>https://en.wikipedia.org/wiki/Sabermetrics<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>https://en.wikipedia.org/wiki/User:Cburnett<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>https://creativecommons.org/licenses/by-sa/3.0/deed.en<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn6"><p>https://www.flickr.com/people/27003603@N00<a href="#fnref6" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn7"><p>https://creativecommons.org/licenses/by-sa/2.0<a href="#fnref7" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn8"><p>http://www.baseball-almanac.com/awards/lou_brock_award.shtml<a href="#fnref8" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../linear-models/regression.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../linear-models/measurement-error-models.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">Advanced Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>Advanced Data Science - 28&nbsp; Cross validation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../ml/algorithms.html" rel="next">
+<link href="../ml/smoothing.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../ml/intro-ml.html">Machine Learning</a></li><li class="breadcrumb-item"><a href="../ml/cross-validation.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Advanced Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/robust-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Robust summaries</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Discrete probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical inference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/parameters-estimates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-driven models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchichal Models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariate-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/measurement-error-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Treatment effect models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Association tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Association is not causation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High dimensional data</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Matrix factorization</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Evaluation metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/cross-validation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#sec-knn-cv-intro" id="toc-sec-knn-cv-intro" class="nav-link active" data-scroll-target="#sec-knn-cv-intro"><span class="header-section-number">28.1</span> Motivation with k-nearest neighbors</a></li>
+  <li><a href="#over-training" id="toc-over-training" class="nav-link" data-scroll-target="#over-training"><span class="header-section-number">28.2</span> Over-training</a></li>
+  <li><a href="#over-smoothing" id="toc-over-smoothing" class="nav-link" data-scroll-target="#over-smoothing"><span class="header-section-number">28.3</span> Over-smoothing</a></li>
+  <li><a href="#picking-the-k-in-knn" id="toc-picking-the-k-in-knn" class="nav-link" data-scroll-target="#picking-the-k-in-knn"><span class="header-section-number">28.4</span> Picking the <span class="math inline">\(k\)</span> in kNN</a></li>
+  <li><a href="#mathematical-description-of-cross-validation" id="toc-mathematical-description-of-cross-validation" class="nav-link" data-scroll-target="#mathematical-description-of-cross-validation"><span class="header-section-number">28.5</span> Mathematical description of cross validation</a></li>
+  <li><a href="#k-fold-cross-validation" id="toc-k-fold-cross-validation" class="nav-link" data-scroll-target="#k-fold-cross-validation"><span class="header-section-number">28.6</span> K-fold cross validation</a></li>
+  <li><a href="#bootstrap" id="toc-bootstrap" class="nav-link" data-scroll-target="#bootstrap"><span class="header-section-number">28.7</span> Bootstrap</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">28.8</span> Exercises</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/edit/main/ml/cross-validation.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title"><span id="sec-cross-validation" class="quarto-section-identifier"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p>In this chapter we introduce cross validation, one of the most important ideas in machine learning. Here we focus on the conceptual and mathematical aspects. We will describe how to implement cross validation in practice with the <strong>caret</strong> package later, in Section <a href="ml-in-practice.html#sec-caret-cv"><span>Section&nbsp;30.1.2</span></a>) in the next chapter. To motivate the concept, we will use the two predictor digits data presented in Section @ref(two-or-seven) and introduce, for the first time, an actual machine learning algorithm: k-nearest neighbors (kNN.</p>
+<section id="sec-knn-cv-intro" class="level2" data-number="28.1"><h2 data-number="28.1" class="anchored" data-anchor-id="sec-knn-cv-intro">
+<span class="header-section-number">28.1</span> Motivation with k-nearest neighbors</h2>
+<p>Let’s start by loading the data and showing a plot of the predictors with outcome represented with color.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/mnist-27-data_f981ed052ea9602852f31e538936f5c6">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span>, color <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/mnist-27-data-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We will use these data to estimate the conditional probability function</p>
+<p><span class="math display">\[
+p(x_1, x_2) = \mbox{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
+\]</span> as defined in Section <a href="smoothing.html#sec-smoothing-ml-connection"><span>Section&nbsp;27.6</span></a>). With k-nearest neighbors (kNN) we estimate <span class="math inline">\(p(x_1, x_2)\)</span> in a similar way to bin smoothing. However, as we will see, kNN is easier to adapt to multiple dimensions. First we define the distance between all observations based on the features. Then, for any point <span class="math inline">\((x_1,x_2)\)</span> for which we want an estimate of <span class="math inline">\(p(x_1, x_2)\)</span>, we look for the <span class="math inline">\(k\)</span> nearest points to <span class="math inline">\((x_1,x_2)\)</span> and then take an average of the 0s and 1s associated with these points. We refer to the set of points used to compute the average as the <em>neighborhood</em>. Due to the connection we described earlier between conditional expectations and conditional probabilities, this gives us a <span class="math inline">\(\hat{p}(x_1,x_2\)</span>, just like the bin smoother gave us an estimate of a trend. As with bin smoothers, we can control the flexibility of our estimate, in this case through the <span class="math inline">\(k\)</span> parameter: larger <span class="math inline">\(k\)</span>s result in smoother estimates, while smaller <span class="math inline">\(k\)</span>s result in more flexible and more wiggly estimates.</p>
+<p>To implement the algorithm, we can use the <code>knn3</code> function from the <strong>caret</strong> package. Looking at the help file for this package, we see that we can call it in one of two ways. We will use the first in which we specify a <em>formula</em> and a data frame. The data frame contains all the data to be used. The formula has the form <code>outcome ~ predictor_1 + predictor_2 + predictor_3</code> and so on. Therefore, we would type <code>y ~ x_1 + x_2</code>. If we are going to use all the predictors, we can use the <code>.</code> like this <code>y ~ .</code>. For this function, we also need to pick a parameter: the number of neighbors to include. Let’s start with the default <span class="math inline">\(k = 5\)</span>. The final call looks like this:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-2_0b6435734badd88a323de8256e03be37">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
+<span><span class="va">knn_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this case, since our dataset is balanced and we care just as much about sensitivity as we do about specificity, we will use accuracy to quantify performance.</p>
+<p>The <code>predict</code> function for <code>knn</code> produces a probability for each class. We keep the probability of being a 7 as the estimate <span class="math inline">\(\hat{p}(x_1, x_2)\)</span></p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-3_0e584e161bec59f20481e11de1adb509">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.815</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In Section <a href="smoothing.html#sec-two-or-seven"><span>Section&nbsp;27.1</span></a> we used linear regression to generate an estimate.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-4_529b7d59918b4998683c6f4c6196dc14">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_lm</span> <span class="op">&lt;-</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">y</span> <span class="op">==</span> <span class="fl">7</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x_1</span> <span class="op">+</span> <span class="va">x_2</span>, data <span class="op">=</span> <span class="va">_</span><span class="op">)</span></span>
+<span><span class="va">p_hat_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_lm</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">)</span></span>
+<span><span class="va">y_hat_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">p_hat_lm</span> <span class="op">&gt;</span> <span class="fl">0.5</span>, <span class="fl">7</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_lm</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;     0.75</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And we see that kNN, with the default parameter, already beats regression. To see why this is the case, we will plot <span class="math inline">\(\hat{p}(x_1, x_2)\)</span> and compare it to the true conditional probability <span class="math inline">\(p(x_1, x_2)\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/knn-fit_770e246744713c849f007372fff9cce6">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/knn-fit-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We see that kNN better adapts to the non-linear shape of <span class="math inline">\(p(x_1, x_2)\)</span>. However, our estimate has some islands of blue in the red area, which intuitively does not make much sense. This is due to what we call <em>over-training</em>. We describe over-training in detail below. Over-training is the reason that we have higher accuracy in the train set compared to the test set:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-6_533bfc2eb6e5d1518148608b3e975ebb">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.882</span></span>
+<span></span>
+<span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.815</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="over-training" class="level2" data-number="28.2"><h2 data-number="28.2" class="anchored" data-anchor-id="over-training">
+<span class="header-section-number">28.2</span> Over-training</h2>
+<p>Over-training is at its worst when we set <span class="math inline">\(k = 1\)</span>. With <span class="math inline">\(k = 1\)</span>, the estimate for each <span class="math inline">\((x_1, x_2)\)</span> in the training set is obtained with just the <span class="math inline">\(y\)</span> corresponding to that point. In this case, if the <span class="math inline">\((x_1, x_2)\)</span> are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself. Remember that if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly.</p>
+<p>Here we fit a kNN model with <span class="math inline">\(k = 1\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-7_74d967859ed8bb92aa7be3ca3a51887c">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">y_hat_knn_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 0.996</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>However, the test set accuracy is actually worse than regression:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-8_cc7431aadbfd667697ad7120b7d8c14b">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;     0.73</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see the over-fitting problem in this figure.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/knn-1-overfit_76ed8981a6dd5f18e6f3aa89d8083e1f">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/knn-1-overfit-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The black curves denote the decision rule boundaries.</p>
+<p>The estimate <span class="math inline">\(\hat{p}(x_1, x_2)\)</span> follows the training data too closely (left). You can see that in the training set, boundaries have been drawn to perfectly surround a single red point in a sea of blue. Because most points <span class="math inline">\((x_1, x_2)\)</span> are unique, the prediction is either 1 or 0 and the prediction for that point is the associated label. However, once we introduce the training set (right), we see that many of these small islands now have the opposite color and we end up making several incorrect predictions.</p>
+</section><section id="over-smoothing" class="level2" data-number="28.3"><h2 data-number="28.3" class="anchored" data-anchor-id="over-smoothing">
+<span class="header-section-number">28.3</span> Over-smoothing</h2>
+<p>Although not as badly as with the previous examples, we saw that with <span class="math inline">\(k = 5\)</span> we also over-trained. Hence, we should consider a larger <span class="math inline">\(k\)</span>. Let’s try, as an example, a much larger number: <span class="math inline">\(k = 401\)</span>.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-9_7310f82b056d732c75fe0603af3e8e05">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_401</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">401</span><span class="op">)</span></span>
+<span><span class="va">y_hat_knn_401</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_401</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn_401</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;     0.79</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This turns out to be similar to regression:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/mnist-27-glm-est_44cc9f7931c3b7c148659416047ad01c">
+<pre><code>#&gt; Warning: The following aesthetics were dropped during statistical
+#&gt; transformation: fill
+#&gt; ℹ This can happen when ggplot fails to infer the correct grouping
+#&gt;   structure in the data.
+#&gt; ℹ Did you forget to specify a `group` aesthetic or to convert a
+#&gt;   numerical variable into a factor?
+#&gt; The following aesthetics were dropped during statistical
+#&gt; transformation: fill
+#&gt; ℹ This can happen when ggplot fails to infer the correct grouping
+#&gt;   structure in the data.
+#&gt; ℹ Did you forget to specify a `group` aesthetic or to convert a
+#&gt;   numerical variable into a factor?</code></pre>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/mnist-27-glm-est-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This size of <span class="math inline">\(k\)</span> is so large that it does not permit enough flexibility. We call this <em>over-smoothing</em>.</p>
+</section><section id="picking-the-k-in-knn" class="level2" data-number="28.4"><h2 data-number="28.4" class="anchored" data-anchor-id="picking-the-k-in-knn">
+<span class="header-section-number">28.4</span> Picking the <span class="math inline">\(k\)</span> in kNN</h2>
+<p>So how do we pick <span class="math inline">\(k\)</span>? In principle we want to pick the <span class="math inline">\(k\)</span> that maximizes accuracy, or minimizes the expected MSE as defined in <a href="evaluation-metrics.html#sec-loss-function"><span>Section&nbsp;25.8</span></a>. The goal of cross validation is to estimate these quantities for any given algorithm and set of tuning parameters such as <span class="math inline">\(k\)</span>. To understand why we need a special method to do this let’s repeat what we did above but for different values of <span class="math inline">\(k\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-10_dd0bcd9ac1f069214310b76a7bebc50b">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">251</span>, <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We do this using <code>map_df</code> function to repeat the above for each one.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-11_8dd026aef2fdf1a3d2983ebba9acbd6c">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://purrr.tidyverse.org/">purrr</a></span><span class="op">)</span></span>
+<span><span class="va">accuracy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://purrr.tidyverse.org/reference/map_dfr.html">map_df</a></span><span class="op">(</span><span class="va">ks</span>, <span class="kw">function</span><span class="op">(</span><span class="va">k</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="va">k</span><span class="op">)</span></span>
+<span>  </span>
+<span>  <span class="va">y_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span>  <span class="va">cm_train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="va">train_error</span> <span class="op">&lt;-</span> <span class="va">cm_train</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span>  </span>
+<span>  <span class="va">y_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span>  <span class="va">cm_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
+<span>  <span class="va">test_error</span> <span class="op">&lt;-</span> <span class="va">cm_test</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span>  </span>
+<span>  <span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>train <span class="op">=</span> <span class="va">train_error</span>, test <span class="op">=</span> <span class="va">test_error</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note that we estimate accuracy by using both the training set and the test set. We can now plot the accuracy estimates for each value of <span class="math inline">\(k\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/accuracy-vs-k-knn_231053065e75af822a80ad65081c1f07">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/accuracy-vs-k-knn-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>First, note that the estimate obtained on the training set is generally lower than the estimate obtained with the test set, with the difference larger for smaller values of <span class="math inline">\(k\)</span>. This is due to over-training. Also note that the accuracy versus <span class="math inline">\(k\)</span> plot is quite jagged. We do not expect this because small changes in <span class="math inline">\(k\)</span> should not affect the algorithm’s performance too much. The jaggedness is explained by the fact that the accuracy is computed on a sample and therefore is a random variable. This demonstrates why we prefer to minimize the expected loss rather than the loss we observe with one dataset.</p>
+<p>If we were to use these estimates to pick the <span class="math inline">\(k\)</span> that maximizes accuracy, we would use the estimates built on the test data:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-12_10df8b7f779f4a3eea7746c6ebc6205f">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ks</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html">which.max</a></span><span class="op">(</span><span class="va">accuracy</span><span class="op">$</span><span class="va">test</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 41</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">accuracy</span><span class="op">$</span><span class="va">test</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.86</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Another reason we need a better estimate of accuracy is that if we use the test set to pick this <span class="math inline">\(k\)</span>, we should not expect the accompanying accuracy estimate to extrapolate to the real world. This is because even here we broke a golden rule of machine learning: we selected the <span class="math inline">\(k\)</span> using the test set. Cross validation also provides an estimate that takes this into account.</p>
+</section><section id="mathematical-description-of-cross-validation" class="level2" data-number="28.5"><h2 data-number="28.5" class="anchored" data-anchor-id="mathematical-description-of-cross-validation">
+<span class="header-section-number">28.5</span> Mathematical description of cross validation</h2>
+<p>In Section <a href="evaluation-metrics.html#sec-loss-function"><span>Section&nbsp;25.8</span></a>, we described that a common goal of machine learning is to find an algorithm that produces predictors <span class="math inline">\(\hat{Y}\)</span> for an outcome <span class="math inline">\(Y\)</span> that minimizes the MSE:</p>
+<p><span class="math display">\[
+\mbox{MSE} = \mbox{E}\left\{ \frac{1}{N}\sum_{i = 1}^N (\hat{Y}_i - Y_i)^2 \right\}
+\]</span></p>
+<p>When all we have at our disposal is one dataset, we can estimate the MSE with the observed MSE like this:</p>
+<p><span class="math display">\[
+\hat{\mbox{MSE}} = \frac{1}{N}\sum_{i = 1}^N (\hat{y}_i - y_i)^2
+\]</span></p>
+<p>These two are often referred to as the <em>true error</em> and <em>apparent error</em>, respectively.</p>
+<p>There are two important characteristics of the apparent error we should always keep in mind:</p>
+<ol type="1">
+<li><p>Because our data is random, the apparent error is a random variable. For example, the dataset we have may be a random sample from a larger population. An algorithm may have a lower apparent error than another algorithm due to luck.</p></li>
+<li><p>If we train an algorithm on the same dataset that we use to compute the apparent error, we might be overtraining. In general, when we do this, the apparent error will be an underestimate of the true error. We will see an extreme example of this with k-nearest neighbors.</p></li>
+</ol>
+<p>Cross validation is a technique that permits us to alleviate both these problems. To understand cross validation, it helps to think of the true error, a theoretical quantity, as the average of many apparent errors obtained by applying the algorithm to <span class="math inline">\(B\)</span> new random samples of the data, none of them used to train the algorithm. As shown in a previous chapter, we think of the true error as:</p>
+<p><span class="math display">\[
+\frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b - y_i^b\right)^2
+\]</span></p>
+<p>with <span class="math inline">\(B\)</span> a large number that can be thought of as practically infinite. As already mentioned, this is a theoretical quantity because we only have available one set of outcomes: <span class="math inline">\(y_1, \dots, y_n\)</span>. Cross validation is based on the idea of imitating the theoretical setup above as best we can with the data we have. To do this, we have to generate a series of different random samples. There are several approaches we can use, but the general idea for all of them is to randomly generate smaller datasets that are not used for training, and instead used to estimate the true error.</p>
+</section><section id="k-fold-cross-validation" class="level2" data-number="28.6"><h2 data-number="28.6" class="anchored" data-anchor-id="k-fold-cross-validation">
+<span class="header-section-number">28.6</span> K-fold cross validation</h2>
+<p>The first one we describe is <em>K-fold cross validation</em>. Generally speaking, a machine learning challenge starts with a dataset (blue in the image below). We need to build an algorithm using this dataset that will eventually be used in completely independent datasets (yellow).</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-14_bef98d5a36c13d4ef32d371b7aefba20">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-1.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>But we don’t get to see these independent datasets.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-15_3ecf6fd1c84b9adf997482f6eed56604">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-2.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>So to imitate this situation, we carve out a piece of our dataset and pretend it is an independent dataset: we divide the dataset into a <em>training set</em> (blue) and a <em>test set</em> (red). We will train our algorithm exclusively on the training set and use the test set only for evaluation purposes.</p>
+<p>We usually try to select a small piece of the dataset so that we have as much data as possible to train. However, we also want the test set to be large so that we obtain a stable estimate of the loss without fitting an impractical number of models. Typical choices are to use 10%-20% of the data for testing.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-16_9bc597e90fa282b5cdfc87e882c6f182">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-3.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Let’s reiterate that it is indispensable that we not use the test set at all: not for filtering out rows, not for selecting features, nothing!</p>
+<p>Now this presents a new problem because for most machine learning algorithms we need to select parameters, for example the number of neighbors <span class="math inline">\(k\)</span> in k-nearest neighbors. Here, we will refer to the set of parameters as <span class="math inline">\(\lambda\)</span>. We need to optimize algorithm parameters without using our test set and we know that if we optimize and evaluate on the same dataset, we will overtrain. This is where cross validation is most useful.</p>
+<p>For each set of algorithm parameters being considered, we want an estimate of the MSE and then we will choose the parameters with the smallest MSE. Cross validation provides this estimate.</p>
+<p>First, before we start the cross validation procedure, it is important to fix all the algorithm parameters. Although we will train the algorithm on the set of training sets, the parameters <span class="math inline">\(\lambda\)</span> will be the same across all training sets. We will use <span class="math inline">\(\hat{y}_i(\lambda)\)</span> to denote the predictors obtained when we use parameters <span class="math inline">\(\lambda\)</span>.</p>
+<p>So, if we are going to imitate this definition:</p>
+<p><span class="math display">\[
+\mbox{MSE}(\lambda) = \frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2
+\]</span></p>
+<p>we want to consider datasets that can be thought of as an independent random sample and we want to do this several times. With K-fold cross validation, we do it <span class="math inline">\(K\)</span> times. In the cartoons, we are showing an example that uses <span class="math inline">\(K = 5\)</span>.</p>
+<p>We will eventually end up with <span class="math inline">\(K\)</span> samples, but let’s start by describing how to construct the first: we simply pick <span class="math inline">\(M = N/K\)</span> observations at random (we round if <span class="math inline">\(M\)</span> is not a round number) and think of these as a random sample <span class="math inline">\(y_1^b, \dots, y_M^b\)</span>, with <span class="math inline">\(b = 1\)</span>. We call this the validation set:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-17_842fc50d439e600ffb26bdf1b948b103">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-4.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we can fit the model in the training set, then compute the apparent error on the independent set:</p>
+<p><span class="math display">\[
+\hat{\mbox{MSE}}_b(\lambda) = \frac{1}{M}\sum_{i = 1}^M \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2
+\]</span></p>
+<p>Note that this is just one sample and will therefore return a noisy estimate of the true error. This is why we take <span class="math inline">\(K\)</span> samples, not just one. In K-cross validation, we randomly split the observations into <span class="math inline">\(K\)</span> non-overlapping sets:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-18_b75a6dcac72de379b8edb8798707576b">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-5.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now we repeat the calculation above for each of these sets <span class="math inline">\(b = 1,\dots,K\)</span> and obtain <span class="math inline">\(\hat{\mbox{MSE}}_1(\lambda),\dots, \hat{\mbox{MSE}}_K(\lambda)\)</span>. Then, for our final estimate, we compute the average:</p>
+<p><span class="math display">\[
+\hat{\mbox{MSE}}(\lambda) = \frac{1}{K} \sum_{b = 1}^K \hat{\mbox{MSE}}_b(\lambda)
+\]</span></p>
+<p>and obtain an estimate of our loss. A final step would be to select the <span class="math inline">\(\lambda\)</span> that minimizes the MSE.</p>
+<p>We have described how to use cross validation to optimize parameters. However, we now have to take into account the fact that the optimization occurred on the training data and therefore we need an estimate of our final algorithm based on data that was not used to optimize the choice. Here is where we use the test set we separated early on:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-19_318385f176adf5f00e1b933cd7ae5f85">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-6.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can do cross validation again:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-20_767e2377cfa61ab0914cbc306303e978">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-7.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>and obtain a final estimate of our expected loss. However, note that this means that our entire compute time gets multiplied by <span class="math inline">\(K\)</span>. You will soon learn that performing this task takes time because we are performing many complex computations. As a result, we are always looking for ways to reduce this time. For the final evaluation, we often just use the one test set.</p>
+<p>Once we are satisfied with this model and want to make it available to others, we could refit the model on the entire dataset, without changing the optimized parameters.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-21_efd8eeb47ded12c10484ec07d5988c7d">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center" style="display: block; margin-left: auto; margin-right: auto; background-color: #000; padding:3px;">
+<figure class="figure"><p><img src="img/cv-8.png" class="img-fluid figure-img" width="500"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Now how do we pick the cross validation <span class="math inline">\(K\)</span>? Large values of <span class="math inline">\(K\)</span> are preferable because the training data better imitates the original dataset. However, larger values of <span class="math inline">\(K\)</span> will have much slower computation time: for example, 100-fold cross validation will be 10 times slower than 10-fold cross validation. For this reason, the choices of <span class="math inline">\(K = 5\)</span> and <span class="math inline">\(K = 10\)</span> are popular.</p>
+<p>One way we can improve the variance of our final estimate is to take more samples. To do this, we would no longer require the training set to be partitioned into non-overlapping sets. Instead, we would just pick <span class="math inline">\(K\)</span> sets of some size at random.</p>
+<p>One popular version of this technique, at each fold, picks observations at random with replacement (which means the same observation can appear twice). This approach has some advantages (not discussed here) and is generally referred to as the <em>bootstrap</em>. In fact, this is the default approach in the <strong>caret</strong> package. We describe how to implement cross validation with the <strong>caret</strong> package in the next chapter. In the next section, we include an explanation of how the bootstrap works in general.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>You are ready to try exercises 1 through 8</p>
+</div>
+</div>
+</div>
+</section><section id="bootstrap" class="level2" data-number="28.7"><h2 data-number="28.7" class="anchored" data-anchor-id="bootstrap">
+<span class="header-section-number">28.7</span> Bootstrap</h2>
+<p>Suppose the income distribution of your population is as follows:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/income-distribution_2bff83435ee1feb792a3c4a3d5869ada">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1995</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span></span>
+<span><span class="va">income</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log10</a></span><span class="op">(</span><span class="fl">45000</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log10</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/qplot.html">qplot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log10</a></span><span class="op">(</span><span class="va">income</span><span class="op">)</span>, bins <span class="op">=</span> <span class="fl">30</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span><span class="op">(</span><span class="st">"black"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: `qplot()` was deprecated in ggplot2 3.4.0.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/income-distribution-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The population median is:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-23_210a1018fd2a8f75df1dce4956fe4e56">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">income</span><span class="op">)</span></span>
+<span><span class="va">m</span></span>
+<span><span class="co">#&gt; [1] 44939</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Suppose we don’t have access to the entire population, but want to estimate the median <span class="math inline">\(m\)</span>. We take a sample of 100 and estimate the population median <span class="math inline">\(m\)</span> with the sample median <span class="math inline">\(M\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-24_ee4e8ea3c3e7442f844e0afdc0c76564">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">income</span>, <span class="va">N</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 38461</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Can we construct a confidence interval? What is the distribution of <span class="math inline">\(M\)</span> ?</p>
+<p>Because we are simulating the data, we can use a Monte Carlo simulation to learn the distribution of <span class="math inline">\(M\)</span>.</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/median-is-normal_a1220c5335991c7e4070ee641fa2e904">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">gridExtra</span><span class="op">)</span></span>
+<span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="fl">4</span></span>
+<span><span class="va">M</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="va">B</span>, <span class="op">{</span></span>
+<span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">income</span>, <span class="va">N</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span>
+<span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/qplot.html">qplot</a></span><span class="op">(</span><span class="va">M</span>, bins <span class="op">=</span> <span class="fl">30</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html">I</a></span><span class="op">(</span><span class="st">"black"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/qplot.html">qplot</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">M</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"theoretical"</span>, ylab <span class="op">=</span> <span class="st">"sample"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_abline</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html">grid.arrange</a></span><span class="op">(</span><span class="va">p1</span>, <span class="va">p2</span>, ncol <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="cross-validation_files/figure-html/median-is-normal-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>If we know this distribution, we can construct a confidence interval. The problem here is that, as we have already described, in practice we do not have access to the distribution. In the past, we have used the Central Limit Theorem, but the CLT we studied applies to averages and here we are interested in the median. We can see that the 95% confidence interval based on CLT</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-25_f2795b7e01c7cf87f3f90d713b1dbe82">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">N</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 21018 55905</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>is quite different from the confidence interval we would generate if we know the actual distribution of <span class="math inline">\(M\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-26_5f992008ffa609ee79cb7c32b59be4f3">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="va">M</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  2.5% 97.5% </span></span>
+<span><span class="co">#&gt; 34438 59050</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The bootstrap permits us to approximate a Monte Carlo simulation without access to the entire distribution. The general idea is relatively simple. We act as if the observed sample is the population. We then sample (with replacement) datasets, of the same sample size as the original dataset. Then we compute the summary statistic, in this case the median, on these <em>bootstrap samples</em>.</p>
+<p>Theory tells us that, in many situations, the distribution of the statistics obtained with bootstrap samples approximate the distribution of our actual statistic. This is how we construct bootstrap samples and an approximate distribution:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-27_53a59442cddddc3d44d9ab6c49d0823f">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="fl">4</span></span>
+<span><span class="va">M_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="va">B</span>, <span class="op">{</span></span>
+<span>  <span class="va">X_star</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">N</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">X_star</span><span class="op">)</span></span>
+<span><span class="op">}</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note a confidence interval constructed with the bootstrap is much closer to one constructed with the theoretical distribution:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-28_86761fdabd164a81308698c23111cd89">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="va">M_star</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.025</span>, <span class="fl">0.975</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  2.5% 97.5% </span></span>
+<span><span class="co">#&gt; 30253 56909</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For more on the Bootstrap, including corrections one can apply to improve these confidence intervals, please consult the book <em>An introduction to the bootstrap</em> by Efron, B., &amp; Tibshirani, R. J.</p>
+<p><em>Note that we can use ideas similar to those used in the bootstrap in cross validation: instead of dividing the data into equal partitions, we simply bootstrap many times.</em></p>
+</section><section id="exercises" class="level2" data-number="28.8"><h2 data-number="28.8" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">28.8</span> Exercises</h2>
+<p>Generate a set of random predictors and outcomes like this:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-29_c1ce36264a962fb26dc81779a80afeb6">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1996</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="va">p</span><span class="op">)</span>, <span class="va">n</span>, <span class="va">p</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, sep <span class="op">=</span> <span class="st">"_"</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">x_subset</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span> ,<span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">p</span>, <span class="fl">100</span><span class="op">)</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>1. Because <code>x</code> and <code>y</code> are completely independent, you should not be able to predict <code>y</code> using <code>x</code> with accuracy larger than 0.5. Confirm this by running cross validation using logistic regression to fit the model. Because we have so many predictors, we selected a random sample <code>x_subset</code>. Use the subset when training the model. Hint: use the caret <code>train</code> function. The <code>results</code> component of the output of <code>train</code> shows you the accuracy. Ignore the warnings.</p>
+<p>2. Now, instead of a random selection of predictors, we are going to search for those that are most predictive of the outcome. We can do this by comparing the values for the <span class="math inline">\(y = 1\)</span> group to those in the <span class="math inline">\(y = 0\)</span> group, for each predictor, using a t-test. You can perform this step like this:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-30_3bb5d29eec035d1a278a162b7b087879">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_bioc.html">install_bioc</a></span><span class="op">(</span><span class="st">"genefilter"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"genefilter"</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">genefilter</span><span class="op">)</span></span>
+<span><span class="va">tt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/genefilter/man/rowFtests.html">colttests</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Create a vector of the p-values and call it <code>pvals</code>.</p>
+<p>3. Create an index <code>ind</code> with the column numbers of the predictors that were “statistically significantly” associated with <code>y</code>. Use a p-value cutoff of 0.01 to define “statistically significant”. How many predictors survive this cutoff?</p>
+<p>4. Re-run the cross validation but after redefining <code>x_subset</code> to be the subset of <code>x</code> defined by the columns showing “statistically significant” association with <code>y</code>. What is the accuracy now?</p>
+<p>5. Re-run the cross validation again, but this time using kNN. Try out the following grid of tuning parameters: <code>k = seq(101, 301, 25)</code>. Make a plot of the resulting accuracy.</p>
+<p>6. In exercises 3 and 4, we see that despite the fact that <code>x</code> and <code>y</code> are completely independent, we were able to predict <code>y</code> with accuracy higher than 70%. We must be doing something wrong then. What is it?</p>
+<ol type="a">
+<li>The function <code>train</code> estimates accuracy on the same data it uses to train the algorithm.</li>
+<li>We are over-fitting the model by including 100 predictors.</li>
+<li>We used the entire dataset to select the columns used in the model. This step needs to be included as part of the algorithm. The cross validation was done <strong>after</strong> this selection.</li>
+<li>The high accuracy is just due to random variability.</li>
+</ol>
+<p>7. Advanced. Re-do the cross validation but this time include the selection step in the cross validation. The accuracy should now be close to 50%.</p>
+<p>8. Load the <code>tissue_gene_expression</code> dataset. Use the <code>train</code> function to predict tissue from gene expression. Use kNN. What <code>k</code> works best?</p>
+<p>9. The <code>createResample</code> function can be used to create bootstrap samples. For example, we can create 10 bootstrap samples for the <code>mnist_27</code> dataset like this:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-31_123d8b222b74be5e7c63b94fc2bbcae9">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1995</span><span class="op">)</span></span>
+<span><span class="va">indexes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html">createResample</a></span><span class="op">(</span><span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span>, <span class="fl">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>How many times do <code>3</code>, <code>4</code>, and <code>7</code> appear in the first re-sampled index?</p>
+<p>10. We see that some numbers appear more than once and others appear no times. This has to be this way for each dataset to be independent. Repeat the exercise for all the re-sampled indexes.</p>
+<p>11. Generate a random dataset like this:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-32_5423bdafe26c4fd6e4a8e5863f10cd87">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Estimate the 75th quantile, which we know is:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-33_af6b90cbebae74aa58e590d4df9f708b">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.75</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>with the sample quantile:</p>
+<div class="cell" data-layout-align="center" data-hash="cross-validation_cache/html/unnamed-chunk-34_de6b1644390c4ac7b3af8fd1685eb08d">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="va">y</span>, <span class="fl">0.75</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Run a Monte Carlo simulation to learn the expected value and standard error of this random variable.</p>
+<p>12. In practice, we can’t run a Monte Carlo simulation because we don’t know if <code>rnorm</code> is being used to simulate the data. Use the bootstrap to estimate the standard error using just the initial sample <code>y</code>. Use 10 bootstrap samples.</p>
+<p>13. Redo exercise 12, but with 10,000 bootstrap samples.</p>
+
+
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../ml/smoothing.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../ml/algorithms.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">Advanced Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

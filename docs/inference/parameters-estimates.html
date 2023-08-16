@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>Advanced Data Science - 6&nbsp; Parameters and Estimates</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../inference/clt.html" rel="next">
+<link href="../inference/intro-inference.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script><script src="../site_libs/kePrint-0.0.1/kePrint.js"></script><link href="../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../inference/intro-inference.html">Statistical inference</a></li><li class="breadcrumb-item"><a href="../inference/parameters-estimates.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Advanced Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/robust-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Robust summaries</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Discrete probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical inference</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/parameters-estimates.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-driven models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchichal Models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariate-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/measurement-error-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Treatment effect models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Association tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Association is not causation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High dimensional data</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Matrix factorization</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Evaluation metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#the-sampling-model-for-polls" id="toc-the-sampling-model-for-polls" class="nav-link active" data-scroll-target="#the-sampling-model-for-polls"><span class="header-section-number">6.1</span> The sampling model for polls</a></li>
+  <li>
+<a href="#populations-samples-parameters-and-estimates" id="toc-populations-samples-parameters-and-estimates" class="nav-link" data-scroll-target="#populations-samples-parameters-and-estimates"><span class="header-section-number">6.2</span> Populations, samples, parameters, and estimates</a>
+  <ul class="collapse">
+<li><a href="#the-sample-average" id="toc-the-sample-average" class="nav-link" data-scroll-target="#the-sample-average"><span class="header-section-number">6.2.1</span> The sample average</a></li>
+  <li><a href="#parameters" id="toc-parameters" class="nav-link" data-scroll-target="#parameters"><span class="header-section-number">6.2.2</span> Parameters</a></li>
+  </ul>
+</li>
+  <li><a href="#polling-versus-forecasting" id="toc-polling-versus-forecasting" class="nav-link" data-scroll-target="#polling-versus-forecasting"><span class="header-section-number">6.3</span> Polling versus forecasting</a></li>
+  <li><a href="#properties-of-our-estimate-expected-value-and-standard-error" id="toc-properties-of-our-estimate-expected-value-and-standard-error" class="nav-link" data-scroll-target="#properties-of-our-estimate-expected-value-and-standard-error"><span class="header-section-number">6.4</span> Properties of our estimate: expected value and standard error</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">6.5</span> Exercises</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/edit/main/inference/parameters-estimates.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p>Opinion polling has been conducted since the 19th century. The general goal is to describe the opinions held by a specific population on a given set of topics. In recent times, these polls have been pervasive in the US during presidential elections. Polls are useful when interviewing every member of a particular population is logistically impossible. The general strategy is to interview a smaller group, chosen at random, and then infer the opinions of the entire population from the opinions of the smaller group. Statistical theory is used to justify the process. This theory is referred to as <em>inference</em> and it is the main topic of this part of the book.</p>
+<p>Perhaps the best known opinion polls are those conducted to determine which candidate is preferred by voters in a given election. Political strategists make extensive use of polls to decide, among other things, how to invest resources. For example, they may want to know in which geographical locations to focus their “get out the vote” efforts.</p>
+<p>Elections are a particularly interesting case of opinion polls because the actual opinion of the entire population is revealed on election day. Of course, it costs millions of dollars to run an actual election which makes polling a cost effective strategy for those that want to forecast the results. Apart from strategist, news organizations are also interested in forecasting elections, as there appears to be demand for these.</p>
+<section id="the-sampling-model-for-polls" class="level2" data-number="6.1"><h2 data-number="6.1" class="anchored" data-anchor-id="the-sampling-model-for-polls">
+<span class="header-section-number">6.1</span> The sampling model for polls</h2>
+<p>We start by connecting probability theory to the task of using polls to learn about a population.</p>
+<p>Although typically the results of these polls are kept private, similar polls are conducted by news organizations because results tend to be of interest to the general public and made public. We will eventually be looking at such data.</p>
+<p>Real Clear Politics<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> is an example of a news aggregator that organizes and publishes poll results. For example, they present the following poll results reporting estimates of the popular vote for the 2016 presidential election<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>:</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/unnamed-chunk-2_de01964bcf645f52b087e2b29681982a">
+<div class="cell-output-display">
+<table class="table table-striped table-sm small" data-quarto-postprocess="true">
+<thead><tr class="header">
+<th style="text-align: left;" data-quarto-table-cell-role="th">Poll</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Date</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Sample</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">MoE</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Clinton</th>
+<th style="text-align: right;" data-quarto-table-cell-role="th">Trump</th>
+<th style="text-align: left;" data-quarto-table-cell-role="th">Spread</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">RCP Average</td>
+<td style="text-align: left;">10/31 - 11/7</td>
+<td style="text-align: left;">--</td>
+<td style="text-align: left;">--</td>
+<td style="text-align: right;">47.2</td>
+<td style="text-align: right;">44.3</td>
+<td style="text-align: left;">Clinton +2.9</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Bloomberg</td>
+<td style="text-align: left;">11/4 - 11/6</td>
+<td style="text-align: left;">799 LV</td>
+<td style="text-align: left;">3.5</td>
+<td style="text-align: right;">46.0</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: left;">Clinton +3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Economist</td>
+<td style="text-align: left;">11/4 - 11/7</td>
+<td style="text-align: left;">3669 LV</td>
+<td style="text-align: left;">--</td>
+<td style="text-align: right;">49.0</td>
+<td style="text-align: right;">45.0</td>
+<td style="text-align: left;">Clinton +4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IBD</td>
+<td style="text-align: left;">11/3 - 11/6</td>
+<td style="text-align: left;">1026 LV</td>
+<td style="text-align: left;">3.1</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: right;">42.0</td>
+<td style="text-align: left;">Clinton +1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ABC</td>
+<td style="text-align: left;">11/3 - 11/6</td>
+<td style="text-align: left;">2220 LV</td>
+<td style="text-align: left;">2.5</td>
+<td style="text-align: right;">49.0</td>
+<td style="text-align: right;">46.0</td>
+<td style="text-align: left;">Clinton +3</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FOX News</td>
+<td style="text-align: left;">11/3 - 11/6</td>
+<td style="text-align: left;">1295 LV</td>
+<td style="text-align: left;">2.5</td>
+<td style="text-align: right;">48.0</td>
+<td style="text-align: right;">44.0</td>
+<td style="text-align: left;">Clinton +4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Monmouth</td>
+<td style="text-align: left;">11/3 - 11/6</td>
+<td style="text-align: left;">748 LV</td>
+<td style="text-align: left;">3.6</td>
+<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">44.0</td>
+<td style="text-align: left;">Clinton +6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">CBS News</td>
+<td style="text-align: left;">11/2 - 11/6</td>
+<td style="text-align: left;">1426 LV</td>
+<td style="text-align: left;">3.0</td>
+<td style="text-align: right;">47.0</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: left;">Clinton +4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LA Times</td>
+<td style="text-align: left;">10/31 - 11/6</td>
+<td style="text-align: left;">2935 LV</td>
+<td style="text-align: left;">4.5</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: right;">48.0</td>
+<td style="text-align: left;">Trump +5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">NBC News</td>
+<td style="text-align: left;">11/3 - 11/5</td>
+<td style="text-align: left;">1282 LV</td>
+<td style="text-align: left;">2.7</td>
+<td style="text-align: right;">48.0</td>
+<td style="text-align: right;">43.0</td>
+<td style="text-align: left;">Clinton +5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">NBC News</td>
+<td style="text-align: left;">10/31 - 11/6</td>
+<td style="text-align: left;">30145 LV</td>
+<td style="text-align: left;">1.0</td>
+<td style="text-align: right;">51.0</td>
+<td style="text-align: right;">44.0</td>
+<td style="text-align: left;">Clinton +7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">McClatchy</td>
+<td style="text-align: left;">11/1 - 11/3</td>
+<td style="text-align: left;">940 LV</td>
+<td style="text-align: left;">3.2</td>
+<td style="text-align: right;">46.0</td>
+<td style="text-align: right;">44.0</td>
+<td style="text-align: left;">Clinton +2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Reuters</td>
+<td style="text-align: left;">10/31 - 11/4</td>
+<td style="text-align: left;">2244 LV</td>
+<td style="text-align: left;">2.2</td>
+<td style="text-align: right;">44.0</td>
+<td style="text-align: right;">40.0</td>
+<td style="text-align: left;">Clinton +4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GravisGravis</td>
+<td style="text-align: left;">10/31 - 10/31</td>
+<td style="text-align: left;">5360 RV</td>
+<td style="text-align: left;">1.3</td>
+<td style="text-align: right;">50.0</td>
+<td style="text-align: right;">50.0</td>
+<td style="text-align: left;">Tie</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- (Source: [Real Clear Politics](https://www.realclearpolitics.com/epolls/2016/president/us/general_election_trump_vs_clinton-5491.html)) -->
+<p>Let’s make some observations about the table above. First, note that different polls, all taken days before the election, report a different <em>spread</em>: the estimated difference between support for the two candidates. Notice also that the reported spreads hover around what ended up being the actual result: Clinton won the popular vote by 2.1%. We also see a column titled <strong>MoE</strong> which stands for <em>margin of error</em>.</p>
+<p>To help us understand the connection between polls and what we have learned, let’s construct a similar situation to the one pollsters face. To mimic the challenge real pollsters face in terms of competing with other pollsters for media attention, we will use an urn full of beads to represent voters and pretend we are competing for a $25 dollar prize. The challenge is to guess the spread between the proportion of blue and red beads in this urn (in this case, a pickle jar):</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/unnamed-chunk-3_c33d9a845a71ac605851e10b6ba7ccc2">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="img/urn.jpg" class="img-fluid figure-img" style="width:30.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Before making a prediction, you can take a sample (with replacement) from the urn. To mimic the fact that running polls is expensive, it costs you $0.10 per each bead you sample. Therefore, if your sample size is 250, and you win, you will break even since you will pay $25 to collect your $25 prize. Your entry into the competition can be an interval. If the interval you submit contains the true proportion, you get half what you paid and pass to the second phase of the competition. In the second phase, the entry with the smallest interval is selected as the winner.</p>
+<p>The <strong>dslabs</strong> package includes a function that shows a random draw from this urn:</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/unnamed-chunk-4_da3006668a071503650e8a5cea458dc0">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/take_poll.html">take_poll</a></span><span class="op">(</span><span class="fl">25</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="parameters-estimates_files/figure-html/first-simulated-poll-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Think about how you would construct your interval based on the data shown above.</p>
+<p>We have just described a simple sampling model for opinion polls. The beads inside the urn represent the individuals that will vote on election day. Those that will vote for the Republican candidate are represented with red beads and the Democrats with the blue beads. For simplicity, assume there are no other colors. That is, that there are just two parties: Republican and Democratic.</p>
+</section><section id="populations-samples-parameters-and-estimates" class="level2" data-number="6.2"><h2 data-number="6.2" class="anchored" data-anchor-id="populations-samples-parameters-and-estimates">
+<span class="header-section-number">6.2</span> Populations, samples, parameters, and estimates</h2>
+<p>We want to predict the proportion of blue beads in the urn. Let’s call this quantity <span class="math inline">\(p\)</span>, which then tells us the proportion of red beads <span class="math inline">\(1-p\)</span>, and the spread <span class="math inline">\(p - (1-p)\)</span>, which simplifies to <span class="math inline">\(2p - 1\)</span>.</p>
+<p>In statistical textbooks, the beads in the urn are called the <em>population</em>. The proportion of blue beads in the population <span class="math inline">\(p\)</span> is called a <em>parameter</em>. The 25 beads we see in the previous plot are called a <em>sample</em>. The task of statistical inference is to predict the parameter <span class="math inline">\(p\)</span> using the observed data in the sample.</p>
+<p>Can we do this with the 25 observations above? It is certainly informative. For example, given that we see 13 red and 12 blue beads, it is unlikely that <span class="math inline">\(p\)</span> &gt; .9 or <span class="math inline">\(p\)</span> &lt; .1. But are we ready to predict with certainty that there are more red beads than blue in the jar?</p>
+<p>We want to construct an estimate of <span class="math inline">\(p\)</span> using only the information we observe. An estimate should be thought of as a summary of the observed data that we think is informative about the parameter of interest. It seems intuitive to think that the proportion of blue beads in the sample <span class="math inline">\(0.48\)</span> must be at least related to the actual proportion <span class="math inline">\(p\)</span>. But do we simply predict <span class="math inline">\(p\)</span> to be 0.48? First, remember that the sample proportion is a random variable. If we run the command <code>take_poll(25)</code> four times, we get a different answer each time, since the sample proportion is a random variable.</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/four-simulated-polls_c732861321c5956a01cbdd2278590c10">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="parameters-estimates_files/figure-html/four-simulated-polls-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that in the four random samples shown above, the sample proportions range from 0.44 to 0.60. By describing the distribution of this random variable, we will be able to gain insights into how good this estimate is and how we can make it better.</p>
+<section id="the-sample-average" class="level3" data-number="6.2.1"><h3 data-number="6.2.1" class="anchored" data-anchor-id="the-sample-average">
+<span class="header-section-number">6.2.1</span> The sample average</h3>
+<p>Conducting an opinion poll is being modeled as taking a random sample from an urn. We are proposing the use of the proportion of blue beads in our sample as an <em>estimate</em> of the parameter <span class="math inline">\(p\)</span>. Once we have this estimate, we can easily report an estimate for the spread <span class="math inline">\(2p-1\)</span>, but for simplicity we will illustrate the concepts for estimating <span class="math inline">\(p\)</span>. We will use our knowledge of probability to defend our use of the sample proportion and quantify how close we think it is from the population proportion <span class="math inline">\(p\)</span>.</p>
+<p>We start by defining the random variable <span class="math inline">\(X\)</span> as: <span class="math inline">\(X=1\)</span> if we pick a blue bead at random and <span class="math inline">\(X=0\)</span> if it is red. This implies that the population is a list of 0s and 1s. If we sample <span class="math inline">\(N\)</span> beads, then the average of the draws <span class="math inline">\(X_1, \dots, X_N\)</span> is equivalent to the proportion of blue beads in our sample. This is because adding the <span class="math inline">\(X\)</span>s is equivalent to counting the blue beads and dividing this count by the total <span class="math inline">\(N\)</span> is equivalent to computing a proportion. We use the symbol <span class="math inline">\(\bar{X}\)</span> to represent this average. In general, in statistics textbooks a bar on top of a symbol means the average. The theory we just learned about the sum of draws becomes useful because the average is a sum of draws multiplied by the constant <span class="math inline">\(1/N\)</span>:</p>
+<p><span class="math display">\[\bar{X} = \frac{1}{N} \sum_{i=1}^N X_i\]</span></p>
+<p>For simplicity, let’s assume that the draws are independent: after we see each sampled bead, we return it to the urn. In this case, what do we know about the distribution of the sum of draws? First, we know that the expected value of the sum of draws is <span class="math inline">\(N\)</span> times the average of the values in the urn. We know that the average of the 0s and 1s in the urn must be <span class="math inline">\(p\)</span>, the proportion of blue beads.</p>
+<p>Here we encounter an important difference with what we did in the Probability chapter: we don’t know what is in the urn. We know there are blue and red beads, but we don’t know how many of each. This is what we want to find out: we are trying to <strong>estimate</strong> <span class="math inline">\(p\)</span>.</p>
+</section><section id="parameters" class="level3" data-number="6.2.2"><h3 data-number="6.2.2" class="anchored" data-anchor-id="parameters">
+<span class="header-section-number">6.2.2</span> Parameters</h3>
+<p>Just like we use variables to define unknowns in systems of equations, in statistical inference we define <em>parameters</em> to define unknown parts of our models. In the urn model which we are using to mimic an opinion poll, we do not know the proportion of blue beads in the urn. We define the parameters <span class="math inline">\(p\)</span> to represent this quantity. <span class="math inline">\(p\)</span> is the average of the urn because if we take the average of the 1s (blue) and 0s (red), we get the proportion of blue beads. Since our main goal is figuring out what is <span class="math inline">\(p\)</span>, we are going to <em>estimate this parameter</em>.</p>
+<p>The ideas presented here on how we estimate parameters, and provide insights into how good these estimates are, extrapolate to many data science tasks. For example, we may want to determine the difference in health improvement between patients receiving treatment and a control group. We may ask, what are the health effects of smoking on a population? What are the differences in racial groups of fatal shootings by police? What is the rate of change in life expectancy in the US during the last 10 years? All these questions can be framed as a task of estimating a parameter from a sample.</p>
+</section></section><section id="polling-versus-forecasting" class="level2" data-number="6.3"><h2 data-number="6.3" class="anchored" data-anchor-id="polling-versus-forecasting">
+<span class="header-section-number">6.3</span> Polling versus forecasting</h2>
+<p>Before we continue, let’s make an important clarification related to the practical problem of forecasting the election. If a poll is conducted four months before the election, it is estimating the <span class="math inline">\(p\)</span> for that moment and not for election day. The <span class="math inline">\(p\)</span> for election night might be different since people’s opinions fluctuate through time. The polls provided the night before the election tend to be the most accurate since opinions don’t change that much in a day. However, forecasters try to build tools that model how opinions vary across time and try to predict the election night results taking into consideration the fact that opinions fluctuate. We will describe some approaches for doing this in a later section.</p>
+</section><section id="properties-of-our-estimate-expected-value-and-standard-error" class="level2" data-number="6.4"><h2 data-number="6.4" class="anchored" data-anchor-id="properties-of-our-estimate-expected-value-and-standard-error">
+<span class="header-section-number">6.4</span> Properties of our estimate: expected value and standard error</h2>
+<p>To understand how good our estimate is, we will describe the statistical properties of the random variable defined above: the sample proportion <span class="math inline">\(\bar{X}\)</span>. Remember that <span class="math inline">\(\bar{X}\)</span> is the sum of independent draws so the rules we covered in the probability chapter apply.</p>
+<p>Using what we have learned, the expected value of the sum <span class="math inline">\(N\bar{X}\)</span> is <span class="math inline">\(N \times\)</span> the average of the urn, <span class="math inline">\(p\)</span>. So dividing by the non-random constant <span class="math inline">\(N\)</span> gives us that the expected value of the average <span class="math inline">\(\bar{X}\)</span> is <span class="math inline">\(p\)</span>. We can write it using our mathematical notation:</p>
+<p><span class="math display">\[
+\mbox{E}(\bar{X}) = p
+\]</span></p>
+<p>We can also use what we learned to figure out the standard error: the standard error of the sum is <span class="math inline">\(\sqrt{N} \times\)</span> the standard deviation of the urn. Can we compute the standard error of the urn? We learned a formula that tells us that it is <span class="math inline">\((1-0) \sqrt{p (1-p)}\)</span> = <span class="math inline">\(\sqrt{p (1-p)}\)</span>. Because we are dividing the sum by <span class="math inline">\(N\)</span>, we arrive at the following formula for the standard error of the average:</p>
+<p><span class="math display">\[
+\mbox{SE}(\bar{X}) = \sqrt{p(1-p)/N}
+\]</span></p>
+<p>This result reveals the power of polls. The expected value of the sample proportion <span class="math inline">\(\bar{X}\)</span> is the parameter of interest <span class="math inline">\(p\)</span> and we can make the standard error as small as we want by increasing <span class="math inline">\(N\)</span>. The law of large numbers tells us that with a large enough poll, our estimate converges to <span class="math inline">\(p\)</span>.</p>
+<p>If we take a large enough poll to make our standard error about 1%, we will be quite certain about who will win. But how large does the poll have to be for the standard error to be this small?</p>
+<p>One problem is that we do not know <span class="math inline">\(p\)</span>, so we can’t compute the standard error. However, for illustrative purposes, let’s assume that <span class="math inline">\(p=0.51\)</span> and make a plot of the standard error versus the sample size <span class="math inline">\(N\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/standard-error-versus-sample-size_8408d65c2c054da5c2b582f41c73ced1">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="parameters-estimates_files/figure-html/standard-error-versus-sample-size-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>From the plot we see that we would need a poll of over 10,000 people to get the standard error that low. We rarely see polls of this size due in part to costs. From the Real Clear Politics table, we learn that the sample sizes in opinion polls range from 500-3,500 people. For a sample size of 1,000 and <span class="math inline">\(p=0.51\)</span>, the standard error is:</p>
+<div class="cell" data-layout-align="center" data-hash="parameters-estimates_cache/html/unnamed-chunk-5_f4f567425d24760e4dc179c1ce0cdaee">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">p</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0158</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>or 1.5 percentage points. So even with large polls, for close elections, <span class="math inline">\(\bar{X}\)</span> can lead us astray if we don’t realize it is a random variable. Nonetheless, we can actually say more about how close we get the <span class="math inline">\(p\)</span> and we do that in Section <a href="clt.html"><span>Chapter&nbsp;7</span></a>.</p>
+</section><section id="exercises" class="level2" data-number="6.5"><h2 data-number="6.5" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">6.5</span> Exercises</h2>
+<p>1. Suppose you poll a population in which a proportion <span class="math inline">\(p\)</span> of voters are Democrats and <span class="math inline">\(1-p\)</span> are Republicans. Your sample size is <span class="math inline">\(N=25\)</span>. Consider the random variable <span class="math inline">\(S\)</span> which is the <strong>total</strong> number of Democrats in your sample. What is the expected value of this random variable? Hint: it’s a function of <span class="math inline">\(p\)</span>.</p>
+<p>2. What is the standard error of <span class="math inline">\(S\)</span> ? Hint: it’s a function of <span class="math inline">\(p\)</span>.</p>
+<p>3. Consider the random variable <span class="math inline">\(S/N\)</span>. This is equivalent to the sample average, which we have been denoting as <span class="math inline">\(\bar{X}\)</span>. What is the expected value of the <span class="math inline">\(\bar{X}\)</span>? Hint: it’s a function of <span class="math inline">\(p\)</span>.</p>
+<p>4. What is the standard error of <span class="math inline">\(\bar{X}\)</span>? Hint: it’s a function of <span class="math inline">\(p\)</span>.</p>
+<p>5. Write a line of code that gives you the standard error <code>se</code> for the problem above for several values of <span class="math inline">\(p\)</span>, specifically for <code>p &lt;- seq(0, 1, length = 100)</code>. Make a plot of <code>se</code> versus <code>p</code>.</p>
+<p>6. Copy the code above and put it inside a for-loop to make the plot for <span class="math inline">\(N=25\)</span>, <span class="math inline">\(N=100\)</span>, and <span class="math inline">\(N=1000\)</span>.</p>
+<p>7. If we are interested in the difference in proportions, <span class="math inline">\(\mu = p - (1-p)\)</span>, our estimate is <span class="math inline">\(\hat{\mu} = \bar{X} - (1-\bar{X})\)</span>. Use the rules we learned about sums of random variables and scaled random variables to derive the expected value of <span class="math inline">\(\hat{\mu}\)</span>.</p>
+<p>8. What is the standard error of <span class="math inline">\(\hat{\mu}\)</span>?</p>
+<p>9. If the actual <span class="math inline">\(p=.45\)</span>, it means the Republicans are winning by a relatively large margin since <span class="math inline">\(\mu = -.1\)</span>, which is a 10% margin of victory. In this case, what is the standard error of <span class="math inline">\(2\hat{X}-1\)</span> if we take a sample of <span class="math inline">\(N=25\)</span>?</p>
+<p>10. Given the answer to 9, which of the following best describes your strategy of using a sample size of <span class="math inline">\(N=25\)</span>?</p>
+<ol type="a">
+<li>The expected value of our estimate <span class="math inline">\(2\bar{X}-1\)</span> is <span class="math inline">\(\mu\)</span>, so our prediction will be right on.</li>
+<li>Our standard error is larger than the difference, so the chances of <span class="math inline">\(2\bar{X}-1\)</span> being positive and throwing us off were not that small. We should pick a larger sample size.</li>
+<li>The difference is 10% and the standard error is about 0.2, therefore much smaller than the difference.</li>
+<li>Because we don’t know <span class="math inline">\(p\)</span>, we have no way of knowing that making <span class="math inline">\(N\)</span> larger would actually improve our standard error.</li>
+</ol>
+
+
+</section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><hr>
+<ol>
+<li id="fn1"><p>http://www.realclearpolitics.com<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>http://www.realclearpolitics.com/epolls/2016/president/us/general_election_trump_vs_clinton-5491.html<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../inference/intro-inference.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Statistical inference</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../inference/clt.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">Advanced Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

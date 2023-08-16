@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>Advanced Data Science - 21&nbsp; Dimension reduction</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../highdim/regularization.html" rel="next">
+<link href="../highdim/linear-algebra.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/dimension-reduction.html"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Advanced Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/robust-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Robust summaries</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Discrete probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical inference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/parameters-estimates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-driven models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchichal Models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariate-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/measurement-error-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Treatment effect models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Association tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Association is not causation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High dimensional data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Matrix factorization</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Evaluation metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#motivation-preserving-distance" id="toc-motivation-preserving-distance" class="nav-link active" data-scroll-target="#motivation-preserving-distance"><span class="header-section-number">21.1</span> Motivation: preserving distance</a></li>
+  <li><a href="#rotations" id="toc-rotations" class="nav-link" data-scroll-target="#rotations"><span class="header-section-number">21.2</span> Rotations</a></li>
+  <li><a href="#linear-transformations" id="toc-linear-transformations" class="nav-link" data-scroll-target="#linear-transformations"><span class="header-section-number">21.3</span> Linear transformations</a></li>
+  <li><a href="#orthogonal-transformations" id="toc-orthogonal-transformations" class="nav-link" data-scroll-target="#orthogonal-transformations"><span class="header-section-number">21.4</span> Orthogonal transformations</a></li>
+  <li><a href="#sec-pca" id="toc-sec-pca" class="nav-link" data-scroll-target="#sec-pca"><span class="header-section-number">21.5</span> Principal Component Analysis (PCA)</a></li>
+  <li><a href="#iris-example" id="toc-iris-example" class="nav-link" data-scroll-target="#iris-example"><span class="header-section-number">21.6</span> Iris example</a></li>
+  <li><a href="#mnist-example" id="toc-mnist-example" class="nav-link" data-scroll-target="#mnist-example"><span class="header-section-number">21.7</span> MNIST example</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">21.8</span> Exercises</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/edit/main/highdim/dimension-reduction.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p>A typical machine learning challenge will include a large number of predictors, which makes visualization somewhat challenging. We have shown methods for visualizing univariate and paired data, but plots that reveal relationships between many variables are more complicated in higher dimensions. For example, to compare each of the 784 features in our predicting digits example, we would have to create, for example, 306,936 scatterplots. Creating one single scatter-plot of the data is impossible due to the high dimensionality.</p>
+<p>Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as <em>dimension reduction</em>. The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations. With fewer dimensions, visualization then becomes more feasible. The technique behind it all, the singular value decomposition, is also useful in other contexts. Principal component analysis (PCA) is the approach we will be showing. We will motivate the ideas behind with a simple example.</p>
+<section id="motivation-preserving-distance" class="level2" data-number="21.1"><h2 data-number="21.1" class="anchored" data-anchor-id="motivation-preserving-distance">
+<span class="header-section-number">21.1</span> Motivation: preserving distance</h2>
+<p>We consider an example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points that represent the number of standard deviations each individual is from the mean height. Each point is a pair of twins. We use the <code>mvrnorm</code> function from the <strong>MASS</strong> package to simulate bivariate normal data.</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-2_d00da729cbc7024cfbd91bf482f4fa98">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1983</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.stats.ox.ac.uk/pub/MASS4/">MASS</a></span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">9</span> <span class="op">*</span> <span class="fl">0.9</span>, <span class="fl">9</span> <span class="op">*</span> <span class="fl">0.9</span>, <span class="fl">9</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">/</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">69</span>, <span class="fl">69</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span>,</span>
+<span>           <span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">/</span> <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">60</span>, <span class="fl">60</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>A scatterplot quickly reveals that the correlation is high and that there are two groups of twins, the adults (upper right points) and the children (lower left points):</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-illustration_28716ad3636133df72880f2303070360">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-illustration-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Our features are <span class="math inline">\(N\)</span> two-dimensional points, the two heights, and, for illustrative purposes, we will act as if visualizing two dimensions is too challenging: we want to explore the data through a histogram of a one-dimensional variable. We therefore want to reduce the dimensions from two to one, but still be able to understand important characteristics of the data, for example that the observations cluster into two groups: adults and children. To show the ideas presented here are generally useful, we will standardize the data so that observations are in standard units rather than inches:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-3_4251cc8223b513bc79bf103a1c4737cb">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the figure above we show the distance between observation 1 and 2 (blue), and observation 1 and 51 (red). Note that the blue line is shorter, which implies 1 and 2 are closer.</p>
+<p>We can compute these distances using <code>dist</code>:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-4_aa12b8a236485f91ebccee56c004591e">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 0.595</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="fl">51</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 1.39</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This distance is based on two dimensions and we need a distance approximation based on just one.</p>
+<p>Let’s start with the naive approach of simply removing one of the two dimensions. Let’s compare the actual distances to the distance computed with just the first dimension:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-5_9e8fcf846a406b85ed6d05cf1afbcb1b">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To make the distances comparable, we divide the sum of squares by the number of dimensions. So for the two dimensional case we have</p>
+<p><span class="math display">\[\sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 },\]</span></p>
+<p>so we divide the distance by <span class="math inline">\(\sqrt{2}\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-6_6ee44fcbc296e5c48008c84bfb91fa92">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-approx-1_0132557bf50bb3639af789c7f013037d">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-1-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Based on the plot, this one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that makes this one-number approximation even better?</p>
+<p>If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can <em>rotate</em> the points in a way that preserve the distance between points, while increasing the variability in one dimension and reducing it on the other. By doing this, we keep more of the <em>information</em> about distances in the first dimension. In the next section we describe a mathematical approach the permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.</p>
+</section><section id="rotations" class="level2" data-number="21.2"><h2 data-number="21.2" class="anchored" data-anchor-id="rotations">
+<span class="header-section-number">21.2</span> Rotations</h2>
+<p>Any two-dimensional point <span class="math inline">\((X_1, X_2)\)</span> can be written as the base and height of a triangle with a hypotenuse going from <span class="math inline">\((0,0)\)</span> to <span class="math inline">\((X_1, X_2)\)</span>:</p>
+<p><span class="math display">\[
+x_1 = r \cos\phi, \,\, x_2 = r \sin\phi
+\]</span></p>
+<p>with <span class="math inline">\(r\)</span> the length of the hypothenus and <span class="math inline">\(\phi\)</span> the angel between the hypotenuse and the x-axis.</p>
+<p>We can <em>rotate</em> the point <span class="math inline">\((x_1, x_2)\)</span> around a circle with center <span class="math inline">\((0,0)\)</span> and radius <span class="math inline">\(r\)</span> by an angle <span class="math inline">\(\theta\)</span> by changing the angle in the previous equation to <span class="math inline">\(\phi + \theta\)</span>:</p>
+<p><span class="math display">\[
+z_1 = r \cos(\phi+ \theta), \,\,
+z_2 = r \sin(\phi + \theta)
+\]</span></p>
+<div class="cell" data-layout-align="center" data-fig.asp="0.7" data-hash="dimension-reduction_cache/html/unnamed-chunk-7_06e07eaa06df53ef9e88e3617db810ab">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can use trigonometric identities to rewrite <span class="math inline">\((z_1, z_2)\)</span> in the following way:</p>
+<p><span class="math display">\[
+\begin{align}
+z_1 = r \cos(\phi + \theta) = r \cos \phi \cos\theta -  r \sin\phi \sin\theta =  x_1 \cos(\theta) -  x_2 \sin(\theta)\\
+z_2 = r \sin(\phi + \theta) =  r \cos\phi \sin\theta + r \sin\phi \cos\theta =  x_1 \sin(\theta) + x_2 \cos(\theta)
+\end{align}
+\]</span></p>
+<p>Now we can rotate each point in the dataset by simply applying the formula above to each pair <span class="math inline">\((x_{i,1}, x_{i,2})\)</span>. Here is what the twin standardized heights look like after rotating each point by <span class="math inline">\(-45\)</span> degrees:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-8_7f0b84d1b467b2515bfea997be45052f">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that while the variability of <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> are similar, the variability of <span class="math inline">\(z_1\)</span> is much larger than the variability of <span class="math inline">\(z_2\)</span>. Also note that the distances between points appear to be preserved. In the next sections, we show, mathematically, that this in fact the case.</p>
+</section><section id="linear-transformations" class="level2" data-number="21.3"><h2 data-number="21.3" class="anchored" data-anchor-id="linear-transformations">
+<span class="header-section-number">21.3</span> Linear transformations</h2>
+<p>Note that each row of <span class="math inline">\(\mathbf{X}\)</span> was transformed using a linear transformation. For any row <span class="math inline">\(i\)</span>, the first entry was:</p>
+<p><span class="math display">\[z_{i,1} = a_{11} x_{i,1} + a_{21} x_{i,2}\]</span></p>
+<p>with <span class="math inline">\(a_{11} = \cos\theta\)</span> and <span class="math inline">\(a_{21} = -\sin\theta\)</span>.</p>
+<p>The second entry was also a linear transformation:</p>
+<p><span class="math display">\[z_{i,2} = a_{12} x_{i,1} + a_{22} x_{i,2}\]</span></p>
+<p>with <span class="math inline">\(a_{12} = \sin\theta\)</span> and <span class="math inline">\(a_{22} = \cos\theta\)</span>.</p>
+<p>We can also use linear transformations to get <span class="math inline">\(X\)</span> back from <span class="math inline">\(Z\)</span>. Solving the system of two linear equations gives us:</p>
+<p><span class="math display">\[x_{i,1} = b_{1,1} z_{i,1} + b_{2,1} z_{i,2}\]</span></p>
+<p>with <span class="math inline">\(b_{1,2} = \cos\theta\)</span> and <span class="math inline">\(b_{2,1} = \sin\theta\)</span> and</p>
+<p><span class="math display">\[x_{i,2} = b_{2,1} z_{i,1} + b_{2,2} z_{i,2}\]</span></p>
+<p>with <span class="math inline">\(b_{2,1} = -\sin\theta\)</span> and <span class="math inline">\(b_{1,2} = \cos\theta\)</span>.</p>
+<p>Using linear algebra, we can write the operation we just performed like this:</p>
+<p><span class="math display">\[
+\begin{pmatrix}
+z_1&amp;z_2
+\end{pmatrix}
+=
+\begin{pmatrix}
+x_1&amp;x_2
+\end{pmatrix}
+\begin{pmatrix}
+a_{11}&amp;a_{12}\\
+a_{21}&amp;a_{22}
+\end{pmatrix}
+\]</span></p>
+<p>An advantage of using linear algebra is that we can write the transformation for the entire dataset by representing it as a <span class="math inline">\(N \times 2\)</span> matrix <span class="math inline">\(X\)</span>, with each row holding the two values for a pair of twins, and the rotation as a <em>linear transformation</em> of <span class="math inline">\(X\)</span>:</p>
+<p><span class="math display">\[
+\mathbf{Z} = \mathbf{X} \mathbf{A}
+\mbox{ with }
+\mathbf{A} = \,
+\begin{pmatrix}
+a_{11}&amp;a_{12}\\
+a_{21}&amp;a_{22}
+\end{pmatrix}.
+\]</span></p>
+<p>This transformation results in an <span class="math inline">\(N \times 2\)</span> matrix, denoted here with <span class="math inline">\(Z\)</span>, with the rotated points in each row. Another advantage of linear algebra is that we can rotate back by simply multiplying <span class="math inline">\(Z\)</span> by the inverse matrix: <span class="math inline">\(\mathbf{Z} \mathbf{A}^{-1} = \mathbf{X} \mathbf{A} \mathbf{A}^{-1} = \mathbf{X}\)</span>. This implies that all the information in <span class="math inline">\(\mathbf{X}\)</span> is included in the rotation <span class="math inline">\(\mathbf{Z}\)</span>, and it can be retrieved via a linear transformation.</p>
+<p>These derivations imply that we can use the following code to rotate the data by any angle <span class="math inline">\(\theta\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-9_c5620ba5a641db8a53c3a1f7578cfe14">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rotate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">theta</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="va">theta</span> <span class="op">&lt;-</span> <span class="va">theta</span><span class="op">/</span><span class="fl">360</span> <span class="op">*</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="co"># convert to radians</span></span>
+<span>  <span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span>  <span class="va">x</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="va">A</span></span>
+<span><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can use this to confirm that for any rotation the distances are preserved. Here are two examples:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-10_07071bf622752c40342df049d200a395">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="op">-</span><span class="fl">45</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 8.88e-16</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="fl">30</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 8.88e-16</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The next section explains why this happens.</p>
+</section><section id="orthogonal-transformations" class="level2" data-number="21.4"><h2 data-number="21.4" class="anchored" data-anchor-id="orthogonal-transformations">
+<span class="header-section-number">21.4</span> Orthogonal transformations</h2>
+<p>Recall that the distance between two points, say rows <span class="math inline">\(h\)</span> and <span class="math inline">\(i\)</span> of the transformation <span class="math inline">\(\mathbf{Z}\)</span>, can be written like this:</p>
+<p><span class="math display">\[
+||\mathbf{z}^\top_h - \mathbf{z}^\top_i|| = (\mathbf{z}_h - \mathbf{z}_i)(\mathbf{z}^\top_h - \mathbf{z}^\top_i)
+\]</span> with <span class="math inline">\(\mathbf{z}_h\)</span> and <span class="math inline">\(\mathbf{z}_i\)</span> the <span class="math inline">\(h\)</span>-th and <span class="math inline">\(i\)</span>-th <span class="math inline">\(1 \times p\)</span> rows, with <span class="math inline">\(p=2\)</span> in our specific example. Using linear algebra, we can rewrite this quantity as</p>
+<p><span class="math display">\[
+||\mathbf{z}^\top_h - \mathbf{z}^\top_i||^2 =  ||\mathbf{A}^\top\mathbf{x}^\top_h - \mathbf{A}^\top\mathbf{x}^\top_i||^2 = (\mathbf{x}_h - \mathbf{x}_i) \mathbf{A} \mathbf{A}^\top (\mathbf{x}^\top_h - \mathbf{x}^\top_i)
+\]</span></p>
+<p>Note that if <span class="math inline">\(\mathbf{A} \mathbf{A}^\top = \mathbf{I}\)</span> then the distance between the <span class="math inline">\(h\)</span>th and <span class="math inline">\(i\)</span>th rows is the same for the original and transformed data. We to transformation with the property <span class="math inline">\(\mathbf{A} \mathbf{A}^\top = \mathbf{I}\)</span> as <em>orthogonal transformations</em> and they are guaranteed to preserves the distance between any two points.</p>
+<p>Notice that <span class="math inline">\(\mathbf{A}\)</span> being orthogonal also guarantees that the total sum of squares of any row in <span class="math inline">\(\mathbf\)</span> is preserved after the transformation:</p>
+<p><span class="math display">\[
+||\mathbf{z}^\top_i||^2 =  ||\mathbf{x}^\top_i\mathbf{A}||^2 = \mathbf{x}_i \mathbf{A}\mathbf{A}^\top  \mathbf{x}^\top_i =  \mathbf{x}_i   \mathbf{x}^\top_i = ||\mathbf{x}^\top_i||^2
+\]</span></p>
+<p>Our transformation has this property:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-11_a48510e8b3fae06413ba8756192df04d">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">30</span> <span class="co"># works for any theta</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">A</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           [,1]      [,2]</span></span>
+<span><span class="co">#&gt; [1,]  1.00e+00 -1.28e-17</span></span>
+<span><span class="co">#&gt; [2,] -1.28e-17  1.00e+00</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can confirm this by computing the total variation for <code>x</code> and <code>z</code>:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-12_e1d15cf9eba298871b826f95148e1859">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="op">-</span><span class="fl">45</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 198</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">z</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 198</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This can be interpreted as consequence of the fact that orthogonal transformation guarantee that all the information is preserved.</p>
+</section><section id="sec-pca" class="level2" data-number="21.5"><h2 data-number="21.5" class="anchored" data-anchor-id="sec-pca">
+<span class="header-section-number">21.5</span> Principal Component Analysis (PCA)</h2>
+<p>Now how does this all relate to our goal of finding a one-dimensional summary that approximates distance between points?</p>
+<p>Note that in our original data the variability of the two dimensions is the same:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-13_66b624aa5286dd3cb7f2b36063922b64">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 99 99</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>But after a rotations this is no longer true:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-14_82a5cfc44b4c48e5274b7179adb8e0f9">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">z</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 194.99   3.01</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>With <code>z</code>, the proportion of the variability included in the first dimension is much higher. We can search for the rotation that maximizes the proportion of the variability included in the first dimension:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/max-rotation_0867809426343a7d616524985f94d9a0">
+<pre><code>#&gt; ── Attaching core tidyverse packages ──────────────── tidyverse 2.0.0 ──
+#&gt; ✔ dplyr     1.1.1     ✔ readr     2.1.4
+#&gt; ✔ forcats   1.0.0     ✔ stringr   1.5.0
+#&gt; ✔ lubridate 1.9.2     ✔ tibble    3.2.1
+#&gt; ✔ purrr     1.0.1     ✔ tidyr     1.3.0
+#&gt; ── Conflicts ────────────────────────────────── tidyverse_conflicts() ──
+#&gt; ✖ dplyr::filter() masks stats::filter()
+#&gt; ✖ dplyr::lag()    masks stats::lag()
+#&gt; ✖ dplyr::select() masks MASS::select()
+#&gt; ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/max-rotation-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-15_db1e72793ac5f06a2d90a5ebca13cad0">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span></span>
+<span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">angles</span>, <span class="kw">function</span><span class="op">(</span><span class="va">angle</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="va">angle</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">variance_explained</span> <span class="op">&lt;-</span> <span class="va">v</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span> <span class="op">/</span> <span class="op">(</span><span class="va">v</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span> <span class="op">+</span> <span class="va">v</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">angles</span>, <span class="va">variance_explained</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We see that the variability included in the first dimension is maximized at about -45 degrees. Becuase almost all the variation is explained by this first dimension, with this particular rotation the distance between points in <span class="math inline">\(X\)</span> can be very well approximated by just the first dimension of <span class="math inline">\(Z\)</span>, much better than with the first dimension of <span class="math inline">\(X\)</span>:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-approx-2_b41989c4ad9378d99d334fe209d7d73e">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-2-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We also notice that the two groups, adults and children, can be clearly observed with the one number summary:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-16_403830f36528eaf5b2be76259f36c52e">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">z</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, nclass <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Below, we learn that the rotation that maximizes the standard deviation of the first dimention <code>z[,1]</code> gives us the first principal component of the matrix <code>x</code>.</p>
+<div class="cell" data-layout-align="center" data-fig.asp="1" data-hash="dimension-reduction_cache/html/unnamed-chunk-17_36ed15dd2c936a031e62362e655314c2">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="img/pca.gif" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In general, dimension reduction can be described as applying a rotation <span class="math inline">\(A\)</span> to a matrix with many columns <span class="math inline">\(X\)</span> that <em>moves</em> the information contained in <span class="math inline">\(\mathbf{X}\)</span> to the first few columns of <span class="math inline">\(\mathbf{Z}=\mathbf{X}\mathbf{A}\)</span>. Then keeping just these few informative columns, reduces the dimension of the vectors contained in the rows. In our simplistic example we reduced the dimensions from 2 to 1. But the ideas extend to higher dimensions.</p>
+<p>In general, the first <em>principal component</em> (PC) of a matrix <span class="math inline">\(\mathbf{X}\)</span> is the linear orthogonal transformation that maximizes the variability of the first dimension. The function <code>prcomp</code> finds this transformation:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-18_44dec3133a13523d3ae7b7b06a66be2f">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span></span>
+<span><span class="co">#&gt;         PC1    PC2</span></span>
+<span><span class="co">#&gt; [1,] -0.707  0.707</span></span>
+<span><span class="co">#&gt; [2,] -0.707 -0.707</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Note that the first PC is almost the same as that provided by the <span class="math inline">\(\cos(-45^{\circ}), \sin(-45^{\circ})\)</span> we used earlier (except perhaps for a sign change that is arbitrary).</p>
+<p>The function <code>prcomp</code> returns the rotation needed to transform <span class="math inline">\(\mathbf{X}\)</span> so that the variability of the columns is decreasing from most variable to least (accessed with <code>$rotation</code>) as well as the resulting new matrix (accessed with <code>$x</code>). By default the columns of <span class="math inline">\(\mathbf{X}\)</span> are first centered (to change this change the <code>center</code> argument to <code>FALSE</code>).</p>
+<p>So, using the matrix multiplication shown above, we have that the following are the same (demonstrated by a difference between elements of essentially zero):</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-19_34320259b29919b72b1a8ce108f5cc58">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">pca</span><span class="op">$</span><span class="va">x</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The rotation is orthogonal which means that the inverse is its transpose. So we also have that these two are identical:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-20_51238c538344fbd2f53901f734c4b28f">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="va">pca</span><span class="op">$</span><span class="va">rotation</span></span>
+<span><span class="va">pca</span><span class="op">$</span><span class="va">x</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can visualize these to see how the first component summarizes the data. In the plot below red represents high values and blue negative values (later, in Section <a href="matrix-factorization.html#sec-factor-analysis"><span>Section&nbsp;23.1</span></a>), we learn why we call these weights and patterns:</p>
+<div class="cell" data-layout-align="center" height="5" data-hash="dimension-reduction_cache/html/illustrate-pca-twin-heights_57414704cbb986755c9d4882855544c0">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>It turns out that we can find this linear transformation not just for two dimensions but for matrices of any dimension <span class="math inline">\(p\)</span>. For a multidimensional matrix with <span class="math inline">\(p\)</span> columns, we can find a transformation that preserves distance between rows, but with the variance of the columns in decreasing order. The second column is the second principal component, the third column is the third principal component, and so on. As in our example, if after a certain number of columns, say <span class="math inline">\(k\)</span>, the variances of the columns of <span class="math inline">\(\mathbf{Z}_j\)</span>, <span class="math inline">\(j&gt;k\)</span> are very small, it means these dimensions have little to contribute to the distance and we can approximate distance between any two points with just <span class="math inline">\(k\)</span> dimensions. If <span class="math inline">\(k\)</span> is much smaller than <span class="math inline">\(p\)</span>, then we can achieve a very efficient summary of our data.</p>
+</section><section id="iris-example" class="level2" data-number="21.6"><h2 data-number="21.6" class="anchored" data-anchor-id="iris-example">
+<span class="header-section-number">21.6</span> Iris example</h2>
+<p>The iris data is a widely used example in data analysis courses. It includes four botanical measurements related to three flower species:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-21_f8907aa0832c15b6b9cd18509bb36d11">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "Sepal.Length" "Sepal.Width"  "Petal.Length" "Petal.Width" </span></span>
+<span><span class="co">#&gt; [5] "Species"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If you print <code>iris$Species</code> you will see that the data is ordered by the species.</p>
+<p>Let’s compute the distance between each observation. You can clearly see the three species with one species very different from the other two:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-22_32cc60126878b0f641ea6159d191b38f">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">iris</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu">RColorBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">"RdBu"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/iris-distances_f2fdb1b517b4c2a66a4767fc4dded85f">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-distances-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Our predictors here have four dimensions, but three are very correlated:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-23_3039e1c7458ee7634f93a3bf12e8292d">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt;              Sepal.Length Sepal.Width Petal.Length Petal.Width</span></span>
+<span><span class="co">#&gt; Sepal.Length        1.000      -0.118        0.872       0.818</span></span>
+<span><span class="co">#&gt; Sepal.Width        -0.118       1.000       -0.428      -0.366</span></span>
+<span><span class="co">#&gt; Petal.Length        0.872      -0.428        1.000       0.963</span></span>
+<span><span class="co">#&gt; Petal.Width         0.818      -0.366        0.963       1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we apply PCA, we should be able to approximate this distance with just two dimensions, compressing the highly correlated dimensions. Using the <code>summary</code> function we can see the variability explained by each PC:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-24_d041cc2ad17ab2fa68ffeb4d30eb2fa3">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Importance of components:</span></span>
+<span><span class="co">#&gt;                          PC1    PC2    PC3     PC4</span></span>
+<span><span class="co">#&gt; Standard deviation     2.056 0.4926 0.2797 0.15439</span></span>
+<span><span class="co">#&gt; Proportion of Variance 0.925 0.0531 0.0171 0.00521</span></span>
+<span><span class="co">#&gt; Cumulative Proportion  0.925 0.9777 0.9948 1.00000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The first two dimensions account for 97% of the variability. Thus we should be able to approximate the distance very well with two dimensions. We can visualize the results of PCA:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/illustrate-pca-twin-heights-iris_73ce04865dd49e2fa8359f13ee5df30c">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-iris-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>And see that the first pattern is sepal length, petal length, and petal width (red) in one direction and sepal width (blue) in the other. The second pattern is the sepal length and petal width in one direction (blue) and petal length and petal width in the other (red). You can see from the weights that the first PC1 drives most of the variability and it clearly separates the first third of samples (setosa) from the second two thirds (versicolor and virginica). If you look at the second column of the weights, you notice that it somewhat separates versicolor (red) from virginica (blue).</p>
+<p>We can see this better by plotting the first two PCs with color representing the species:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/iris-pca_6d39137cee2ef15d33276542f78f5074">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, Species <span class="op">=</span> <span class="va">iris</span><span class="op">$</span><span class="va">Species</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">PC1</span>, <span class="va">PC2</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>cex <span class="op">=</span> <span class="fl">3</span>, pch <span class="op">=</span> <span class="fl">21</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">coord_fixed</span><span class="op">(</span>ratio <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-pca-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We see that the first two dimensions preserve the distance:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/dist-approx-4_0bc9e511b44abf0e37dc57a8b697ddef">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d_approx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">d_approx</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning in int_abline(a = a, b = b, h = h, v = v, untf = untf, ...):</span></span>
+<span><span class="co">#&gt; "color" is not a graphical parameter</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/dist-approx-4-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This example is more realistic than the first artificial example we used, since we showed how we can visualize the data using two dimensions when the data was four-dimensional.</p>
+</section><section id="mnist-example" class="level2" data-number="21.7"><h2 data-number="21.7" class="anchored" data-anchor-id="mnist-example">
+<span class="header-section-number">21.7</span> MNIST example</h2>
+<p>The written digits example has 784 features. Is there any room for data reduction? Can we create simple machine learning algorithms using fewer features?</p>
+<p>Let’s load the data:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-25_268e29de93b9bb6bbe1e7055ffd5dea6">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html">exists</a></span><span class="op">(</span><span class="st">"mnist"</span><span class="op">)</span><span class="op">)</span> <span class="va">mnist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/read_mnist.html">read_mnist</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because the pixels are so small, we expect pixels close to each other on the grid to be correlated, meaning that dimension reduction should be possible.</p>
+<p>Let’s try PCA and explore the variance of the PCs. This will take a few seconds as it is a rather large matrix.</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-26_a9975d0b426171dcfa8c7b0482a2d1a4">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">col_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
+<span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-variance-explained_fa980834f10ea827795f187cf618d83e">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pc</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
+<span><span class="fu">qplot</span><span class="op">(</span><span class="va">pc</span>, <span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Warning: `qplot()` was deprecated in ggplot2 3.4.0.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-variance-explained-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can see that the first few PCs already explain a large percent of the variability:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-27_d020e682187e7ac15d6cfdf4aeb10e58">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span><span class="op">$</span><span class="va">importance</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                            PC1     PC2      PC3      PC4      PC5</span></span>
+<span><span class="co">#&gt; Standard deviation     576.823 493.238 459.8993 429.8562 408.5668</span></span>
+<span><span class="co">#&gt; Proportion of Variance   0.097   0.071   0.0617   0.0539   0.0487</span></span>
+<span><span class="co">#&gt; Cumulative Proportion    0.097   0.168   0.2297   0.2836   0.3323</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>And just by looking at the first two PCs we see information about the class. Here is a random sample of 2,000 digits:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-1-2-scatter_313aa64599c49a991a49c0f80ff83a1b">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>PC1 <span class="op">=</span> <span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, PC2 <span class="op">=</span> <span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>,</span>
+<span>           label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">label</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">sample_n</span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">PC1</span>, <span class="va">PC2</span>, fill <span class="op">=</span> <span class="va">label</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">geom_point</span><span class="op">(</span>cex <span class="op">=</span> <span class="fl">3</span>, pch <span class="op">=</span> <span class="fl">21</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-2-scatter-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can also <em>see</em> the linear combinations on the grid to get an idea of what is getting weighted:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-1-4_95973f0fcf8e79612b6247bb08739c06">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-4-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The lower variance PCs appear related to unimportant variability in the corners:</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-last,_10c89bcabdb28ba4cf6af27683c5fac6">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-last,-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="exercises" class="level2" data-number="21.8"><h2 data-number="21.8" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">21.8</span> Exercises</h2>
+<p>1. We want to explore the <code>tissue_gene_expression</code> predictors by plotting them.</p>
+<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-28_e14cb12d0567a13b53e32837202b0979">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">tissue_gene_expression</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We want to get an idea of which observations are close to each other, but the predictors are 500-dimensional so plotting is difficult. Plot the first two principal components with color representing tissue type.</p>
+<p>2. The predictors for each observation are measured on the same measurement device (a gene expression microarray) after an experimental procedure. A different device and procedure is used for each observation. This may introduce biases that affect all predictors for each observation in the same way. To explore the effect of this potential bias, for each observation, compute the average across all predictors and then plot this against the first PC with color representing tissue. Report the correlation.</p>
+<p>3. We see an association with the first PC and the observation averages. Redo the PCA but only after removing the center.</p>
+<p>4. For the first 10 PCs, make a boxplot showing the values for each tissue.</p>
+<p>5. Plot the percent variance explained by PC number. Hint: use the <code>summary</code> function.</p>
+
+
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../highdim/linear-algebra.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../highdim/regularization.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">Advanced Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

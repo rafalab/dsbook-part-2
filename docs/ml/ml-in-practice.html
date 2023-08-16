@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>Advanced Data Science - 30&nbsp; Machine learning in practice</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../ml/clustering.html" rel="next">
+<link href="../ml/algorithms.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../ml/intro-ml.html">Machine Learning</a></li><li class="breadcrumb-item"><a href="../ml/ml-in-practice.html"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Advanced Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/robust-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Robust summaries</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Discrete probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical inference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/parameters-estimates.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Parameters and Estimates</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-driven models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchichal Models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariate-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Multivariate Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/measurement-error-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Measurement error models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Treatment effect models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-tests.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Association tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Association is not causation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High dimensional data</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Dimension reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrix-factorization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Matrix factorization</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Evaluation metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/cross-validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Cross validation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li>
+<a href="#sec-caret" id="toc-sec-caret" class="nav-link active" data-scroll-target="#sec-caret"><span class="header-section-number">30.1</span> The caret package</a>
+  <ul class="collapse">
+<li><a href="#the-train-functon" id="toc-the-train-functon" class="nav-link" data-scroll-target="#the-train-functon"><span class="header-section-number">30.1.1</span> The <code>train</code> functon</a></li>
+  <li><a href="#sec-caret-cv" id="toc-sec-caret-cv" class="nav-link" data-scroll-target="#sec-caret-cv"><span class="header-section-number">30.1.2</span> Cross validation</a></li>
+  </ul>
+</li>
+  <li><a href="#preprocessing" id="toc-preprocessing" class="nav-link" data-scroll-target="#preprocessing"><span class="header-section-number">30.2</span> Preprocessing</a></li>
+  <li><a href="#k-nearest-neighbors" id="toc-k-nearest-neighbors" class="nav-link" data-scroll-target="#k-nearest-neighbors"><span class="header-section-number">30.3</span> k-nearest neighbors</a></li>
+  <li><a href="#random-forest" id="toc-random-forest" class="nav-link" data-scroll-target="#random-forest"><span class="header-section-number">30.4</span> Random Forest</a></li>
+  <li><a href="#testing-and-improving-computation-time" id="toc-testing-and-improving-computation-time" class="nav-link" data-scroll-target="#testing-and-improving-computation-time"><span class="header-section-number">30.5</span> Testing and improving computation time</a></li>
+  <li><a href="#variable-importance" id="toc-variable-importance" class="nav-link" data-scroll-target="#variable-importance"><span class="header-section-number">30.6</span> Variable importance</a></li>
+  <li><a href="#visual-assessments" id="toc-visual-assessments" class="nav-link" data-scroll-target="#visual-assessments"><span class="header-section-number">30.7</span> Visual assessments</a></li>
+  <li><a href="#ensembles" id="toc-ensembles" class="nav-link" data-scroll-target="#ensembles"><span class="header-section-number">30.8</span> Ensembles</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">30.9</span> Exercises</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/edit/main/ml/ml-in-practice.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Machine learning in practice</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p>Now that we have learned several methods and explored them with simple, yet illustrative, examples, we will try them out on a real example: the MNIST digits.</p>
+<p>We can load this data using the following <strong>dslabs</strong> package:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-1_9aa6b933360029d8de9996c45d1a5804">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="va">mnist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/read_mnist.html">read_mnist</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The dataset includes two components, a training set and test set:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-2_95dcc5061302885f7fb685cc7af1573f">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "train" "test"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Each of these components includes a matrix with features in the columns:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-3_471b9b5b0e0bfed99f8ef2bb9ef5deb5">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 60000   784</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and vector with the classes as integers:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-4_ab7d96f531b33dbcfd5e31ba48b4cfd5">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "integer"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;    0    1    2    3    4    5    6    7    8    9 </span></span>
+<span><span class="co">#&gt; 5923 6742 5958 6131 5842 5421 5918 6265 5851 5949</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Because we want this example to run on a small laptop and in less than one hour, we will consider a subset of the dataset. We will sample 10,000 random rows from the training set and 1,000 random rows from the test set:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-5_d2cba156636fa4b25dd1cd7880341713">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1990</span><span class="op">)</span></span>
+<span><span class="va">index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span>, <span class="fl">10000</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">[</span><span class="va">index</span>,<span class="op">]</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span><span class="op">[</span><span class="va">index</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">images</span><span class="op">)</span>, <span class="fl">1000</span><span class="op">)</span></span>
+<span><span class="va">x_test</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">images</span><span class="op">[</span><span class="va">index</span>,<span class="op">]</span></span>
+<span><span class="va">y_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">labels</span><span class="op">[</span><span class="va">index</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="sec-caret" class="level2" data-number="30.1"><h2 data-number="30.1" class="anchored" data-anchor-id="sec-caret">
+<span class="header-section-number">30.1</span> The caret package</h2>
+<p>We have already learned about several machine learning algorithms. Many of these algorithms are implemented in R. However, they are distributed via different packages, developed by different authors, and often use different syntax. The <strong>caret</strong> package tries to consolidate these differences and provide consistency. It currently includes over 200 different methods which are summarized in the <strong>caret</strong> package manual<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. Keep in mind that <strong>caret</strong> does not include the needed packages and, to implement a package through <strong>caret</strong>, you still need to install the library. The required packages for each method are described in the package manual. The <strong>caret</strong> package also provides a function that performs cross validation for us. Here we provide some examples showing how we use this incredibly helpful package. We will use the 2 or 7 example to illustrate and in later sections we use use the package to run algorithms on the larger MNIST datset.</p>
+<section id="the-train-functon" class="level3" data-number="30.1.1"><h3 data-number="30.1.1" class="anchored" data-anchor-id="the-train-functon">
+<span class="header-section-number">30.1.1</span> The <code>train</code> functon</h3>
+<p>The <strong>caret</strong> <code>train</code> function lets us train different algorithms using similar syntax. So, for example, we can type:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-6_3b557ce83793eaa582ed669d13232b55">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
+<span><span class="co">#&gt; Loading required package: lattice</span></span>
+<span><span class="va">train_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, method <span class="op">=</span> <span class="st">"glm"</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span>
+<span><span class="va">train_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, method <span class="op">=</span> <span class="st">"knn"</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To make predictions, we can use the output of this function directly without needing to look at the specifics of <code>predict.glm</code> and <code>predict.knn</code>. Instead, we can learn how to obtain predictions from <code>predict.train</code>.</p>
+<p>The code looks the same for both methods:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-7_bf60954ea6db6088594edbb91bce6ea4">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">train_glm</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span>
+<span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">train_knn</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This permits us to quickly compare the algorithms. For example, we can compare the accuracy like this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-8_25febfdb7192b7b35bc9c017c93ed252">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>glm <span class="op">=</span> <span class="va">y_hat_glm</span>, knn <span class="op">=</span> <span class="va">y_hat_knn</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">fits</span>, <span class="kw">function</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  glm  knn </span></span>
+<span><span class="co">#&gt; 0.75 0.84</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="sec-caret-cv" class="level3" data-number="30.1.2"><h3 data-number="30.1.2" class="anchored" data-anchor-id="sec-caret-cv">
+<span class="header-section-number">30.1.2</span> Cross validation</h3>
+<p>When an algorithm includes a tuning parameter, <code>train</code> automatically uses cross validation to decide among a few default values. To find out what parameter or parameters are optimized, you can read the manual <a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> or study the output of:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-9_6f9b5d3e50a78f50f24371c63573a41d">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/modelLookup.html">getModelInfo</a></span><span class="op">(</span><span class="st">"knn"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can also use a quick lookup like this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-10_3b58d415f8ca34cca5779a3379bef792">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/modelLookup.html">modelLookup</a></span><span class="op">(</span><span class="st">"knn"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we run it with default values:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-11_d330aa89ac7e53f1cc45fef541fb692c">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">train_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, method <span class="op">=</span> <span class="st">"knn"</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>you can quickly see the results of the cross validation using the <code>ggplot</code> function. The argument <code>highlight</code> highlights the max:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/caret-highlight_d17c6c5125c1ffb3ed5ff21ef6c364a2">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">train_knn</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/caret-highlight-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>By default, the cross validation is performed by taking 25 bootstrap samples comprised of 25% of the observations. For the <code>kNN</code> method, the default is to try <span class="math inline">\(k=5,7,9\)</span>. We change this using the <code>tuneGrid</code> parameter. The grid of values must be supplied by a data frame with the parameter names as specified in the <code>modelLookup</code> output.</p>
+<p>Here, we present an example where we try out 30 values between 9 and 67. To do this with <strong>caret</strong>, we need to define a column named <code>k</code>, so we use this: <code>data.frame(k = seq(9, 67, 2))</code>. Note that when running this code, we are fitting 30 versions of kNN to 25 bootstrapped samples. Since we are fitting <span class="math inline">\(30 \times 25 = 750\)</span> kNN models, running this code will take several seconds. We set the seed because cross validation is a random procedure and we want to make sure the result here is reproducible.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/train-knn-plot_97100927b08b3dc802b2fa12e13e2553">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">2008</span><span class="op">)</span></span>
+<span><span class="va">train_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, method <span class="op">=</span> <span class="st">"knn"</span>, </span>
+<span>                   data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>,</span>
+<span>                   tuneGrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">71</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">train_knn</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/train-knn-plot-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>To access the parameter that maximized the accuracy, you can use this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-12_c9d5c4f9b192984759f8b52b256441dd">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">train_knn</span><span class="op">$</span><span class="va">bestTune</span></span>
+<span><span class="co">#&gt;     k</span></span>
+<span><span class="co">#&gt; 10 27</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and the best performing model like this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-13_a6e7469425d3a4e9aa77736cccb8bfee">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">train_knn</span><span class="op">$</span><span class="va">finalModel</span></span>
+<span><span class="co">#&gt; 27-nearest neighbor model</span></span>
+<span><span class="co">#&gt; Training set outcome distribution:</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   2   7 </span></span>
+<span><span class="co">#&gt; 379 421</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The function <code>predict</code> will use this best performing model. Here is the accuracy of the best model when applied to the test set, which we have not used at all yet because the cross validation was done on the training set:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-14_91f9895bfc2bff1ccdc99d6eee3a982a">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">train_knn</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span>,</span>
+<span>                <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.835</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we want to change how we perform cross validation, we can use the <code>trainControl</code> function. We can make the code above go a bit faster by using, for example, 10-fold cross validation. This means we have 10 samples using 10% of the observations each. We accomplish this using the following code:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/cv-10-fold-accuracy-estimate_d4212fede48073bbaf84f9b33a8cfec9">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"cv"</span>, number <span class="op">=</span> <span class="fl">10</span>, p <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span></span>
+<span><span class="va">train_knn_cv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, method <span class="op">=</span> <span class="st">"knn"</span>, </span>
+<span>                   data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>,</span>
+<span>                   tuneGrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">9</span>, <span class="fl">71</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>                   trControl <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="va">train_knn_cv</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/cv-10-fold-accuracy-estimate-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We notice that the accuracy estimates are more variable, which is expected since we changed the number of samples used to estimate accuracy.</p>
+<p>Note that <code>results</code> component of the <code>train</code> output includes several summary statistics related to the variability of the cross validation estimates:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-15_7ae4dcaea59b4d12d40efff415130b1a">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">train_knn</span><span class="op">$</span><span class="va">results</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "k"          "Accuracy"   "Kappa"      "AccuracySD" "KappaSD"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We have only covered the basics. To <strong>caret</strong> package manual <a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a> includes many more details.</p>
+</section></section><section id="preprocessing" class="level2" data-number="30.2"><h2 data-number="30.2" class="anchored" data-anchor-id="preprocessing">
+<span class="header-section-number">30.2</span> Preprocessing</h2>
+<p>In machine learning, we often transform predictors before running the machine algorithm. We also remove predictors that are clearly not useful. We call these steps <em>preprocessing</em>.</p>
+<p>Examples of preprocessing include standardizing the predictors, taking the log transform of some predictors, removing predictors that are highly correlated with others, and removing predictors with very few non-unique values or close to zero variation. We show an example below.</p>
+<p>We can run the <code>nearZero</code> function from the <strong>caret</strong> package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with 0 variability:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/matrixStats">matrixStats</a></span><span class="op">)</span></span>
+<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">sds</span>, breaks <span class="op">=</span> <span class="fl">256</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/pixel-sds-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This is expected because there are parts of the image that rarely contain writing (dark pixels).</p>
+<p>The <strong>caret</strong> packages includes a function that recommends features to be removed due to <em>near zero variance</em>:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-16_fbefe38de87776620ad72c30516221f4">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">nzv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/nearZeroVar.html">nearZeroVar</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see the columns recommended for removal:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-17_4485b77166f811536464e580066146e1">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">784</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">nzv</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/near-zero-image_8b5146573c82c3b0b8098b5899086a71">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">rafalib</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rafalib/man/mypar.html">mypar</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">784</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">nzv</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/near-zero-image-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>So we end up keeping this number of columns:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-18_974961747f8ce0636e4d1d3617ee0452">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">col_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sets.html">setdiff</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">nzv</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">col_index</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 252</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we are ready to fit some models. Before we start, we need to add column names to the feature matrices as these are required by <strong>caret</strong>:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-19_8134330fba1c0fe8a85de99eb48f756d">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">x_test</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="k-nearest-neighbors" class="level2" data-number="30.3"><h2 data-number="30.3" class="anchored" data-anchor-id="k-nearest-neighbors">
+<span class="header-section-number">30.3</span> k-nearest neighbors</h2>
+<p>Before starting this section, <strong>be warned</strong> that the first two calls to the <code>train</code> function in the code below can take several hours to run. This is common challenge when training machine learning algorithms since we have to run the algorithm for each cross validation split and each set of tuning parameter being considered. In the next section, we will provide some suggestion on how to predict the duration of the process and ways to reduce.</p>
+<p>The first step is to optimize for <span class="math inline">\(k\)</span>.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/mnist-knn-fit_6456da2f79a11665e0f69ed74ad8e6de">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">train_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span> ,<span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>, </span>
+<span>                   method <span class="op">=</span> <span class="st">"knn"</span>, </span>
+<span>                   tuneGrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">13</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Once we optimize our algorithm, we can fit it to the entire dataset:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-20_8c72378a54626a5cee0866a6face1fce">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>,  k <span class="op">=</span> <span class="va">train_knn</span><span class="op">$</span><span class="va">bestTune</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We achieve a high accuracy:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-22_2560c324bf3dc7fe2f4c8ebf3df8ec49">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_knn</span>, <span class="va">x_test</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_knn</span>, <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">y_test</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.945</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>An alternative to removing low variance columns directly, is to use dimension reduction on the feature matrix before applying the algorithms. It is important that we not use the test set when finding the PCs nor any summary of the data, as this could result in overtraining. So we start by applying <code>prcomp</code> to the training data:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-23_b6242f4379073c3e5a1414884b1772b8">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">col_means</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="va">col_means</span><span class="op">)</span>, center <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, and run knn on just a small number of dimensions. We try 36 dimensions since this explains about 80% of the data.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-24_a520a38c36e1a5864de4e6a984d48f05">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fl">36</span></span>
+<span><span class="va">x_train</span> <span class="op">&lt;-</span> <span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="va">k</span><span class="op">]</span></span>
+<span><span class="va">train_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">x_train</span>, <span class="va">y</span>, </span>
+<span>                   method <span class="op">=</span> <span class="st">"knn"</span>, </span>
+<span>                   tuneGrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">13</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">x_train</span>, <span class="va">y</span>, k <span class="op">=</span> <span class="va">train_knn</span><span class="op">$</span><span class="va">bestTune</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we apply the transformation we learned with the training data to the test data, reduce the dimension, and then run predict. Note that we used the rotation and column means estimated from the training data.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-26_cef45cc649be872a0b481095513dd316">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x_test</span>, <span class="fl">2</span>, <span class="va">col_means</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="va">k</span><span class="op">]</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat</span>, <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">y_test</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.962</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>With obtain an improvement in accuracy, while using only 36 dimensions.</p>
+</section><section id="random-forest" class="level2" data-number="30.4"><h2 data-number="30.4" class="anchored" data-anchor-id="random-forest">
+<span class="header-section-number">30.4</span> Random Forest</h2>
+<p>With the random forest algorithm several parameters can be optimized, but the main one is <code>mtry</code>, the number of predictors that are randomly selected for each tree. This is also the only tuning parameter that the <strong>caret</strong> function <code>train</code> permits when using the default implementation from the <strong>randomForest</strong> package.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-27_068ab7f92917f79d9b5d1dcb11c8f574">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span>
+<span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>mtry <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">24</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">train_rf</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>, </span>
+<span>                   method <span class="op">=</span> <span class="st">"rf"</span>, </span>
+<span>                   tuneGrid <span class="op">=</span> <span class="va">grid</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now that we have optimized our algorithm, we are ready to fit our final model:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-28_40d35b6720c598a8f35149feb5c3ecaf">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>, mtry <span class="op">=</span> <span class="va">train_rf</span><span class="op">$</span><span class="va">bestTune</span><span class="op">$</span><span class="va">mtry</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<pre><code>#&gt; randomForest 4.7-1.1
+#&gt; Type rfNews() to see new features/changes/bug fixes.
+#&gt; 
+#&gt; Attaching package: 'randomForest'
+#&gt; The following object is masked from 'package:ggplot2':
+#&gt; 
+#&gt;     margin</code></pre>
+</div>
+<p>As with kNN, we also achieve high accuracy:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-31_b90cc07af67ba07f1091af825600e4d3">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_rf</span>, <span class="va">x_test</span><span class="op">[</span> ,<span class="va">col_index</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_hat_rf</span>, <span class="va">y_test</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.954</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>By optimizing some of the other algorithm parameters we can achieve even higher accuracy.</p>
+</section><section id="testing-and-improving-computation-time" class="level2" data-number="30.5"><h2 data-number="30.5" class="anchored" data-anchor-id="testing-and-improving-computation-time">
+<span class="header-section-number">30.5</span> Testing and improving computation time</h2>
+<p>The default method for estimating accuracy used by the <code>train</code> function is to test prediction on 25 bootstrap samples. This can result in long compute times. For examples, if we are considering several values, say 10, of the tuning parameters, we will fit the algorithm 250 times. We can use the <code>system.time</code> function to estimate the how long it takes to run the algorithm once</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-32_1c8c9428b3b0f739bf2c914c52f95b8f">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span><span class="op">(</span><span class="va">fit_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>,  mtry <span class="op">=</span> <span class="fl">9</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    user  system elapsed </span></span>
+<span><span class="co">#&gt;   60.61    0.59   61.25</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and use this to estimate the total time for the 250 iterations. In this case it will be several hours.</p>
+<p>One way to reduce run time is to use k-fold cross validation with a smaller number of test sets. A popular choice is leaving out 10 test sets with 10% of the data:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/mnist-knn-fit-control_7d84fe9432f08fd5a97cb5a70aafd808">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">control</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"cv"</span>, number <span class="op">=</span> <span class="fl">10</span>, p <span class="op">=</span> <span class="fl">.9</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and re-running the <code>train</code> function with this choice specified via the <code>trControl</code> argument:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-33_7696c321ad4b3d970a21357067a14053">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">train_rf</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/caret/man/train.html">train</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="va">col_index</span><span class="op">]</span>, <span class="va">y</span>, </span>
+<span>                   method <span class="op">=</span> <span class="st">"rf"</span>, </span>
+<span>                   tuneGrid <span class="op">=</span> <span class="va">grid</span>,</span>
+<span>                   trControl <span class="op">=</span> <span class="va">control</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>For random forest we can also speed up the training step by running less trees per fit. After running the algorithm once, we can use the plot function to see how the error rate changes as the number of trees grows. Here we</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-34_7257d709764f6c0cc4ce61ddb7102ee7">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can see that error rate stabilizes after about 200 trees. We can use this finding to speed up the cross validation procedure. Specifically, because the default is 500, by adding the argument <code>ntree = 200</code> to the call to <code>train</code> above, the procedure will finish 2.5 times faster.</p>
+</section><section id="variable-importance" class="level2" data-number="30.6"><h2 data-number="30.6" class="anchored" data-anchor-id="variable-importance">
+<span class="header-section-number">30.6</span> Variable importance</h2>
+<p>The following function computes the importance of each feature:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-35_0abd53d72027e70960866864837d532a">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">imp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/importance.html">importance</a></span><span class="op">(</span><span class="va">fit_rf</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see which features are being used most by plotting an image:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-36_ceba3f5834e626da0508d6a285b784ff">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">mat</span><span class="op">[</span><span class="va">col_index</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">imp</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/importance-image_a8a32cd95999d93aa5a85ba876de0e34">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">rafalib</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/rafalib/man/mypar.html">mypar</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">mat</span><span class="op">[</span><span class="va">col_index</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">imp</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">mat</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/importance-image-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+</section><section id="visual-assessments" class="level2" data-number="30.7"><h2 data-number="30.7" class="anchored" data-anchor-id="visual-assessments">
+<span class="header-section-number">30.7</span> Visual assessments</h2>
+<p>An important part of data analysis is visualizing results to determine why we are failing. How we do this depends on the application. Below we show the images of digits for which we made an incorrect prediction. Here are some errors for the random forest:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/rf-images,_c790a3692bde4d560c36bb262ca2859c">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="ml-in-practice_files/figure-html/rf-images,-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>By examining errors like this we often find specific weaknesses to algorithms or parameter choices and can try to correct them.</p>
+</section><section id="ensembles" class="level2" data-number="30.8"><h2 data-number="30.8" class="anchored" data-anchor-id="ensembles">
+<span class="header-section-number">30.8</span> Ensembles</h2>
+<p>The idea of an ensemble is similar to the idea of combining data from different pollsters to obtain a better estimate of the true support for each candidate.</p>
+<p>In machine learning, one can usually greatly improve the final results by combining the results of different algorithms.</p>
+<p>Here is a simple example where we compute new class probabilities by taking the average of random forest and kNN. We can see that the accuracy improves to 0.96:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-37_f489fbe89e2d12dd9d9ef4a344227ffd">
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_rf</span>, <span class="va">x_test</span><span class="op">[</span>,<span class="va">col_index</span><span class="op">]</span>, type <span class="op">=</span> <span class="st">"prob"</span><span class="op">)</span>  </span>
+<span><span class="va">p_rf</span> <span class="op">&lt;-</span> <span class="va">p_rf</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowSums</a></span><span class="op">(</span><span class="va">p_rf</span><span class="op">)</span></span>
+<span><span class="va">p_knn</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_knn</span>, <span class="va">x_test</span><span class="op">[</span>,<span class="va">col_index</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">p_rf</span> <span class="op">+</span> <span class="va">p_knn</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span></span>
+<span><span class="va">y_pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">p</span>, <span class="fl">1</span>, <span class="va">which.max</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html">confusionMatrix</a></span><span class="op">(</span><span class="va">y_pred</span>, <span class="va">y_test</span><span class="op">)</span><span class="op">$</span><span class="va">overall</span><span class="op">[</span><span class="st">"Accuracy"</span><span class="op">]</span></span>
+<span><span class="co">#&gt; Accuracy </span></span>
+<span><span class="co">#&gt;    0.954</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the exercises we are going to build several machine learning models for the <code>mnist_27</code> dataset and then build an ensemble.</p>
+</section><section id="exercises" class="level2" data-number="30.9"><h2 data-number="30.9" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">30.9</span> Exercises</h2>
+<p>1. Previously in the book, we have compared conditional probability give two predictors <span class="math inline">\(p(x_1,x_2)\)</span> to the fit <span class="math inline">\(\hat{p}(x_1,x_2)\)</span> obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> for which the function is <span class="math inline">\(0.5\)</span>.</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-38_3cd0ebf5f5cd1f45bab56c2e6bdf4e71">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">plot_cond_prob</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span>, <span class="va">p</span><span class="op">)</span><span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>x_1 <span class="op">=</span> <span class="va">x_1</span>, x_2 <span class="op">=</span> <span class="va">x_2</span>, p <span class="op">=</span> <span class="va">p</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html">geom_raster</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="va">p</span><span class="op">)</span>, show.legend <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html">stat_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>z <span class="op">=</span> <span class="va">p</span><span class="op">)</span>, breaks <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"#F8766D"</span>, <span class="st">"white"</span>, <span class="st">"#00BFC4"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see the true conditional probability for the 2 or 7 example like this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-39_1d4c3f8cd964cff295f290c30068b3d2">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">mnist_27</span><span class="op">$</span><span class="va">true_p</span>, <span class="fu">plot_cond_prob</span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span>, <span class="va">p</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Fit a kNN model and make this plot for the estimated conditional probability. Hint: Use the argument <code>newdata=mnist27$train</code> to obtain predictions for a grid points.</p>
+<p>2. Notice that, in the plot made in exercise 1, the boundary is somewhat wiggly. This is because kNN, like the basic bin smoother, does not use a kernel. To improve this we could try loess. By reading through the available models part of the manual<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> we see that we can use the <code>gamLoess</code> method. In the manual<a href="#fn5" class="footnote-ref" id="fnref5" role="doc-noteref"><sup>5</sup></a> we also see that we need to install the <strong>gam</strong> package if we have not done so already. We see that we have two parameters to optimize:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-40_cfd7c1cc0b9992621abbbb6d44695339">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/modelLookup.html">modelLookup</a></span><span class="op">(</span><span class="st">"gamLoess"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      model parameter  label forReg forClass probModel</span></span>
+<span><span class="co">#&gt; 1 gamLoess      span   Span   TRUE     TRUE      TRUE</span></span>
+<span><span class="co">#&gt; 2 gamLoess    degree Degree   TRUE     TRUE      TRUE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Use cross-validation to pick a span between 0.15 and 0.75. Keep <code>degree = 1</code>. What span does cross-validation select?</p>
+<p>3. Show an image plot of the estimate <span class="math inline">\(\hat{p}(x,y)\)</span> resulting from the model fit in the exercise 2. How does the accuracy compare to that of kNN? Comment on the difference between the estimate obtained with kNN.</p>
+<p>4. Use the <code>mnist_27</code> training set to build a model with several of the models available from the <strong>caret</strong> package. For example, you can try these:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-41_7873ebd428b94aac9ef240a6c75dc968">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">models</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"glm"</span>, <span class="st">"lda"</span>,  <span class="st">"naive_bayes"</span>,  <span class="st">"svmLinear"</span>, <span class="st">"gamboost"</span>,  </span>
+<span>            <span class="st">"gamLoess"</span>, <span class="st">"qda"</span>, <span class="st">"knn"</span>, <span class="st">"kknn"</span>, <span class="st">"loclda"</span>, <span class="st">"gam"</span>, <span class="st">"rf"</span>, </span>
+<span>            <span class="st">"ranger"</span>,<span class="st">"wsrf"</span>, <span class="st">"Rborist"</span>, <span class="st">"avNNet"</span>, <span class="st">"mlp"</span>, <span class="st">"monmlp"</span>, <span class="st">"gbm"</span>, </span>
+<span>            <span class="st">"adaboost"</span>, <span class="st">"svmRadial"</span>, <span class="st">"svmRadialCost"</span>, <span class="st">"svmRadialSigma"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We have not explained many of these, but apply them anyway using <code>train</code> with all the default parameters. Keep the results in a list. You might need to install some packages. Keep in mind that you will likely get some warnings.</p>
+<p>5. Now that you have all the trained models in a list, use <code>sapply</code> or <code>map</code> to create a matrix of predictions for the test set. You should end up with a matrix with <code>length(mnist_27$test$y)</code> rows and <code>length(models)</code> columns.</p>
+<p>6. Now compute accuracy for each model on the test set.</p>
+<p>7. Now build an ensemble prediction by majority vote and compute its accuracy.</p>
+<p>8. Earlier we computed the accuracy of each method on the training set and noticed they varied. Which individual methods do better than the ensemble?</p>
+<p>9. It is tempting to remove the methods that do not perform well and re-do the ensemble. The problem with this approach is that we are using the test data to make a decision. However, we could use the accuracy estimates obtained from cross validation with the training data. Obtain these estimates and save them in an object.</p>
+<p>10. Now let’s only consider the methods with an estimated accuracy of 0.8 when constructing the ensemble. What is the accuracy now?</p>
+<p>11. <strong>Advanced</strong>: If two methods give results that are the same, ensembling them will not change the results at all. For each pair of metrics compare the percent of time they call the same thing. Then use the <code>heatmap</code> function to visualize the results. Hint: use the <code>method = "binary"</code> argument in the <code>dist</code> function.</p>
+<p>12. <strong>Advanced</strong>: Note that each method can also produce an estimated conditional probability. Instead of majority vote we can take the average of these estimated conditional probabilities. For most methods, we can the use the <code>type = "prob"</code> in the train function. However, some of the methods require you to use the argument <code>trControl=trainControl(classProbs=TRUE)</code> when calling train. Also these methods do not work if classes have numbers as names. Hint: change the levels like this:</p>
+<div class="cell" data-layout-align="center" data-hash="ml-in-practice_cache/html/unnamed-chunk-42_738209a841e11b376e86712cc0d1e5c3">
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu">recode_factor</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span>, <span class="st">"2"</span><span class="op">=</span><span class="st">"two"</span>, <span class="st">"7"</span><span class="op">=</span><span class="st">"seven"</span><span class="op">)</span></span>
+<span><span class="va">dat</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu">recode_factor</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span>, <span class="st">"2"</span><span class="op">=</span><span class="st">"two"</span>, <span class="st">"7"</span><span class="op">=</span><span class="st">"seven"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>13. In this chapter, we illustrated a couple of machine learning algorithms on a subset of the MNIST dataset. Try fitting a model to the entire dataset.</p>
+
+
+</section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><hr>
+<ol>
+<li id="fn1"><p>https://topepo.github.io/caret/available-models.html<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>http://topepo.github.io/caret/available-models.html<a href="#fnref2" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn3"><p>https://topepo.github.io/caret/available-models.html<a href="#fnref3" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn4"><p>https://topepo.github.io/caret/available-models.html<a href="#fnref4" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+<li id="fn5"><p>https://topepo.github.io/caret/train-models-by-tag.html<a href="#fnref5" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../ml/algorithms.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Examples of algorithms</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../ml/clustering.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Clustering</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">Advanced Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>
