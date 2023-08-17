@@ -1,4 +1,8 @@
-This is the code for the [Advanced Data Science](https://rafalab.github.io/dsbook-part-2/) class notes used in the
+This is the code for the [Advanced Data Science](https://rafalab.github.io/dsbook-part-2/) book. 
+
+The website for **Introduction to Data Science** is [here](http://rafalab.dfci.harvard.edu/dsbook-part-1/).
+
+This material is used in the
  [HarvardX Data Science Series](https://www.edx.org/professional-certificate/harvardx-data-science).
 
 For updates follow
