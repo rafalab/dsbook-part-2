@@ -422,13 +422,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header><p>Another major application of linear models comes from measurement errors models. In these applications, it is common to have a non-random covariate, such as time, and randomness is introduced from measurement error rather than sampling or natural variability.</p>
 <p>To understand these models, imagine you are Galileo in the 16th century trying to describe the velocity of a falling object. An assistant climbs the Tower of Pisa and drops a ball, while several other assistants record the position at different times. Let’s simulate some data using the equations we know today and adding some measurement error. The <strong>dslabs</strong> function <code>rfalling_object</code> generates these simulations:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/">broom</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">falling_object</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/rfalling_object.html">rfalling_object</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The assistants hand the data to Galileo and this is what he sees:</p>
-<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/gravity_d3ec336c21322d29010d07d353d0feae">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
-<span><span class="va">falling_object</span> <span class="op">|&gt;</span> </span>
+<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/gravity_aecf2a87e7f78fb6e0cfbde7eb1bb4db">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">falling_object</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">time</span>, <span class="va">observed_distance</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html">ylab</a></span><span class="op">(</span><span class="st">"Distance in meters"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -441,25 +442,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Galileo does not know the exact equation, but by looking at the plot above, he deduces that the position should follow a parabola, which we can write like this:</p>
-<p><span class="math display">\[ f(x) = \beta_0 + \beta_1 x + \beta_2 x^2\]</span></p>
+<p><span class="math display">\[
+f(x) = \beta_0 + \beta_1 x + \beta_2 x^2
+\]</span></p>
 <p>The data does not fall exactly on a parabola. Galileo knows this is due to measurement error. His helpers make mistakes when measuring the distance. To account for this, he models the data with:</p>
-<p><span class="math display">\[ Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n \]</span></p>
+<p><span class="math display">\[
+Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n
+\]</span></p>
 <p>with <span class="math inline">\(Y_i\)</span> representing distance in meters, <span class="math inline">\(x_i\)</span> representing time in seconds, and <span class="math inline">\(\varepsilon\)</span> accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each <span class="math inline">\(i\)</span>. We also assume that there is no bias, which means the expected value <span class="math inline">\(\mbox{E}[\varepsilon] = 0\)</span>.</p>
 <p>Note that this is a linear model because it is a linear combination of known quantities (<span class="math inline">\(x\)</span> and <span class="math inline">\(x^2\)</span> are known) and unknown parameters (the <span class="math inline">\(\beta\)</span>s are unknown parameters to Galileo). Unlike our previous examples, here <span class="math inline">\(x\)</span> is a fixed quantity; we are not conditioning.</p>
 <p>To pose a new physical theory and start making predictions about other falling objects, Galileo needs actual numbers, rather than unknown parameters. Using LSE seems like a reasonable approach. How do we find the LSE?</p>
 <p>LSE calculations do not require the errors to be approximately normal. The <code>lm</code> function will find the <span class="math inline">\(\beta\)</span> s that will minimize the residual sum of squares:</p>
-<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/unnamed-chunk-3_0f713340da6b605e9423e6f6039a4848">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/">broom</a></span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">falling_object</span> <span class="op">|&gt;</span> </span>
+<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/unnamed-chunk-2_457bf14996376d4ef7741f2a02f58cb2">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="va">falling_object</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>time_sq <span class="op">=</span> <span class="va">time</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">observed_distance</span><span class="op">~</span><span class="va">time</span><span class="op">+</span><span class="va">time_sq</span>, data <span class="op">=</span> <span class="va">_</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 3 × 5</span></span>
 <span><span class="co">#&gt;   term        estimate std.error statistic  p.value</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 (Intercept)   54.8       0.821    66.8   1.05e-15</span></span>
-<span><span class="co">#&gt; 2 time           0.434     1.17      0.370 7.19e- 1</span></span>
-<span><span class="co">#&gt; 3 time_sq       -4.86      0.348   -14.0   2.39e- 8</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1 (Intercept)   55.1       0.563    98.0   1.56e-17</span></span>
+<span><span class="co">#&gt; 2 time           0.724     0.804     0.901 3.87e- 1</span></span>
+<span><span class="co">#&gt; 3 time_sq       -5.06      0.239   -21.2   2.85e-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s check if the estimated parabola fits the data. The <strong>broom</strong> function <code>augment</code> lets us do this easily:</p>
 <div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/falling-object-fit_17fb693544a09610da7eec016e1868e4">
@@ -475,17 +479,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Thanks to my high school physics teacher, I know that the equation for the trajectory of a falling object is:</p>
-<p><span class="math display">\[d = h_0 + v_0 t -  0.5 \times 9.8 t^2\]</span></p>
+<p><span class="math display">\[
+d(t) = h_0 + v_0 t -  0.5 \times 9.8 \, t^2
+\]</span></p>
 <p>with <span class="math inline">\(h_0\)</span> and <span class="math inline">\(v_0\)</span> the starting height and velocity, respectively. The data we simulated above followed this equation and added measurement error to simulate <code>n</code> observations for dropping the ball <span class="math inline">\((v_0=0)\)</span> from the tower of Pisa <span class="math inline">\((h_0=55.86)\)</span>.</p>
 <p>These are consistent with the parameter estimates:</p>
-<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/unnamed-chunk-4_7177e7e4d21c0cc4085571df1e282a52">
+<div class="cell" data-layout-align="center" data-hash="measurement-error-models_cache/html/unnamed-chunk-3_edb72d28909c532ed997c80995f3c935">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 3 × 7</span></span>
 <span><span class="co">#&gt;   term        estimate std.error statistic  p.value conf.low conf.high</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 (Intercept)   54.8       0.821    66.8   1.05e-15    53.0      56.6 </span></span>
-<span><span class="co">#&gt; 2 time           0.434     1.17      0.370 7.19e- 1    -2.15      3.01</span></span>
-<span><span class="co">#&gt; 3 time_sq       -4.86      0.348   -14.0   2.39e- 8    -5.63     -4.10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1 (Intercept)   55.1       0.563    98.0   1.56e-17    53.9      56.4 </span></span>
+<span><span class="co">#&gt; 2 time           0.724     0.804     0.901 3.87e- 1    -1.05      2.49</span></span>
+<span><span class="co">#&gt; 3 time_sq       -5.06      0.239   -21.2   2.85e-10    -5.58     -4.53</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The Tower of Pisa height is within the confidence interval for <span class="math inline">\(\beta_0\)</span>, the initial velocity 0 is in the confidence interval for <span class="math inline">\(\beta_1\)</span> (note the p-value is larger than 0.05), and the acceleration constant is in a confidence interval for <span class="math inline">\(-2 \times \beta_2\)</span>.</p>
 <section id="exercises" class="level2" data-number="15.1"><h2 data-number="15.1" class="anchored" data-anchor-id="exercises">
@@ -496,7 +502,7 @@ y_i = \mu + A \sin(2\pi t_i / 12 + \phi) + \varepsilon_i
 \]</span> with <span class="math inline">\(t_i\)</span> the month number of observation <span class="math inline">\(i\)</span>. Is this a linear model for the parameters <span class="math inline">\(mu\)</span>, <span class="math inline">\(A\)</span> and <span class="math inline">\(\phi\)</span>?</p>
 <p>2. Using trigonometry we can show that we can rewrite this model as</p>
 <p>$$ y_i = _0 + _1 (2t_i/12) + _2 (2t_i/12) + _i</p>
-<p>$$ Is this a linear model? Hint: we kno</p>
+<p>$$ Is this a linear model?</p>
 <p>3. Find least square estimates for the <span class="math inline">\(\beta\)</span>s using <code>lm</code>. Show a plot of <span class="math inline">\(y_i\)</span> versus <span class="math inline">\(t_i\)</span> with a curve on the same plot showing <span class="math inline">\(\hat{Y}_i\)</span> versus <span class="math inline">\(t_i\)</span>.</p>
 <p>4. Now fit a measurement error model to the entire <code>co2</code> dataset that includes a trend term that is a parabola as well as the sine wave model.</p>
 <p>5. Run diagnostic plots for the fitted model and describe the results.</p>

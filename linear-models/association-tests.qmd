@@ -50,8 +50,8 @@ totals <- research_funding_rates |>
 So we see that a larger percent of men than women received awards:
 
 ```{r}
-totals |> summarize(percent_men = yes_men/(yes_men+no_men),
-                    percent_women = yes_women/(yes_women+no_women))
+totals |> summarize(percent_men = yes_men/(yes_men + no_men),
+                    percent_women = yes_women/(yes_women + no_women))
 ```
 
 But could this be due just to random variability? Here we learn how to perform inference for this type of data.
@@ -74,8 +74,8 @@ The data from the experiment is usually summarized by a table like this:
 
 ```{r}
 tab <- matrix(c(3,1,1,3),2,2)
-rownames(tab)<-c("Poured Before","Poured After")
-colnames(tab)<-c("Guessed before","Guessed after")
+rownames(tab) <- c("Poured Before", "Poured After")
+colnames(tab) <- c("Guessed before", "Guessed after")
 tab
 ```
 
@@ -84,7 +84,7 @@ These are referred to as a two-by-two table. For each of the four combinations o
 The function `fisher.test` performs the inference calculations above:
 
 ```{r}
-fisher.test(tab, alternative="greater")$p.value
+fisher.test(tab, alternative = "greater")$p.value
 ```
 
 ## Chi-square Test
@@ -94,8 +94,8 @@ Notice that, in a way, our funding rates example is similar to the Lady Tasting 
 Imagine we have `r prettyNum(totals, ,big.mark=",")` applicants, some are men and some are women and some get funded, whereas others don't. We saw that the success rates for men and woman were:
 
 ```{r}
-totals |> summarize(percent_men = yes_men/(yes_men+no_men),
-                    percent_women = yes_women/(yes_women+no_women))
+totals |> summarize(percent_men = yes_men/(yes_men + no_men),
+                    percent_women = yes_women/(yes_women + no_women))
 ```
 
 respectively. Would we see this again if we randomly assign funding at the overall rate:
@@ -108,31 +108,61 @@ rate
 The Chi-square test answers this question. The first step is to create the two-by-two data table:
 
 ```{r}
-two_by_two <- with(totals, data.frame(awarded = c("no", "yes"), 
-                                      men = c(no_men, yes_men),
-                                      women = c(no_women, yes_women)))
-two_by_two
+o <- with(totals, data.frame(men = c(no_men, yes_men),
+                             women = c(no_women, yes_women),
+                             row.names = c("no", "yes")))
+o
 ```
 
 The general idea of the Chi-square test is to compare this two-by-two table to what you expect to see, which would be:
 
 ```{r}
-with(totals, data.frame(awarded = c("no", "yes"), 
-                        men = (no_men + yes_men) * c(1 - rate, rate),
-                        women = (no_women + yes_women) * c(1 - rate, rate)))
+e <- with(totals, data.frame(men = (no_men + yes_men) * c(1 - rate, rate),
+                             women = (no_women + yes_women) * c(1 - rate, rate),
+                             row.names = c("no", "yes")))
+                       
+e
 ```
 
-We can see that more men than expected and fewer women than expected received funding. However, under the null hypothesis these observations are random variables. The Chi-square test tells us how likely it is to see a deviation this large or larger. This test uses an asymptotic result, similar to the CLT, related to the sums of independent binary outcomes. The R function `chisq.test` takes a two-by-two table and returns the results from the test:
+We can see that more men than expected and fewer women than expected received funding. However, under the null hypothesis these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by
+
+1. Taking the difference between each observed and expected cell value.
+2. Squaring this difference.
+3. Dividing each squared difference by the expected value.
+4. Summing all these values together to get the final statistic.
 
 ```{r}
-chisq_test <- chisq.test(two_by_two[, -1])
+sum((o - e)^2/e)
 ```
 
-We see that the p-value is 0.0509:
+The Chi-square test tells us how likely it is to see a deviation this large or larger. This test uses an asymptotic result, similar to the CLT, related to the sums of independent binary outcomes. The R function `chisq.test` takes a two-by-two table and returns the results from the test:
+
+```{r}
+chisq_test <- chisq.test(o, correct = FALSE)
+```
+
+We see that the p-value is 0.045:
 
 ```{r}
 chisq_test$p.value
 ```
+
+:::{.callout-note}
+By default the `chisq.test` function applies a  _continuity correction_. This correction is particularly useful when a cell in the table has values close to 0 as it avoid low observed values inflating the statistics. This achieved by subtracting 0.5 in the following way:
+
+```{r}
+sum((abs(o - e) - 0.5)^2/e)
+
+```
+
+Note that it matches the default behavior:
+
+```{r}
+chisq.test(o)$statistic
+```
+:::
+
+
 
 ## Generalized linear models {#sec-glm}
 
@@ -144,7 +174,7 @@ $$
 g\{\mbox{E}(Y_i)\} = \beta_0 + \beta_1 x_i
 $$
 
-To finish describing the model we impose a distribution on $Y$ such as binomial or Poisson. These are referred to as _generalized linear models. 
+To finish describing the model we impose a distribution on $Y$ such as binomial or Poisson. These are referred to as _generalized linear models_. 
 
 We demonstrate with the funding rates example. We define $Y_i$ to be 1 if person $i$ received funding and 0 otherwise  and $x_i$ to be 1 for person $i$ is a women and 0 for men. For this data the expected value of $Y_i$ is the probability of funding for person $i$ $\mbox{Pr}(Y_i=1)$. We assume the outcomes $Y_i$ are binomial with $N=1$ and probability $p_i$. For binomial data, the most widely used transformation is the logit function $g(p) = \log \{p / (1-p)\}$ which takes numbers between 0 and 1 to any continuous number. The model looks like this:
 
@@ -155,7 +185,7 @@ $$
 
 ### The odds ratio {#sec-odds-ratio}
 
-To understand how $\beta_1$ can be used to quantify the effect of being a woman on success rates, first note that $\mbox{Pr}(Y_i=1)/\{1-\mbox{Pr}(Y_i=1)\} = \mbox{Pr}(Y_i=1)/\mbox{Pr}(Y_i=0)$ is the _odds_ of person $i$ getting funding: the ratio of the probability of success and probability of failure. This implies that $e^{\beta_0}$ is the odds for men and $e^{\beta_0}e^{\beta_1}$ is the odds for women, which implies $\beta_1$ is the odds for women divided by the odds for men. This quantity is called the _odds ratio_. To see this not that if use $p_1$ and $p_0$ to denote the probability of success for women and men, respectively, then $e^\{beta_1$ can be rewritten as
+To understand how $\beta_1$ can be used to quantify the effect of being a woman on success rates, first note that $\mbox{Pr}(Y_i=1)/\{1-\mbox{Pr}(Y_i=1)\} = \mbox{Pr}(Y_i=1)/\mbox{Pr}(Y_i=0)$ is the _odds_ of person $i$ getting funding: the ratio of the probability of success and probability of failure. This implies that $e^{\beta_0}$ is the odds for men and $e^{\beta_0}e^{\beta_1}$ is the odds for women, which implies $e^{\beta_1}$ is the odds for women divided by the odds for men. This quantity is called the _odds ratio_. To see this not that if use $p_1$ and $p_0$ to denote the probability of success for women and men, respectively, then $e^\{beta_1$ can be rewritten as
 
 $$
 e^{\beta_1} = \frac{p_1}{1-p_1} \, / \, \frac{p_0}{1-p_0}
@@ -212,6 +242,10 @@ if(knitr::is_html_output()){
 In this case, the odds ratio is simply $\frac{a/c}{b/d} = \frac{ad}{bc}$. We can confirm we obtain the same estimate as when using `glm`:
 
 ```{r}
+two_by_two <- with(totals, data.frame(awarded = c("no", "yes"), 
+                                      men = c(no_men, yes_men),
+                                      women = c(no_women, yes_women)))
+
 or <- with(two_by_two, women[2]/sum(women) / (women[1]/sum(women)) / ((men[2]/sum(men)) / (men[1]/sum(men))))
 c(log(or), fit$coef[2])
 ```
@@ -265,7 +299,7 @@ chisq.test(two_by_two_x_10)$p.value
 ```
 
 
-:::{.callout-note title = "Small count correction"}
+:::{.callout-note}
 Note that the log odds ratio is not defined if any of the cells of the two-by-two table is 0. This is because if $a$, $b$, $c$, or $d$ is 0, the $\log(\frac{ad}{bc})$ is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the *Haldane--Anscombe correction* and has been shown, both in practice and theory, to work well.
 :::
 
@@ -291,43 +325,27 @@ d.  We should use the Fisher exact test to get confidence intervals.
 
 5\. Multiply the two-by-two table by 2 and see if the p-value and confidence retrieval are a better match.
 
-6\. During the 2016 US presidential election, then candidate Donald J. Trump used his twitter account as a way to communicate with potential voters. 
-Todd Vaziri hypothesized that "Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him)."  We will test this hypothesis using association tests. The following code coverts the tweets to a table with the counts for several sentiments from each source (Android or iPhone):
+6\. Use the `research_funding_rates` data to estimate the log odds ratio along and standard errors comparing women to men for each discipline. Compute a confidence interval and report all the disciplines for which one gender appears to be favored over the other.
+
+7\. Divide the log odds ratio estimates by their respective standard errors and generate a qq-plot comparing these to a standard normal. Do any of the discplines deviate from what is expected by chance?
+
+
+8\. During the 2016 US presidential election, then candidate Donald J. Trump used his twitter account as a way to communicate with potential voters. 
+Todd Vaziri hypothesized that "Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him)."  We will test this hypothesis using association tests. The **dslabs** object `sentiment_counts` provides a table with the counts for several sentiments from each source (Android or iPhone):
 
 ```{r}
+#| eval: false
 library(tidyverse)
 library(dslabs)
-library(tidytext)
-
-links <- "https://t.co/[A-Za-z\\d]+|&amp;"
-nrc <- get_sentiments("nrc") |> select(word, sentiment)
-android_iphone <- trump_tweets |> 
-  extract(source, "source", "Twitter for (.*)") |>
-  filter(source %in% c("Android", "iPhone") &
-           created_at >= ymd("2015-06-17") & 
-           created_at < ymd("2016-11-08")) |>
-  filter(!is_retweet) |>
-  arrange(created_at) |> 
-  mutate(text = str_replace_all(text, links, ""))  |>
-  unnest_tokens(word, text) |>
-  filter(!word %in% stop_words$word &
-           !str_detect(word, "^\\d+$")) |>
-  mutate(word = str_replace(word, "^'", "")) |>
-  filter(!word %in% stop_words$word)
-
-sentiment_counts <- android_iphone |>
-  left_join(nrc, by = "word", relationship = "many-to-many") |>
-  count(source, sentiment) |>
-  pivot_wider(names_from = "source", values_from = "n") |>
-  mutate(sentiment = replace_na(sentiment, replace = "none"))
+sentiment_counts
 ```
 
 Compute an odds ratio comparing Android to iPhone for each sentiment and add it to the table.
 
-7\. Compute a 95\% confidence interval for each odds ratio. 
+9\. Compute a 95\% confidence interval for each odds ratio. 
 
-8\. Generate a plot showing the estimated odds ratios along with their confidence intervals.
+10\. Generate a plot showing the estimated odds ratios along with their confidence intervals.
 
-9\. Test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.
+11\. Test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.
 
-10\. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2.
+12\. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2.

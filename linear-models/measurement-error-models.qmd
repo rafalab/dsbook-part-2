@@ -4,13 +4,9 @@ Another major application of linear models comes from measurement errors models.
 
 To understand these models, imagine you are Galileo in the 16th century trying to describe the velocity of a falling object. An assistant climbs the Tower of Pisa and drops a ball, while several other assistants record the position at different times. Let's simulate some data using the equations we know today and adding some measurement error. The **dslabs** function `rfalling_object` generates these simulations:
 
-```{r, include=FALSE, warning=FALSE, cache=FALSE}
+```{r, message=FALSE, warning=FALSE, cache=FALSE}
 library(tidyverse)
 library(broom)
-library(dslabs)
-```
-
-```{r, cache=FALSE}
 library(dslabs)
 falling_object <- rfalling_object()
 ```
@@ -18,7 +14,6 @@ falling_object <- rfalling_object()
 The assistants hand the data to Galileo and this is what he sees:
 
 ```{r gravity}
-library(tidyverse)
 falling_object |> 
   ggplot(aes(time, observed_distance)) + 
   geom_point() +
@@ -28,11 +23,15 @@ falling_object |>
 
 Galileo does not know the exact equation, but by looking at the plot above, he deduces that the position should follow a parabola, which we can write like this:
 
-$$ f(x) = \beta_0 + \beta_1 x + \beta_2 x^2$$
+$$
+f(x) = \beta_0 + \beta_1 x + \beta_2 x^2
+$$
 
 The data does not fall exactly on a parabola. Galileo knows this is due to measurement error. His helpers make mistakes when measuring the distance. To account for this, he models the data with:
 
-$$ Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n $$
+$$
+Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n
+$$
 
 with $Y_i$ representing distance in meters, $x_i$ representing time in seconds, and $\varepsilon$ accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each $i$. We also assume that there is no bias, which means the expected value $\mbox{E}[\varepsilon] = 0$.
 
@@ -43,7 +42,6 @@ To pose a new physical theory and start making predictions about other falling o
 LSE calculations do not require the errors to be approximately normal. The `lm` function will find the $\beta$ s that will minimize the residual sum of squares:
 
 ```{r}
-library(broom)
 fit <- falling_object |> 
   mutate(time_sq = time^2) |> 
   lm(observed_distance~time+time_sq, data = _)
@@ -61,7 +59,9 @@ augment(fit) |>
 
 Thanks to my high school physics teacher, I know that the equation for the trajectory of a falling object is:
 
-$$d = h_0 + v_0 t -  0.5 \times 9.8 t^2$$
+$$
+d(t) = h_0 + v_0 t -  0.5 \times 9.8 \, t^2
+$$
 
 with $h_0$ and $v_0$ the starting height and velocity, respectively. The data we simulated above followed this equation and added measurement error to simulate `n` observations for dropping the ball $(v_0=0)$ from the tower of Pisa $(h_0=55.86)$.
 
@@ -90,7 +90,7 @@ $$
 y_i = \beta_0 + \beta_1 \sin(2\pi t_i/12) + \beta_2 \cos(2\pi t_i/12) + \varepsilon_i
 
 $$
-Is this a linear model? Hint: we kno
+Is this a linear model? 
 
 3\. Find least square estimates for the $\beta$s using `lm`. Show a plot of $y_i$ versus $t_i$ with a curve on the same plot showing $\hat{Y}_i$ versus $t_i$.
 

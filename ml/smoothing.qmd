@@ -607,42 +607,11 @@ with $X_1$ and $X_2$ the two predictors defined in Section @sec-two-or-seven). I
 1\. In the wrangling part of this book, we used the code below to obtain mortality counts for Puerto Rico for 2015-2018.
 
 ```{r, eval=FALSE}
-library(tidyverse)
-library(lubridate)
-library(purrr)
-library(pdftools)
 library(dslabs)
-
-fn <- system.file("extdata", "RD-Mortality-Report_2015-18-180531.pdf",
-                  package="dslabs")
-dat <- map_df(str_split(pdf_text(fn), "\n"), function(s){
-  s <- str_trim(s)
-  header_index <- str_which(s, "2015")[1]
-  tmp <- str_split(s[header_index], "\\s+", simplify = TRUE)
-  month <- tmp[1]
-  header <- tmp[-1]
-  tail_index  <- str_which(s, "Total")
-  n <- str_count(s, "\\d+")
-  out <- c(1:header_index, which(n == 1), 
-           which(n >= 28), tail_index:length(s))
-  s <- s[-out] |>  str_remove_all("[^\\d\\s]") |> str_trim() |>
-    str_split_fixed("\\s+", n = 6) 
-  s[,1:5] |> as_tibble() |> 
-    setNames(c("day", header)) |>
-    mutate(month = month, day = as.numeric(day)) |>
-    pivot_longer(-c(day, month), names_to = "year", values_to = "deaths") |>
-    mutate(deaths = as.numeric(deaths))
-}) |>
-  mutate(month = recode(month, 
-                        "JAN" = 1, "FEB" = 2, "MAR" = 3, 
-                        "APR" = 4, "MAY" = 5, "JUN" = 6, 
-                        "JUL" = 7, "AGO" = 8, "SEP" = 9, 
-                        "OCT" = 10, "NOV" = 11, "DEC" = 12)) |>
-  mutate(date = make_date(year, month, day)) |>
-  filter(date <= "2018-05-01")
+head(pr_death_counts)
 ```
 
-Use the `loess` function to obtain a smooth estimate of the expected number of deaths as a function of date. Plot this resulting smooth function. Make the span about two months long.
+Remove data from before May 2018, then use the `loess` function to obtain a smooth estimate of the expected number of deaths as a function of date. Plot this resulting smooth function. Make the span about two months long.
 
 2\. Plot the smooth estimates against day of the year, all on the same plot but with different colors.
 

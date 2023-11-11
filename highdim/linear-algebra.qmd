@@ -3,34 +3,12 @@
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dslabs)
-if(!exists("mnist")) mnist <- read_mnist()
-x <- mnist$train$images[1:300,] 
-y <- mnist$train$labels[1:300]
+if (!exists("mnist")) mnist <- read_mnist()
+x <- mnist$train$images 
+y <- mnist$train$labels
 ```
 
 Linear algebra is the main mathematical technique used to describe and motivate statistical methods and machine learning approaches. In this chapter, we introduce some of the mathematical concepts needed to understand these techniques and demonstrate how to work with matrices in R. We use these concepts and techniques throughout the remainder of the book. We start the chapter with a motivating example.
-
-
-## Transpose of a matrix
-
-A common operation when working with matrices is the *transpose*. We will see examples in later sections. This operation simply converts the rows of a matrix into columns. We use the symbols $\top$ or $'$ next to the bold upper case letter to denote the transpose:
-
-$$
-\mathbf{X}^\top = 
-\begin{pmatrix}
-  x_{1,1}&x_{2,1}&\dots & x_{n,1} \\
-  x_{1,2}&x_{2,2}&\dots & x_{n,2} \\
-  \vdots & \vdots & \ddots & \vdots & \\
-  x_{1,p}&x_{2,p}&\dots & x_{n,p} 
-  \end{pmatrix}
-$$ If we are writing out a column, such as $\mathbf{x}_1$ defined above, in a sentence we often use the notation: $\mathbf{x}_1 = ( x_{1,1}, \dots x_{n,1})^\top$ to avoid wasting vertical space in the text.
-
-In R we compute the transpose using the function `t`
-
-```{r}
-dim(x)
-dim(t(x))
-```
 
 ## Matrix multiplication
 
@@ -48,7 +26,7 @@ $$
 
 Mathematicians figured out that by representing these linear systems of equations using matrices and vectors, predefined algorithms could be designed to solve any system of linear equations. A basic linear algebra class will teach some of these algorithms, such as Gaussian elimination, the Gauss-Jordan elimination, and the LU and QR decompositions. These methods are usually covered in detail in university level linear algebra courses.
 
-To explain matrix multiplication, define two matrices $\mathbf{A}$ and $\mathbf{B}$ 
+To explain matrix multiplication, define two matrices $\mathbf{A}$ and $\mathbf{B}$
 
 $$
 \mathbf{A} = 
@@ -85,7 +63,7 @@ Because this operation is so common, R includes a mathematical operator `%*%` fo
 C <- A %*% B
 ```
 
-Using mathematical notation $\mathbf{C} = \mathbf{A}\mathbf{B}$ looks like this: 
+Using mathematical notation $\mathbf{C} = \mathbf{A}\mathbf{B}$ looks like this:
 
 $$
 \begin{pmatrix}
@@ -167,14 +145,14 @@ solve(A, b)
 
 ## The identity matrix
 
-The identity matrix, represented with a bold 1, is like the number 1, but for matrices: if you multiply a matrix by the identity matrix, you get back the matrix.
+The identity matrix, represented with a bold $\mathbf{I}$, is like the number 1, but for matrices: if you multiply a matrix by the identity matrix, you get back the matrix.
 
 $$
-\mathbf{1}\mathbf{x} = \mathbf{x}
+\mathbf{I}\mathbf{x} = \mathbf{x}
 $$ If you do some math with the definition of matrix multiplication you will realize that $\mathbf{1}$ is a matrix with the same number of rows and columns (refereed to as square matrix) with 0s everywhere except the diagonal:
 
 $$
-\mathbf{1}=\begin{pmatrix}
+\mathbf{I}=\begin{pmatrix}
 1&0&\dots&0\\
 0&1&\dots&0\\
 \vdots&\vdots&\ddots&\vdots\\
@@ -218,17 +196,17 @@ text(cos(theta), sin(theta), expression('(' * x[1] * ',' * x[2] *  ') = (' * pha
 draw.circle(theta)
 ```
 
-with $\theta = \arctan{\frac{x2}{x1}}$ and $r = \sqrt{x_1^2 + x_2^2}$. If we think of the point as two dimensional vector $\mathbf{x} = (x_1, x_2)^\top$, $r$ defines the norm of $\mathbf{x}$. The norm can be thought of as the _size_ of the two-dimensional vector disregarding the direction: if we change the angle, the vector changes but the size does not. The point of defining the norm is that we can extrapolated the concept of _size_ to higher dimensions. Specifically, we write the norm for any vector $\mathbf{x}$ as:
+with $\theta = \arctan{\frac{x2}{x1}}$ and $r = \sqrt{x_1^2 + x_2^2}$. If we think of the point as two dimensional column vector $\mathbf{x} = (x_1, x_2)^\top$, $r$ defines the norm of $\mathbf{x}$. The norm can be thought of as the *size* of the two-dimensional vector disregarding the direction: if we change the angle, the vector changes but the size does not. The point of defining the norm is that we can extrapolated the concept of *size* to higher dimensions. Specifically, we write the norm for any vector $\mathbf{x}$ as:
 
 $$
-||\mathbf{x}|| = \sqrt{x_1^2 + x_2^2 + \dots + x_n^2}
+||\mathbf{x}|| = \sqrt{x_1^2 + x_2^2 + \dots + x_p^2}
 $$
 
 We can use the linear algebra concepts we have learned to define the norm like this:
 
 $$
 ||\mathbf{x}||^2 = \mathbf{x}^\top\mathbf{x}
-$$ 
+$$
 
 To define distance, suppose we have two two-dimensional points $\mathbf{x}_1$ and $\mathbf{x}_2$. We can define how similar they are by simply using euclidean distance.
 
@@ -297,38 +275,44 @@ y[c(6, 17, 16)]
 We can also compute **all** the distances at once relatively quickly using the function `dist`, which computes the distance between each row and produces an object of class `dist`:
 
 ```{r}
-d <- dist(x)
+d <- dist(x[c(6,17,16),])
 class(d)
 ```
 
 There are several machine learning related functions in R that take objects of class `dist` as input. To access the entries using row and column indices, we need to coerce it into a matrix. We can see the distance we calculated above like this:
 
 ```{r}
-as.matrix(d)[c(6, 17, 16), c(6, 17, 16)]
+d
 ```
 
-We can quickly see an image of these distances using this code:
+We can quickly see an image of the distances between observations using this function. As an example, we compute the distance between each of the first 300 observations and then make an image:
 
 ```{r distance-image, fig.width = 4, fig.height = 4, eval=FALSE}
+d <- dist(x[1:300,])
 image(as.matrix(d))
+```
+
+```{r}
+#| echo: false
+d <- dist(x[1:300,])
 ```
 
 If we order this distance by the labels, we can see yellowish squares near the diagonal. This is because observations from the same digits tend to be closer than to different digits:
 
 ```{r eval=FALSE}
-image(as.matrix(d)[order(y), order(y)])
+image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
 ```
 
 ```{r diatance-image-ordered, fig.width = 4, fig.height = 4, out.width="50%", echo=FALSE}
 rafalib::mypar()
-image(as.matrix(d)[order(y), order(y)])
+image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
 ```
 
 ## Spaces {#sec-predictor-space}
 
 *Predictor space* is a concept that is often used to describe machine learning algorithms. The term *space* refers to an advanced mathematical definition for which we provide a simplified explanation to help understand the term predictor space when used in the context of machine learning algorithms.
 
-We can think of all predictors $(x_{i,1}, \dots, x_{i,n})$ for all observations $i=1,\dots,n$ as $n$ points. A *space* can be thought of as the collection of all possible points that should be considered for the data analysis in question. This includes points we could see, but have not been observed yet. In the case of the handwritten digits, we can think of the predictor space as any point $(x_{1}, \dots, x_{n})$ as long as each entry $x_i, i = 1, \dots, n$ is between 0 and 255.
+We can think of all predictors $(x_{i,1}, \dots, x_{i,p})^\top$ for all observations $i=1,\dots,n$ as $n$ $p$-dimensional points. A *space* can be thought of as the collection of all possible points that should be considered for the data analysis in question. This includes points we could see, but have not been observed yet. In the case of the handwritten digits, we can think of the predictor space as any point $(x_{1}, \dots, x_{p})^\top$ as long as each entry $x_i, \, i = 1, \dots, p$ is between 0 and 255.
 
 Some Machine Learning algorithms also define subspaces. A common approach is to define neighborhoods of points that are close to a *center*. We can do this by selecting a center $\mathbf{x}_0$, a minimum distance $r$, and defining the subspace as the collection of points $\mathbf{x}$ that satisfy
 
@@ -336,15 +320,13 @@ $$
 || \mathbf{x} - \mathbf{x}_0 || \leq r.
 $$
 
-We can think of this a multidimensional sphere since, as in a circle or sphere, every point is the same distance away from the center.
+We can think of this subspace as a multidimensional sphere since every point is the same distance away from the center.
 
 Other machine learning algorithms partition the predictor space into non-overlapping regions and then make different predictions for each region using the data in the region. We will learn about these in @sec-trees.
 
 ## Exercises
 
-
 1\. Generate two matrix, `A` and `B`, containing randomly generated and normally distributed numbers. The dimensions of these two matrices should $4 \times 3$ and $3 \times 6$, respectively. Confirm that `C <- A %*% B` produce the same results as:
-
 
 ```{r, eval=FALSE}
 m <- nrow(A)
@@ -357,7 +339,6 @@ for(i in 1:m){
 }
 ```
 
-
 2\. Solve the following system of equations using R:
 
 $$
@@ -365,13 +346,11 @@ $$
 x + y + z + w &= 10\\
 2x + 3y - z - w &= 5\\
 3x - y + 4z - 2w &= 15\\
-2x + 2y + 2z + 2w &= 20\\
+2x + 2y - 2z - 2w &= 20\\
 \end{align}
 $$
 
-
-
-3\. Define `x` 
+3\. Define `x`
 
 ```{r}
 #| eval: false
@@ -381,7 +360,7 @@ x <- mnist$train$images[1:300,]
 y <- mnist$train$labels[1:300]
 ```
 
-and compute the distance matrix 
+and compute the distance matrix
 
 ```{r}
 #| eval: false
@@ -390,15 +369,8 @@ d <- dist(x)
 class(d)
 ```
 
-Generate a boxplot showing the distances for the second row of `d` stratified by digits. Do not include the distance to itself which we know it is 0. Can you predict what digit is represented by the second row of `x`? 
+Generate a boxplot showing the distances for the second row of `d` stratified by digits. Do not include the distance to itself which we know it is 0. Can you predict what digit is represented by the second row of `x`?
 
 4\. Use the `apply` function and matrix algebra to compute the distance between the second digit `mnist$train$images[4,]` and all other digits represented in `mnist$train$images`. Then generate as boxplot as in exercise 2 and predict what digit is the fourth row.
 
-
-5\. Compute the distance between each feature and the feature representing the middle pixel (row 14 column 14). Create an image plot of where the distance is showns with color in the pixel position.
-
-
-
-
-
-
+5\. Compute the distance between each feature and the feature representing the middle pixel (row 14 column 14). Create an image plot of where the distance is shown with color in the pixel position.

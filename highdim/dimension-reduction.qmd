@@ -1,12 +1,8 @@
 # Dimension reduction
 
-```{r, echo=FALSE}
-rafalib::mypar()
-```
+A typical machine learning task involves working with a large number of predictors, which makes visualization somewhat challenging. We have shown methods for visualizing univariate and paired data, but plots that reveal relationships between many variables are more complicated in higher dimensions. For example, to compare each of the 784 features in our predicting digits example, we would have to create, for example, 306,936 scatterplots. Creating one single scatter-plot of the data is impossible due to the high dimensionality.
 
-A typical machine learning challenge will include a large number of predictors, which makes visualization somewhat challenging. We have shown methods for visualizing univariate and paired data, but plots that reveal relationships between many variables are more complicated in higher dimensions. For example, to compare each of the 784 features in our predicting digits example, we would have to create, for example, 306,936 scatterplots. Creating one single scatter-plot of the data is impossible due to the high dimensionality.
-
-Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as *dimension reduction*. The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations. With fewer dimensions, visualization then becomes more feasible. The technique behind it all, the singular value decomposition, is also useful in other contexts. Principal component analysis (PCA) is the approach we will be showing. We will motivate the ideas behind with a simple example.
+Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as *dimension reduction*. The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations. With fewer dimensions, visualization then becomes more feasible. The general technique behind it all, the singular value decomposition, is also useful in other contexts. Principal component analysis (PCA) is the approach we will be showing. We will motivate the ideas with a simple illustrative example and present some mathematical concepts needed to understand PCA. We finish the chapter with demonstrating the use of PCA in two more complex datasets.
 
 ## Motivation: preserving distance
 
@@ -16,13 +12,14 @@ We consider an example with twin heights. Some pairs are adults, the others are 
 set.seed(1983)
 library(MASS)
 n <- 100
-Sigma <- matrix(c(9, 9 * 0.9, 9 * 0.9, 9), 2, 2)
-x <- rbind(mvrnorm(n / 2, c(69, 69), Sigma),
-           mvrnorm(n / 2, c(60, 60), Sigma))
+rho <- 0.9
+sigma <- 3
+s <- sigma^2*matrix(c(1, rho, rho, 1), 2, 2)
+x <- rbind(mvrnorm(n/2, c(69, 69), s),
+           mvrnorm(n/2, c(60, 60), s))
 ```
 
 A scatterplot quickly reveals that the correlation is high and that there are two groups of twins, the adults (upper right points) and the children (lower left points):
-
 
 ```{r distance-illustration, fig.width=3, fig.height=3, echo=FALSE, out.width="40%"}
 rafalib::mypar()
@@ -33,10 +30,12 @@ lines(x[c(2, 51),], col = "red", lwd = 2)
 points(x[c(1, 2, 51),], pch = 16)
 ```
 
-Our features are $N$ two-dimensional points, the two heights, and, for illustrative purposes, we will act as if visualizing two dimensions is too challenging: we want to explore the data through a histogram of a one-dimensional variable. We therefore want to reduce the dimensions from two to one, but still be able to understand important characteristics of the data, for example that the observations cluster into two groups: adults and children. To show the ideas presented here are generally useful, we will standardize the data so that observations are in standard units rather than inches:
+Our features are $n$ two-dimensional points, the two heights. For illustrative purposes, we will act as if visualizing two dimensions is too challenging and we want to explore the data through a histogram of a one-dimensional variable. We therefore want to reduce the dimensions from two to one, but still be able to understand important characteristics of the data, for example that the observations cluster into two groups: adults and children. To show the ideas presented here are generally useful, we will standardize the data so that observations are in standard units rather than inches:
 
 ```{r}
-x <- scale(x)
+library(matrixStats)
+x <- sweep(x, 2, colMeans(x))
+x <- sweep(x, 2, colSds(x), "/")
 ```
 
 In the figure above we show the distance between observation 1 and 2 (blue), and observation 1 and 51 (red). Note that the blue line is shorter, which implies 1 and 2 are closer.
@@ -51,19 +50,22 @@ as.matrix(d)[2, 51]
 
 This distance is based on two dimensions and we need a distance approximation based on just one.
 
-Let's start with the naive approach of simply removing one of the two dimensions. Let's compare the actual distances to the distance computed with just the first dimension:
+Let's start with the naive approach of simply removing one of the two dimensions. Let's compare the actual distances to the distances computed with just the first dimension:
 
 ```{r}
 z <- x[,1]
 ```
 
-To make the distances comparable, we divide the sum of squares by the number of dimensions. So for the two dimensional case we have
+To make the distances comparable, we divide the sum of squares by the number of dimensions being added. So for the two dimensional case we have
 
-$$\sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 },$$
+$$
+\sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 },
+$$
 
-so we divide the distance by $\sqrt{2}$:
+so to make the distances comparable we divide by $\sqrt{2}$:
 
-```{r, eval=FALSE, fig.width=3, fig.height=3, out.width="40%"}
+```{r}
+#| eval: false
 plot(dist(x) / sqrt(2), dist(z))
 abline(0, 1, col = "red")
 ```
@@ -74,21 +76,21 @@ plot(dist(x) / sqrt(2), dist(z))
 abline(0, 1, col = "red")
 ```
 
-Based on the plot, this one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that makes this one-number approximation even better?
+This one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that makes the approximation even better?
 
-If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can *rotate* the points in a way that preserve the distance between points, while increasing the variability in one dimension and reducing it on the other. By doing this, we keep more of the *information* about distances in the first dimension. In the next section we describe a mathematical approach the permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.
+If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can *rotate* the points in a way that preserve the distance between points, while increasing the variability in one dimension and reducing it on the other. By doing this, we keep more of the *information* about distances in the first dimension. In the next section we describe a mathematical approach that permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.
 
 ## Rotations
 
-Any two-dimensional point $(X_1, X_2)$ can be written as the base and height of a triangle with a hypotenuse going from $(0,0)$ to $(X_1, X_2)$:
+Any two-dimensional point $(x_1, x_2)^\top$ can be written as the base and height of a triangle with a hypotenuse going from $(0,0)^\top$ to $(x_1, x_2)^\top$:
 
 $$
 x_1 = r \cos\phi, \,\, x_2 = r \sin\phi
 $$
 
-with $r$ the length of the hypothenus and $\phi$ the angel between the hypotenuse and the x-axis.
+with $r$ the length of the hypotenuse and $\phi$ the angel between the hypotenuse and the x-axis.
 
-We can *rotate* the point $(x_1, x_2)$ around a circle with center $(0,0)$ and radius $r$ by an angle $\theta$ by changing the angle in the previous equation to $\phi + \theta$:
+We can *rotate* the point $(x_1, x_2)^\top$ around a circle with center $(0,0)^\top$ and radius $r$ by an angle $\theta$ by changing the angle in the previous equation to $\phi + \theta$:
 
 $$
 z_1 = r \cos(\phi+ \theta), \,\,
@@ -132,7 +134,7 @@ z_2 = r \sin(\phi + \theta) =  r \cos\phi \sin\theta + r \sin\phi \cos\theta =  
 \end{align}
 $$
 
-Now we can rotate each point in the dataset by simply applying the formula above to each pair $(x_{i,1}, x_{i,2})$. Here is what the twin standardized heights look like after rotating each point by $-45$ degrees:
+Now we can rotate each point in the dataset by simply applying the formula above to each pair $(x_{i,1}, x_{i,2})^\top$. Here is what the twin standardized heights look like after rotating each point by $-45$ degrees:
 
 ```{r, fig.width = 6, fig.height = 3, echo=FALSE}
 z <- cbind((x[,1] + x[,2]) / sqrt(2), (x[,2] - x[,1]) / sqrt(2))
@@ -153,76 +155,116 @@ Note that while the variability of $x_1$ and $x_2$ are similar, the variability 
 
 ## Linear transformations
 
-Note that each row of $\mathbf{X}$ was transformed using a linear transformation. For any row $i$, the first entry was:
+Any time a matrix $\mathbf{X}$ is multiplied by another matrix $\mathbf{A}$, we refer to the product $\mathbf{Z} = \mathbf{X}\mathbf{A}$ as a linear transformation of $\mathbf{X}$. Below we show that the rotations described above are a linear transformation. To see this, note that for any row $i$, the first entry was:
 
-$$z_{i,1} = a_{11} x_{i,1} + a_{21} x_{i,2}$$
+$$z_{i,1} = a_{1,1} x_{i,1} + a_{2,1} x_{i,2}$$
 
-with $a_{11} = \cos\theta$ and $a_{21} = -\sin\theta$.
+with $a_{1,1} = \cos\theta$ and $a_{2,1} = -\sin\theta$.
 
 The second entry was also a linear transformation:
 
-$$z_{i,2} = a_{12} x_{i,1} + a_{22} x_{i,2}$$
+$$z_{i,2} = a_{1,2} x_{i,1} + a_{2,2} x_{i,2}$$
 
-with $a_{12} = \sin\theta$ and $a_{22} = \cos\theta$.
+with $a_{1,2} = \sin\theta$ and $a_{2,2} = \cos\theta$.
 
-We can also use linear transformations to get $X$ back from $Z$. Solving the system of two linear equations gives us:
-
-$$x_{i,1} = b_{1,1} z_{i,1} + b_{2,1} z_{i,2}$$
-
-
-with $b_{1,2} = \cos\theta$ and $b_{2,1} = \sin\theta$ and
-
-$$x_{i,2} = b_{2,1} z_{i,1} + b_{2,2} z_{i,2}$$
-
-with $b_{2,1} = -\sin\theta$ and $b_{1,2} = \cos\theta$.
-
-Using linear algebra, we can write the operation we just performed like this:
-
+We can write these equations using matrix notation:
 
 $$
 \begin{pmatrix}
-z_1&z_2
+z_1\\z_2
 \end{pmatrix}
 =
 \begin{pmatrix}
-x_1&x_2
-\end{pmatrix}
+a_{1,1}&a_{1,2}\\
+a_{2,1}&a_{2,2}
+\end{pmatrix}^\top
 \begin{pmatrix}
-a_{11}&a_{12}\\
-a_{21}&a_{22}
+x_1\\x_2
 \end{pmatrix}
-$$ 
+$$
 
+An advantage of using linear algebra is that we can write the transformation for the entire dataset by saving all observations in a $N \times 2$ matrix
 
-An advantage of using linear algebra is that we can write the transformation for the entire dataset by representing it as a $N \times 2$ matrix $X$, with each row holding the two values for a pair of twins, and the rotation as a *linear transformation* of $X$:
+$$
+\mathbf{X} \equiv 
+\begin{bmatrix}
+\mathbf{x_1}^\top\\
+\vdots\\
+\mathbf{x_n}^\top
+\end{bmatrix} = 
+\begin{bmatrix}
+x_{1,1}&x_{1,2}\\
+\vdots&\vdots\\
+x_{n,1}&x_{n,2}
+\end{bmatrix}
+$$
+
+We can then obtained the rotated values $\mathbf{z}_i$ for each row $i$ by applying a *linear transformation* of $X$:
 
 $$
 \mathbf{Z} = \mathbf{X} \mathbf{A}
 \mbox{ with }
 \mathbf{A} = \,
 \begin{pmatrix}
-a_{11}&a_{12}\\
-a_{21}&a_{22}
-\end{pmatrix}.
-$$
+a_{1,1}&a_{1,2}\\
+a_{2,1}&a_{2,2}
+\end{pmatrix} = 
+\begin{pmatrix}
+\cos \theta&\sin \theta\\
+-\sin \theta&\cos \theta
+\end{pmatrix} 
+.
+$$ 
 
-This transformation results in an $N \times 2$ matrix, denoted here with $Z$, with the rotated points in each row. Another advantage of linear algebra is that we can rotate back by simply multiplying $Z$ by the inverse matrix: $\mathbf{Z} \mathbf{A}^{-1} = \mathbf{X} \mathbf{A} \mathbf{A}^{-1} = \mathbf{X}$. This implies that all the information in $\mathbf{X}$ is included in the rotation $\mathbf{Z}$, and it can be retrieved via a linear transformation.
 
-These derivations imply that we can use the following code to rotate the data by any angle $\theta$:
+If we define
+
+```{r}
+theta <- 2*pi*-45/360 #convert to radians
+A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
+```
+
+We can write code implementing a rotation by any angle $\theta$ using linear algebra:
 
 ```{r}
 rotate <- function(x, theta){
-  theta <- theta/360 * 2 * pi # convert to radians
+  theta <- 2*pi*theta/360
   A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
   x %*% A
 }
 ```
 
-We can use this to confirm that for any rotation the distances are preserved. Here are two examples:
+The columns of $\mathbf{A}$ are referred to as _directions_ because if we draw a vector from $(0,0)$ to $(a_{1,j}, a_{2,j})$ it points in the direction of the line that will become the $j-th$ dimension.
+
+Another advantage of linear algebra is that if we can find the inverse matrix of $\mathbf{A}^\top$ we can convert $\mathbf{Z}$ back to $\mathbf{X}$ again using a linear transformation.
+
+In this particular case we can use trigonometry to show that
+
+$$
+x_{i,1} = b_{1,1} z_{i,1} + b_{2,1} z_{i,2}\\
+x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
+$$
+
+with $b_{2,1} = \cos\theta$, $b_{2,1} = \sin\theta$, $b_{1,2} = -\sin\theta$, and $b_{2,2} = \cos\theta$.
+
+This implies that
+
+$$
+\mathbf{X} = \mathbf{Z} 
+\begin{pmatrix}
+\cos \theta&-\sin \theta\\
+\sin \theta&\cos \theta
+\end{pmatrix}. 
+$$ Note that the transformation used above is actually $\mathbf{A}^\top$ which implies that
+
+$$
+\mathbf{Z} \mathbf{A}^\top = \mathbf{X} \mathbf{A}\mathbf{A}^\top\ = \mathbf{X}
+$$
+
+and therefore that $\mathbf{A}^\top$ is the inverse of $\mathbf{A}$. This also implies that all the information in $\mathbf{X}$ is included in the rotation $\mathbf{Z}$, and it can be retrieved via a linear transformation. A consequence is that for any rotation the distances are preserved. Here is an example for a 30 degree rotation, but it works for any angle:
 
 ```{r}
-max(dist(rotate(x, -45)) - dist(x))
-max(dist(rotate(x, 30)) - dist(x))
+all.equal(as.matrix(dist(rotate(x, 30))), as.matrix(dist(x)))
 ```
 
 The next section explains why this happens.
@@ -232,95 +274,98 @@ The next section explains why this happens.
 Recall that the distance between two points, say rows $h$ and $i$ of the transformation $\mathbf{Z}$, can be written like this:
 
 $$
-||\mathbf{z}^\top_h - \mathbf{z}^\top_i|| = (\mathbf{z}_h - \mathbf{z}_i)(\mathbf{z}^\top_h - \mathbf{z}^\top_i)
-$$
-with $\mathbf{z}_h$ and $\mathbf{z}_i$ the $h$-th and $i$-th $1 \times p$ rows, with $p=2$ in our specific example. Using linear algebra, we can rewrite this quantity as
-
-
-$$
-||\mathbf{z}^\top_h - \mathbf{z}^\top_i||^2 =  ||\mathbf{A}^\top\mathbf{x}^\top_h - \mathbf{A}^\top\mathbf{x}^\top_i||^2 = (\mathbf{x}_h - \mathbf{x}_i) \mathbf{A} \mathbf{A}^\top (\mathbf{x}^\top_h - \mathbf{x}^\top_i)
+||\mathbf{z}_h - \mathbf{z}_i|| = (\mathbf{z}_h - \mathbf{z}_i)^\top(\mathbf{z}_h - \mathbf{z}_i)
 $$
 
-Note that if $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ then the distance between the $h$th and $i$th rows is the same for the original and transformed data. We to transformation with the property $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ as _orthogonal transformations_ and they are guaranteed to preserves the distance between any two points.
+with $\mathbf{z}_h$ and $\mathbf{z}_i$ the $p \times 1$ column vectors stored in the $h$-th and $i$-th rows of $\mathbf{X}$, respectively.
 
-Notice that $\mathbf{A}$ being orthogonal also guarantees that the total sum of squares of any row in $\mathbf$ is preserved after the transformation:
+::: callout-note
+Remember that we represent the rows of a matrix as column vectors. This explains why we use $\mathbf{A}$ when showing the multiplication for the matrix $\mathbf{Z}=\mathbf{X}\mathbf{A}$ but transpose the operation when showing the transformation for just one observation: $\mathbf{z}_i = \mathbf{A}^\top\mathbf{x}_i$
+:::
+
+Using linear algebra, we can rewrite the quantity above as
 
 $$
-||\mathbf{z}^\top_i||^2 =  ||\mathbf{x}^\top_i\mathbf{A}||^2 = \mathbf{x}_i \mathbf{A}\mathbf{A}^\top  \mathbf{x}^\top_i =  \mathbf{x}_i   \mathbf{x}^\top_i = ||\mathbf{x}^\top_i||^2
+||\mathbf{z}_h - \mathbf{z}_i|| = 
+||\mathbf{A}^\top \mathbf{x}_h - \mathbf{A}^\top\mathbf{x}_i||^2 =
+(\mathbf{x}_h - \mathbf{x}_i)^\top \mathbf{A} \mathbf{A}^\top (\mathbf{x}_h - \mathbf{x}_i)
 $$
 
-Our transformation has this property:
+Note that if $\mathbf{A} \mathbf{A} ^\top= \mathbf{I}$ then the distance between the $h$th and $i$th rows is the same for the original and transformed data.
+
+We refer to transformation with the property $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ as an *orthogonal transformations* and they are guaranteed to preserves the distance between any two points.
+
+We previously demonstrated our rotation has this property. We can confirm using R:
 
 ```{r}
-theta <- 30 # works for any theta
-A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
 A %*% t(A)
 ```
 
-We can confirm this by computing the total variation for `x` and `z`:
+Notice that $\mathbf{A}$ being orthogonal also guarantees that the total sum of squares (TSS) of $\mathbf{X}$, defined as $\sum_{i=1}^n \sum_{j=1}^p x_{i,j}^2$ is equal to the total sum of squares of the rotation $\mathbf{Z} = \mathbf{X}\mathbf{A}^\top$. To show this notice that if we denote the rows of $\mathbf{Z}$ as $\mathbf{z}_1, \dots, \mathbf{z}_n$, then sum of squares can be written as:
+
+$$
+\sum_{1=1}^n ||\mathbf{z}_i||^2 = \sum_{i=1}^n ||\mathbf{A}^\top\mathbf{x}_i||^2 = \sum_{i=1}^n \mathbf{x}_i^\top \mathbf{A}\mathbf{A}^\top  \mathbf{x}_i = \sum_{i=1}^n \mathbf{x}_i^\top\mathbf{x}_i = \sum_{i=1}^n||\mathbf{x}_i||^2 
+$$
+
+We can confirm using R:
 
 ```{r}
-z <- rotate(x, -45)
-sum(colSums(x^2))
-sum(colSums(z^2))
+theta <- -45
+z <- rotate(x, theta) # works for any theta
+sum(x^2)
+sum(z^2)
 ```
 
-This can be interpreted as consequence of the fact that orthogonal transformation guarantee that all the information is preserved.
+This can be interpreted as a consequence of the fact that orthogonal transformation guarantee that all the information is preserved.
+
+However, although the total is preserved, the sum of squares for the individual columns changes. Here we compute the proportion of TSS attributed to each column, referred to as the *variance explained* or *variance captured* by each column, for $\mathbf{X}$
+
+```{r}
+colSums(x^2)/sum(x^2)
+```
+
+and $\mathbf{Z}$
+
+```{r}
+colSums(z^2)/sum(z^2)
+```
+
+In the next section we describe how this last mathematical result can be useful.
 
 ## Principal Component Analysis (PCA) {#sec-pca}
 
-Now how does this all relate to our goal of finding a one-dimensional summary that approximates distance between points?
+We have established that orthogonal transformations preserve the the distance between observations and the total sum of squares. We have also established that, while the TSS remains the same, the way this total is distributed across the columns can change.
 
-Note that in our original data the variability of the two dimensions is the same:
-
-```{r}
-colSums(x^2)
-```
-
-But after a rotations this is no longer true:
-
-```{r}
-colSums(z^2)
-```
-
-With `z`, the proportion of the variability included in the first dimension is much higher. We can search for the rotation that maximizes the proportion of the variability included in the first dimension:
+The general idea behind Principal Component Analysis (PCA) is to try to find orthogonal transformations that concentrate the variance explained in the first few columns. We can then focus on these few columns, effectively reducing the dimension of the problem. In our specific example, we are looking for the rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from -90 to 0:
 
 ```{r max-rotation, fig.width=3, fig.height=3, echo=FALSE, out.width="50%"}
-library(tidyverse)
 rafalib::mypar()
 angles <- seq(0, -90)
 v <- sapply(angles, function(angle) colSums(rotate(x, angle)^2))
-variance_explained <- v[1,] / (v[1,] + v[2,])
-plot(angles, variance_explained)
+variance_explained <- v[1,]/sum(x^2)
+plot(angles, variance_explained, type = "l")
 ```
 
 ```{r, eval=FALSE}
 angles <- seq(0, -90)
 v <- sapply(angles, function(angle) colSums(rotate(x, angle)^2))
-variance_explained <- v[1,] / (v[1,] + v[2,])
-plot(angles, variance_explained)
+variance_explained <- v[1,]/sum(x^2)
+plot(angles, variance_explained, type = "l")
 ```
 
-We see that the variability included in the first dimension is maximized at about -45 degrees. Becuase almost all the variation is explained by this first dimension, with this particular rotation the distance between points in $X$ can be very well approximated by just the first dimension of $Z$, much better than with the first dimension of $X$:
-
-```{r distance-approx-2, echo=FALSE, fig.width=3, fig.height=3, out.width="40%"}
-rafalib::mypar()
-plot(dist(x), dist(z[,1]))
-abline(0,1, col = "red")
-```
-
-We also notice that the two groups, adults and children, can be clearly observed with the one number summary:
+We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We can rotate the entire dataset using:
 
 ```{r}
-hist(z[,1], nclass = 15)
+z <- x %*% A
 ```
 
-Below, we learn that the rotation that maximizes the standard deviation of the first dimention `z[,1]` gives us the first principal component of the matrix `x`.
+
+The following animation further illustrates how different rotations affect the variability explained by the dimensions of the rotated data:
 
 ```{r, echo=FALSE, fig.asp=1}
-if(knitr::is_html_output()){
+#if(knitr::is_html_output()){
+if (TRUE) {
   if(!file.exists("img/pca.gif")){
-    x <- apply(x, 2, scale)
     angles <- c(rep(0, 5),
                 seq(0, 45, 1),
                 rep(45, 15),
@@ -374,38 +419,33 @@ if(knitr::is_html_output()){
 }
 ```
 
-In general, dimension reduction can be described as applying a rotation $A$ to a matrix with many columns $X$ that *moves* the information contained in $\mathbf{X}$ to the first few columns of $\mathbf{Z}=\mathbf{X}\mathbf{A}$. Then keeping just these few informative columns, reduces the dimension of the vectors contained in the rows. In our simplistic example we reduced the dimensions from 2 to 1. But the ideas extend to higher dimensions. 
 
-In general, the first *principal component* (PC) of a matrix $\mathbf{X}$ is the linear orthogonal transformation  that maximizes the variability of the first dimension. The function `prcomp` finds this transformation:
+The first dimension of `z` is referred to as the *first principal component (PC)*. Because almost all the variation is explained by this first PC, the distance between rows in `x` can be very well approximated by the distance calculated with just `z[,1]`.
 
-```{r}
-pca <- prcomp(x)
-pca$rotation
+```{r distance-approx-2, echo=FALSE, fig.width=3, fig.height=3, out.width="40%"}
+rafalib::mypar()
+plot(dist(x), dist(z[,1]))
+abline(0,1, col = "red")
 ```
 
-Note that the first PC is almost the same as that provided by the $\cos(-45^{\circ}), \sin(-45^{\circ})$ we used earlier (except perhaps for a sign change that is arbitrary).
+We also notice that the two groups, adults and children, can be clearly observed with the one number summary, better than with any of the two orginal dimesions.
 
-The function `prcomp` returns the rotation needed to transform $\mathbf{X}$ so that the variability of the columns is decreasing from most variable to least (accessed with `$rotation`) as well as the resulting new matrix (accessed with `$x`). By default the columns of $\mathbf{X}$ are first centered (to change this change the `center` argument to `FALSE`).
-
-So, using the matrix multiplication shown above, we have that the following are the same (demonstrated by a difference between elements of essentially zero):
+```{r}
+#| echo: false
+rafalib::mypar(1,3)
+hist(x[,1], breaks = seq(-4,4,0.5))
+hist(x[,2], breaks = seq(-4,4,0.5))
+hist(z[,1], breaks = seq(-4,4,0.5))
+```
 
 ```{r}
 #| eval: false
-
-sweep(x, 2, colMeans(x))
-pca$x %*% t(pca$rotation)
+hist(x[,1], breaks = seq(-4,4,0.5))
+hist(x[,2], breaks = seq(-4,4,0.5))
+hist(z[,1], breaks = seq(-4,4,0.5))
 ```
 
-The rotation is orthogonal which means that the inverse is its transpose. So we also have that these two are identical:
-
-```{r eval=FALSE}
-#| eval: false
-
-sweep(x, 2, colMeans(x)) %*% pca$rotation
-pca$x
-```
-
-We can visualize these to see how the first component summarizes the data. In the plot below red represents high values and blue negative values (later, in Section @sec-factor-analysis), we learn why we call these weights and patterns:
+We can visualize these to see how the first component summarizes the data. In the plot below red represents high values and blue negative values:
 
 ```{r illustrate-pca-twin-heights, echo=FALSE, height = 5, out.width="70%"}
 illustrate_pca <- function(x, flip=1,
@@ -428,7 +468,7 @@ illustrate_pca <- function(x, flip=1,
   text(0.5, 0.5, "=", cex = cex)
 
   z <- flip*t(pca$x)
-  image(cols, rows, z[,rev(1:ncol(z))], xaxt = "n", yaxt = "n",xlab="",ylab="", main= "Weights", col = colors)
+  image(cols, rows, z[,rev(1:ncol(z))], xaxt = "n", yaxt = "n",xlab="",ylab="", main= "Z", col = colors)
   abline(h=rows + 0.5, v = cols + 0.5)
 
   rafalib::nullplot(xaxt="n",yaxt="n",bty="n")
@@ -440,15 +480,78 @@ illustrate_pca <- function(x, flip=1,
   image(cols, rows, nz[,rev(1:ncol(nz))],  xaxt = "n", yaxt = "n", bty = "n", xlab="",ylab="", col = colors)
   abline(h = pad+0:ncol(z)+1/2)
   lines(c(ncol(z)/2+0.5,ncol(z)/2+1/2),c(pad,pad+ncol(z))+0.5)
-  text(ncol(z)/2+0.5, pad+ncol(z)+2 , expression(bold(Pattern^T)), font=2)
+  text(ncol(z)/2+0.5, pad+ncol(z)+2 , expression(bold(A^T)), font=2)
 }
 rafalib::mypar(1,1)
 illustrate_pca(x, flip = -1)
 ```
 
-It turns out that we can find this linear transformation not just for two dimensions but for matrices of any dimension $p$. For a multidimensional matrix with $p$ columns, we can find a transformation that preserves distance between rows, but with the variance of the columns in decreasing order. The second column is the second principal component, the third column is the third principal component, and so on. As in our example, if after a certain number of columns, say $k$, the variances of the columns of $\mathbf{Z}_j$, $j>k$ are very small, it means these dimensions have little to contribute to the distance and we can approximate distance between any two points with just $k$ dimensions. If $k$ is much smaller than $p$, then we can achieve a very efficient summary of our data. 
 
-## Iris example
+This idea generalizes to dimensions higher than 2. As we did in our two dimensional example, we start by finding the $p\times1$ vector $\mathbf{a}_1$ with$||\mathbf{a}_1||=1$ that maximizes $||\mathbf{X} \mathbf{a}_1||$. $\mathbf{X} \mathbf{a}_1$ is the first PC. To find the second PC, we subtract the variation explained by first PC from $\mathbf{X}$:
+
+$$
+\mathbf{r} = \mathbf{X} - \mathbf{X} \mathbf{a}_1 \mathbf{a}_1^\top
+$$
+
+and then find the vector $\mathbf{a}_2$ with$||\mathbf{a}_2||=1$ that maximizes $||\mathbf{r} \mathbf{a}_2||$. $\mathbf{X} \mathbf{a}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
+
+$$
+\mathbf{A} =
+\begin{bmatrix} 
+\mathbf{a}_1&\dots&\mathbf{a}_p
+\end{bmatrix},
+\mathbf{Z} = \mathbf{X}\mathbf{A}
+$$
+
+The ideas of distance preervation extends to higher dimensions. For a multidimensional matrix with $p$ columns, the $\mathbf{A}$ transformation  preserves distance between rows, but with the variance exaplined by the columns in decreasing order.
+If the variances of the columns $\mathbf{Z}_j$, $j>k$ are very small, these dimensions have little to contribute to the distance calculation and we can approximate distance between any two points with just $k$ dimensions. If $k$ is much smaller than $p$, then we can achieve a very efficient summary of our data.
+
+
+:::{.callout-warning} 
+Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{a}|| = ||-\mathbf{X} \mathbf{a}||$. Also note that if we multiply a column of $\mathbf{A}$ by $-1$ we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{A}^\top$ as long as we also multiple the corresponsing column of $\matbf{Z}$ by -1. This implies that sign of each column of the rotation $\mathbf{A}$ and principal component matrix $\mathbf{Z}$ is arbitrary.
+:::
+
+
+In R we can find the principal components of any matrix with the function `prcomp`:
+
+```{r}
+pca <- prcomp(x, center = FALSE)
+```
+
+Note that default behavior is to center the columns of `x` before computing the PCs, an operation we don't need because our matrix is scaled.
+
+The object `pca` includes the rotated data $Z$ in `pca$x` and the rotation $\mathbf{A}$ in `pca$rotation`.
+
+We can see that columns of the `pca$rotation` are indeed the rotation obtained with -45 (remember the sign is arbitrary)
+
+```{r}
+pca$rotation
+```
+
+The sqaure root of the variation of each column is included in the `pca$sdev` component. This implies we can compute the variance explained by each PC using:
+
+```{r}
+pca$sdev^2/sum(pca$sdev^2)
+```
+
+The function `summary` performs this calculation for us:
+
+```{r}
+summary(pca)
+```
+
+
+We also see that we can transform between `x` ($\mathbf{X}$) and `pca$x` ($\mathbf{Z}$) as explained with mathematical formulas above:
+
+```{r}
+all.equal(pca$x, x %*% pca$rotation)
+all.equal(x, pca$x %*% t(pca$rotation))
+```
+
+## Examples
+
+
+### Iris example
 
 The iris data is a widely used example in data analysis courses. It includes four botanical measurements related to three flower species:
 
@@ -458,7 +561,7 @@ names(iris)
 
 If you print `iris$Species` you will see that the data is ordered by the species.
 
-Let's compute the distance between each observation. You can clearly see the three species with one species very different from the other two:
+If we visualize the distances we can clearly see the three species with one species very different from the other two:
 
 ```{r, eval=FALSE}
 x <- iris[,1:4] |> as.matrix()
@@ -473,7 +576,7 @@ d <- dist(x)
 image(as.matrix(d), col = rev(RColorBrewer::brewer.pal(9, "RdBu")))
 ```
 
-Our predictors here have four dimensions, but three are very correlated:
+Our features matrix has four dimensions, but three are very correlated:
 
 ```{r}
 cor(x)
@@ -486,16 +589,21 @@ pca <- prcomp(x)
 summary(pca)
 ```
 
-The first two dimensions account for 97% of the variability. Thus we should be able to approximate the distance very well with two dimensions. We can visualize the results of PCA:
+The first two dimensions account for almot 98% of the variability. Thus we should be able to approximate the distance very well with two dimensions. We confirm this by computing the distance from first two dimensions and comparing to the original:
 
-```{r illustrate-pca-twin-heights-iris, echo=FALSE, fig.height = 6, out.width="70%"}
-rafalib::mypar()
-illustrate_pca(x)
+```{r, eval = FALSE}
+d_approx <- dist(pca$x[, 1:2])
+plot(d, d_approx); abline(0, 1, col = "red")
 ```
 
-And see that the first pattern is sepal length, petal length, and petal width (red) in one direction and sepal width (blue) in the other. The second pattern is the sepal length and petal width in one direction (blue) and petal length and petal width in the other (red). You can see from the weights that the first PC1 drives most of the variability and it clearly separates the first third of samples (setosa) from the second two thirds (versicolor and virginica). If you look at the second column of the weights, you notice that it somewhat separates versicolor (red) from virginica (blue).
+```{r dist-approx-4, echo = FALSE, message = FALSE, fig.height = 3, fig.width = 3, out.width="50%"}
+rafalib::mypar(1,1)
+d_approx <- dist(pca$x[, 1:2])
+plot(d, d_approx); abline(0, 1, col = "red")
+```
 
-We can see this better by plotting the first two PCs with color representing the species:
+
+A useful application of this result is that we can now visualize the distance between each observation with a two-dimensional plot.
 
 ```{r iris-pca}
 data.frame(pca$x[,1:2], Species = iris$Species) |>
@@ -504,20 +612,23 @@ data.frame(pca$x[,1:2], Species = iris$Species) |>
   coord_fixed(ratio = 1)
 ```
 
-We see that the first two dimensions preserve the distance:
+We color the the observation by their labels and notice that with these two dimensions we achieve almost perfect separation.
 
-```{r dist-approx-4, message = FALSE, fig.height = 3, fig.width = 3, out.width="50%"}
-d_approx <- dist(pca$x[, 1:2])
-plot(d, d_approx); abline(0, 1, color = "red")
+Looking more closely at the resulting PCs and rotaions:
+
+```{r illustrate-pca-twin-heights-iris, echo=FALSE, fig.height = 6, out.width="70%"}
+rafalib::mypar()
+illustrate_pca(x)
 ```
 
-This example is more realistic than the first artificial example we used, since we showed how we can visualize the data using two dimensions when the data was four-dimensional.
+we learn that the first PC is obtained by taking a weighted avarge of sepal length, petal length, and petal width, since these are red in first column, and subtracts a weighted sepal width, since this is blue. The second PC is a weighted average of weighted average of petal length and petal width minus a weighted average of sepal length and petal width. 
 
-## MNIST example
 
-The written digits example has 784 features. Is there any room for data reduction? Can we create simple machine learning algorithms using fewer features?
+### MNIST example
 
-Let's load the data:
+The written digits example has 784 features. Is there any room for data reduction? We will use PCA to answer this.
+
+Let's load the data if not already loaded:
 
 ```{r}
 library(dslabs)
@@ -526,35 +637,33 @@ if (!exists("mnist")) mnist <- read_mnist()
 
 Because the pixels are so small, we expect pixels close to each other on the grid to be correlated, meaning that dimension reduction should be possible.
 
-Let's try PCA and explore the variance of the PCs. This will take a few seconds as it is a rather large matrix.
+Let's compute the PCs. This will take a few seconds as it is a rather large matrix.
 
 ```{r, cache=TRUE}
-col_means <- colMeans(mnist$test$images)
 pca <- prcomp(mnist$train$images)
 ```
 
-```{r mnist-pca-variance-explained}
-pc <- 1:ncol(mnist$test$images)
-qplot(pc, pca$sdev)
+```{r mnist-pca-variance-explained, echo=FALSE}
+rafalib::mypar(1,1)
+plot(pca$sdev^2/sum(pca$sdev^2), xlab = "PC", ylab = "Variance explained")
+```
+
+```{r eval=FALSE}
+plot(pca$sdev^2/sum(pca$sdev^2), xlab = "PC", ylab = "Variance explained")
 ```
 
 We can see that the first few PCs already explain a large percent of the variability:
 
-```{r}
-summary(pca)$importance[,1:5]
-```
-
-And just by looking at the first two PCs we see information about the class. Here is a random sample of 2,000 digits:
+And just by looking at the first two PCs we already see information about the labels. Here is a random sample of 500 digits:
 
 ```{r mnist-pca-1-2-scatter}
-data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2],
-           label = factor(mnist$train$label)) |>
-  sample_n(2000) |>
+data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], label = factor(mnist$train$label)) |>
+  sample_n(500) |>
   ggplot(aes(PC1, PC2, fill = label)) +
   geom_point(cex = 3, pch = 21)
 ```
 
-We can also *see* the linear combinations on the grid to get an idea of what is getting weighted:
+We can also *see* the linear combinations on the grid to get an idea of how pixels are getting to compute the first four principal components:
 
 ```{r mnist-pca-1-4, echo = FALSE, out.width="100%", fig.width=6, fig.height=1.75}
 library(RColorBrewer)
@@ -565,7 +674,7 @@ tmp <- lapply( c(1:4,781:784), function(i){
 })
 tmp <- Reduce(rbind, tmp)
 
-tmp |> filter(id < 5) |>
+tmp |> filter(id <= 4) |>
   ggplot(aes(Row, Column, fill = value)) +
   geom_raster() +
   scale_y_reverse() +
@@ -573,7 +682,16 @@ tmp |> filter(id < 5) |>
   facet_wrap(~label, nrow = 1)
 ```
 
-The lower variance PCs appear related to unimportant variability in the corners:
+We can clearly see that first PC appears to be separating the 1s (red) from the 0s (blue). We can kind of make out numbers in the other three PCs as well. By looking at the PCs stratified by digit we get futher insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:
+
+```{r digit-pc-boxplot}
+#| echo: false
+data.frame(label = factor(mnist$train$labels), PC2 = pca$x[,2]) |> 
+  ggplot(aes(label, PC2)) + geom_boxplot() 
+```
+
+
+We can also confirm that the lower variance PCs appear related to unimportant variability, mainly smudges in the corners:
 
 ```{r mnist-pca-last,, echo = FALSE, out.width="100%", fig.width=6, fig.height=1.75}
 tmp |> filter(id > 5) |>
