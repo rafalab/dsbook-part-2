@@ -1,55 +1,50 @@
 # Matrix factorization
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, message=FALSE, eval=FALSE}
 library(tidyverse)
+library(janitor)
 library(dslabs)
-RMSE <- function(true_ratings, predicted_ratings){
-    sqrt(mean((true_ratings - predicted_ratings)^2))
-  }
 
+rmse <- function(r) sqrt(mean(r^2, na.rm = TRUE))
 set.seed(2006)
 indexes <- split(1:nrow(movielens), movielens$userId)
-test_ind <- sapply(indexes, function(ind) sample(ind, ceiling(length(ind)*.2))) |>
-  unlist(use.names = TRUE) |> sort()
+test_ind <- sapply(indexes, function(i) sample(i, ceiling(length(i)*.2))) |> 
+  unlist() |>
+  sort()
 test_set <- movielens[test_ind,]
 train_set <- movielens[-test_ind,]
 
-test_set <- test_set |> 
-  semi_join(train_set, by = "movieId")
-train_set <- train_set |> 
-  semi_join(test_set, by = "movieId")
+test_set <- test_set |> semi_join(train_set, by = "movieId")
+train_set <- train_set |> semi_join(test_set, by = "movieId")
 
-y <- select(train_set, movieId, userId, rating) |>
-  pivot_wider(names_from = movieId, values_from = rating) 
-rnames <- y$userId
-y <- as.matrix(y[,-1])
-rownames(y) <- rnames
+y_train <- select(train_set, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) |>
+  column_to_rownames("userId") |>
+  as.matrix()
+
+y_test <- select(test_set, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) |>
+  column_to_rownames("userId") |>
+  as.matrix() 
+
+y_test <- y_test[rownames(y_train), colnames(y_train)]
 
 movie_map <- train_set |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
 
-mu <- mean(y, na.rm = TRUE)
-b_i <- colMeans(y - mu, na.rm = TRUE)
-b_u <- rowMeans(sweep(y - mu, 2, b_i), na.rm = TRUE)
-
+mu <- mean(y_train, na.rm = TRUE)
+n <- colSums(!is.na(y_train))
+sums <- colSums(y_train - mu, na.rm = TRUE)
 lambdas <- seq(0, 10, 0.1)
-
-fit_movies <- data.frame(movieId = as.integer(colnames(y)), mu = mu, b_i = b_i)
-n <-  colSums(!is.na(y))
-fit_movies$n <- n
-sums <- colSums(y - mu, na.rm = TRUE)
 rmses <- sapply(lambdas, function(lambda){
   b_i <-  sums / (n + lambda)
-  fit_movies$b_i <- b_i
-  left_join(test_set, fit_movies, by = "movieId") |> mutate(pred = mu + b_i) |> 
-    summarize(rmse = RMSE(rating, pred)) |>
-    pull(rmse)
+  rmse(sweep(y_test - mu, 2, b_i))
 })
 
 lambda <- lambdas[which.min(rmses)]
-fit_movies$b_i_reg <- colSums(y - mu, na.rm = TRUE) / (n + lambda)
-
-fit_users <- data.frame(userId = as.integer(rownames(y)), b_u = b_u)
-fit_users$b_u <- rowMeans(sweep(y - mu, 2, fit_movies$b_i_reg), na.rm = TRUE)
+b_i_reg <- colSums(y_train - mu, na.rm = TRUE) / (n + lambda)
+b_u <- rowMeans(sweep(y_train - mu, 2, b_i_reg), na.rm = TRUE)
+r <- sweep(y_train - mu, 2, b_i_reg) - b_u
+colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
 ```
 
 Matrix factorization is a widely used concept in machine learning. It is very much related to factor analysis, singular value decomposition (SVD), and principal component analysis (PCA). Here we describe the concept in the context of movie recommendation systems.
@@ -67,10 +62,22 @@ r_{u,i} = y_{u,i} - \hat{b}_i - \hat{b}_u
 $$
 
 
-We can compute these residuals for the model we fit in the previous section:
+We can compute these residuals for the model we fit in the previous chapter:
 
 ```{r}
-r <- sweep(y - mu, 2, fit_movies$b_i_reg) - fit_users$b_u
+y <- select(movielens, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) |>
+  column_to_rownames("userId") |>
+  as.matrix() 
+
+movie_map <- movielens |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
+
+lambda <- 3.1
+mu <- mean(y, na.rm = TRUE)
+n <- colSums(!is.na(y))
+b_i_reg <- colSums(y - mu, na.rm = TRUE) / (n + lambda)
+b_u <- rowMeans(sweep(y - mu, 2, b_i_reg), na.rm = TRUE)
+r <- sweep(y - mu, 2, b_i_reg) - b_u
 colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
 ```
 
@@ -189,8 +196,7 @@ cor(r)
 we note that perhaps we need a second factor to account for the fact that some users like Al Pacino, while others dislike him or don't care. Notice that the overall structure of the correlation obtained from the simulated data is not that far off the real correlation:
 
 ```{r, echo=FALSE}
-cnames <- colnames(r)
-r <- sweep(y - mu, 2, fit_movies$b_i_reg) - fit_users$b_u
+r <- sweep(y - mu, 2, b_i_reg) - b_u
 colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
 
 six_movies <- c(m_1, m_2, m_3, m_4, m_5, m_6)
@@ -237,24 +243,19 @@ with the variability of each term decreasing and with the $p$s uncorrelated. The
 To illustrate this we will only consider a small subset of movies with many ratings and users that have rated many movies:
 
 ```{r}
-keep <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", "Ghost", "Titanic", 
+keep <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", "Ghost", 
           "Scent of a Woman")
-dat <- movielens  |> 
-  group_by(userId) |>
-  filter(n() >= 250) |> 
-  ungroup() |>
-  group_by(movieId) |>
-  filter(n() >= 50 | title %in% keep) |> 
-  ungroup() 
 
-y <- select(dat, movieId, userId, rating) |>
-  pivot_wider(names_from = movieId, values_from = rating) 
-y <- as.matrix(y[,-1])
+library(missMDA)
+ind_x <- rowSums(!is.na(r)) > 25
+ind_y <- colSums(!is.na(r[ind_x,])) > 10 #| colnames(r) %in% keep
+dim(r[ind_x,ind_y])
+pca <- imputePCA(r[ind_x,ind_y], ncp = 5)
+pca$values
 
-colnames(y) <- dat |> select(movieId, title) |> 
-  distinct(movieId, .keep_all = TRUE) |>
-  right_join(data.frame(movieId = as.integer(colnames(y))), by = "movieId") |>
-  pull(title)
+mean(!is.na(r[ind_x, ind_y]))
+y <- y[ind_x, ind_y]
+r <- r[ind_x, ind_y]
 ```
 
 We first remove the overall movie and user effects as we are interested in the variability not explained by these. We start by removing the movie effects:

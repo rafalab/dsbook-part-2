@@ -184,10 +184,56 @@ Scientific studies, particularly within epidemiology and social sciences, freque
 Linear models are very flexible and can be applied in many contexts. For example, we can include many more factors than 2. We have just scratched the surface of how linear models can be used to estimate treatment effects. We highly recommend learning more about this through linear model textbooks and R manuals on using the `lm`, `contrasts`, and `model.matrix` functions.
 :::
 
+## Contrasts
 
-## Analysis of variance
+In the examples we have examined, each treatment had only two group: diet and chow and high-fat and sex had female and male. However, variables of interest often have more than one level. For example, we might have tested a third diet on the mice. In Statistics textbooks these variables are referred to as _factor_ and the groups in each factor are called its _levels_. 
 
-In the example we have examined, each treatment had only two _levels_: diet and chow and high-fat and sex had female and male. However, often we have variables of interest that have more than one level. For example, we might have tested a third diet on the mice. In statistics textbooks these variables are referred to as _factor_. In these cases it is common to want to know rather than the effect of each levels of the factor, a more general quantification regarding the variability across the levels. Analysis of variances or ANOVA does just this. The summary used to quantify the variability of a factor is the mean squared error of the estimated effects of each level.
+When a factor is included in the formula, the default behavior for `lm` is to define the intercept term as the expected value for the first level and the other coefficient are to represent the difference, or _contrast_ between the other levels and first. We can see this if we fit estimate the sex effect with `lm`:
+
+
+```{r}
+fit <- lm(body_weight ~ sex, data = mice_weights)
+coefficients(fit)
+```
+
+To recover the expected mean for males we can simply add the two coefficients:
+
+```{r}
+sum(fit$coefficients[1:2])
+```
+
+The package **emmeans** makes this calculation simple and it also calculates standard errors:
+
+```{r}
+library(emmeans)
+emmeans(fit, ~sex)
+```
+
+Now, what if we really didn't want to define a reference level? What if we wanted a parameter to represent the difference from each group to the overall mean? Can we write a model like this:
+
+
+$$
+Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
+$$
+with $x_{i,1} = 1$ if observation $i$ is female and 0 otherwise, and $x_{i,2}=1$ if observation $i$ is male and 0 otherwise? Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is problem because the expected value for each group is just on number, say $\mu_f$ and $\mu_m$, and there is infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies we can't obtain a unique least squares estimates. In statistics we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
+
+Notice that this is not the only constrain that permits estimation of the parameters. Any linear constrain will do as it adds a third equation to our system. A widely used constrain is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrast` in the following way:
+
+
+```{r}
+fit <- lm(body_weight ~ sex, data = mice_weights, contrasts = list(sex = contr.sum))
+coefficients(fit)
+```
+
+We see that the intercept is now larger because it now represents the overall mean, rather than the mean for females. The other coefficient  represents the contrast between females and the overall mean, $\beta_1$ in our model. The coefficient for men is not shown because it is redundant: $\beta_1= -\beta_2$. 
+
+If we want to see all the estimates, the package **emmeans** also makes the calculations for us:
+
+```{r}
+contrast(emmeans(fit, ~sex))
+```
+
+The use of this alternative constrain is more practical when a factor has more than one level and choosing an baseline becomes less convenient. Furthermoe, we might be more interested in the variance of the coefficients rather than contrasts between groups and the reference level.
 
 As an example, consider that the mice in our dataset are actually from several generations: 
 
@@ -195,23 +241,103 @@ As an example, consider that the mice in our dataset are actually from several g
 table(mice_weights$gen)
 ```
 
-We can fit a linear model that fits an effect for each of these generations along with diet and sex model previously fit:
+
+To estimate the variability due to the different generations, a convinient model is:
+
+$$
+Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \varepsilon_i
+$$
+
+with $x_{i,j}$ indicator variables: $x_{i,j}=1$ if mouse $i$ is in level $j$ and 0 otherwise, $J$ representing the number of levels, in our example `r length(unique(dat$gen))` generations, and the level effects constrained with 
+
+$$
+\frac{1}{J} \sum_{j=1}^J \beta_j = 0 \implies \sum_{j=1}^J \beta_j = 0 
+$$
+
+This constrain makes the model identifiable and also let's us quantify the variability due to generations with 
+
+$$
+\sigma^2_{\text{gen}} = \frac{1}{J}\sum_{j=1}^J \beta_j^2
+$$
+
+We can see the estimated coefficients using:
 
 ```{r}
-fit <- lm(body_weight ~ diet * sex + gen,  data = mice_weights)
+fit <- lm(body_weight ~ gen,  data = mice_weights, contrasts = list(gen = contr.sum))
+contrast(emmeans(fit, ~gen)) 
 ```
 
-We can then perform an analysis of variance with the R `aov` function:
+In the next section we briefly describe a technique useful to study the variability associated with this factors.
+
+## Analysis of variance (ANOVA) {#sec-anova}
+
+When a factor has more than one level it is common to want to know if there is important variability across the levels rather than specific difference between any given pair of levels. Analysis of variances (ANOVA) provides tools to do this.
+
+
+ANOVA provides an estimate of $\sigma^2_{\text{gen}}$ and statistical approach to test the null hypothesis that the factor contributes no variability:  $\sigma^2_{\text{gen}} =0$.
+
+Once a linear model is fit using one or more factors, the R `aov` function can be used to perform ANOVA. Specifically, the estimate of the factor variability is computed along with a statistic that can be used for hypothesis testing:
 
 ```{r}
 summary(aov(fit))
 ```
 
-This analysis shows that the largest variation is explained by sex and then diet. The generation factor explains very little variation in comparison and is not found to be statistically significant. 
+Note that if given a model formula `aov` will fit the model:
+
+```{r}
+#| eval: false
+summary(aov(body_weight ~ gen, data = mice_weights))
+```
+
+We do not need to specify the constrain because ANOVA needs tto constrain the sum to be 0 for the results to be interpretable.
+
+This analysis points that generation not being significant.
 
 :::{.callout-note}
-In this book, we do not provide the details for how we compute this p-value. There are several books on analysis of variance and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult these textbooks.
+We do note include many details, for example on how the summary statistics and p-values shown by `aov` are defined and motivated. There are several books on analysis of variance and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult these textbooks.
 :::
+
+
+### Multiple factors
+
+ANOVA was developed to analyze agricultural data, which usually included several factors such as treatment, blocks, and breeds. 
+
+
+We can perform ANOVA with multiple factors:
+
+```{r}
+summary(aov(body_weight ~ sex + diet + gen,  data = mice_weights))
+```
+
+This analysis points at sex being the biggest source of variability, which is consistent with previously made exploratory plots.
+
+:::{.callout-warning}
+One of the key aspects of ANOVA (Analysis of Variance) is its ability to decompose the total variance in the data, represented by $\sum_{i=1}^n Y_i^2$, into individual contributions attributable to each factor in the study. However, for the mathematical underpinnings of ANOVA to be valid, the experimental design must be balanced. This means that for every level of any given factor, there must be an equal representation of the levels of all other factors. In our study involving mice, the design is unbalanced, which necessitates a cautious approach to the interpretation of the ANOVA results.
+:::
+
+### Array representation 
+
+When the model includes more than one factor, writing down linear models can become cumbersome. For example, in our two factor model we would have to include indicator variables for both factors:
+
+
+$$
+Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i 
+$$
+with the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor. Note we would apply a constrain to assure identifiability. 
+
+An alternative approach, widely used in ANOVA, to avoid indicators variables, is to save the data in an array, then using different Greek letters to denote factors and indices to denote levels:
+
+$$
+Y_{i,j,k} = \mu + \alpha_j + \beta_k + \varepsilon_{i,j,k}
+$$
+with $\mu$ the overall mean, $\alpha_j$ the effect of level $j$ in the first factor, and $\beta_k$ the effect of level $k$ in the second factor. The constrain can be written as 
+
+$$
+\sum_{j=1}^J \alph_a_j = 0 \text{ and } \sum_{k=1}^K \beta_k = 0
+$$
+
+This notation lends itself for extimating the effects by computing means across dimensions of the array.
+
 
 
 ## Exercises
