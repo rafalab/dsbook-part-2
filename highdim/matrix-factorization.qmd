@@ -1,321 +1,371 @@
-# Matrix factorization
+# Matrix Factorization
 
-```{r, echo=FALSE, message=FALSE, eval=FALSE}
+```{r, echo=FALSE, message=FALSE, echo=FALSE}
 library(tidyverse)
 library(janitor)
 library(dslabs)
 
 rmse <- function(r) sqrt(mean(r^2, na.rm = TRUE))
+clamp <- function(x, min = 0.5, max = 5) pmax(pmin(x, max), min)
+
+movielens <- mutate(movielens, userId = factor(userId), movieId = factor(movieId))
+
+movielens <- movielens |> 
+  group_by(userId) |>
+  filter(n() >= 100) |>
+  ungroup()
+
 set.seed(2006)
 indexes <- split(1:nrow(movielens), movielens$userId)
 test_ind <- sapply(indexes, function(i) sample(i, ceiling(length(i)*.2))) |> 
   unlist() |>
   sort()
-test_set <- movielens[test_ind,]
+test_set <- movielens[test_ind,] 
 train_set <- movielens[-test_ind,]
 
 test_set <- test_set |> semi_join(train_set, by = "movieId")
-train_set <- train_set |> semi_join(test_set, by = "movieId")
 
-y_train <- select(train_set, movieId, userId, rating) |>
+y <- select(train_set, movieId, userId, rating) |>
   pivot_wider(names_from = movieId, values_from = rating) |>
   column_to_rownames("userId") |>
   as.matrix()
 
-y_test <- select(test_set, movieId, userId, rating) |>
-  pivot_wider(names_from = movieId, values_from = rating) |>
-  column_to_rownames("userId") |>
-  as.matrix() 
-
-y_test <- y_test[rownames(y_train), colnames(y_train)]
-
 movie_map <- train_set |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
 
-mu <- mean(y_train, na.rm = TRUE)
-n <- colSums(!is.na(y_train))
-sums <- colSums(y_train - mu, na.rm = TRUE)
+mu <- mean(y, na.rm = TRUE)
+a <- rowMeans(y - mu, na.rm = TRUE)
+n <- colSums(!is.na(y))
+sums <- colSums(y - mu - a, na.rm = TRUE)
 lambdas <- seq(0, 10, 0.1)
 rmses <- sapply(lambdas, function(lambda){
-  b_i <-  sums / (n + lambda)
-  rmse(sweep(y_test - mu, 2, b_i))
+  b <-  sums / (n + lambda)
+  test_set |> 
+    left_join(data.frame(userId = names(a), a = a), by = "userId") |>
+    left_join(data.frame(movieId = names(b), b = b), by = "movieId") |>
+    mutate(resid = rating - clamp(mu + a + b)) |> pull(resid) |> rmse()
 })
-
-lambda <- lambdas[which.min(rmses)]
-b_i_reg <- colSums(y_train - mu, na.rm = TRUE) / (n + lambda)
-b_u <- rowMeans(sweep(y_train - mu, 2, b_i_reg), na.rm = TRUE)
-r <- sweep(y_train - mu, 2, b_i_reg) - b_u
-colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
+lambda <- lambdas[which.min(rmses)] 
+b_reg <- sums / (n + lambda)
 ```
 
-Matrix factorization is a widely used concept in machine learning. It is very much related to factor analysis, singular value decomposition (SVD), and principal component analysis (PCA). Here we describe the concept in the context of movie recommendation systems.
-
-We have described how the model:
+In the previous chapter we described how the model:
 
 $$ 
-Y_{u,i} = \mu + b_i + b_u + \varepsilon_{u,i}
+Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
 $$
 
-accounts for movie to movie differences through the $b_i$ and user to user differences through the $b_u$. But this model leaves out an important source of variation related to the fact that groups of movies have similar rating patterns and groups of users have similar rating patterns as well. We will discover these patterns by studying the residuals:
+can be used to model movie ratings and help make useful predictions. This model accounts for user differences through $\alpha_i$ and movie effects through $\beta_j$. However, the model ignores an important source of information related to the fact that groups of movies, have similar rating patterns and groups of users have similar rating patterns as well.  
+
+To see an example of this we compute residuals 
 
 $$
-r_{u,i} = y_{u,i} - \hat{b}_i - \hat{b}_u
+r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 $$
-
-
-We can compute these residuals for the model we fit in the previous chapter:
+using the `mu`, `a` and `b_reg` computed in the previous chapter:
 
 ```{r}
-y <- select(movielens, movieId, userId, rating) |>
-  pivot_wider(names_from = movieId, values_from = rating) |>
-  column_to_rownames("userId") |>
-  as.matrix() 
-
-movie_map <- movielens |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
-
-lambda <- 3.1
-mu <- mean(y, na.rm = TRUE)
-n <- colSums(!is.na(y))
-b_i_reg <- colSums(y - mu, na.rm = TRUE) / (n + lambda)
-b_u <- rowMeans(sweep(y - mu, 2, b_i_reg), na.rm = TRUE)
-r <- sweep(y - mu, 2, b_i_reg) - b_u
-colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
+r <- sweep(y - mu - a,  2, b_reg)
 ```
 
-If the movie and user effect model explains all the signal, and the $\varepsilon$ are just noise, then the residuals for different movies should be independent from each other. But they are not. Here are some examples:
+and see how the residuals for three different movies correlate with _The Godfather_:
 
 ```{r movie-cor, echo=FALSE, warning=FALSE, message=FALSE, out.width="100%", fig.width=9, fig.height=3}
+rr <- r
+colnames(rr) <- with(movie_map, title[match(colnames(r), movieId)])
 m_1 <- "Godfather, The"
 m_2 <- "Godfather: Part II, The"
-p1 <- data.frame(x = r[, m_1], y = r[, m_2]) |> 
-  ggplot(aes(x, y)) + geom_point() + xlab(m_1) + ylab(m_2)
+p1 <- data.frame(x = rr[,m_1], y = rr[,m_2]) |> 
+  ggplot(aes(x, y)) + geom_jitter() + xlab(m_1) + ylab(m_2) + xlim(c(-2.5, 2.5)) + ylim(c(-2.5, 2.5))
 
 m_3 <- "Goodfellas"
-p2 <- data.frame(x = r[, m_1], y = r[, m_3]) |> 
-  ggplot(aes(x, y)) + geom_point() + xlab(m_1) + ylab(m_3)
+p2 <- data.frame(x = rr[,m_1], y = rr[,m_3]) |> 
+  ggplot(aes(x, y)) + geom_jitter() + xlab(m_1) + ylab(m_3) + xlim(c(-2.5, 2.5)) + ylim(c(-2.5, 2.5))
 
 m_4 <- "You've Got Mail" 
 m_5 <- "Sleepless in Seattle" 
-p3 <- data.frame(x = r[, m_4], y = r[, m_5]) |> 
-  ggplot(aes(x, y)) + geom_point() + xlab(m_4) + ylab(m_5)
+p3 <- data.frame(x = rr[,m_1], y = rr[,m_5]) |> 
+  ggplot(aes(x, y)) + geom_jitter() + xlab(m_1) + ylab(m_5) + xlim(c(-2.5, 2.5)) + ylim(c(-2.5, 2.5))
 
 gridExtra::grid.arrange(p1, p2 ,p3, ncol = 3)
+rm(rr)
 ```
 
-This plot says that users that liked The Godfather more than what the model expects them to, based on the movie and user effects, also liked The Godfather II more than expected. A similar relationship is seen when comparing The Godfather and Goodfellas. Although not as strong, there is still correlation. We see correlations between You've Got Mail and Sleepless in Seattle as well
+We see that the correlation varies from very strong to negative across the other three movies. 
 
-By looking at the correlation between movies, we can see a pattern (we rename the columns to save print space):
-
-```{r, echo=FALSE}
-x <- r[, c(m_1, m_2, m_3, m_4, m_5)]
-short_names <- c("Godfather", "Godfather2", "Goodfellas",
-                 "You've Got", "Sleepless")
-colnames(x) <- short_names
-cor(x, use = "pairwise.complete")
-```
-
-There seems to be people that like romantic comedies more than expected, while others that like gangster movies more than expected.
-
-These results tell us that there is structure in the data. But how can we model this?
+In this chapter we introduce Factor Analysis, an approach that permits us to model these correlations and improve our prediction, and the Singular Value Decomposition, which permtis us to fit the model. As we will see, this approach is related to principal component analysis (PCA). We describe these concepts in the context of movie recommendation systems.
 
 ## Factor analysis {#sec-factor-analysis}
 
-Here is an illustration, using a simulation, of how we can use some structure to predict the $r_{u,i}$. Suppose our residuals `r` look like this:
-
 ```{r, echo=FALSE}
-q <- matrix(c(1 , 1, 1, -1, -1), ncol = 1)
-rownames(q) <- short_names
-p <- matrix(rep(c(2, 0, -2), c(3, 5, 4)), ncol = 1)
-rownames(p) <- 1:nrow(p)
-
-set.seed(1988)
-r <- jitter(p %*% t(q), factor = 2)
-```
-
-```{r}
-round(r, 1)
-```
-
-There seems to be a pattern here. In fact, we can see very strong correlation patterns:
-
-```{r}
-cor(r) 
-``` 
-
-We can create vectors `q` and `p`, that can explain much of the structure we see. The `q` would look like this:
-
-```{r}
-t(q) 
-```
-
-and it narrows down movies to two groups: gangster (coded with 1) and romance (coded with -1). We can also reduce the users to three groups: 
-
-```{r}
-t(p)
-```
-
-those that like gangster movies and dislike romance movies (coded as 2), those that like romance movies and dislike gangster movies (coded as -2), and those that don't care (coded as 0). The main point here is that we can almost reconstruct $r$, which has 60 values, with a couple of vectors totaling 17 values. Note that `p` and `q` are equivalent to the patterns and weights we described in Section @sec-pca.
-
-If $r$ contains the residuals for users $u=1,\dots,12$ for movies $i=1,\dots,5$ we can write the following mathematical formula for our residuals $r_{u,i}$.
-
-$$
-r_{u,i} \approx p_u q_i 
-$$
-
-This implies that we can explain more variability by modifying our previous model for movie recommendations to:
-
-$$
-Y_{u,i} = \mu + b_i + b_u + p_u q_i + \varepsilon_{u,i}
-$$
-
-
-However, we motivated the need for the $p_u q_i$ term with a simple simulation. The structure found in data is usually more complex. For example, in this first simulation we assumed there were was just one factor $p_u$ that determined which of the two genres movie $u$ belongs to. But the structure in our movie data seems to be much more complicated than gangster movie versus romance. We may have many other factors. Here we present a slightly more complex simulation. We now add a sixth movie, Scent of Woman.
-
-
-```{r, echo=FALSE}
-set.seed(1988)
-m_6 <- "Scent of a Woman"
+set.seed(1987)
+short_names <- c("Godfather", "Godfather 2", "Goodfellas",
+                 "Scent of a Woman", "You've Got Mail", "Sleepless in Seattle")
 q <- cbind(c(1 , 1, 1, -1, -1, -1), 
-           c(1 , 1, -1, -1, -1, 1))
-rownames(q) <- c(short_names, "Scent")
-p <- cbind(rep(c(1,0,-1), c(3,5,4)), 
-          c(-1,1,1,0,0,1,1,1,0,-1,-1,-1))
+           c(1 , 1, -1, 1, -1, -1))
+p <- cbind(sqrt(2)*rep(c(-1,0,1), c(3,6,3)*10),
+           1/sqrt(2)*rep(c(-1,1,0,1,0,-1), c(1,2,3,2,1,3)*10))
+             
 rownames(p) <- 1:nrow(p)
+rownames(q) <- c(short_names)
 
-r <- jitter(p %*% t(q), factor = 2)
+e <- p %*% t(q) + matrix(rnorm(nrow(p)*nrow(q), 0, 0.5), nrow(p), nrow(q))
 ```
+
+We start with a simple illustration. We simulate $\varepsilon_{i,j}$ for 6 movies and 120 users and save it in `e`. If we examine the correlation we notice there a pattern:
 
 ```{r}
-round(r, 1)
+cor(e)
 ```
 
-By exploring the correlation structure of this new dataset
-```{r, echo=FALSE}
-colnames(r)[4:6] <- c("YGM", "SS", "SW")
-cor(r)
-```
-we note that perhaps we need a second factor to account for the fact that some users like Al Pacino, while others dislike him or don't care. Notice that the overall structure of the correlation obtained from the simulated data is not that far off the real correlation:
-
-```{r, echo=FALSE}
-r <- sweep(y - mu, 2, b_i_reg) - b_u
-colnames(r) <- with(movie_map, title[match(colnames(r), movieId)])
-
-six_movies <- c(m_1, m_2, m_3, m_4, m_5, m_6)
-x <- r[, six_movies]
-colnames(x) <- cnames
-cor(x, use = "pairwise.complete")
-```
-
-To explain this more complicated structure, we need two factors. For example something like this:
+It seems their is positive correlation within mob and romance movies, and negative across the two genres. In statistics, we define _factors_ as unobserved or _latent_ variables that are inferred from the patterns of correlations or associations between the observed variables. We can quantify a factor that distinguishes between mob and romance movies with:
 
 ```{r}
-t(q) 
+q <- c(-1, -1, -1, 1, 1, 1)
 ```
 
-With the first factor (the first column of `q`) used to code the gangster versus romance groups and a second factor (the second column of `q`) to explain the Al Pacino versus no Al Pacino groups. We will also need two sets of coefficients to explain the variability introduced by the $3\times 3$ types of groups:
+To determine which users prefer each genre, we can fit a linear model to each user:
 
 ```{r}
-t(p)
+p <- apply(e, 1, function(y) lm(y~q-1)$coef)
 ```
 
-The model with two factors has 36 parameters that can be used to explain much of the variability in the 72 ratings:
+Note we use the `-1` because the errors have mean 0 and we don't need an intercept.
+
+:::{.callout-note}
+There is a much faster way to make this computation using linear algebra. This is because the `lm` function is computing the least squares estimates by taking the derivative of the sum of squares, equaling it to 0, and noting the solution $\hat{\boldsymbol{\beta}}$ satisfies
 
 $$
-Y_{u,i} = \mu + b_i + b_u + p_{u,1} q_{1,i} + p_{u,2} q_{2,i} + \varepsilon_{u,i}
+(\mathbf{q}^\top\mathbf{q}) \, \hat{\boldsymbol{\beta}}  = \mathbf{q}^\top \mathbf{y}
 $$
-
-Note that in an actual data application, we need to fit this model to data. To explain the complex correlation we observe in real data, we usually permit the entries of $p$ and $q$ to be continuous values, rather than discrete ones as we used in the simulation. For example, rather than dividing movies into gangster or romance, we define a continuum. Also note that this is not a linear model and to fit it we need to use an algorithm other than the one used by `lm` to find the parameters that minimize the least squares. The winning algorithms for the Netflix challenge fit a model similar to the above and used regularization to penalize for large values of $p$ and $q$, rather than using least squares. Implementing this approach is beyond the scope of this book.
-
-## Connection to SVD and PCA
-
-The decomposition:
-
-$$
-r_{u,i} \approx p_{u,1} q_{1,i} + p_{u,2} q_{2,i}
-$$
-
-is very much related to SVD and PCA. SVD and PCA are complicated concepts, but one way to understand them is that SVD is an algorithm that finds the vectors $p$ and $q$ that permit us to rewrite the matrix $\mbox{r}$ with $m$ rows and $n$ columns as:
-
-$$
-r_{u,i} = p_{u,1} q_{1,i} + p_{u,2} q_{2,i} + \dots + p_{u,n} q_{n,i} 
-$$
-
-with the variability of each term decreasing and with the $p$s uncorrelated. The algorithm also computes this variability so that we can know how much of the matrices, total variability is explained as we add new terms. This may permit us to see that, with just a few terms, we can explain most of the variability.
-To illustrate this we will only consider a small subset of movies with many ratings and users that have rated many movies:
+with $\mathbf{y}$ the row of `e` passed to `y` in the apply function. Because $\mathbf{q}$ does not change for each user, rather than have `lm` recompute the equation for each user, we can perform the calculation on each column of $e$ to get the $\beta_j$ for all users $j$ like this:
 
 ```{r}
-keep <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", "Ghost", 
-          "Scent of a Woman")
+#| eval: false
+p <- t(qr.solve(crossprod(q)) %*% t(q) %*% t(e))
+```
+:::
 
+We can see that there type of users:
+
+```{r}
+hist(p, breaks = seq(-2,2,0.1))
+```
+
+love mob and hate romance, don't care, and love romance and hate mob movies. We see that we approximate $\varepsilon_{i,j}$ with $p_iq_j$. We convert the vectors to matrices to be able to use linear algebra:
+
+```{r}
+p <- matrix(p); q <- matrix(q)
+plot(p %*% t(q), e)
+```
+
+However, after removing this mob/romance effect, we still see structure in the correlation:
+
+```{r}
+cor(e - p %*% t(q))
+```
+
+This structure seems to be driven by Al Pacino being in the movie or not. This implies we could add another factor:
+
+```{r}
+q <- cbind(c(-1, -1, -1, 1, 1, 1),
+           c(1, 1, -1, 1, -1, 1))
+```
+
+And obtain estimates for each user:
+
+```{r}
+p <- t(apply(e, 1, function(y) lm(y~q-1)$coef))
+```
+
+We use the transpose becuase `apply` binds results into columns and we want a row for each user. 
+
+Our approximation based on two factors does a even better job of predicting how our residuals deviate from 0:
+
+```{r}
+plot(p %*% t(q), e)
+```
+
+This analysis provides insights into the process generating our data. Note that it also provides compression:  the $\120 \times 6$ matrix $\boldsymbol{\varepsilon}$, with 720 observation, is well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of 252 parameters. 
+
+Our approximation with two factors can be written as:
+
+$$
+\varepsilon_{i,j} \approx p_{i,1}q_{j,1} + p_{i,2}q_{j,2} \mbox{ or } \boldsymbol{\varepsilon} = \mathbf{P}\mathbf{Q}^\top
+$$
+
+In our example with simulated data we deduced the factors $\mathbf{p}_1$ and $\mathbf{p}_2$ from the sample correlation and our knowledge of movies. These ended up working well. However, in general deducing factors is not this easy. Furthermore, factors that provide good approximation might be more complicated than containing just two values. For example, _The Godfather III_ might be consider both a mob and romance movie and we would not know what value to  assign it in `q`. 
+
+So, can we estimate the factors? A challenge is that if $\mathbf{P}$ is unknown our model is no longer linear: we can use `lm` to estimate both $\mathbf{P}$ and $\mathbf{Q}$. In the next section we describe a technique that permits us to estimate to this.
+
+
+## Connection to PCA
+
+Notice that if we perform PCA on the matrix $\boldsymbol{\varepsilon}$ we obtain a transformation $\mathbf{V}$ that permits us to rewrite 
+
+$$
+\boldsymbol{\varepsilon} = \mathbf{Z} \mathbf{V}^\top
+$$
+
+with $\mathbf{Z}$ the matrix of principal components. 
+
+Let's perform PCA and examine the results:
+
+```{r}
+pca <- prcomp(e, center = FALSE)
+```
+
+First notice that the first two PCs explain over 95% of the variability:
+
+```{r}
+pca$sdev^2/sum(pca$sdev^2)
+```
+
+Next notice that the first column of $\mathbf{V}$
+
+```{r}
+pca$rotation[,1]
+```
+
+is assigning positive values to the mob movies and negative values to the romance movies.
+
+The second column 
+
+```{r}
+pca$rotation[,2]
+```
+
+is coding for Al Pacino movies. 
+
+PCA is automatically finding what we deduced with our knowledge of movies.
+This is not a coincidence. 
+
+Assume that data $\mathbf{Y}$ follows the model:
+
+$$
+Y_{i,j} = \sum_{k=1}^K p_{i,k}q_{j,k} + \varepsilon_{i,j}
+$$
+
+If we define the matrices $\mathbf{Y}$ and $\boldsymbol{\varepsilon}$ to have $y_{i,j}$ and $\varepsilon_{i,j}$ in the $i$th row and $j$th column, respectively, and $\mathbf{P}$ and $\mathbf{Q}$ to have entries $p_{i,k}$ and $q_{i,k}$ in the $i$th and $k$th column, respecively, we can rewrite the model as:
+
+$$
+\mathbf{Y} =  \mathbf{P}\mathbf{Q} ^\top + \boldsymbol{\varepsilon}
+$$
+
+
+Notice this model is not identifiable since we can multiply the $\mathbf{P}$ by any positive constant and obtain the same model by dividing $\mathbf{Q}$ by this same constant. To avoid this we impose the constrain that the matrix $\mathbf{Q}$ is orthogonal:
+
+$$
+\mathbf{Q}^\top\mathbf{Q} = \mathbf{I}
+$$
+
+The first $K$ columns of the principal components and assocaited rotation provide estimates of $\mathbf{P}$ and $\mathbf{Q}$ respectively.
+
+
+
+## Case study: movie recommendations
+
+Note that if we look at the correlation structure of the movies for which we simulated data in the previous sections we see structure as well:
+
+```{r}
+#| echo: false
+six_titles <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", 
+            "Scent of a Woman",  "You've Got Mail", "Sleepless in Seattle")
+ids <- with(movie_map, match(six_titles, title))
+
+x <- r[,ids]
+colnames(x) <- six_titles
+cor(x, use = "pairwise.complete.obs")
+```
+
+This implies that we should be able to improve the predictions made in the previous chapter if we use this information. Ratings on _The Godfather_ should inform ratings for the _The Godfather II_, for example. But what other patterns might be useful for prediction?
+
+We will rewrite the model from the previous chapter to include factors to explain similarities between movies:
+
+$$
+Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i,j}
+$$
+
+
+Unfortunately, we can't fit this model with `prcomp` due to the missing values.  We introduce the **missMDA** package that provides an approach `imputePCA` to fit such models when entries of the matrix are missing, a very common occurrence in movie recommendations. Also, because there are small sample sizes for several movie pairs it is useful to regularize the $p$s. The `imputePCA` function also permits regularization.
+
+We estimate use the estimates for $\mu$, the $\alpha$s and the $\beta$s from the previous chapter and estimate two factors (`ncp = 2`) to movies rated more than 25 times (and Scent of a Woman), using the same penalty we used for the $\beta$s (`coeff.ridge = `) for the penalization.
+
+```{r}
 library(missMDA)
-ind_x <- rowSums(!is.na(r)) > 25
-ind_y <- colSums(!is.na(r[ind_x,])) > 10 #| colnames(r) %in% keep
-dim(r[ind_x,ind_y])
-pca <- imputePCA(r[ind_x,ind_y], ncp = 5)
-pca$values
 
-mean(!is.na(r[ind_x, ind_y]))
-y <- y[ind_x, ind_y]
-r <- r[ind_x, ind_y]
+ind <- colSums(!is.na(y)) >= 25 | colnames(y) == "3252"
+imputed <- imputePCA(r[,ind], ncp = 2, coeff.ridge = lambda)
 ```
 
-We first remove the overall movie and user effects as we are interested in the variability not explained by these. We start by removing the movie effects:
+To see how much we improve our previous prediction we construct a matrix with the ratings in the test set:
 
 ```{r}
-r <- sweep(y, 2, colMeans(y, na.rm = TRUE))
+y_test <- select(test_set, movieId, userId, rating) |>
+  pivot_wider(names_from = movieId, values_from = rating) |>
+  column_to_rownames("userId") |>
+  as.matrix()
 ```
 
-Because for the techniques shown here we can't have missing values we need to replace the missing ratings. There are advanced techniques for doing this, some are explained in the description of the winning entry for the Netflix competition. Here we will use a simple approach: replace with a constant. Now because an unrated movie is more likely to be a movie the user does not want to see, we will replace the missing ratings with -1 rather than a 0, which represents a neutral rating.
+and construct our predictor obtained with `imputePCA`. We start by constructing the predictor from the previous chapter:
 
 ```{r}
-r[is.na(r)] <- -1
+pred <- matrix(0, nrow(y), ncol(y))
+rownames(pred) <- rownames(y); colnames(pred) <- colnames(y)
+pred <- clamp(sweep(pred + mu + a, 2, b_reg, FUN = "+"))
+rmse(y_test - pred[rownames(y_test), colnames(y_test)])
 ```
 
-Finally we will remove the overall user effect:
+Then we adjust the prediction to include the imputed residuals for the test set:
 
 ```{r}
-r <- r - rowMeans(r)
+pred[,ind] <- clamp(pred[,ind] + imputed$completeObs)
 ```
 
-Now we can perform principal component analysis:
+We see that our prediction improves:
 
 ```{r}
-pca <- prcomp(r)
+rmse(y_test - pred[rownames(y_test), colnames(y_test)])
 ```
 
-The $q$ vectors are called the principal components and they are stored in this matrix:
+We note that further improvements can be obtained by optimizing the regularization penalty, considering more factors, and accounting for the fact
+that missing that is likely more predictive of not liking the movie.
+
+### Visualizing factors
+
+We can compute the first two principal components used for the prediction using `prcomp`. 
+
 
 ```{r}
-dim(pca$rotation)
+pca <- prcomp(imputed$completeObs, center = FALSE, rank. = 3)
 ```
 
-While the $p$, or the user effects, are here:
+By adding the movie names to the rotation matrix:
 
 ```{r}
-dim(pca$x)
+v <- pca$rotation
+rownames(v) <- with(movie_map, title[match(colnames(r[,ind]), movieId)])
 ```
 
-We can see the variability of each of the vectors:
+and visually explore the results, we see that the mob discussed above are close to each other, as are the romance movie without Al Pacino.
 
-```{r, pca-sds}
-qplot(1:nrow(pca$x), pca$sdev, xlab = "PC")
-```
 
-We also notice that the first two principal components are related to the structure in opinions about movies:
-
-```{r movies-pca, echo=FALSE}
+```{r movies-pca, echo=FALSE, warning=FALSE}
 library(ggrepel)
+rotation <- pca$rotation
+pcs <- data.frame(PC1 = v[,1], PC2 = v[,2], name = str_trunc(rownames(v), 30))
 
-pcs <- data.frame(pca$rotation, name = str_trunc(colnames(y), 30), 
-                  stringsAsFactors = FALSE)
+highlight <- filter(pcs, name %in% 
+                      c("Godfather, The", "Godfather: Part II, The", 
+                        "Goodfellas", "Scent of a Woman", 
+                        "Sleepless in Seattle", "You've Got Mail"))
+                        
 
-highlight <- filter(pcs, PC1 < -0.1 | PC1 > 0.1 | PC2 < -0.075 | PC2 > 0.1)
-
-pcs |>  ggplot(aes(PC1, PC2)) + geom_point() + 
+pcs |>  ggplot(aes(PC1, PC2)) + geom_point(alpha = 1, color = "grey") + 
   geom_text_repel(aes(PC1, PC2, label = name),
-                  data = highlight, size = 2)
+                  data = highlight, size = 2, color = "blue")
 ```
 
-Just by looking at the top 10 in each direction, we see a meaningful patterns. The first PC shows the difference between Hollywood blockbusters on one side:
+By looking at the highest and lowest values for the first principal component  we see a meaningful pattern. The first PC shows the difference between Hollywood blockbusters on one side:
 
 ```{r, echo=FALSE}
 pcs |> select(name, PC1) |> arrange(PC1) |> slice(1:10) |> pull(name)
@@ -327,34 +377,39 @@ and critically acclaimed movies on the other:
 pcs |> select(name, PC1) |> arrange(desc(PC1)) |> slice(1:10) |> pull(name)
 ```
 
-While the second PC seems to be related to nerd favorites or violent movies on one side
+## Singular Value Decomposition
 
-```{r, echo=FALSE}
-pcs |> select(name, PC2) |> arrange(PC2) |> slice(1:10) |> pull(name)
+The analysis performed here with PCA is often performed with a related technique called the Singular Value Decomposition (SVD). The SVD theorem states that any $N\times p$ matrix can be written as
+
+$$
+\mathbf{Y} = \mathbf{U}\mathbf{D}\mathbf{V}^\top
+$$
+With $\mathbf{U}$ and orthogonal $N\times p$ matrix, $\mathbf{V}$ an orthogonal $p \times p$ matrix, and $\mathbf{D}$ a diagonal matrix with $d_{1,1} \geq d_{2,2} \geq \dots \geq d_{p,p}$. SVD is related to PCA because we can show that  $\mathbf{V}$ is the rotation that gives us principal components. This implies that $\mathbf{U}\mathbf{D}$ are the principal components. This also implies that if you square the diagonal entries of $\mathbf{D}$ you obtain the sum of squares of the principal components since
+
+$$
+\mathbf{U}^\top\mathbf{D}\mathbf{U} = \mathbf{D}^2
+$$
+
+In, we can can obtained the SVD using the function `svd`. To see the connection to PCA notice that:
+
+```{r}
+x <- matrix(rnorm(1000), 100, 10)
+pca <- prcomp(x, center = FALSE)
+s <- svd(x)
+
+all.equal(pca$rotation, s$v, check.attributes = FALSE)
+all.equal(pca$sdev^2, s$d^2/(nrow(x) - 1))
+all.equal(pca$x, s$u %*% diag(s$d), check.attributes = FALSE)
 ```
 
-and romantic movies on the other:
-
-```{r, echo=FALSE}
-pcs |> select(name, PC2) |> arrange(desc(PC2)) |> slice(1:10) |> pull(name)
-```
-
-Fitting a model that incorporates these estimates is complicated. For those interested in implementing an approach that incorporates these ideas, we recommend trying the __recommenderlab__ package. The details are beyond the scope of this book.
+In the exercises we show that `s$u %*% diag(s$d)` can be computed more efficiently as `sweep(s$u, 2, s$d, "*")`.
 
 
 ## Exercises
 
-In this exercise set, we will be covering a topic useful for understanding matrix factorization: the singular value decomposition (SVD). SVD is a mathematical result that is widely used in machine learning, both in practice and to understand the mathematical properties of some algorithms. This is a rather advanced topic and to complete this exercise set you will have to be familiar with linear algebra concepts such as matrix multiplication, orthogonal matrices, and diagonal matrices.
+In this exercise set, we use the singular value decomposition (SVD) to estimate factors in an example related to the first application of factor analysis: finding factors related to student performance in school. 
 
-The SVD tells us that we can _decompose_ an $N\times p$ matrix $Y$ with $p < N$ as 
-
-$$ Y = U D V^{\top} $$
-
-With $U$ and $V$ _orthogonal_ of dimensions $N\times p$ and $p\times p$, respectively, and $D$ a $p \times p$ _diagonal_ matrix with the values of the diagonal decreasing: 
-
-$$d_{1,1} \geq d_{2,2} \geq \dots d_{p,p}.$$ 
-
-In this exercise, we will see one of the ways that this decomposition can be useful. To do this, we will construct a dataset that represents grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A+), and a -25 represents a low grade (F). You can simulate the data like this:
+We construct a dataset that represents grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A+), and a -25 represents a low grade (F). You can simulate the data like this:
 
 
 ```{r, eval=FALSE}
@@ -414,9 +469,9 @@ d. There is a correlation among all tests, but higher if the tests are in scienc
 
 3\. Remember that orthogonality means that $U^{\top}U$ and  $V^{\top}V$ are equal to the identity matrix. This implies that we can also rewrite the decomposition as
 
-$$ Y V = U D \mbox{ or } U^{\top}Y = D V^{\top}$$ 
+$$ \mathbf{Y V} = \mathbf{U D} \mbox{ or } \mathbf{U}^{\top}\mathbf{Y} = \mathbf{D V}^{\top}$$ 
 
-We can think of $YV$ and $U^{\top}V$ as two transformations of Y that preserve the total variability of $Y$ since $U$ and $V$ are orthogonal. 
+We can think of $\mathbf{YV}$ and $\mathbf{U}^{\top}\mathbf{V}$ as two transformations of $\mathbf{Y}$ that preserve the total variability. 
 
 Use the function `svd` to compute the SVD of `y`. This function will return $U$, $V$ and the diagonal entries of $D$. 
 
@@ -428,65 +483,67 @@ names(s)
 You can check that the SVD works by typing:
 
 ```{r, eval=FALSE}
-y_svd <- s$u %*% diag(s$d) %*% t(s$v)
+y_svd <- sweep(s$u, d) %*% t(s$v)
 max(abs(y - y_svd))
 ```
 
-Compute the sum of squares of the columns of $Y$ and store them in `ss_y`. Then compute the sum of squares of columns of the transformed $YV$ and store them in `ss_yv`. Confirm that `sum(ss_y)` is equal to `sum(ss_yv)`.
+Compute the sum of squares of the columns of $Y$ and store them in `ss_y`. Then compute the sum of squares of columns of the transformed $\mathbf{YV}$ and store them in `ss_yv`. Confirm that `sum(ss_y)` is equal to `sum(ss_yv)`.
 
 
-4\. We see that the total sum of squares is preserved. This is because $V$ is orthogonal. Now to start understanding how $YV$ is useful, 
+4\. We see that the total sum of squares is preserved. This is because $\mathbf{V}$ is orthogonal. Now to start understanding how $\mathbf{YV}$ is useful, 
 plot `ss_y` against the column number and then do the same for `ss_yv`. What do you observe?
 
-5\. We see that the variability of the columns of $YV$ is decreasing. Furthermore, we see that, relative to the first three, the variability of the columns beyond the third is almost 0. Now notice that we didn't have to compute `ss_yv` because we already have the answer. How? Remember that $YV = UD$ and because $U$ is orthogonal, we know that the sum of squares of the columns of $UD$ are the diagonal entries of $D$ squared. Confirm this by plotting the square root of `ss_yv` versus the diagonal entries of $D$.
+5\. We see that the variability of the columns of $\mathbf{YV}$ is decreasing. Furthermore, we see that, relative to the first three, the variability of the columns beyond the third is almost 0. Now notice that we didn't have to compute `ss_yv` because we already have the answer. How? Remember that $\mathbf{YV} = \mathbf{UD}$ and because $\mathbf{U}$ is orthogonal, we know that the sum of squares of the columns of $\mathbf{UD}$ are the diagonal entries of $\mathbf{D}$ squared. Confirm this by plotting the square root of `ss_yv` versus the diagonal entries of $\mathbf{D}$.
 
  
-6\. From the above we know that the sum of squares of the columns of $Y$ (the total sum of squares) add up to the sum of `s$d^2` and that the transformation $YV$ gives us columns with sums of squares equal to `s$d^2`. Now compute what percent of the total variability is explained by just the first three columns of $YV$.
+6\. From the above we know that the sum of squares of the columns of $\mathbf{Y}$ (the total sum of squares) add up to the sum of `s$d^2` and that the transformation $\mathbf{YV}$ gives us columns with sums of squares equal to `s$d^2`. Now compute what percent of the total variability is explained by just the first three columns of $\mathbf{YV}$.
 
     
-7\. We see that almost 99% of the variability is explained by the first three columns of $YV  = UD$. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let's show a useful computational trick to avoid creating the matrix `diag(s$d)`. To motivate this, we note that if we write $U$ out in its columns $[U_1, U_2, \dots, U_p]$ then $UD$ is equal to 
+7\. We see that almost 99% of the variability is explained by the first three columns of $\mathbf{YV}  = \mathbf{UD}$. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let's show a useful computational trick to avoid creating the matrix `diag(s$d)`. To motivate this, we note that if we write $\mathbf{U}$ out in its columns $[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]$ then $\mathbf{UD}$ is equal to 
 
-$$UD = [U_1 d_{1,1}, U_2 d_{2,2}, \dots, U_p d_{p,p}]$$
+$$\mathbf{UD} = [\mathbf{u}_1 d_{1,1}, \mathbf{u}_2 d_{2,2}, \dots, \mathbf{u}_p d_{p,p}]$$
 
 Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` nor matrix multiplication.
 
 
 
-8\. We know that $U_1 d_{1,1}$, the first column of $UD$, has the most variability of all the columns of $UD$. Earlier we saw an image of $Y$: 
+8\. We know that $\mathbf{u}_1 d_{1,1}$, the first column of $\mathbf{UD}$, has the most variability of all the columns of $\mathbf{UD}$. Earlier we saw an image of $Y$: 
 
 ```{r, eval=FALSE}
 my_image(y)
 ```
 
-in which we can see that the student to student variability is quite large and that it appears that students that are good in one subject are good in all. This implies that the average (across all subjects) for each student should explain a lot of the variability. Compute the average score for each student and plot it against $U_1 d_{1,1}$ and describe what you find.
+in which we can see that the student to student variability is quite large and that it appears that students that are good in one subject are good in all. This implies that the average (across all subjects) for each student should explain a lot of the variability. Compute the average score for each student and plot it against $\mathbf{u}_1 d_{1,1}$ and describe what you find.
 
 
 
 9\. We note that the signs in SVD are arbitrary because: 
 
-$$ U D V^{\top} = (-U) D (-V)^{\top} $$
+$$ \mathbf{U D V}^{\top} = (-\mathbf{U}) D (-\mathbf{V})^{\top} $$
 
 
-With this in mind we see that the first column of $UD$ is almost identical to the average score for each student except for the sign.
+With this in mind we see that the first column of $\mathbf{UD}$ is almost identical to the average score for each student except for the sign.
 
-This implies that multiplying $Y$ by the first column of $V$ must be performing a similar operation to taking the average. Make an image plot of $V$ and describe the first column relative to others and how this relates to taking an average.
+This implies that multiplying $\mathbf{Y}$ by the first column of $\mathbf{V}$ must be performing a similar operation to taking the average. Make an image plot of $\mathbf{V}$ and describe the first column relative to others and how this relates to taking an average.
 
 
 10\. We already saw that we can rewrite $UD$ as
 
-$$U_1 d_{1,1} + U_2 d_{2,2} + \dots + U_p d_{p,p}$$
+$$
+\mathbf{u}_1 d_{1,1} + \mathbf{u}_2 d_{2,2} + \dots + \mathbf{u}_p d_{p,p}$
+$$
 
-with $U_j$ the j-th column of $U$. This implies that we can rewrite the entire SVD as:
+with $\mathbf{u}_j$ the j-th column of $\mathbf{U}$. This implies that we can rewrite the entire SVD as:
 
-$$Y = U_1 d_{1,1} V_1 ^{\top} + U_2 d_{2,2} V_2 ^{\top} + \dots + U_p d_{p,p} V_p ^{\top}$$
+$$\mathbf{Y} = \mathbf{u}_1 d_{1,1} \mathbf{v}_1 ^{\top} + \mathbf{u}_2 d_{2,2} \mathbf{v}_2 ^{\top} + \dots + \mathbf{u}_p d_{p,p} \mathbf{v}_p ^{\top}$$
 
-with $V_j$ the jth column of $V$. Plot $U_1$, then plot $V_1^{\top}$ using the same range for the y-axis limits, then make an image of $U_1 d_{1,1} V_1 ^{\top}$ and compare it to the image of $Y$. Hint: use the `my_image` function defined above and use the `drop=FALSE` argument to assure the subsets of matrices are matrices.
+with $\mathbf{V}_j$ the jth column of $\mathbf{V}$. Plot $\mathbf{u}_1$, then plot $\mathbf{v}_1^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_1 d_{1,1} \mathbf{v}_1 ^{\top}$ and compare it to the image of $\mathbf{Y}$. Hint: use the `my_image` function defined above and use the `drop=FALSE` argument to assure the subsets of matrices are matrices.
 
 
 
 11\. We see that with just a vector of length 100, a scalar, and a vector of length 24, we actually come close to reconstructing the original $100 \times 24$ matrix. This is our first matrix factorization:
 
-$$ Y \approx d_{1,1} U_1 V_1^{\top}$$
+$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top}$$
 We know it explains `s$d[1]^2/sum(s$d^2) * 100` percent of the total variability.  Our approximation only explains the observation that good students tend to be good in all subjects. But another aspect of the original data that our approximation does not explain was the higher similarity we observed within subjects. We can see this by computing the difference between our approximation and original data and then computing the correlations. You can see this by running this code:
 
 ```{r, eval=FALSE}
@@ -495,12 +552,12 @@ my_image(cor(resid), zlim = c(-1,1))
 axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 ```
 
-Now that we have removed the overall student effect, the correlation plot reveals that we have not yet explained the within subject correlation nor the fact that math and science are closer to each other than to the arts. So let's explore the second column of the SVD. Repeat the previous exercise but for the second column: Plot $U_2$, then plot $V_2^{\top}$ using the same range for the y-axis limits, then make an image of $U_2 d_{2,2} V_2 ^{\top}$ and compare it to the image of `resid`.
+Now that we have removed the overall student effect, the correlation plot reveals that we have not yet explained the within subject correlation nor the fact that math and science are closer to each other than to the arts. So let's explore the second column of the SVD. Repeat the previous exercise but for the second column: Plot $\mathbf{u}_2$, then plot $\mathbf{v}_2^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_2 d_{2,2} \mathbf{v}_2 ^{\top}$ and compare it to the image of `resid`.
 
 
 12\. The second column clearly relates to a student's difference in ability in math/science versus the arts. We can see this most clearly from the plot of `s$v[,2]`. Adding the matrix we obtain with these two columns will help with our approximation:
 
-$$ Y \approx d_{1,1} U_1 V_1^{\top} + d_{2,2} U_2 V_2^{\top} $$
+$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} $$
 
 We know it will explain 
 
@@ -516,13 +573,13 @@ my_image(cor(resid), zlim = c(-1,1))
 axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 ```
 
-and see that the structure that is left is driven by the differences between math and science. Confirm this by plotting  $U_3$, then plot $V_3^{\top}$ using the same range for the y-axis limits, then make an image of $U_3 d_{3,3} V_3 ^{\top}$ and compare it to the image of `resid`.
+and see that the structure that is left is driven by the differences between math and science. Confirm this by plotting  $\mathbf{u}_3$, then plot $\mathbf{v}_3^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_3 d_{3,3} \mathbf{v}_3 ^{\top}$ and compare it to the image of `resid`.
 
 
 13\. The third column clearly relates to a student's difference in ability in math and science. We can see this most clearly from the plot of `s$v[,3]`. Adding the matrix we obtain with these two columns will help with our approximation:
 
 
-$$ Y \approx d_{1,1} U_1 V_1^{\top} + d_{2,2} U_2 V_2^{\top} + d_{3,3} U_3 V_3^{\top}$$
+$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}$$
 
 We know it will explain:
 
@@ -540,11 +597,10 @@ axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 
 We no longer see structure in the residuals: they seem to be independent of each other. This implies that we can describe the data with the following model:
 
-$$ Y =  d_{1,1} U_1 V_1^{\top} + d_{2,2} U_2 V_2^{\top} + d_{3,3} U_3 V_3^{\top} + \varepsilon$$
+$$ \mathbf{Y} =  \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top} + \varepsilon$$
 
-with $\varepsilon$ a matrix of independent identically distributed errors. This model is useful because we summarize of $100 \times 24$ observations with $3 \times (100+24+1) = 375$ numbers. Furthermore, the three components of the model have useful interpretations: 1) the overall ability of a student, 2) the difference in ability between the math/sciences and arts, and 3) the remaining differences between the three subjects. The sizes $d_{1,1}, d_{2,2}$ and $d_{3,3}$ tell us the variability explained by each component. Finally, note that the components $d_{j,j} U_j V_j^{\top}$ are equivalent to the jth principal component.
+with $\varepsilon$ a matrix of independent identically distributed errors. This model is useful because we summarize of $100 \times 24$ observations with $3 \times (100+24+1) = 375$ numbers. Furthermore, the three components of the model have useful interpretations: 1) the overall ability of a student, 2) the difference in ability between the math/sciences and arts, and 3) the remaining differences between the three subjects. The sizes $d_{1,1}, d_{2,2}$ and $d_{3,3}$ tell us the variability explained by each component. Finally, note that the components $d_{j,j} \mathbf{u}_j \mathbf{v}_j^{\top}$ are equivalent to the jth principal component.
 
-Finish the exercise by plotting an image of  $Y$, an image of $d_{1,1} U_1 V_1^{\top} + d_{2,2} U_2 V_2^{\top} + d_{3,3} U_3 V_3^{\top}$ and an image of the residuals, all with the same `zlim`.
+Finish the exercise by plotting an image of  $Y$, an image of $d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}$ and an image of the residuals, all with the same `zlim`.
 
 
-14\. Advanced. The `movielens` dataset included in the __dslabs__ package is a small subset of a larger dataset with millions of ratings. You can find the entire latest dataset here [https://grouplens.org/datasets/movielens/20m/](https://grouplens.org/datasets/movielens/20m/). Create your own recommendation system using all the tools we have shown you.

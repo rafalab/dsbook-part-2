@@ -353,10 +353,22 @@ variance_explained <- v[1,]/sum(x^2)
 plot(angles, variance_explained, type = "l")
 ```
 
-We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We can rotate the entire dataset using:
+We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this  rotation matrix with $\mathbf{V}$:
 
 ```{r}
-z <- x %*% A
+theta <- 2*pi*-45/360 #convert to radians
+V <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
+```
+
+
+We can rotate the entire dataset using 
+
+$$
+\mathbf{Z} = \mathbf{X}\mathbf{V}
+$$
+
+```{r}
+z <- x %*% V
 ```
 
 
@@ -487,20 +499,20 @@ illustrate_pca(x, flip = -1)
 ```
 
 
-This idea generalizes to dimensions higher than 2. As we did in our two dimensional example, we start by finding the $p\times1$ vector $\mathbf{a}_1$ with$||\mathbf{a}_1||=1$ that maximizes $||\mathbf{X} \mathbf{a}_1||$. $\mathbf{X} \mathbf{a}_1$ is the first PC. To find the second PC, we subtract the variation explained by first PC from $\mathbf{X}$:
+This idea generalizes to dimensions higher than 2. As we did in our two dimensional example, we start by finding the $p\times1$ vector $\mathbf{v}_1$ with$||\mathbf{v}_1||=1$ that maximizes $||\mathbf{X} \mathbf{v}_1||$. $\mathbf{X} \mathbf{a}_1$ is the first PC. To find the second PC, we subtract the variation explained by first PC from $\mathbf{X}$:
 
 $$
-\mathbf{r} = \mathbf{X} - \mathbf{X} \mathbf{a}_1 \mathbf{a}_1^\top
+\mathbf{r} = \mathbf{X} - \mathbf{X} \mathbf{v}_1 \mathbf{v}_1^\top
 $$
 
-and then find the vector $\mathbf{a}_2$ with$||\mathbf{a}_2||=1$ that maximizes $||\mathbf{r} \mathbf{a}_2||$. $\mathbf{X} \mathbf{a}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
+and then find the vector $\mathbf{v}_2$ with$||\mathbf{v}_2||=1$ that maximizes $||\mathbf{r} \mathbf{v}_2||$. $\mathbf{X} \mathbf{v}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
 
 $$
-\mathbf{A} =
+\mathbf{V} =
 \begin{bmatrix} 
-\mathbf{a}_1&\dots&\mathbf{a}_p
+\mathbf{v}_1&\dots&\mathbf{v}_p
 \end{bmatrix},
-\mathbf{Z} = \mathbf{X}\mathbf{A}
+\mathbf{Z} = \mathbf{X}\mathbf{V}
 $$
 
 The ideas of distance preervation extends to higher dimensions. For a multidimensional matrix with $p$ columns, the $\mathbf{A}$ transformation  preserves distance between rows, but with the variance exaplined by the columns in decreasing order.
@@ -508,9 +520,8 @@ If the variances of the columns $\mathbf{Z}_j$, $j>k$ are very small, these dime
 
 
 :::{.callout-warning} 
-Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{a}|| = ||-\mathbf{X} \mathbf{a}||$. Also note that if we multiply a column of $\mathbf{A}$ by $-1$ we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{A}^\top$ as long as we also multiple the corresponsing column of $\matbf{Z}$ by -1. This implies that sign of each column of the rotation $\mathbf{A}$ and principal component matrix $\mathbf{Z}$ is arbitrary.
+Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{v}|| = ||-\mathbf{X} \mathbf{v}||$. Also note that if we multiply a column of $\mathbf{A}$ by $-1$ we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{V}^\top$ as long as we also multiple the corresponsing column of $\matbf{V}$ by -1. This implies that sign of each column of the rotation $\mathbf{V}$ and principal component matrix $\mathbf{Z}$ is arbitrary.
 :::
-
 
 In R we can find the principal components of any matrix with the function `prcomp`:
 
@@ -520,7 +531,7 @@ pca <- prcomp(x, center = FALSE)
 
 Note that default behavior is to center the columns of `x` before computing the PCs, an operation we don't need because our matrix is scaled.
 
-The object `pca` includes the rotated data $Z$ in `pca$x` and the rotation $\mathbf{A}$ in `pca$rotation`.
+The object `pca` includes the rotated data $Z$ in `pca$x` and the rotation $\mathbf{V}$ in `pca$rotation`.
 
 We can see that columns of the `pca$rotation` are indeed the rotation obtained with -45 (remember the sign is arbitrary)
 
@@ -548,8 +559,8 @@ all.equal(pca$x, x %*% pca$rotation)
 all.equal(x, pca$x %*% t(pca$rotation))
 ```
 
-## Examples
 
+## Examples
 
 ### Iris example
 
