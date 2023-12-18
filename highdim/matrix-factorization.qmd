@@ -48,7 +48,7 @@ lambda <- lambdas[which.min(rmses)]
 b_reg <- sums / (n + lambda)
 ```
 
-In the previous chapter we described how the model:
+In the previous chapter, we described how the model:
 
 $$ 
 Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
@@ -56,7 +56,7 @@ $$
 
 can be used to model movie ratings and help make useful predictions. This model accounts for user differences through $\alpha_i$ and movie effects through $\beta_j$. However, the model ignores an important source of information related to the fact that groups of movies, have similar rating patterns and groups of users have similar rating patterns as well.  
 
-To see an example of this we compute residuals 
+To see an example of this, we compute residuals:
 
 $$
 r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
@@ -92,7 +92,7 @@ rm(rr)
 
 We see that the correlation varies from very strong to negative across the other three movies. 
 
-In this chapter we introduce Factor Analysis, an approach that permits us to model these correlations and improve our prediction, and the Singular Value Decomposition, which permtis us to fit the model. As we will see, this approach is related to principal component analysis (PCA). We describe these concepts in the context of movie recommendation systems.
+In this chapter, we introduce Factor Analysis, an approach that permits us to model these correlations and improve our prediction, and the Singular Value Decomposition, which permits us to fit the model. As we will see, this approach is related to principal component analysis (PCA). We describe these concepts in the context of movie recommendation systems.
 
 ## Factor analysis {#sec-factor-analysis}
 
@@ -111,13 +111,13 @@ rownames(q) <- c(short_names)
 e <- p %*% t(q) + matrix(rnorm(nrow(p)*nrow(q), 0, 0.5), nrow(p), nrow(q))
 ```
 
-We start with a simple illustration. We simulate $\varepsilon_{i,j}$ for 6 movies and 120 users and save it in `e`. If we examine the correlation we notice there a pattern:
+We start with a simple illustration. We simulate $\varepsilon_{i,j}$ for 6 movies and 120 users and save it in `e`. If we examine the correlation, we notice a pattern:
 
 ```{r}
 cor(e)
 ```
 
-It seems their is positive correlation within mob and romance movies, and negative across the two genres. In statistics, we define _factors_ as unobserved or _latent_ variables that are inferred from the patterns of correlations or associations between the observed variables. We can quantify a factor that distinguishes between mob and romance movies with:
+It seems there is positive correlation within mob and romance movies, and negative across the two genres. In statistics, we define _factors_ as unobserved or _latent_ variables that are inferred from the patterns of correlations or associations between the observed variables. We can quantify a factor that distinguishes between mob and romance movies with:
 
 ```{r}
 q <- c(-1, -1, -1, 1, 1, 1)
@@ -129,10 +129,10 @@ To determine which users prefer each genre, we can fit a linear model to each us
 p <- apply(e, 1, function(y) lm(y~q-1)$coef)
 ```
 
-Note we use the `-1` because the errors have mean 0 and we don't need an intercept.
+Notice we use the `-1` because the errors have mean 0 and we don't need an intercept.
 
 :::{.callout-note}
-There is a much faster way to make this computation using linear algebra. This is because the `lm` function is computing the least squares estimates by taking the derivative of the sum of squares, equaling it to 0, and noting the solution $\hat{\boldsymbol{\beta}}$ satisfies
+There is a much faster way to make this computation using linear algebra. This is because the `lm` function is computing the least squares estimates by taking the derivative of the sum of squares, equaling it to 0, and noting the solution $\hat{\boldsymbol{\beta}}$ satisfies:
 
 $$
 (\mathbf{q}^\top\mathbf{q}) \, \hat{\boldsymbol{\beta}}  = \mathbf{q}^\top \mathbf{y}
@@ -145,13 +145,13 @@ p <- t(qr.solve(crossprod(q)) %*% t(q) %*% t(e))
 ```
 :::
 
-We can see that there type of users:
+FIX We can see that there type of users:
 
 ```{r}
 hist(p, breaks = seq(-2,2,0.1))
 ```
 
-love mob and hate romance, don't care, and love romance and hate mob movies. We see that we approximate $\varepsilon_{i,j}$ with $p_iq_j$. We convert the vectors to matrices to be able to use linear algebra:
+love mob and hate romance movies, don't care, and love romance and hate mob movies. We see that we approximate $\varepsilon_{i,j}$ with $p_iq_j$. We convert the vectors to matrices to be able to use linear algebra:
 
 ```{r}
 p <- matrix(p); q <- matrix(q)
@@ -177,7 +177,7 @@ And obtain estimates for each user:
 p <- t(apply(e, 1, function(y) lm(y~q-1)$coef))
 ```
 
-We use the transpose becuase `apply` binds results into columns and we want a row for each user. 
+We use the transpose because `apply` binds results into columns and we want a row for each user. 
 
 Our approximation based on two factors does a even better job of predicting how our residuals deviate from 0:
 
@@ -185,7 +185,7 @@ Our approximation based on two factors does a even better job of predicting how 
 plot(p %*% t(q), e)
 ```
 
-This analysis provides insights into the process generating our data. Note that it also provides compression:  the $\120 \times 6$ matrix $\boldsymbol{\varepsilon}$, with 720 observation, is well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of 252 parameters. 
+This analysis provides insights into the process generating our data. Note that it also provides compression: the $\120 \times 6$ matrix $\boldsymbol{\varepsilon}$, with 720 observation, is well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of 252 parameters. 
 
 Our approximation with two factors can be written as:
 
@@ -193,14 +193,14 @@ $$
 \varepsilon_{i,j} \approx p_{i,1}q_{j,1} + p_{i,2}q_{j,2} \mbox{ or } \boldsymbol{\varepsilon} = \mathbf{P}\mathbf{Q}^\top
 $$
 
-In our example with simulated data we deduced the factors $\mathbf{p}_1$ and $\mathbf{p}_2$ from the sample correlation and our knowledge of movies. These ended up working well. However, in general deducing factors is not this easy. Furthermore, factors that provide good approximation might be more complicated than containing just two values. For example, _The Godfather III_ might be consider both a mob and romance movie and we would not know what value to  assign it in `q`. 
+In our example with simulated data, we deduced the factors $\mathbf{p}_1$ and $\mathbf{p}_2$ from the sample correlation and our knowledge of movies. These ended up working well. However, in general deducing factors is not this easy. Furthermore, factors that provide good approximation might be more complicated than containing just two values. For example, _The Godfather III_ might be considered both a mob and romance movie and we would not know what value to assign it in `q`. 
 
-So, can we estimate the factors? A challenge is that if $\mathbf{P}$ is unknown our model is no longer linear: we can use `lm` to estimate both $\mathbf{P}$ and $\mathbf{Q}$. In the next section we describe a technique that permits us to estimate to this.
+So, can we estimate the factors? A challenge is that if $\mathbf{P}$ is unknown our model is no longer linear: we can use `lm` to estimate both $\mathbf{P}$ and $\mathbf{Q}$. In the next section, we describe a technique that permits us to estimate to this.
 
 
 ## Connection to PCA
 
-Notice that if we perform PCA on the matrix $\boldsymbol{\varepsilon}$ we obtain a transformation $\mathbf{V}$ that permits us to rewrite 
+Notice that if we perform PCA on the matrix $\boldsymbol{\varepsilon}$, we obtain a transformation $\mathbf{V}$ that permits us to rewrite: 
 
 $$
 \boldsymbol{\varepsilon} = \mathbf{Z} \mathbf{V}^\top
@@ -214,13 +214,13 @@ Let's perform PCA and examine the results:
 pca <- prcomp(e, center = FALSE)
 ```
 
-First notice that the first two PCs explain over 95% of the variability:
+First, notice that the first two PCs explain over 95% of the variability:
 
 ```{r}
 pca$sdev^2/sum(pca$sdev^2)
 ```
 
-Next notice that the first column of $\mathbf{V}$
+Next, notice that the first column of $\mathbf{V}$:
 
 ```{r}
 pca$rotation[,1]
@@ -228,7 +228,7 @@ pca$rotation[,1]
 
 is assigning positive values to the mob movies and negative values to the romance movies.
 
-The second column 
+The second column: 
 
 ```{r}
 pca$rotation[,2]
@@ -236,8 +236,7 @@ pca$rotation[,2]
 
 is coding for Al Pacino movies. 
 
-PCA is automatically finding what we deduced with our knowledge of movies.
-This is not a coincidence. 
+PCA is automatically finding what we deduced with our knowledge of movies. This is not a coincidence. 
 
 Assume that data $\mathbf{Y}$ follows the model:
 
@@ -245,26 +244,26 @@ $$
 Y_{i,j} = \sum_{k=1}^K p_{i,k}q_{j,k} + \varepsilon_{i,j}
 $$
 
-If we define the matrices $\mathbf{Y}$ and $\boldsymbol{\varepsilon}$ to have $y_{i,j}$ and $\varepsilon_{i,j}$ in the $i$th row and $j$th column, respectively, and $\mathbf{P}$ and $\mathbf{Q}$ to have entries $p_{i,k}$ and $q_{i,k}$ in the $i$th and $k$th column, respecively, we can rewrite the model as:
+If we define the matrices $\mathbf{Y}$ and $\boldsymbol{\varepsilon}$ to have $y_{i,j}$ and $\varepsilon_{i,j}$ in the $i$th row and $j$th column, respectively, and $\mathbf{P}$ and $\mathbf{Q}$ to have entries $p_{i,k}$ and $q_{i,k}$ in the $i$th and $k$th column, respectively, we can rewrite the model as:
 
 $$
 \mathbf{Y} =  \mathbf{P}\mathbf{Q} ^\top + \boldsymbol{\varepsilon}
 $$
 
 
-Notice this model is not identifiable since we can multiply the $\mathbf{P}$ by any positive constant and obtain the same model by dividing $\mathbf{Q}$ by this same constant. To avoid this we impose the constrain that the matrix $\mathbf{Q}$ is orthogonal:
+Notice this model is not identifiable since we can multiply the $\mathbf{P}$ by any positive constant and obtain the same model by dividing $\mathbf{Q}$ by this same constant. FIX (constrainT?) To avoid this, we impose the constrain that the matrix $\mathbf{Q}$ is orthogonal:
 
 $$
 \mathbf{Q}^\top\mathbf{Q} = \mathbf{I}
 $$
 
-The first $K$ columns of the principal components and assocaited rotation provide estimates of $\mathbf{P}$ and $\mathbf{Q}$ respectively.
+The first $K$ columns of the principal components and associated rotation provide estimates of $\mathbf{P}$ and $\mathbf{Q}$ respectively.
 
 
 
 ## Case study: movie recommendations
 
-Note that if we look at the correlation structure of the movies for which we simulated data in the previous sections we see structure as well:
+Note that if we look at the correlation structure of the movies for which we simulated data in the previous sections, we see structure as well:
 
 ```{r}
 #| echo: false
@@ -286,9 +285,9 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 $$
 
 
-Unfortunately, we can't fit this model with `prcomp` due to the missing values.  We introduce the **missMDA** package that provides an approach `imputePCA` to fit such models when entries of the matrix are missing, a very common occurrence in movie recommendations. Also, because there are small sample sizes for several movie pairs it is useful to regularize the $p$s. The `imputePCA` function also permits regularization.
+Unfortunately, we can't fit this model with `prcomp` due to the missing values. We introduce the **missMDA** package that provides an approach `imputePCA` to fit such models when matrix entries are missing, a very common occurrence in movie recommendations. Also, because there are small sample sizes for several movie pairs, it is useful to regularize the $p$s. The `imputePCA` function also permits regularization.
 
-We estimate use the estimates for $\mu$, the $\alpha$s and the $\beta$s from the previous chapter and estimate two factors (`ncp = 2`) to movies rated more than 25 times (and Scent of a Woman), using the same penalty we used for the $\beta$s (`coeff.ridge = `) for the penalization.
+FIX We estimate use the estimates for $\mu$, the $\alpha$s and the $\beta$s from the previous chapter and estimate two factors (`ncp = 2`) to movies rated more than 25 times (and _Scent of a Woman_), using the same penalty we used for the $\beta$s (`coeff.ridge = `) for the penalization.
 
 ```{r}
 library(missMDA)
@@ -297,7 +296,7 @@ ind <- colSums(!is.na(y)) >= 25 | colnames(y) == "3252"
 imputed <- imputePCA(r[,ind], ncp = 2, coeff.ridge = lambda)
 ```
 
-To see how much we improve our previous prediction we construct a matrix with the ratings in the test set:
+To see how much we improve our previous prediction, we construct a matrix with the ratings in the test set:
 
 ```{r}
 y_test <- select(test_set, movieId, userId, rating) |>
@@ -327,8 +326,7 @@ We see that our prediction improves:
 rmse(y_test - pred[rownames(y_test), colnames(y_test)])
 ```
 
-We note that further improvements can be obtained by optimizing the regularization penalty, considering more factors, and accounting for the fact
-that missing that is likely more predictive of not liking the movie.
+We note that further improvements can be obtained by optimizing the regularization penalty, considering more factors, FIX and accounting for the fact that missing that is likely more predictive of not liking the movie.
 
 ### Visualizing factors
 
@@ -346,7 +344,7 @@ v <- pca$rotation
 rownames(v) <- with(movie_map, title[match(colnames(r[,ind]), movieId)])
 ```
 
-and visually explore the results, we see that the mob discussed above are close to each other, as are the romance movie without Al Pacino.
+and visually explore the results, we see that the mob movies discussed above are close to each other, as are the romance movies without Al Pacino.
 
 
 ```{r movies-pca, echo=FALSE, warning=FALSE}
@@ -365,7 +363,7 @@ pcs |>  ggplot(aes(PC1, PC2)) + geom_point(alpha = 1, color = "grey") +
                   data = highlight, size = 2, color = "blue")
 ```
 
-By looking at the highest and lowest values for the first principal component  we see a meaningful pattern. The first PC shows the difference between Hollywood blockbusters on one side:
+By looking at the highest and lowest values for the first principal component, we see a meaningful pattern. The first PC shows the difference between Hollywood blockbusters on one side:
 
 ```{r, echo=FALSE}
 pcs |> select(name, PC1) |> arrange(PC1) |> slice(1:10) |> pull(name)
@@ -379,18 +377,18 @@ pcs |> select(name, PC1) |> arrange(desc(PC1)) |> slice(1:10) |> pull(name)
 
 ## Singular Value Decomposition
 
-The analysis performed here with PCA is often performed with a related technique called the Singular Value Decomposition (SVD). The SVD theorem states that any $N\times p$ matrix can be written as
+The analysis performed here with PCA is often performed with a related technique called the Singular Value Decomposition (SVD). The SVD theorem states that any $N\times p$ matrix can be written as:
 
 $$
 \mathbf{Y} = \mathbf{U}\mathbf{D}\mathbf{V}^\top
 $$
-With $\mathbf{U}$ and orthogonal $N\times p$ matrix, $\mathbf{V}$ an orthogonal $p \times p$ matrix, and $\mathbf{D}$ a diagonal matrix with $d_{1,1} \geq d_{2,2} \geq \dots \geq d_{p,p}$. SVD is related to PCA because we can show that  $\mathbf{V}$ is the rotation that gives us principal components. This implies that $\mathbf{U}\mathbf{D}$ are the principal components. This also implies that if you square the diagonal entries of $\mathbf{D}$ you obtain the sum of squares of the principal components since
+With $\mathbf{U}$ and orthogonal $N\times p$ matrix, $\mathbf{V}$ an orthogonal $p \times p$ matrix, and $\mathbf{D}$ a diagonal matrix with $d_{1,1} \geq d_{2,2} \geq \dots \geq d_{p,p}$. SVD is related to PCA because we can show that $\mathbf{V}$ is the rotation that gives us principal components. This implies that $\mathbf{U}\mathbf{D}$ are the principal components. This also implies that if you square the diagonal entries of $\mathbf{D}$, you obtain the sum of squares of the principal components since:
 
 $$
 \mathbf{U}^\top\mathbf{D}\mathbf{U} = \mathbf{D}^2
 $$
 
-In, we can can obtained the SVD using the function `svd`. To see the connection to PCA notice that:
+FIX In, we can obtain the SVD using the function `svd`. To see the connection to PCA, notice that:
 
 ```{r}
 x <- matrix(rnorm(1000), 100, 10)
@@ -402,14 +400,14 @@ all.equal(pca$sdev^2, s$d^2/(nrow(x) - 1))
 all.equal(pca$x, s$u %*% diag(s$d), check.attributes = FALSE)
 ```
 
-In the exercises we show that `s$u %*% diag(s$d)` can be computed more efficiently as `sweep(s$u, 2, s$d, "*")`.
+In the exercises, we show that `s$u %*% diag(s$d)` can be computed more efficiently as `sweep(s$u, 2, s$d, "*")`.
 
 
 ## Exercises
 
 In this exercise set, we use the singular value decomposition (SVD) to estimate factors in an example related to the first application of factor analysis: finding factors related to student performance in school. 
 
-We construct a dataset that represents grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage point each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A+), and a -25 represents a low grade (F). You can simulate the data like this:
+We construct a dataset that represents grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage points each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A+), and a -25 represents a low grade (F). You can simulate the data like this:
 
 
 ```{r, eval=FALSE}
@@ -426,7 +424,7 @@ colnames(y) <- c(paste(rep("Math",k), 1:k, sep="_"),
                  paste(rep("Arts",k), 1:k, sep="_"))
 ``` 
 
-Our goal is to describe the student performances as succinctly as possible. For example, we want to know if these test results are all just  random independent numbers. Are all students just about as good? Does being good in one subject  imply you will be good in another? How does the SVD help with all this? We will go step by step to show that with just three relatively small pairs of vectors we can explain much of the variability in this $100 \times 24$ dataset. 
+Our goal is to describe the student performances as succinctly as possible. For example, we want to know if these test results are all simply random independent numbers. Are all students just about as good? Does being good in one subject imply one will be good in another? How does the SVD help with all this? We will go step by step to show that with just three relatively small pairs of vectors, we can explain much of the variability in this $100 \times 24$ dataset. 
 
 You can visualize the 24 test scores for the 100 students by plotting an image:
 
@@ -447,7 +445,7 @@ my_image(y)
 1\. How would you describe the data based on this figure?
 
 a. The test scores are all independent of each other.
-b. The students that test well are at the top of the image and there seem to be three groupings by subject.
+b. The students that test well are at the top of the image and there seems to be three groupings by subject.
 c. The students that are good at math are not good at science.
 d. The students that are good at math are not good at humanities.
 
@@ -462,12 +460,12 @@ axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 Which of the following best describes what you see?
 
 a. The test scores are independent.
-b. Math and science are highly correlated but the humanities are not.
-c. There is high correlation between tests in the same subject but no correlation across subjects.
+b. Math and science are highly correlated, but the humanities are not.
+c. There is high correlation between tests in the same subject, but no correlation across subjects.
 d. There is a correlation among all tests, but higher if the tests are in science and math and even higher within each subject.
 
 
-3\. Remember that orthogonality means that $U^{\top}U$ and  $V^{\top}V$ are equal to the identity matrix. This implies that we can also rewrite the decomposition as
+3\. Remember that orthogonality means that $U^{\top}U$ and $V^{\top}V$ are equal to the identity matrix. This implies that we can also rewrite the decomposition as:
 
 $$ \mathbf{Y V} = \mathbf{U D} \mbox{ or } \mathbf{U}^{\top}\mathbf{Y} = \mathbf{D V}^{\top}$$ 
 
@@ -496,14 +494,14 @@ plot `ss_y` against the column number and then do the same for `ss_yv`. What do 
 5\. We see that the variability of the columns of $\mathbf{YV}$ is decreasing. Furthermore, we see that, relative to the first three, the variability of the columns beyond the third is almost 0. Now notice that we didn't have to compute `ss_yv` because we already have the answer. How? Remember that $\mathbf{YV} = \mathbf{UD}$ and because $\mathbf{U}$ is orthogonal, we know that the sum of squares of the columns of $\mathbf{UD}$ are the diagonal entries of $\mathbf{D}$ squared. Confirm this by plotting the square root of `ss_yv` versus the diagonal entries of $\mathbf{D}$.
 
  
-6\. From the above we know that the sum of squares of the columns of $\mathbf{Y}$ (the total sum of squares) add up to the sum of `s$d^2` and that the transformation $\mathbf{YV}$ gives us columns with sums of squares equal to `s$d^2`. Now compute what percent of the total variability is explained by just the first three columns of $\mathbf{YV}$.
+6\. From the above we know that the sum of squares of the columns of $\mathbf{Y}$ (the total sum of squares) add up to the sum of `s$d^2`, and that the transformation $\mathbf{YV}$ gives us columns with sums of squares equal to `s$d^2`. Now compute what percent of the total variability is explained by just the first three columns of $\mathbf{YV}$.
 
     
-7\. We see that almost 99% of the variability is explained by the first three columns of $\mathbf{YV}  = \mathbf{UD}$. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let's show a useful computational trick to avoid creating the matrix `diag(s$d)`. To motivate this, we note that if we write $\mathbf{U}$ out in its columns $[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]$ then $\mathbf{UD}$ is equal to 
+7\. We see that almost 99% of the variability is explained by the first three columns of $\mathbf{YV}  = \mathbf{UD}$. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let's show a useful computational trick to avoid creating the matrix `diag(s$d)`. To motivate this, we note that if we write $\mathbf{U}$ out in its columns $[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]$, then $\mathbf{UD}$ is equal to:
 
 $$\mathbf{UD} = [\mathbf{u}_1 d_{1,1}, \mathbf{u}_2 d_{2,2}, \dots, \mathbf{u}_p d_{p,p}]$$
 
-Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` nor matrix multiplication.
+FIX Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` nor matrix multiplication.
 
 
 
@@ -513,7 +511,7 @@ Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` nor ma
 my_image(y)
 ```
 
-in which we can see that the student to student variability is quite large and that it appears that students that are good in one subject are good in all. This implies that the average (across all subjects) for each student should explain a lot of the variability. Compute the average score for each student and plot it against $\mathbf{u}_1 d_{1,1}$ and describe what you find.
+in which we can see that the student to student variability is quite large and that it appears that students that are good in one subject are good in all. This implies that the average (across all subjects) for each student should explain a lot of the variability. Compute the average score for each student and plot it against $\mathbf{u}_1 d_{1,1}$, and describe what you find.
 
 
 
@@ -522,12 +520,12 @@ in which we can see that the student to student variability is quite large and t
 $$ \mathbf{U D V}^{\top} = (-\mathbf{U}) D (-\mathbf{V})^{\top} $$
 
 
-With this in mind we see that the first column of $\mathbf{UD}$ is almost identical to the average score for each student except for the sign.
+With this in mind, we see that the first column of $\mathbf{UD}$ is almost identical to the average score for each student except for the sign.
 
 This implies that multiplying $\mathbf{Y}$ by the first column of $\mathbf{V}$ must be performing a similar operation to taking the average. Make an image plot of $\mathbf{V}$ and describe the first column relative to others and how this relates to taking an average.
 
 
-10\. We already saw that we can rewrite $UD$ as
+10\. We already saw that we can rewrite $UD$ as:
 
 $$
 \mathbf{u}_1 d_{1,1} + \mathbf{u}_2 d_{2,2} + \dots + \mathbf{u}_p d_{p,p}$
@@ -537,14 +535,14 @@ with $\mathbf{u}_j$ the j-th column of $\mathbf{U}$. This implies that we can re
 
 $$\mathbf{Y} = \mathbf{u}_1 d_{1,1} \mathbf{v}_1 ^{\top} + \mathbf{u}_2 d_{2,2} \mathbf{v}_2 ^{\top} + \dots + \mathbf{u}_p d_{p,p} \mathbf{v}_p ^{\top}$$
 
-with $\mathbf{V}_j$ the jth column of $\mathbf{V}$. Plot $\mathbf{u}_1$, then plot $\mathbf{v}_1^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_1 d_{1,1} \mathbf{v}_1 ^{\top}$ and compare it to the image of $\mathbf{Y}$. Hint: use the `my_image` function defined above and use the `drop=FALSE` argument to assure the subsets of matrices are matrices.
+with $\mathbf{V}_j$ the jth column of $\mathbf{V}$. Plot $\mathbf{u}_1$, then plot $\mathbf{v}_1^{\top}$ using the same range for the y-axis limits. Then make an image of $\mathbf{u}_1 d_{1,1} \mathbf{v}_1 ^{\top}$ and compare it to the image of $\mathbf{Y}$. Hint: use the `my_image` function defined above and use the `drop=FALSE` argument to assure the subsets of matrices are matrices.
 
 
 
 11\. We see that with just a vector of length 100, a scalar, and a vector of length 24, we actually come close to reconstructing the original $100 \times 24$ matrix. This is our first matrix factorization:
 
 $$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top}$$
-We know it explains `s$d[1]^2/sum(s$d^2) * 100` percent of the total variability.  Our approximation only explains the observation that good students tend to be good in all subjects. But another aspect of the original data that our approximation does not explain was the higher similarity we observed within subjects. We can see this by computing the difference between our approximation and original data and then computing the correlations. You can see this by running this code:
+We know it explains `s$d[1]^2/sum(s$d^2) * 100` percent of the total variability. Our approximation only explains the observation that good students tend to be good in all subjects. But another aspect of the original data that our approximation does not explain was the higher similarity we observed within subjects. We can see this by computing the difference between our approximation and original data and then computing the correlations. You can see this by running this code:
 
 ```{r, eval=FALSE}
 resid <- y - with(s,(u[,1, drop=FALSE]*d[1]) %*% t(v[,1, drop=FALSE]))
@@ -559,7 +557,7 @@ Now that we have removed the overall student effect, the correlation plot reveal
 
 $$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} $$
 
-We know it will explain 
+We know it will explain:
 
 ```{r,eval=FALSE}
 sum(s$d[1:2]^2)/sum(s$d^2) * 100
@@ -573,7 +571,7 @@ my_image(cor(resid), zlim = c(-1,1))
 axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 ```
 
-and see that the structure that is left is driven by the differences between math and science. Confirm this by plotting  $\mathbf{u}_3$, then plot $\mathbf{v}_3^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_3 d_{3,3} \mathbf{v}_3 ^{\top}$ and compare it to the image of `resid`.
+and see that the structure that is left is driven by the differences between math and science. Confirm this by plotting $\mathbf{u}_3$, then plot $\mathbf{v}_3^{\top}$ using the same range for the y-axis limits, then make an image of $\mathbf{u}_3 d_{3,3} \mathbf{v}_3 ^{\top}$ and compare it to the image of `resid`.
 
 
 13\. The third column clearly relates to a student's difference in ability in math and science. We can see this most clearly from the plot of `s$v[,3]`. Adding the matrix we obtain with these two columns will help with our approximation:
@@ -599,7 +597,7 @@ We no longer see structure in the residuals: they seem to be independent of each
 
 $$ \mathbf{Y} =  \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top} + \varepsilon$$
 
-with $\varepsilon$ a matrix of independent identically distributed errors. This model is useful because we summarize of $100 \times 24$ observations with $3 \times (100+24+1) = 375$ numbers. Furthermore, the three components of the model have useful interpretations: 1) the overall ability of a student, 2) the difference in ability between the math/sciences and arts, and 3) the remaining differences between the three subjects. The sizes $d_{1,1}, d_{2,2}$ and $d_{3,3}$ tell us the variability explained by each component. Finally, note that the components $d_{j,j} \mathbf{u}_j \mathbf{v}_j^{\top}$ are equivalent to the jth principal component.
+with $\varepsilon$ a matrix of independent identically distributed errors. This model is useful because we summarize $100 \times 24$ observations with $3 \times (100+24+1) = 375$ numbers. Furthermore, the three components of the model have useful interpretations: 1) the overall ability of a student, 2) the difference in ability between the math/sciences and arts, and 3) the remaining differences between the three subjects. The sizes $d_{1,1}, d_{2,2}$ and $d_{3,3}$ tell us the variability explained by each component. Finally, note that the components $d_{j,j} \mathbf{u}_j \mathbf{v}_j^{\top}$ are equivalent to the jth principal component.
 
 Finish the exercise by plotting an image of  $Y$, an image of $d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}$ and an image of the residuals, all with the same `zlim`.
 

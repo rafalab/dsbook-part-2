@@ -2,9 +2,9 @@
 
 ## Case study: recommendation systems {#sec-recommendation-systems}
 
-Recommendation systems, like the one used by Amazon, operate by analyzing the ratings that customers give to various products. These ratings form a large dataset. The system uses this data to predict how likely a specific user is to favorably rate a particular product. For example, if the system predicts that a user is likely to give a high rating to a certain book or gadget, it will recommend that item to them. In essence, the system tries to guess which products a user will like based on the ratings provided by them and other customers for various items. This approach helps in personalizing recommendations to suit individual preferences.
+Recommendation systems, such as the one used by Amazon, operate by analyzing the ratings that customers give to various products. These ratings form a large dataset. The system uses this data to predict how likely a specific user is to favorably rate a particular product. For example, if the system predicts that a user is likely to give a high rating to a certain book or gadget, it will recommend that item to them. In essence, the system tries to guess which products a user will like based on the ratings provided by them and other customers for various items. This approach helps in personalizing recommendations to suit individual preferences.
 
-During its initial years of operation, Netflix used a 5-star recommendation system. One star suggests it is not a good movie, whereas five stars suggests it is an excellent movie. Here, we provide the basics of how these recommendations are made, motivated by some of the approaches taken by the winners of the  _Netflix challenges_.  
+During its initial years of operation, Netflix used a 5-star recommendation system. One star suggested it was not a good movie, whereas five stars suggested it was an excellent movie. Here, we provide the basics of how these recommendations are made, motivated by some of the approaches taken by the winners of the _Netflix challenges_.  
 
 In October 2006, Netflix offered a challenge to the data science community: improve our recommendation algorithm by 10% and win a million dollars. In September 2009, 
 the winners were announced^[http://bits.blogs.nytimes.com/2009/09/21/netflix-awards-1-million-prize-and-starts-a-new-contest/]. You can read a summary of how the winning algorithm was put together here: [http://blog.echen.me/2011/10/24/winning-the-netflix-prize-a-summary/](http://blog.echen.me/2011/10/24/winning-the-netflix-prize-a-summary/) 
@@ -24,7 +24,7 @@ movielens |> as_tibble() |> head(5)
 
 Each row represents a rating given by one user to one movie. 
 
-It will later be convenient that our `userId` and `movieId` are factors so we change that:
+It will later be convenient that our `userId` and `movieId` are factors, so we change that:
 
 ```{r}
 movielens <- mutate(movielens, userId = factor(userId), movieId = factor(movieId))
@@ -37,7 +37,7 @@ We can see the number of unique users that provided ratings and how many unique 
 movielens |> summarize(n_distinct(userId), n_distinct(movieId))
 ```
 
-If we multiply those two numbers, we get a number larger than 5 million, yet our data table has about 100,000 rows. This implies that not every user rated every movie. So we can think of these data as a very large matrix, with users on the rows and movies on the columns, with many empty cells. Here is the matrix for six users and four movies.
+If we multiply those two numbers, we get a number larger than 5 million, yet our data table has about 100,000 rows. This implies that not every user rated every movie. We can think of these data as a very large matrix, with users on the rows and movies on the columns, with many empty cells. Here is the matrix for six users and four movies:
 
 ```{r, echo=FALSE}
 keep <- movielens |> 
@@ -62,7 +62,7 @@ if (knitr::is_html_output()) {
 }
 ```
 
-You can think of the task of a recommendation system as filling in the `NA`s in the table above. To see how _sparse_ the matrix is, here is the matrix for a random sample of 100 movies and 100 users with yellow indicating a user/movie combination for which we have a rating.
+You can think of the task of a recommendation system as filling in the `NA`s in the table above. To see how _sparse_ the matrix is, here is the matrix for a random sample of 100 movies and 100 users with yellow indicating a user/movie combination for which we have a rating:
 
 ```{r sparsity-of-movie-recs, echo=FALSE, fig.width=3, fig.height=3, out.width="40%"}
 users <- sample(unique(movielens$userId), 100)
@@ -81,7 +81,7 @@ movielens |>
 
 Let's look at some of the general properties of the data to better understand the challenges.
 
-The first thing we notice is that some movies get rated more than others. Below is the distribution. This should not surprise us given that there are blockbuster movies watched by millions and artsy, independent movies watched by just a few. Our second observation is that some users are more active than others at rating movies:
+The first thing we notice is that some movies get rated more than others. Below is the distribution. This is not surprising given that there are blockbuster movies watched by millions and artsy, independent movies watched by just a few. Our second observation is that some users are more active than others at rating movies:
 
 ```{r movie-id-and-user-hists, echo=FALSE, fig.width=6, fig.height=3}
 p1 <- movielens |> 
@@ -102,9 +102,9 @@ gridExtra::grid.arrange(p2, p1, ncol = 2)
 ```
 
 
-We need to build an algorithm with the collected data that will then be applied outside our control when users look for movie recommendations. To test our idea we will split the data into a training set, which we will use to develop our approach, and a test set in which we will compute the accuracy of our predictions.
+We need to build an algorithm with the collected data that will then be applied outside our control when users look for movie recommendations. To test our idea, we will split the data into a training set, which we will use to develop our approach, and a test set in which we will compute the accuracy of our predictions.
 
-We will do this only for users that have have provided at least 100 ratings. 
+We will do this only for users that have provided at least 100 ratings. 
 
 ```{r}
 movielens <- movielens |> 
@@ -113,7 +113,7 @@ movielens <- movielens |>
   ungroup()
 ```
 
-For each one of these users we will take split their ratings into 80% for training and 20% for testing.
+For each one of these users, we will split their ratings into 80% for training and 20% for testing.
 
 ```{r}
 set.seed(2006)
@@ -125,13 +125,13 @@ test_set <- movielens[test_ind,]
 train_set <- movielens[-test_ind,]
 ```
 
-To make sure we don't include movies in the training set that are not in the training sets, we remove entries using the `semi_join` function:
+To make sure we don't include movies in the training set that should not be there, we remove entries using the `semi_join` function:
 
 ```{r}
 test_set <- test_set |> semi_join(train_set, by = "movieId")
 ```
 
-We will use the array representation described in @sec-anova, for the training data: we denote ranking for movie $j$ by user $i$ as $y_{i,j}$. To create this matrix we use `pivot_wider`:
+We will use the array representation described in @sec-anova, for the training data: we denote ranking for movie $j$ by user $i$ as $y_{i,j}$. To create this matrix, we use `pivot_wider`:
 
 ```{r}
 y <- select(train_set, movieId, userId, rating) |>
@@ -140,7 +140,7 @@ y <- select(train_set, movieId, userId, rating) |>
   as.matrix()
 ```
 
-We be able to map movie ids to titles we create a lookup table:
+FIX We be able to map movie ids to titles we create a lookup table:
 
 ```{r}
 movie_map <- train_set |> select(movieId, title) |> distinct(movieId, .keep_all = TRUE)
@@ -150,7 +150,7 @@ Note that two different movies can have the same title. For example, our dataset
 
 ## Loss function {#sec-netflix-loss-function}
 
-The Netflix challenge decided on a winner based on the root mean squared error (RMSE) computed on the test set. Specifically, if $y_{i,j}$ is the rating for movie $j$ by user $i$ **in the test set** and $\hat{y}_{i,j}$ is our prediction based on the training set, RMSE was defined as
+The Netflix challenge decided on a winner based on the root mean squared error (RMSE) computed on the test set. Specifically, if $y_{i,j}$ is the rating for movie $j$ by user $i$ **in the test set** and $\hat{y}_{i,j}$ is our prediction based on the training set, RMSE was defined as:
 
 $$
 \mbox{RMSE} = \sqrt{\frac{1}{N} \sum_{i,j}^{N} (y_{i,j} - \hat{y}_{i,j})^2}
@@ -164,15 +164,15 @@ We can interpret the RMSE similarly to a standard deviation: it is the typical e
 rmse <- function(r) sqrt(mean(r^2))
 ```
 
-In this chapter and the nextwe introduce two concepts, regularization and matrix factorization, that were used by the winners of the Netflix challenge to obtain the winning RMSE.
+In this chapter and the next, we introduce two concepts, regularization and matrix factorization, that were used by the winners of the Netflix challenge to obtain the winning RMSE.
 
 :::{.callout-note}
-In @sec-cross-validation we provide a formal discussion of the mean squared error.
+In @sec-cross-validation, we provide a formal discussion of the mean squared error.
 :::
 
 ## A first model
 
-Let's start by building the simplest possible recommendation system: we predict the same rating for all movies regardless of user. What number should this prediction be? We can use a model based approach to answer this. A model that assumes the same rating for all movies and users with all the differences explained by random variation would look like this:
+Let's start by building the simplest possible recommendation system: we predict the same rating for all movies regardless of user. What number should this prediction be? We can use a model based approach to answer this. A model that assumes the same rating for all movies and users with all the differences explained by random variation would look as follows:
 
 
 $$
@@ -185,7 +185,7 @@ with $\varepsilon_{i,j}$ independent errors sampled from the same distribution c
 mu <- mean(y, na.rm = TRUE)
 ```
 
-If we predict all unknown ratings with $\hat{\mu}$ we obtain the following RMSE: 
+If we predict all unknown ratings with $\hat{\mu}$, we obtain the following RMSE: 
 
 ```{r}
 rmse(test_set$rating - mu)
@@ -214,14 +214,14 @@ If we visualize the average rating for each user:
 hist(rowMeans(y, na.rm = TRUE), nclass = 30)
 ```
 
-we notice that there is substantial variability across users: some users are very cranky and others love most movies. To account for this we can use a linear model with a _treatment effect_  $\alpha_i$ for each user. The sum $\mu+\alpha_i$ can be interpreted as the typical rating user $i$ gives to movies. We can write the model as:
+we notice that there is substantial variability across users: some users are very cranky and others love most movies. To account for this, we can use a linear model with a _treatment effect_  $\alpha_i$ for each user. The sum $\mu+\alpha_i$ can be interpreted as the typical rating user $i$ gives to movies. We can write the model as:
 
 
 $$
 Y_{i,j} = \mu + \alpha_i + \varepsilon_{i,j}
 $$
 
-Statistics textbooks refer to the $\alpha$s as a treatment effects. In the Netflix challenge papers they refer to them as _bias_.
+Statistics textbooks refer to the $\alpha$s as treatment effects. In the Netflix challenge papers, they refer to them as _bias_.
 
 We can again use least squares to estimate the $\alpha_i$ in the following way:
 
@@ -229,7 +229,7 @@ We can again use least squares to estimate the $\alpha_i$ in the following way:
 fit <- lm(rating ~ userId, data = train_set)
 ```
 
-Because there are hundreds of $\alpha_i$ as each movie gets one, the `lm()` function will be very slow here. In this case, we can show that the least squares estimate $\hat{\alpha}_i$ is just the average of $y_{i,j} - \hat{\mu}$ for each user $i$. So we can compute them this way:
+Because there are hundreds of $\alpha_i$, as each movie gets one, the `lm()` function will be very slow here. In this case, we can show that the least squares estimate $\hat{\alpha}_i$ is just the average of $y_{i,j} - \hat{\mu}$ for each user $i$. So we can compute them this way:
 
 ```{r}
 a <- rowMeans(y - mu, na.rm = TRUE)
@@ -237,7 +237,7 @@ a <- rowMeans(y - mu, na.rm = TRUE)
 
 Note that going forward, we drop the `hat` notation in the code to represent estimates.
 
-Let's see how much our prediction improves once we use $\hat{y}_{i,j} = \hat{\mu} + \hat{\alpha}_i$. Because we know ratings can't be below 0.5 or above 5 we define the function `clamp`
+Let's see how much our prediction improves once we use $\hat{y}_{i,j} = \hat{\mu} + \hat{\alpha}_i$. Because we know ratings can't be below 0.5 or above 5, we define the function `clamp`:
 
 ```{r}
 clamp <- function(x, min = 0.5, max = 5) pmax(pmin(x, max), min)
@@ -261,7 +261,7 @@ We already see an improvement. But can we make it better?
 
 ## Movie effects
 
-We know from experience that some movies are just generally rated higher than others. We can use a linear models with a _treatment effect_  $\beta_j$ for each movie, which can be interpreted as movie effect or the difference between the average ranking for movie $j$ and the overall average $\mu$: 
+We know from experience that some movies are just generally rated higher than others. We can use a linear model with a _treatment effect_ $\beta_j$ for each movie, which can be interpreted as movie effect or the difference between the average ranking for movie $j$ and the overall average $\mu$: 
 
 $$
 Y_{i,j} = \mu + \alpha_i + \beta_j +\varepsilon_{i,j}
@@ -274,7 +274,7 @@ fit <- lm(rating ~ userId + movieId, data = train_set)
 ```
 
 However, this code generates a very large matrix with all the indicator variables needed to represent all the movies and the code will take time to run. 
-We instead, use an approximation by computing the least square estimate $\hat{\mu}$ and $\hat{\alpha}_i$ first, and then estimating $\hat{\beta}_j$ as the average of the residuals $y_{i,j} - \hat{\mu} - \hat{\alpha}_i$:
+We instead use an approximation by first computing the least square estimate $\hat{\mu}$ and $\hat{\alpha}_i$, and then estimating $\hat{\beta}_j$ as the average of the residuals $y_{i,j} - \hat{\mu} - \hat{\alpha}_i$:
 
 ```{r}
 b <- colMeans(y - mu - a, na.rm = TRUE)
@@ -299,7 +299,7 @@ rmse2 <- test_set |>
 
 ## Penalized least squares
 
-If we look at the top movies based on our estimates of the movie effect $\hat{\beta}_j$ we find that they all obscure movies with just one rating:
+If we look at the top movies based on our estimates of the movie effect $\hat{\beta}_j$, we find that they all obscure movies with just one rating:
 
 ```{r}
 n <- colSums(!is.na(y))
@@ -308,8 +308,7 @@ filter(movie_map, movieId %in% names(b)[ind]) |> pull(title)
 n[ind]
 ```
 
-Do we really think these are the top movies in our database? 
-The one of these that appears in our test set receives a terrible rating:
+Do we really think these are the top movies in our database? The one of these that appears in our test set receives a terrible rating:
 
 ```{r}
 filter(test_set, movieId %in% names(b)[ind]) |> 
@@ -318,20 +317,18 @@ filter(test_set, movieId %in% names(b)[ind]) |>
 ```
 
 
-Large estimates, negative or positive, should not trusted when based on a small number of ratings. Because large errors can increase our RMSE, we rather be conservative when unsure.
+Large estimates, negative or positive, should not trusted when based on a small number of ratings. Because large errors can increase our RMSE, we would rather be conservative when unsure.
 
 In previous sections, we computed standard error and constructed confidence intervals to account for different levels of uncertainty. However, when making predictions, we need one number, one prediction, not an interval. For this, we introduce the concept of regularization.
 
-Regularization permits us to penalize large estimates that 
-are formed using small sample sizes. It has commonalities with the 
-Bayesian approach that shrunk predictions described in @sec-bayesian-statistics. 
+Regularization permits us to penalize large estimates that are formed using small sample sizes. It has commonalities with the Bayesian approach that shrunk predictions described in @sec-bayesian-statistics. 
 
-The general idea behind regularization is to constrain the total variability of the effect sizes. Why does this help? Consider a case in which we have movie $j=1$ with 100 user ratings and 4 movies $j=2,3,4,5$ with just one user rating. Suppose we know the average rating is, say, $\mu = 3$. If we use least squares, the estimate for the first movie effect is the average of  100 user ratings,  which we expect to be a quite precise. However, the estimate for movies 2, 3, 4, and 5 will be based on one observation. Note that because the average is based on a single observation, the error for $j=2,3,4,5$ is 0, but we don't expect to be this lucky next time, when asked to predict. In fact, ignoring the one user and guessing that movies 2,3,4, and 5 are just average movies might provide a better prediction. The general idea of penalized regression is to control the total variability of the movie effects: $\sum_{j=1}^5 \beta_j^2$. Specifically, instead of minimizing the least squares equation, we minimize an equation that adds a penalty:
+The general idea behind regularization is to constrain the total variability of the effect sizes. Why does this help? Consider a case in which we have movie $j=1$ with 100 user ratings and 4 movies $j=2,3,4,5$ with just one user rating. Suppose we know the average rating is, say, $\mu = 3$. If we use least squares, the estimate for the first movie effect is the average of 100 user ratings,  which we expect to be quite precise. However, the estimate for movies 2, 3, 4, and 5 will be based on one observation. Note that because the average is based on a single observation, the error for $j=2,3,4,5$ is 0, but we don't expect to be this lucky next time, when asked to predict. In fact, ignoring the one user and guessing that movies 2,3,4, and 5 are just average movies might provide a better prediction. The general idea of penalized regression is to control the total variability of the movie effects: $\sum_{j=1}^5 \beta_j^2$. Specifically, instead of minimizing the least squares equation, we minimize an equation that adds a penalty:
 
 $$ 
 \sum_{i,j} \left(y_{u,i} - \mu - \alpha_i - \beta_j \right)^2 + \lambda \sum_{j} \beta_j^2
 $$
-The first term is just the sum of squares and the second is a penalty that gets larger when many $\beta_i$s are large. Using calculus we can actually show that the values of $\beta_i$ that minimize this equation are:
+The first term is just the sum of squares and the second is a penalty that gets larger when many $\beta_i$s are large. Using calculus, we can actually show that the values of $\beta_i$ that minimize this equation are:
 
 $$
 \hat{\beta}_j(\lambda) = \frac{1}{\lambda + n_j} \sum_{i=1}^{n_i} \left(Y_{i,j} - \mu - \alpha_i\right)
@@ -340,12 +337,12 @@ $$
 where $n_j$ is the number of ratings made for movie $j$. 
 
 :::{.callout-note}
-When we estimate the parameters of a linear model with penalized least squares, we refer to the approach as _ridge regression_. The  `lm.ridge`  function in the **MASS** package can perform the estimation. We don't use it here due to the large numbers of parameters associated with movie effects.
+When we estimate the parameters of a linear model with penalized least squares, we refer to the approach as _ridge regression_. The `lm.ridge` function in the **MASS** package can perform the estimation. We don't use it here due to the large numbers of parameters associated with movie effects.
 :::
 
-This approach will have our desired effect: when our sample size $n_j$ is very large, we obtain a stable estimate and the penalty $\lambda$ is effectively ignored since $n_j+\lambda \approx n_j$. However, when the $n_j$ is small, then the estimate $\hat{\beta}_i(\lambda)$ is shrunken towards 0. The larger the $\lambda$, the more we shrink.
+This approach will have our desired effect: when our sample size $n_j$ is very large, we obtain a stable estimate and the penalty $\lambda$ is effectively ignored since $n_j+\lambda \approx n_j$. Yet when the $n_j$ is small, then the estimate $\hat{\beta}_i(\lambda)$ is shrunken towards 0. The larger the $\lambda$, the more we shrink.
 
-But how do we select $\lambda$? In @sec-cross-validation we describe an approach to do this. Here we will simply compute the RMSE we for different values of $\lambda$ to illustrate the effect:
+But how do we select $\lambda$? In @sec-cross-validation, we describe an approach to do this. Here we will simply compute the RMSE we for different values of $\lambda$ to illustrate the effect:
 
 ```{r}
 n <- colSums(!is.na(y))
@@ -368,7 +365,7 @@ plot(lambdas, rmses, type = "l")
 
 The minimum is obtained for $\lambda=$ `r lambdas[which.min(rmses)]`
 
-Using this$\lambda$ we can compute the regularized estimates and add to our table of estimates:
+Using this $\lambda$, we can compute the regularized estimates and add to our table of estimates:
 
 ```{r}
 lambda <- lambdas[which.min(rmses)] 
@@ -401,7 +398,7 @@ filter(test_set, movieId %in% names(b)[ind]) |>
 These make more sense with some movies that are watched more and have more ratings in the training set.
 
 :::{.callout-note}
-Notice Swinger has a lower rating than the other top 10, yet a large movie effect estimate. This is due to the fact that it was rated by harsher users
+Notice _Swinger_ has a lower rating than the other top 10, yet a large movie effect estimate. This is due to the fact that it was rated by harsher users.
 :::
 
 Note that regularization improves our RMSE:
@@ -445,12 +442,12 @@ if (knitr::is_html_output()) {
 
 ## Exercises 
 
-1\. For the  `movielens` data, compute the number of ratings for each movie and then plot it against the year the movie came out. Use the square root transformation on the counts.
+1\. For the `movielens` data, compute the number of ratings for each movie and then plot it against the year the movie was released. Use the square root transformation on the counts.
 
 
-2\. We see that, on average, movies that came out after 1993 get more ratings. We also see that with newer movies, starting in 1993, the number of ratings decreases with year: the more recent a movie is, the less time users have had to rate it. 
+2\. We see that, on average, movies that were releaed after 1993 get more ratings. We also see that with newer movies, starting in 1993, the number of ratings decreases with year: the more recent a movie is, the less time users have had to rate it. 
 
-Among movies that came out in 1993 or later, what are the 25 movies with the most ratings per year? Also report their average rating.
+Among movies that came out in 1993 or later, what are the 25 movies with the most ratings per year? Also, report their average rating.
 
 3\. From the table constructed in the previous example, we see that the most rated movies tend to have above average ratings. This is not surprising: more people watch popular movies. To confirm this, stratify the post 1993 movies by ratings per year and compute their average ratings. Make a plot of average rating versus ratings per year and show an estimate of the trend.
 
@@ -546,13 +543,13 @@ Let's use regularization to pick the best schools. Remember regularization _shri
 overall <- mean(sapply(scores, mean))
 ```
 
-and then define, for each school, how it deviates from that average. Write code that estimates the score above average for each school but dividing by $n + \lambda$ instead of $n$, with $n$ the school size and $\lambda$ a regularization parameter. Try $\lambda = 3$.
+and then define, for each school, how it deviates from that average. Write code that estimates the score above average for each school, but dividing by $n + \lambda$ instead of $n$, with $n$ the school size and $\lambda$ a regularization parameter. Try $\lambda = 3$.
 
-15\. Notice that this improves things a bit. The number of small schools that are not highly ranked is now 4.  Is there a better $\lambda$? Find the $\lambda$ that minimizes the RMSE = $1/100 \sum_{i=1}^{100} (\mbox{quality} - \mbox{estimate})^2$.
+15\. Notice that this improves things a bit. The number of small schools that are not highly ranked is now 4. Is there a better $\lambda$? Find the $\lambda$ that minimizes the RMSE = $1/100 \sum_{i=1}^{100} (\mbox{quality} - \mbox{estimate})^2$.
 
 
 16\. Rank the schools based on the average obtained with the best $\alpha$. Note that no small school is incorrectly included.
 
 
-17\.  A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually obtain a very similar result. Confirm this by re-running the code from exercise 6 but without removing the overall mean. 
+17\.  A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually obtain a very similar result. Confirm this by re-running the code from exercise 6, but without removing the overall mean. 
 
