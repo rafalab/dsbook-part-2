@@ -22,9 +22,9 @@ Part of what we explain in this section are the assumptions that permit us to ex
 
 ## Example: Is it a 2 or a 7? {#sec-two-or-seven}
 
-To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or 7 from the proportion of dark pixels in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits, 500 in the training set and 500 in the test set. We provide this dataset in the `dslabs` package:
+To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or 7 from the proportion of dark pixels in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits, 500 in the training set and 500 in the test set. FIX We provide this dataset in the `dslabs` package:
 
-So for the training data we have $n=500$ observed outcomes $y_1,\dots,y_n$, with $Y$ defined as $1$ if the digit is 7 and 0 if it's 2, and $n=500$ features $\matbh{x}_1, \dots, \matbh{x}_n$, with each feature a two-dimensional point $\mathbf{x}_i = (x_{i,1}, x_{i,2})^\top$. Here is a plot of the $x_2$s versus the $x_1$s with color determinining if $y$ is 1 (blue) or 0 (red).
+So for the training data, we have $n=500$ observed outcomes $y_1,\dots,y_n$, with $Y$ defined as $1$ if the digit is 7 and 0 if it's 2, and $n=500$ features $\matbh{x}_1, \dots, \matbh{x}_n$, with each feature a two-dimensional point $\mathbf{x}_i = (x_{i,1}, x_{i,2})^\top$. Here is a plot of the $x_2$s versus the $x_1$s with color determinining if $y$ is 1 (blue) or 0 (red):
 
 ```{r two-or-seven-scatter, warning=FALSE, message=FALSE, cache=FALSE}
 library(caret)
@@ -85,7 +85,7 @@ p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x}) = \mbox{Pr}(Y=1 \mid X
 $$
 
 We fit can fit this model using least squares and obtain an estimate $\hat{p}(\mathbf{x})$ by using the least square estimates $\hat{\beta}_0$, $\hat{\beta}_1$ and $\hat{\beta}_2$.
-We define a decision rule by predictin $\hat{y}=1$ if $\hat{p}(\mathbf{x})>0.5$ and 0 otherwise. 
+We define a decision rule by predicting $\hat{y}=1$ if $\hat{p}(\mathbf{x})>0.5$ and 0 otherwise. 
 
 
 ```{r, echo=FALSE}
@@ -116,7 +116,7 @@ $$
 x_2 = (0.5-\hat{\beta}_0)/\hat{\beta}_2  -\hat{\beta}_1/\hat{\beta}_2 x_1
 $$
 
-This implies that for the boundary $x_2$ is a linear function of $x_1$. This implies that our regression approach has no chance of capturing the non-linear nature of the true $p(\mathbf{x})$. Below is a visual representation of $\hat{p}(\mathbf{x})$ which clearly shows how it fails to capture the shape of $p(\mathbf{x})$.
+This implies that for the boundary, $x_2$ is a linear function of $x_1$, which suggests that our regression approach has no chance of capturing the non-linear nature of the true $p(\mathbf{x})$. Below is a visual representation of $\hat{p}(\mathbf{x})$ which clearly shows how it fails to capture the shape of $p(\mathbf{x})$:
 
 ```{r regression-p-hat, echo=FALSE, out.width="100%", fig.height=3, fig.width=7}
 p_hat <- predict(fit, newdata = mnist_27$true_p)
@@ -140,7 +140,7 @@ We need something more flexible: a method that permits estimates with shapes oth
 
 ## Signal plus noise model
 
-To explain these concepts, we will focus first on a problem with just one predictor. Specifically, we try to estimate the time trend in the 2008 US popular vote poll margin (difference between Obama and McCain). Later we will learn about methods such as k-nearest neighbors that can be used to smooth with higher dimensions. 
+To explain these concepts, we will focus first on a problem with just one predictor. Specifically, we try to estimate the time trend in the 2008 US popular vote poll margin (the difference between Obama and McCain). Later we will learn about methods, such as k-nearest neighbors, that can be used to smooth with higher dimensions. 
 
 
 ```{r polls-2008-data, warning=FALSE, message=FALSE, cache=FALSE}
@@ -305,7 +305,7 @@ There are several functions in R that implement bin smoothers. One example is `k
 
 ## Local weighted regression (loess)
 
-A limitation of the bin smoother approach just described is that we need small windows for the approximately constant assumptions to hold. As a result, we end up with a small number of data points to average and obtain imprecise estimates $\hat{f}(x)$. Here we describe how *local weighted regression* (loess) permits us to consider larger window sizes. To do this, we will use a mathematical result, referred to as Taylor's theorem, which tells us that if you look closely enough at any smooth function $f(x)$, it will look like a line. To see why this makes sense, consider the curved edges gardeners make using straight-edged spades:
+A limitation of the bin smoother approach just described is that we need small windows for the approximately constant assumptions to hold. As a result, we end up with a small number of data points to average and obtain imprecise estimates $\hat{f}(x)$. Here we describe how *local weighted regression* (loess) permits us to consider larger window sizes. To do this, we will use a mathematical result, referred to as Taylor's theorem, which tells us that if you look closely enough at any smooth function $f(x)$, it will look like a line. To see why this makes sense, consider the curved edges gardeners make using straight-edged spades: 
 
 ![](img/garden.png)
 
@@ -345,7 +345,7 @@ tmp |>
   facet_wrap(~center)
 ```
 
-The fitted value at $x_0$ becomes our estimate $\hat{f}(x_0)$. Below we show the procedure happening as we move from the -155 up to 0.
+The fitted value at $x_0$ becomes our estimate $\hat{f}(x_0)$. Below we show the procedure happening as we move from the -155 up to 0:
 
 ```{r loess-animation, echo=FALSE, warning=FALSE}
 library(broom)
@@ -545,11 +545,11 @@ $$
 p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid X_1=x_1 , X_2 = x_2).
 $$ 
 
-with $x_1$ and $x_2$ the two predictors defined in Section @sec-two-or-seven. In this example, the 0s and 1s we observe are "noisy" because for some regions the probabilities $p(\mathbf{x})$ are not that close to 0 or 1. So we need to estimate $p(\mathbf{x})$. Smoothing is an alternative to accomplishing this. In  @sec-two-or-seven we saw that linear regression was not flexible enough to capture the non-linear nature of $p(\mathbf{x})$, thus smoothing approaches provide an improvement. In @sec-knn-cv-intro we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.
+with $x_1$ and $x_2$ the two predictors defined in FIX Section @sec-two-or-seven. In this example, the 0s and 1s we observe are "noisy" because for some regions the probabilities $p(\mathbf{x})$ are not that close to 0 or 1. We therefore need to estimate $p(\mathbf{x})$. Smoothing is an alternative to accomplishing this. In  @sec-two-or-seven, we saw that linear regression was not flexible enough to capture the non-linear nature of $p(\mathbf{x})$, thus smoothing approaches provide an improvement. In @sec-knn-cv-intro, we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.
 
 ## Exercises
 
-1\. In the wrangling part of this book, we used the code below to obtain mortality counts for Puerto Rico for 2015-2018.
+1\. FIX In the wrangling part of this book, we used the code below to obtain mortality counts for Puerto Rico for 2015-2018.
 
 ```{r, eval=FALSE}
 library(dslabs)
