@@ -8,15 +8,15 @@ img_path <- "img"
 
 Since Galton's original development, regression has become one of the most widely used tools in data analysis. One reason has to do with the fact that an adaptation of the original regression approach, based on linear models, permits us to find relationships between two variables taking into account the effects of other variables that affect both. This has been particularly popular in fields where randomized experiments are hard to run, such as economics and epidemiology.
 
-When we are not able to randomly assign each individual to a treatment or control group, confounding is particularly prevalent. For example, consider estimating the effect of eating fast foods on life expectancy using data collected from a random sample of people in a jurisdiction. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Therefore, a naive regression model may lead to an overestimate of the negative health effect of fast food. So how do we account for confounding in practice? In this chapter we learn how _multivariate regression_ can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource limited sports team.
+When we are not able to randomly assign each individual to a treatment or control group, confounding is particularly prevalent. As an example, consider estimating the effect of eating fast foods on life expectancy using data collected from a random sample of people in a jurisdiction. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Therefore, a naive regression model may lead to an overestimate of the negative health effects of fast food. So how do we account for confounding in practice? In this chapter, we learn how _multivariate regression_ can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource limited sports team.
 
 ## Case study: Moneyball
 
-*Moneyball: The Art of Winning an Unfair Game* is a book by Michael Lewis about the Oakland Athletics (A's) baseball team and its general manager, the person tasked with building the team, Billy Beane.
+*Moneyball: The Art of Winning an Unfair Game* by Michael Lewis focuses on the Oakland Athletics (A's) baseball team and its general manager, Billy Beane, the person tasked with building the team.
 
-Traditionally, baseball teams use *scouts* to help them decide what players to hire. These scouts evaluate players by observing them perform. Scouts tend to favor athletic players with observable physical abilities. For this reason, scouts tend to agree on who the best players are and, as a result, these players tend to be in high demand. This in turn drives up their salaries.
+Traditionally, baseball teams use *scouts* to help them decide what players to hire. These scouts evaluate players by observing them perform, tending to favor athletic players with observable physical abilities. For this reason, scouts generally agree on who the best players are and, as a result, these players are often in high demand. This in turn drives up their salaries.
 
-From 1989 to 1991, the A's had one of the highest payrolls in baseball. They were able to buy the best players and, during that time, they were one of the best teams. However, in 1995 the A's team owner changed and the new management cut the budget drastically, leaving then general manager, Sandy Alderson, with one of the lowest payrolls in baseball. He could no longer afford the most sought-after players. Alderson began using a statistical approach to find inefficiencies in the market. Alderson was a mentor to Billy Beane, who succeeded him in 1998 and fully embraced data science, as opposed to scouts, as a method for finding low-cost players that data predicted would help the team win. Today, this strategy has been adapted by most baseball teams. As we will see, regression plays a large role in this approach.
+From 1989 to 1991, the A's had one of the highest payrolls in baseball. They were able to buy the best players and, during that time, were one of the best teams. However, in 1995, the A's team owner changed and the new management cut the budget drastically, leaving then general manager, Sandy Alderson, with one of the lowest payrolls in baseball. He could no longer afford the most sought-after players. As a result, Alderson began using a statistical approach to find inefficiencies in the market. Alderson was a mentor to Billy Beane, who succeeded him in 1998 and fully embraced data science, as opposed to scouts, as a method for finding low-cost players that data predicted would help the team win. Today, this strategy has been adapted by most baseball teams. As we will see, regression plays a large role in this approach.
 
 As motivation for this part of the book, we will pretend it is 2002 and try to build a baseball team with a limited budget, just like the A's had to do. To appreciate what you are up against, note that in 2002 the Yankees' payroll of \$125,928,583 more than tripled the Oakland A's \$39,679,746:
 
@@ -41,23 +41,23 @@ Statistics have been used in baseball since its beginnings. The dataset we will 
 
 [^moneyball-motivation-1]: http://mlb.mlb.com/stats/league_leaders.jsp
 
-This changed with Bill James[^moneyball-motivation-2]. In the late 1970s, this aspiring writer and baseball fan started publishing articles describing more in-depth analysis of baseball data. He named the approach of using data to predict what outcomes best predicted if a team would win *sabermetrics*[^moneyball-motivation-3]. Until Billy Beane made sabermetrics the center of his baseball operation, Bill James' work was mostly ignored by the baseball world. Currently, sabermetrics popularity is no longer limited to just baseball; other sports have started to use this approach as well.
+This changed with Bill James[^moneyball-motivation-2]. In the late 1970s, this aspiring writer and baseball fan started publishing articles describing more in-depth analysis of baseball data. He named the approach of using data to predict what outcomes best predicted if a team would win *sabermetrics*[^moneyball-motivation-3]. Yet until Billy Beane made sabermetrics the center of his baseball operation, Bill James' work was mostly ignored by the baseball world. Currently, sabermetrics popularity is no longer limited to just baseball, with other sports also adopting this approach.
 
 [^moneyball-motivation-2]: https://en.wikipedia.org/wiki/Bill_James
 
 [^moneyball-motivation-3]: https://en.wikipedia.org/wiki/Sabermetrics
 
-To simplify the exercise, we will focus on scoring runs and ignore the two other important aspects of the game: pitching and fielding. We will see how regression analysis can help develop strategies to build a competitive baseball team with a constrained budget. The approach can be divided into two separate data analyses. In the first, we determine which recorded player-specific statistics predict runs. In the second, we examine if players were undervalued based on what our first analysis predicts.
+To simplify the exercise, we will focus on scoring runs and ignore the two other important aspects of the game: pitching and fielding. We will see how regression analysis can help develop strategies to build a competitive baseball team with a constrained budget. The approach can be divided into two separate data analyses. In the first, we determine which recorded player-specific statistics predict runs. In the second, we examine if players were undervalued based on the predictions from our first analysis.
 
 ### Baseball basics 
 
 To see how regression will help us find undervalued players, we actually don't need to understand all the details about the game of baseball, which has over 100 rules. Here, we distill the sport to the basic knowledge one needs to know how to effectively attack the data science problem.
 
-The goal of a baseball game is to score more runs (points) than the other team. Each team has 9 batters that have an opportunity to hit a ball with a bat in a predetermined order. After the 9th batter has had their turn, the first batter bats again, then the second, and so on. Each time a batter has an opportunity to bat, we call it a plate appearance (PA). At each PA, the other team's *pitcher* throws the ball and the batter tries to hit it. The PA ends with an binary outcome: the batter either makes an *out* (failure) and returns to the bench or the batter doesn't (success) and can run around the bases, and potentially score a run (reach all 4 bases). Each team gets nine tries, referred to as *innings*, to score runs and each inning ends after three outs (three failures).
+The goal of a baseball game is to score more runs (points) than the other team. Each team has 9 batters that have an opportunity to hit a ball with a bat in a predetermined order. After the 9th batter has had their turn, the first batter bats again, then the second, and so on. Each time a batter has an opportunity to bat, we call it a plate appearance (PA). At each PA, the other team's *pitcher* throws the ball and the batter tries to hit it. The PA ends with an binary outcome: the batter either makes an *out* (failure) and returns to the bench, or the batter doesn't (success) and can run around the bases, potentially scoring a run (reaching all 4 bases). Each team gets nine tries, referred to as *innings*, to score runs, and each inning ends after three outs (three failures).
 
 Here is a video showing a success: <https://www.youtube.com/watch?v=HL-XjMCPfio>. And here is one showing a failure: <https://www.youtube.com/watch?v=NeloljCx-1g>. In these videos, we see how luck is involved in the process. When at bat, the batter wants to hit the ball hard. If the batter hits it hard enough, it is a HR, the best possible outcome as the batter gets at least one automatic run. But sometimes, due to chance, the batter hits the ball very hard and a defender catches it, resulting in an out. In contrast, sometimes the batter hits the ball softly, but it lands just in the right place. The fact that there is chance involved hints at why probability models will be involved.
 
-Now, there are several ways to succeed. Understanding this distinction will be important for our analysis. When the batter hits the ball, the batter wants to pass as many *bases* as possible. There are four bases with the fourth one called *home plate*. Home plate is where batters start by trying to hit, so the bases form a cycle.
+Now, there are several ways to succeed. Understanding this distinction will be important for our analysis. When the batter hits the ball, the batter wants to pass as many *bases* as possible. There are four bases, with the fourth one called *home plate*. Home plate is where batters start by trying to hit, so the bases form a cycle.
 
 ```{r, echo = FALSE, out.width="50%"}
 ## source: http://quarterlyspeedbump.com/wp-content/uploads/2012/03/Baseball_Diamond1.jpeg
@@ -74,20 +74,20 @@ A batter who *goes around the bases* and arrives home, scores a run.
 
 We are simplifying a bit, but there are five ways a batter can succeed, that is, not make an out:
 
--   Bases on balls (BB) - the pitcher fails to throw the ball through a predefined area considered to be hittable (the strikezone), so the batter is permitted to go to first base.
+-   Bases on balls (BB) - the pitcher fails to throw the ball through a predefined area considered to be hittable (the strike zone), so the batter is permitted to go to first base.
 -   Single - Batter hits the ball and gets to first base.
 -   Double (2B) - Batter hits the ball and gets to second base.
 -   Triple (3B) - Batter hits the ball and gets to third base.
 -   Home Run (HR) - Batter hits the ball and goes all the way home and scores a run.
 
-Here is an example of a HR: <https://www.youtube.com/watch?v=xYxSZJ9GZ-w>. If a batter gets to a base, the batter still has a chance of getting home and scoring a run if the next batter hits successfully. While the batter is *on base*, the batter can also try to steal a base (SB). If a batter runs fast enough, the batter can try to go from one base to the next without the other team tagging the runner. Here is an example of a stolen base: <https://www.youtube.com/watch?v=JSE5kfxkzfk>.
+Here is an example of a HR: <https://www.youtube.com/watch?v=xYxSZJ9GZ-w>. If a batter reaches a base, the batter still has a chance of reaching home and scoring a run if the next batter succeeds with a hit. While the batter is *on base*, the batter can also try to steal a base (SB). If a batter runs fast enough, the batter can try to advance from one base to the next without the other team tagging the runner. Here is an example of a stolen base: <https://www.youtube.com/watch?v=JSE5kfxkzfk>.
 
-All these events are kept track of during the season and are available to us through the **Lahman** package. Now we will start discussing how data analysis can help us decide how to use these statistics to evaluate players.
+All these events are tracked throughout the season and are available to us through the **Lahman** package. Now we will start discussing how data analysis can help us decide how to use these statistics to evaluate players.
 
 
 ### No awards for BB
 
-Historically, the *batting average* has been considered the most important offensive statistic. To define this average, we define a *hit* (H) and an *at bat* (AB). Singles, doubles, triples, and home runs are hits. The fifth way to be successful, BB, is not a hit. An AB is the number of times you either get a hit or make an out; BBs are excluded. The batting average is simply H/AB and is considered the main measure of a success rate. Today this success rate ranges from 20% to 38%. We refer to the batting average in thousands so, for example, if your success rate is 28%, we call it *batting 280*.
+Historically, the *batting average* has been considered the most important offensive statistic. To define this average, we define a *hit* (H) and an *at bat* (AB). Singles, doubles, triples, and home runs are hits. The fifth way to be successful, BB, is not a hit. An AB is the number of times in which you either get a hit or make an out; BBs are excluded. The batting average is simply H/AB and is considered the main measure of a success rate. Today, this success rate ranges from 20% to 38%. We refer to the batting average in thousands so, for example, if your success rate is 28%, we call it *batting 280*.
 
 ```{r, echo = FALSE}
 knitr::include_graphics(file.path(img_path,"JumboTron.png"))
@@ -99,14 +99,13 @@ knitr::include_graphics(file.path(img_path,"JumboTron.png"))
 
 [^moneyball-motivation-7]: https://creativecommons.org/licenses/by-sa/2.0
 
-One of Bill James' first important insights is that the batting average ignores BB, but a BB is a success. He proposed we use the *on base percentage* (OBP) instead of batting average. He defined OBP as (H+BB)/(AB+BB) which is simply the proportion of plate appearances that don't result in an out, a very intuitive measure. He noted that a player that gets many more BB than the average player might not be recognized if the batter does not excel in batting average. But is this player not helping produce runs? No award is given to the player with the most BB. However, bad habits are hard to break and baseball did not immediately adopt OBP as an important statistic. In contrast, total stolen bases were considered important and an award[^moneyball-motivation-8] given to the player with the most. But players with high totals of SB also made more outs as they did not always succeed. Does a player with high SB total help produce runs? Can we use data science to determine if it's better to pay for players with high BB or SB?
+One of Bill James' first important insights is that the batting average ignores BB, but a BB is a success. Instead of batting average, James proposed the use of the *on base percentage* (OBP), which he defined as (H+BB)/(AB+BB), or simply the proportion of plate appearances that don't result in an out, a very intuitive measure. He noted that a player that accumulates many more BB than the average player might go unrecognized if the batter does not excel in batting average. But is this player not helping produce runs? No award is given to the player with the most BB. However, bad habits are hard to break and baseball did not immediately adopt OBP as an important statistic. In contrast, total stolen bases were considered important and an award[^moneyball-motivation-8] given to the player with the most. But players with high totals of SB also made more outs as they did not always succeed. Does a player with high SB total help produce runs? Can we use data science to determine if it's better to pay for players with high BB or SB?
 
 [^moneyball-motivation-8]: http://www.baseball-almanac.com/awards/lou_brock_award.shtml
 
 ### Base on balls or stolen bases?
 
-One of the challenges in this analysis is that it is not obvious how to determine if a player produces runs because so much depends on his teammates. We do keep track of the number of runs scored by a player. However, remember that if a player X bats right before someone who hits many HRs, batter X will score many runs. But these runs don't necessarily happen if we hire player X but not his HR hitting teammate. However, we can examine team-level statistics. How do teams with many SB compare to teams with few? How about BB? We have data! Let's examine some. We start by creating with statistics 
-from 1962, the first year all teams played 162 games (like today) instead of 154, to 2001, the year before the year for which we will construct a team. We convert the data to a _per game_ rate because a small proportion of seasons had less games than usual due to strikes, and some teams played extra games due to tie breakers.
+One of the challenges in this analysis is that it is not obvious how to determine if a player produces runs because so much depends on his teammates. We do keep track of the number of runs scored by a player. FIX However, remember that if player X bats right before someone who hits many HRs, batter X will score many runs. But these runs don't necessarily happen if we hire player X, but not his HR hitting teammate. However, we can examine team-level statistics. How do teams with many SB compare to teams with few? How about BB? We have data! Let's examine some. FIX We start by creating with statistics from 1962, the first year all teams played 162 games (like today) instead of 154, to 2001, the year before the year for which we will construct a team. We convert the data to a _per game_ rate, because a small proportion of seasons had less games than usual due to strikes, and some teams played extra games due to tie breakers.
 
 ```{r, cache=FALSE}
 library(tidyverse)
@@ -118,15 +117,14 @@ dat <- Teams |> filter(yearID %in% 1962:2002) |>
   select(team, year, r, singles, doubles, triples, hr, sb, bb)
 ```
 
-Now let's start with a obvious question: does teams that hit more home runs score more runs?
-The visualization of choice when exploring the relationship between two variables is a scatter plot.
+Now let's start with a obvious question: do teams that hit more home runs score more runs? When exploring the relationship between two variables, The visualization of choice is a scatterplot:
  
 ```{r runs-vs-hrs, message=FALSE, warning=FALSE}
 p <- dat |> ggplot(aes(hr, r)) + geom_point(alpha = 0.5)
 p 
 ```
 
-We defined `p` because we will add to this plot latter. The plot shows a strong association: teams with more HRs tend to score more runs. Now let's examine the relationship between stolen bases and runs:
+We defined `p` because we will add it to this plot latter. The plot shows a strong association: teams with more HRs tend to score more runs. Now let's examine the relationship between stolen bases and runs:
 
 ```{r runs-vs-sb}
 dat |> ggplot(aes(sb, r)) + geom_point(alpha = 0.5)
@@ -144,14 +142,13 @@ Here again we see a clear association. But does this mean that increasing a team
 dat |> ggplot(aes(hr, bb)) + geom_point(alpha = 0.5)
 ```
 
-We know that HRs cause runs because when a player hits a HR they are guaranteed at least one run. Could it be that HRs also cause BB and this makes it appear as if BB cause runs? When this happens we say there is *confounding*, an important concept we will learn more about throughout this chapter.
+We know that HRs cause runs because when a player hits a HR, they are guaranteed at least one run. Could it be that HRs also cause BB and this makes it appear as if BB cause runs? When this happens, we say there is *confounding*, an important concept we will learn more about throughout this section.
 
-Linear regression will help us parse all this out and quantify the associations. This will then help us determine what players to recruit. Specifically, we will try to predict things like how many more runs will a team score if we increase the number of BBs, but keep the HRs fixed? Regression will help us answer questions like this one.
+Linear regression will help us parse out the information and quantify the associations. This, in turn, will aid us in determining what players to recruit. Specifically, we will try to predict things like how many more runs will a team score if we increase the number of BBs, but keep the HRs fixed? Regression will help us answer questions like this one.
 
 ### Regression applied to baseball statistics
 
-Can we use regression with these data? First, notice that the HR and Run data, shown above, appear to be bivariate normal. 
-Specifically, the qq-plots confirm that the normal approximation for each HR strata is useful here:
+Can we use regression with these data? First, notice that the HR and Run data, shown above, appear to be bivariate normal. Specifically, the qq-plots confirm that the normal approximation for each HR strata is useful here:
 
 ```{r hr-by-runs-qq}
 dat |> mutate(z_hr = round(scale(hr))) |>
@@ -161,26 +158,25 @@ dat |> mutate(z_hr = round(scale(hr))) |>
   facet_wrap(~z_hr) 
 ```
 
-Now we are ready to use linear regression to predict the number of runs a team will score if we know how many home runs the team hits using regression:
+Now we are ready to use linear regression to predict the number of runs a team will score, if we know how many home runs the team hits using regression:
 
 ```{r hr-versus-runs-regression}
 hr_fit  <- lm(r ~ hr, data = dat)$coef
 p + geom_abline(intercept = hr_fit[[1]], slope = hr_fit[[2]])
 ```
 
-Note that we can obtain the same plot quicker by using the **ggplot2** function `geom_smooth` which computes and adds a regression line to plot along with confidence intervals. We use the argument `method = "lm"` which stands for *linear model*, the title of an upcoming section. So we can simplify the code above like this:
+Note that we can obtain the same plot more quickly by using the **ggplot2** function `geom_smooth`, which computes and adds a regression line to plot along with confidence intervals. We use the argument `method = "lm"`, which stands for *linear model*, the title of an upcoming section. We simplify the code above like this:
 
 ```{r  hr-versus-runs-regression-easy, message=FALSE}
 p + geom_smooth(method = "lm")
 ```
 
-In the example above, the slope is `r  lm(r ~ hr, data = dat)$coef[[2]]`. So this tells us that teams that hit 1 more HR per game than the average team, score `r lm(r ~ hr, data = dat)$coef[[2]]` more runs per game than the average team. Given that the most common final score is a difference of a run, this can certainly lead to a large increase in wins. Not surprisingly, HR hitters are very expensive. Because we are working on a budget, we will need to find some other way to increase wins. In the next chapter, we introduce _linear models_, which provide an framework for performing this analysis. In chapter \@ref{@moneyball} we apply what have learned to build a baseball team.
+In the example above, the slope is `r  lm(r ~ hr, data = dat)$coef[[2]]`. This tells us that teams that hit 1 more HR per game than the average team, score `r lm(r ~ hr, data = dat)$coef[[2]]` more runs per game than the average team. Given that the most common final score is a difference of one run, this can certainly lead to a large increase in wins. Not surprisingly, HR hitters are very expensive. Because we are working on a budget, we will need to find some other way to increase wins. In the next chapter, we introduce _linear models_, which provide an framework for performing this analysis. In \@ref{@moneyball}, we apply what have learned to build a baseball team.
 
 
 ## The broom package
 
-The **broom** package facilitates the use of R function such as `lm` within the tidyverse. Recall the that `lm` does not take a data frame as a first argument and does not return a data frame, which makes using `lm` in conjunction with the **tidyverse** difficult. It has three main functions, all of which extract information from the object returned by `lm` 
-and returns it in a **tidyverse** friendly data frame.  These functions are `tidy`, `glance`, and `augment`. The `tidy` function returns estimates and related information as a data frame:
+The **broom** package facilitates the use of R function, such as `lm`, within the tidyverse. Recall the that `lm` does not take a data frame as a first argument and does not return a data frame, which makes using `lm` in conjunction with the **tidyverse** difficult. It has three main functions, all of which extract information from the object returned by `lm` and returns it in a **tidyverse** friendly data frame.  These functions are: `tidy`, `glance`, and `augment`. The `tidy` function returns estimates and related information as a data frame:
 
 ```{r}
 library(broom)
@@ -194,17 +190,17 @@ We can add other important summaries, such as confidence intervals:
 tidy(fit, conf.int = TRUE)
 ```
 
-Because the outcome is a data frame, we can immediately use it with `summarize` to string together the commands that produce the table we are after. Because a data frame is returned, we can filter and select the rows and columns we want, as we will see in the next section.
+Given that the outcome is a data frame, we can immediately use it with `summarize` to string together the commands that produce the table we are after. Because a data frame is returned, we can filter and select the rows and columns we want, as we will see in the next section.
 
 Now we return to discussing our original task of determining if slopes changed. The plot we just made, using `summarize` and `tidy`, shows that the confidence intervals overlap, which provides a nice visual confirmation that our assumption that the slope does not change is safe.
 
-The other functions provided by **broom**, `glance`, and `augment`, relate to model-specific and observation-specific outcomes, respectively. Here, we can see the model fit summaries `glance` returns:
+The other functions provided by **broom**, `glance` and `augment`, relate to model-specific and observation-specific outcomes, respectively. FIX Here we can see the model fit summaries `glance` returns:
 
 ```{r}
 glance(fit)
 ```
 
-You can learn more about these summaries in any regression text book.
+You can learn more about these summaries in any regression textbook.
 
 ## Confounding
 
@@ -215,23 +211,23 @@ bb_slope <- lm(r ~ bb, data = dat)$coef[2]
 bb_slope 
 ```
 
-So does this mean that if we go and hire low salary players with many BB, and who therefore increase the number of walks per game by 2, our team will score `r round(bb_slope*2, 1)` more runs per game?
+Does this mean that if we go and hire low salary players with many BB, and who therefore increase the number of walks per game by 2, our team will score `r round(bb_slope*2, 1)` more runs per game?
 
 We are again reminded that association is not causation. The data does provide strong evidence that a team with two more BB per game than the average team, scores `r round(bb_slope*2, 1)` runs per game. But this does not mean that BB are the cause.
 
-Note that if we compute the regression line slope for singles we get:
+Note that, if we compute the regression line slope for singles, we get:
 
 ```{r}
 lm(r ~ singles, data = dat)$coef[2]
 ```
 
-which is a lower value than what we obtain for BB. Notice that a single gets you to first base just like a BB. Those that know about baseball will tell you that with a single, runners on base have a better chance of scoring than with a BB. So how can BB be more predictive of runs? The reason this happen is because of confounding. Here we show the correlation between HR, BB, and singles:
+which is a lower value than what we obtain for BB. Remember that a single gets you to first base just like a BB. Baseball fans will point out that with a single, runners on base have a better chance of scoring than with a BB. So how can BB be more predictive of runs? The reason is because of confounding. Here we show the correlation between HR, BB, and singles:
 
 ```{r}
 dat |> summarize(cor(bb, hr), cor(singles, hr), cor(bb, singles))
 ```
 
-It turns out that pitchers, afraid of HRs, will sometimes avoid throwing strikes to HR hitters. As a result, HR hitters tend to have more BBs and a team with many HRs will also have more BBs. Although it may appear that BBs cause runs, it is actually the HRs that cause most of these runs. We say that BBs are *confounded* with HRs. Nonetheless, could it be that BBs still help? To find out, we somehow have to adjust for the HR effect. Regression can help with this as well.
+It appears that pitchers, afraid of HRs, will sometimes avoid throwing strikes to HR hitters. As a result, HR hitters tend to have more BBs, and a team with many HRs will also have more BBs. Although it may appear that BBs cause runs, it is actually the HRs that cause most of these runs. We say that BBs are *confounded* with HRs. Nonetheless, could it be that BBs still help? To find out, we somehow have to adjust for the HR effect. Regression can help with this as well.
 
 ### Understanding confounding through stratification
 
@@ -264,7 +260,7 @@ Note we use `reframe` instead of `summarize` because `tidy` returns a data frame
 
 The slopes are reduced, but they are not 0, which indicates that BBs are helpful for producing runs, just not as much as previously thought. In fact, the values above are closer to the slope we obtained from singles, `r round(lm(r~singles, data = dat)$coef[2],1)`, which is more consistent with our intuition. Since both singles and BB get us to first base, they should have about the same predictive power.
 
-Although our understanding of the application tells us that HR cause BB but not the other way around, we can still check if stratifying by BB makes the effect of BB go down. To do this, we use the same code except that we swap HR and BBs. In this case, the slopes do not change much from the original:
+Although our understanding of the application tells us that HR cause BB, but not the other way around, we can still check if stratifying by BB makes the effect of BB go down. To do this, we use the same code except that we swap HR and BBs. In this case, the slopes do not change much from the original:
 
 ```{r}
 dat |> mutate(bb_strata = round(bb, 1)) |> 
@@ -274,7 +270,7 @@ dat |> mutate(bb_strata = round(bb, 1)) |>
   filter(term == "hr")
 ```
 
-They are reduced a bit from `r lm(r ~ hr, data = dat)$coef[2]`, which is consistent with the fact that BB do in fact cause some runs.
+They are reduced slightly from `r lm(r ~ hr, data = dat)$coef[2]`, which is consistent with the fact that BB do in fact cause some runs.
 
 Regardless, it seems that if we stratify by HR, we have bivariate distributions for runs versus BB. Similarly, if we stratify by BB, we have approximate bivariate normal distributions for HR versus runs.
 
@@ -288,21 +284,21 @@ $$
 
 with the slopes for $x_1$ changing for different values of $x_2$ and vice versa. But is there an easier approach?
 
-If we take random variability into account, the slopes in the strata don't appear to change much. If these slopes are in fact the same, this implies that $\beta_1(x_2)$ and $\beta_2(x_1)$ are constants. This in turn implies that the expectation of runs conditioned on HR and BB can be written like this:
+If we take random variability into account, the slopes in the strata don't appear to change much. If these slopes are in fact the same, this implies that $\beta_1(x_2)$ and $\beta_2(x_1)$ are constants. This, in turn, implies that the expectation of runs conditioned on HR and BB can be written as follows:
 
 $$
 \mbox{E}[R \mid BB = x_1, \, HR = x_2] = \beta_0 + \beta_1 x_1 + \beta_2 x_2
 $$
 
-This model suggests that if the number of HR is fixed at $x_2$, we observe a linear relationship between runs and BB with an intercept of $\beta_0 + \beta_2 x_2$. Our exploratory data analysis suggested that this is the case. The model also suggests that as the number of HR grows, the intercept growth is linear as well and determined by $\beta_1$. In this analysis, referred to as *multivariable regression*, you will often hear people say that the BB slope $\beta_1$ is *adjusted* for the HR effect. 
+This model suggests that, if the number of HR is fixed at $x_2$, we observe a linear relationship between runs and BB with an intercept of $\beta_0 + \beta_2 x_2$. Our exploratory data analysis suggested that this is the case. The model also suggests that as the number of HR grows, the intercept growth is linear as well and determined by $\beta_1$. In this analysis, referred to as *multivariable regression*, you will often hear people say that the BB slope $\beta_1$ is *adjusted* for the HR effect. 
 
-Because the data is approximately normal and conditional distributions were also normal we are justified in using a linear model:
+Because the data is approximately normal and conditional distributions were also normal, we are justified in using a linear model:
 
 $$
 Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
 $$
 
-with $Y_i$ runs per game for team $i$, $x_{i,1}$ walks per game, and $x_{i,2}$. To use `lm` here, we need to let the function know we have two predictor variables. So we use the `+` symbol as follows:
+with $Y_i$ runs per game for team $i$, $x_{i,1}$ walks per game, and $x_{i,2}$. To use `lm` here, we need to let the function know we have two predictor variables. We therefore use the `+` symbol as follows:
 
 ```{r}
 tidy(lm(r ~ bb + hr, data = dat), conf.int = TRUE) 
@@ -311,13 +307,13 @@ tidy(lm(r ~ bb + hr, data = dat), conf.int = TRUE)
 When we fit the model with only one variable, the estimated slopes were `r lm(r ~ bb, data = dat)$coef[2]` and `r lm(r ~ hr, data = dat)$coef[2]` for BB and HR, respectively. Note that when fitting the multivariable model both go down, with the BB effect decreasing much more.
 
 :::{.callout-note}
-You are ready to do exercises 1-12  if you want to practice before continuing. 
+You are ready to do exercises 1-12, if you want to practice before continuing. 
 :::
 
 
 ### Building a baseball team
 
-Now we want to construct a metric to pick players, and we need to consider singles, doubles, and triples as well. Can we build a model that predicts runs based on all these outcomes? We take somewhat of a "leap of faith" and assume that these five variables are jointly normal. This means that if we pick any one of them, and hold the other four fixed, the relationship with the outcome is linear and the slope does not depend on the four values held constant. If this is true, then a linear model for our data is:
+Now we want to construct a metric to pick players, and we need to consider singles, doubles, and triples as well. Can we build a model that predicts runs based on all these outcomes? We take somewhat of a "leap of faith" and assume that these five variables are jointly normal. This means that, if we pick any one of them and hold the other four fixed, the relationship with the outcome is linear and the slope does not depend on the four values held constant. If this is true, then a linear model for our data is:
 
 $$
 Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \beta_3 x_{i,3}+ \beta_4 x_{i,4} + \beta_5 x_{i,5} + \varepsilon_i
@@ -332,7 +328,7 @@ Using `lm`, we can quickly find the LSE for the parameters using:
 fit <- dat |>  filter(year <= 2001) |> lm(r ~ bb + singles + doubles + triples + hr, data = _)
 ```
 
-Note we fit the model to data up until 2001, the year before we will construct our team. We can see the coefficients using `tidy`:
+Be aware that we fit the model to data up until 2001, the year before we will construct our team. We can see the coefficients using `tidy`:
 
 ```{r}
 tidy(fit, conf.int = TRUE) |> filter(term != "(Intercept)")
@@ -349,9 +345,9 @@ dat |> mutate(r_hat = predict(fit, newdata = dat)) |>
   geom_abline()
 ```
 
-Our model does quite a good job as demonstrated by the fact that points from the observed versus predicted plot fall close to the identity line.
+Our model does quite a good job, as demonstrated by the fact that points from the observed versus predicted plot fall close to the identity line.
 
-So instead of using batting average, or just number of HR, as a measure of picking players, we can use our fitted model to form a metric that relates more directly to run production. Specifically, to define a metric for player A, we imagine a team made up of players just like player A and use our fitted regression model to predict how many runs this team would produce. The formula would look like this: `r coef(fit)[1]` + `r coef(fit)[2]` $\times$ BB + `r coef(fit)[3]` $\times$ singles + `r coef(fit)[4]` $\times$ doubles + `r coef(fit)[5]` $\times$ triples + `r coef(fit)[6]` $\times$ HR.
+So instead of using batting average, or just number of HR, as a measure of picking players, we can use our fitted model to form a metric that relates more directly to run production. Specifically, to define a metric for player A, we imagine a team made up of players just like player A, and use our fitted regression model to predict how many runs this team would produce. The formula would look like this: `r coef(fit)[1]` + `r coef(fit)[2]` $\times$ BB + `r coef(fit)[3]` $\times$ singles + `r coef(fit)[4]` $\times$ doubles + `r coef(fit)[5]` $\times$ triples + `r coef(fit)[6]` $\times$ HR.
 
 To define a player-specific metric, we have a bit more work to do. A challenge here is that we derived the metric for teams, based on team-level summary statistics. For example, the HR value that is entered into the equation is HR per game for the entire team. If we compute the HR per game for a player, it will be much lower since the total is accumulated by 9 batters. Furthermore, if a player only plays part of the game and gets fewer opportunities than average, it is still considered a game played. For players, a rate that takes into account opportunities is the per-plate-appearance rate.
 
@@ -404,7 +400,7 @@ players <- Salaries |>
   right_join(players, by = "playerID")
 ```
 
-Next, we add their defensive position. This is a somewhat complicated task because players play more than one position each year. The **Lahman** package table `Appearances` tells how many games each player played in each position, so we can pick the position that was most played using `which.max` on each row. We use `apply` to do this. However, because some players are traded, they appear more than once on the table, so we first sum their appearances across teams. Here, we pick the one position the player most played using the `top_n` function. To make sure we only pick one position, in the case of ties, we pick the first row of the resulting data frame. We also remove the `OF` position which stands for outfielder, a generalization of three positions: left field (LF), center field (CF), and right field (RF). We also remove pitchers since they don't bat in the league in which the A's play.
+Next, we add their defensive position. This is a somewhat complicated task because players play more than one position each year. The **Lahman** package table `Appearances` specifies how many games each player played in each position, allowing us to pick the position that was most played using `which.max` on each row. We use `apply` to do this. However, as some players are traded and appear more than once on the table, we first sum their appearances across teams. Here, we pick the one position the player most played using the `top_n` function. To make sure we only pick one position, in the case of ties, we pick the first row of the resulting data frame. We also remove the `OF` position which stands for outfielder, a generalization of three positions: left field (LF), center field (CF), and right field (RF). We also remove pitchers since they don't bat in the league where the A's play.
 
 ```{r}
 position_names <- 
@@ -451,7 +447,7 @@ players |> ggplot(aes(salary, r_hat, color = POS)) +
   scale_x_log10()
 ```
 
-We can search for good deals by looking at players who produce many more runs than others with similar salaries. We can use this table to decide what players to pick and keep our total salary below the 40 million dollars Billy Beane had to work with. This can be done using what computer scientists call linear programming. This is not something we teach, but here are the position players selected with this approach:
+We can search for good deals by looking at players who generate many more runs than others with similar salaries. We can use this table to decide what players to pick while keeping our total salary below the 40 million dollar budget Billy Beane had to work with. This can be done using what computer scientists call linear programming. This is not something we teach, although here are the position players selected with this approach:
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE, cache = FALSE}
 library(reshape2)
@@ -478,7 +474,7 @@ if(knitr::is_html_output()){
 }
 ```
 
-We see that all these players have above average BB and most have above average HR rates, while the same is not true for singles and batting average. Here is a table with statistics standardized across players so that, for example, above average HR hitters have values above 0.
+We see that all these players have above average BB and most have above average HR rates, while the same is not true for singles and batting average. Below is a table with statistics standardized across players so that, for example, above average HR hitters have values above 0:
 
 ```{r, echo=FALSE}
 my_scale <- function(x) (x - median(x))/mad(x)
@@ -503,9 +499,9 @@ if(knitr::is_html_output()){
 
 ## Exercises
 
-We have shown how BB and singles have similar predictive power for scoring runs. Another way to compare the usefulness of these baseball metrics is by assessing how stable they are across the years. Since we have to pick players based on their previous performances, we will prefer metrics that are more stable. In these exercises, we will compare the stability of singles and BBs.
+We have shown how BB and singles have similar predictive power for scoring runs. Another way to compare the usefulness of these baseball metrics is by assessing their stability across the years. Since we have to pick players based on their previous performances, we prefer metrics that are more stable. In these exercises, we will compare the stability of singles and BBs.
 
-1\. Before we get started, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. Here is how we create the 2017 table. Keeping only players with more than 100 plate appearances.
+1\. Before we begin, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. FIX Here is how we create the 2017 table. Keeping only players with more than 100 plate appearances.
 
 ```{r, eval=FALSE}
 library(Lahman)
@@ -516,7 +512,7 @@ dat <- Batting |> filter(yearID == 2002) |>
   select(playerID, singles, bb)
 ```
 
-Now compute a similar table but with rates computed over 1999-2001.
+Now, compute a similar table, but with rates computed over 1999-2001.
 
 2\. You can use the `inner_join` function to combine the 2001 data and averages in the same table:
 
@@ -531,7 +527,7 @@ Compute the correlation between 2002 and the previous seasons for singles and BB
 4\. Now fit a linear model for each metric and use the `confint` function to compare the estimates.
 
 
-5\. In a previous section, we computed the correlation between mothers and daughters, mothers and sons, fathers and daughters, and fathers and sons, and noticed that the highest correlation is between fathers and sons and the lowest is between mothers and sons. We can compute these correlations using:
+5\. In a previous section, we computed the correlation between mothers and daughters, mothers and sons, fathers and daughters, and fathers and sons. We noticed that the highest correlation is between fathers and sons and the lowest is between mothers and sons. We can compute these correlations using:
 
 ```{r, eval=FALSE}
 library(HistData)
@@ -566,30 +562,29 @@ Are these differences statistically significant? To answer this, we will compute
 12\. **Advanced**. Write a function that takes R, HR, and BB as arguments and fits two linear models: `R ~ BB` and `R~BB+HR`. Then use the `summary` function to obtain the `BB` for both models for each year since 1962. Then plot these against each other as a function of time.
 
 
-
 13\. Since the 1980s, sabermetricians have used a summary statistic different from batting average to evaluate players. They realized walks were important and that doubles, triples, and HRs, should be weighed more than singles. As a result, they proposed the following metric:
 
 $$
 \frac{\mbox{BB}}{\mbox{PA}} + \frac{\mbox{Singles} + 2 \mbox{Doubles} + 3 \mbox{Triples} + 4\mbox{HR}}{\mbox{AB}}
 $$
 
-They called this on-base-percentage plus slugging percentage (OPS). Although the sabermetricians probably did not use regression, here we show how this metric is close to what one gets with regression.
+They called this on-base-percentage plus slugging percentage (OPS). Although the sabermetricians probably did not use regression, here we demonstrate how this metric closely aligns with regression results.
 
 Compute the OPS for each team in the 2001 season. Then plot Runs per game versus OPS.
 
-14\. For every year since 1962, compute the correlation between runs per game and OPS; then plot these correlations as a function of year.
+14\. For every year since 1962, compute the correlation between runs per game and OPS. Then plot these correlations as a function of year.
 
-15\. Note that we can rewrite OPS as a weighted average of BBs, singles, doubles, triples, and HRs. We know that the weights for doubles, triples, and HRs are 2, 3, and 4 times that of singles. But what about BB? What is the weight for BB relative to singles? Hint: the weight for BB relative to singles will be a function of AB and PA.
+15\. Keep in mind that we can rewrite OPS as a weighted average of BBs, singles, doubles, triples, and HRs. We know that the weights for doubles, triples, and HRs are 2, 3, and 4 times that of singles. But what about BB? What is the weight for BB relative to singles? Hint: the weight for BB relative to singles will be a function of AB and PA.
 
-16\. Note that the weight for BB, $\frac{\mbox{AB}}{\mbox{PA}}$, will change from team to team. To see how variable it is, compute and plot this quantity for each team for each year since 1962. Then plot it again, but instead of computing it for every team, compute and plot the ratio for the entire year. Then, once you are convinced that there is not much of a time or team trend, report the overall average.
+16\. Consider that the weight for BB, $\frac{\mbox{AB}}{\mbox{PA}}$, will change from team to team. To assess its variability, compute and plot this quantity for each team for each year since 1962. Then plot it again, but instead of computing it for every team, compute and plot the ratio for the entire year. Then, once you are convinced that there is not much of a time or team trend, report the overall average.
 
 17\. So now we know that the formula for OPS is proportional to $0.91 \times \mbox{BB} + \mbox{singles} + 2 \times \mbox{doubles} + 3 \times \mbox{triples} + 4 \times \mbox{HR}$. Let's see how these coefficients compare to those obtained with regression. Fit a regression model to the data after 1962, as done earlier: using per game statistics for each year for each team. After fitting this model, report the coefficients as weights relative to the coefficient for singles.
 
-18\. We see that our linear regression model coefficients follow the same general trend as those used by OPS, but with slightly less weight for metrics other than singles. For each team in years after 1962, compute the OPS, the predicted runs with the regression model and compute the correlation between the two as well as the correlation with runs per game.
+18\. We see that our linear regression model coefficients follow the same general trend as those used by OPS, but with slightly less weight for metrics other than singles. For each team in years after 1962, compute the OPS, the predicted runs with the regression model, and compute the correlation between the two, as well as the correlation with runs per game.
 
-19\. We see that using the regression approach predicts runs slightly better than OPS, but not that much. However, note that we have been computing OPS and predicting runs for teams when these measures are used to evaluate players. Let's show that OPS is quite similar to what one obtains with regression at the player level. For the 1962 season and after, compute the OPS and the predicted runs from our model for each player and plot them. Use the PA per game correction we used in the previous chapter:
+19\. We see that using the regression approach predicts runs slightly better than OPS, but not that much. However, note that we have been computing OPS and predicting runs for teams when these measures are used to evaluate players. Let's show that OPS is quite similar to what one obtains with regression at the player level. For the 1962 season and onward, compute the OPS and the predicted runs from our model for each player, and plot them. Use the PA per game correction we used in the previous chapter:
 
-20\. What players have show the largest difference between their rank by predicted runs and OPS?
+20\. Which players have shown the largest difference between their rank by predicted runs and OPS?
 
 
 
