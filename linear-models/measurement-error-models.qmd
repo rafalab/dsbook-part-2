@@ -1,8 +1,8 @@
 # Measurement error models
 
-Another major application of linear models comes from measurement errors models. In these applications, it is common to have a non-random covariate, such as time, and randomness is introduced from measurement error rather than sampling or natural variability.
+Another major application of linear models arises in measurement errors models. In these scenarios, it is common to have a non-random covariate, such as time, and randomness is introduced from measurement error rather than sampling or natural variability.
 
-To understand these models, imagine you are Galileo in the 16th century trying to describe the velocity of a falling object. An assistant climbs the Tower of Pisa and drops a ball, while several other assistants record the position at different times. Let's simulate some data using the equations we know today and adding some measurement error. The **dslabs** function `rfalling_object` generates these simulations:
+To understand these models, imagine you are Galileo in the 16th century trying to describe the velocity of a falling object. An assistant climbs the Tower of Pisa and drops a ball, while several other assistants record the position at different times. Let's simulate some data using the equations we currently know and adding some measurement error. The **dslabs** function `rfalling_object` generates these simulations:
 
 ```{r, message=FALSE, warning=FALSE, cache=FALSE}
 library(tidyverse)
@@ -11,7 +11,7 @@ library(dslabs)
 falling_object <- rfalling_object()
 ```
 
-The assistants hand the data to Galileo and this is what he sees:
+The assistants hand the data to Galileo, and this is what he sees:
 
 ```{r gravity}
 falling_object |> 
@@ -33,13 +33,13 @@ $$
 Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n
 $$
 
-with $Y_i$ representing distance in meters, $x_i$ representing time in seconds, and $\varepsilon$ accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each $i$. We also assume that there is no bias, which means the expected value $\mbox{E}[\varepsilon] = 0$.
+with $Y_i$ representing distance in meters, $x_i$ representing time in seconds, and $\varepsilon$ accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each $i$. FIX We also assume that there is no bias, which means the expected value $\mbox{E}[\varepsilon] = 0$.
 
 Note that this is a linear model because it is a linear combination of known quantities ($x$ and $x^2$ are known) and unknown parameters (the $\beta$s are unknown parameters to Galileo). Unlike our previous examples, here $x$ is a fixed quantity; we are not conditioning.
 
 To pose a new physical theory and start making predictions about other falling objects, Galileo needs actual numbers, rather than unknown parameters. Using LSE seems like a reasonable approach. How do we find the LSE?
 
-LSE calculations do not require the errors to be approximately normal. The `lm` function will find the $\beta$ s that will minimize the residual sum of squares:
+LSE calculations do not require the errors to be approximately normal. The `lm` function will find the $\beta$s that will minimize the residual sum of squares:
 
 ```{r}
 fit <- falling_object |> 
@@ -48,7 +48,7 @@ fit <- falling_object |>
 tidy(fit)
 ```
 
-Let's check if the estimated parabola fits the data. The **broom** function `augment` lets us do this easily:
+Let's check if the estimated parabola fits the data. The **broom** function `augment` allows us to do this easily:
 
 ```{r falling-object-fit}
 augment(fit) |> 
@@ -63,7 +63,7 @@ $$
 d(t) = h_0 + v_0 t -  0.5 \times 9.8 \, t^2
 $$
 
-with $h_0$ and $v_0$ the starting height and velocity, respectively. The data we simulated above followed this equation and added measurement error to simulate `n` observations for dropping the ball $(v_0=0)$ from the tower of Pisa $(h_0=55.86)$.
+with $h_0$ and $v_0$ the starting height and velocity, respectively. The data we simulated above followed this equation, adding measurement error to simulate `n` observations for dropping the ball $(v_0=0)$ from the tower of Pisa $(h_0=55.86)$.
 
 These are consistent with the parameter estimates:
 
@@ -76,15 +76,15 @@ The Tower of Pisa height is within the confidence interval for $\beta_0$, the in
 
 ## Exercises 
 
-1\. Plot of co2 evels for the first 12 months of the `co2` dataset and notice it seems to follow a sin wave with frequency 1 cycle per month. This means that a measurement error model that might work is 
+1\. Plot of co2 levels for the first 12 months of the `co2` dataset and notice it seems to follow a sin wave with frequency 1 cycle per month. This means that a measurement error model that might work is 
 
 $$
 y_i = \mu + A \sin(2\pi t_i / 12 + \phi) + \varepsilon_i
 $$
-with $t_i$ the month number of observation $i$. Is this a linear model for the parameters $mu$, $A$ and $\phi$?
+FIX with $t_i$ the month number of observation $i$. Is this a linear model for the parameters $mu$, $A$ and $\phi$?
 
 
-2\. Using trigonometry we can show that we can rewrite this model as
+2\. Using trigonometry, we can show that we can rewrite this model as:
 
 $$
 y_i = \beta_0 + \beta_1 \sin(2\pi t_i/12) + \beta_2 \cos(2\pi t_i/12) + \varepsilon_i
