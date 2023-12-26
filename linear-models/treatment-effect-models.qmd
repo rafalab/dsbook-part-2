@@ -10,12 +10,13 @@ library(broom)
 library(dslabs)
 ```
 
-Up to now, all our linear models have been applied to two or more continuous random variables. We assume the random variables are multivariate normal and use this to motivate a linear model. This approach covers many real-life examples of linear regression. However, linear models have many other applications. One of the most popular is to quantify treatment effects in randomized and controlled experiments. One of the first applications was in agriculture, where different plots of lands were treated with different combinations of fertilizers to try to determine if they were effective. In fact the use of $Y$ for the outcome in Statistics, is due to the mathematical theory being developed for crop _yield_ as the outcome.  
+Up to now, all our linear models have been applied to two or more continuous random variables. We assume the random variables are multivariate normal and use this to motivate a linear model. This approach covers many real-life examples of linear regression. However, linear models have many other applications. One of the most popular is to quantify treatment effects in randomized and controlled experiments. One of the first applications was in agriculture, where different plots of lands were treated with different combinations of fertilizers to try to determine if they were effective. In fact, the use of $Y$ for the outcome in statistics is due to the mathematical theory being developed for crop _yield_ as the outcome.  
 
-Since, the same ideas have been applied in other areas, such as randomized trials developed to determine if drugs cure or prevent a diseases or if policies have an effect on social or educational outcomes. In the latter example, we think of the policy intervention as a _treatment_ and follow the same mathematical procedure. The analyses used in _A/B testing_, widely used today by internet companies, are based on treatment effects models. 
-Furthermore, the use of these models has been extended to observational studies where analysts attempt to use linear models to estimate effects of interest while accounting for potential confounders. For example, to estimate the effect of a diet high on fruits and vegetables on blood pleasure, we would have to adjust for _factors_ such as age, sex, and smoking status. 
+Since then, the same ideas have been applied in other areas, such as randomized trials developed to determine if drugs cure or prevent diseases or if policies have an effect on social or educational outcomes. In the latter example, we think of the policy intervention as a _treatment_ and follow the same mathematical procedure. The analyses used in _A/B testing_, widely used today by internet companies, are based on treatment effects models. 
 
-In this chapter we consider an experiment testing for the effect of a high-fat diet on mouse physiology. Mice were selected and divided at random into two groups, one group receiving a high-fat diet, considered the _treatment_ and the other group left as control and receiving the usual _chow_ diet. The data is included in the **dslabs** package:
+Moreover, these models have been applied in observational studies where analysts attempt to use linear models to estimate effects of interest while accounting for potential confounders. For example, to estimate the effect of a diet high in fruits and vegetables on blood pressure, we would have to adjust for _factors_ such as age, sex, and smoking status. 
+
+In this chapter, we consider an experiment designed to test for the effects of a high-fat diet on mouse physiology. Mice were randomly selected and divided into two groups: one group receiving a high-fat diet, considered the _treatment_, while the other group served as the control and received the usual _chow_ diet. The data is included in the **dslabs** package:
 
 ```{r}
 library(dslabs)
@@ -28,7 +29,7 @@ A boxplot shows that the high fat diet mice are, on average, heavier.
 with(mice_weights, boxplot(body_weight ~ diet))
 ```
 
-But, given that we divided the mice at random, is it possible the observed difference is simply due to chance? Here, we can compute the sample average and standard deviation of each group and perform statistical inference on the difference of these means, similar to what we did for election forecasting in Chapters @sec-hypothesis-testing and  @sec-models.
+However, given that we divided the mice randomly, is it possible that the observed difference is simply due to chance? Here, we can compute the sample average and standard deviation of each group and perform statistical inference on the difference of these means, similar to our approach for election forecasting in @sec-hypothesis-testing and @sec-models.
 
 ## Comparing group means
 
@@ -39,16 +40,16 @@ library(tidyverse)
 mice_weights |> group_by(diet) |> summarize(average = mean(body_weight))
 ```
 
-But this is a random sample of mice and the assignment to the diet group is also random. So is this difference due to chance? We will use hypothesis testing, first described in Chapter @sec-hypothesis-testing, to answer this question.
+However, this is a random sample of mice, and the assignment to the diet group is also done randomly. So is this difference due to chance? We will use hypothesis testing, first described in @sec-hypothesis-testing, to answer this question.
 
-Denote with $\mu_1$ and $\sigma_1$ the weight average and standard deviation we would observe if the entire population of mice were on the high-fat diet. Define $\mu_0$ and $\sigma_0$ similarly for the chow diet. Define $N_1$ and $N_0$ as the sample sizes, let's call them $\bar{X}_1$ and $\bar{X}_0$ as the sample averages, and $s_1$ and $s_0$ the sample standard deviations for the for the high-fat and chow diets, respectively. Because this is a random sample the central limit theorem tells us that the difference in averages $bar{X}_1 - \bar{X}_0$ follows a normal distribution with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{s_1^2}{N_1} + \frac{s_0^2}{N_0}}$. If we define the null hypothesis as the high-fat diet having no effect, or $\mu_1 - \mu_0 = 0$, the the following summary statistic  
+Let $\mu_1$ and $\sigma_1$ represent the weighted average and standard deviation, respectively, that we would observe if the entire population of mice were on the high-fat diet. Define $\mu_0$ and $\sigma_0$ similarly for the chow diet. FIX UNCLEAR Define $N_1$ and $N_0$ as the sample sizes, let's call them $\bar{X}_1$ and $\bar{X}_0$ as the sample averages, and $s_1$ and $s_0$ the sample standard deviations for the for the high-fat and chow diets, respectively. Since this is a random sample, the central limit theorem tells us that the difference in averages $bar{X}_1 - \bar{X}_0$ follows a normal distribution, with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{s_1^2}{N_1} + \frac{s_0^2}{N_0}}$. If we define the null hypothesis as the high-fat diet having no effect, or $\mu_1 - \mu_0 = 0$, the following summary statistic:
 
 
 $$
 t = \frac{\bar{X}_1 - \bar{X}_0}{\sqrt{\frac{s_1^2}{N_1} + \frac{s_0^2}{N_0}}}
 $$
 
-follows a standard normal distribution when the null hypothesis is true,  which implies we can easily compute the probability of observing a value as large as the one we did: 
+follows a standard normal distribution when the null hypothesis is true.  This implies that we can easily compute the probability of observing a value as large as the one we obtained: 
 
 ```{r}
 stats <- mice_weights |> group_by(diet) |> summarize(xbar = mean(body_weight), s = sd(body_weight), n = n()) 
@@ -58,58 +59,58 @@ t_stat
 
 Here $t$ is well over 3, so we don't really need to compute the p-value `1-pnorm(t_stat)` as we know it will be very small.
 
-Note that when $N$ is not large, then the CLT does not apply. However, if the outcome data, in this case weight, follows a normal distribution, then $t$ follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except we use `1-pt(t_stat, with(stats, n[2]+n[1]-2)` to compute the p-value. 
+Note that when $N$ is not large, then the CLT does not apply. However, if the outcome data, in this case weight, follows a normal distribution, then $t$ follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `1-pt(t_stat, with(stats, n[2]+n[1]-2)` to compute the p-value. 
 
-Because using differences in mean are so common in scientific studies, this _t-statistic_ is one of the most widely reported summaries. When use it in a hypothesis testing setting, it is referred to a performing a _t test_. 
+Given the common use of differences in means in scientific studies, this _t-statistic_ is one of the most widely reported summaries. FIX When use it in a hypothesis testing setting, it is referred to as performing a _t test_. 
 
 
 :::{.callout-warning}
-In the computation above we computed the probability of `t` being as large as what we observed. However, when we are equally interested in both directions, for example, either an increase or decrease in weight, then we need to compute the probability of `t` being _as extreme_ as what we observe. The formula simply changes to using the absolute value: `1 - pnorm(abs(t-test))` or `1-pt(t_stat, with(stats, n[2]+n[1]-2)`.
+In the computation above, we computed the probability of `t` being as large as what we observed. However, when our interest spans both directions, for example, either an increase or decrease in weight, we need to compute the probability of `t` being _as extreme_ as what we observe. The formula simply changes to using the absolute value: `1 - pnorm(abs(t-test))` or `1-pt(t_stat, with(stats, n[2]+n[1]-2)`.
 :::
 
 ## One factor design
 
-Although the t-test is useful for cases in which we only account for two treatments, it is common to have other variables affect our outcomes. Linear models permit hypothesis testing in more general situations. We start the description of the use linear models for estimating treatment effects by demonstrating how they can be used to perform t-tests.
+Although the t-test is useful for cases in which we only account for two treatments, it is common to have other variables affect our outcomes. Linear models permit hypothesis testing in these more general situations. We start the description of the use of linear models for estimating treatment effects by demonstrating how they can be used to perform t-tests.
 
 If we assume that the weight distributions for both chow and high-fat diets are normally distributed, we can write the following linear model to represent the data:
 
 $$
 Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
 $$
-with $X_i$ 1 if the $i$-th mice was fed the high-fat diet and 0 otherwise and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, permits us to use it in this different context. In particular notice that now $\beta_0$ represents the population average height of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
+with $X_i$ 1, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average height of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
 
-A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. If the null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. We can then estimate $\beta_1$ and answer the question of weather or not the observed difference is real by computing the estimates being as large as it was under the null. So how do we estimate $\beta_1$ and a standard error for the estimate?
+A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. FIX If the null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. FIX We can then estimate $\beta_1$ and answer the question of weather or not the observed difference is real by computing the estimates being as large as it was under the null. So how do we estimate $\beta_1$ and a standard error for the estimate?
 
-A powerful characteristics of linear models is that we can can estimate the parameters $\beta$s and their standard errors with the same LSE machinery:
+A powerful characteristic of linear models is that we can estimate the parameters $\beta$s and their standard errors with the same LSE machinery:
 
 ```{r}
 fit <- lm(body_weight ~ diet, data = mice_weights)
 ```
 
-Because `diet` is a factor with two entries, the `lm` function knows to fit the model above with a $x_i$ a indicator variable. The `summary` function shows us the resulting estimate, standard error, and p-value:
+FIX Because `diet` is a factor with two entries, the `lm` function knows to fit the model above with a $x_i$ a indicator variable. The `summary` function shows us the resulting estimate, standard error, and p-value:
 
 ```{r}
 coefficients(summary(fit))
 ```
 
-or using `broom` we can write:
+or, using `broom`, we can write:
 
 ```{r}
 library(broom)
 tidy(fit, conf.int = TRUE) |> filter(term == "diethf")
 ```
 
-The `statistic` computed here is the estimate divided by its standard error: $\hat{\beta}_1 / \hat{\mbox{SE}}(\hat{\beta}_1)$. In the case for the simple one-factor model, we can show that this statistic is almost equivalent to the t-test. Intuitively it makes since both $\hat{\beta_1}$ and the numerator of the t-test are estimates of the treatment effect. In fact, we can see that we obtain a number similar to the $t$ computed in the previous section. 
+The `statistic` computed here is the estimate divided by its standard error: $\hat{\beta}_1 / \hat{\mbox{SE}}(\hat{\beta}_1)$. In the case of the simple one-factor model, we can show that this statistic is almost equivalent to the t-test. Intuitively, it makes sense, as both $\hat{\beta_1}$ and the numerator of the t-test are estimates of the treatment effect. In fact, we can observe that the obtained number is similar to the $t$ computed in the previous section. 
 
 ```{r}
 c(coefficients(summary(fit))[2,3], t_stat)
 ```
 
 
-One minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mbox{SD}(\varepislon)$ as a standard deviation. Note that, although we do not show how to do it with R here, we can redefine the linear model to have different standard errors for each group.
+One minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mbox{SD}(\varepislon)$ as a standard deviation. Note that, although we don't demonstrate it with R here, we can redefine the linear model to have different standard errors for each group.
 
 :::{.callout-note}
-In the linear model description provided here we assumed $\varepsilon$ follows a normal distribution. This assumption permits us to show that the statistics formed by dividing estimates by their estimated standard errors follow t-distribution, which in turn permits us to estimate p-values or confidence intervals. However, note that we do not need this assumption to compute the expected value and standard error of the least squared estimates. Furthermore, if the number of observations in large enough, then the central limit theorem applies and we can obtain p-values and confidence intervals even without the normal distribution assumption.
+In the linear model description provided here, we assumed $\varepsilon$ follows a normal distribution. This assumption permits us to show that the statistics formed by dividing estimates by their estimated standard errors follow t-distribution, which in turn allows us to estimate p-values or confidence intervals. However, note that we do not need this assumption to compute the expected value and standard error of the least squared estimates. Furthermore, if the number of observations is large enough, then the central limit theorem applies and we can obtain p-values and confidence intervals even without the normal distribution assumption.
 :::
 
 ## Two factor designs
@@ -120,7 +121,7 @@ Note that this experiment included male and female mice, and male mice are known
 boxplot(fit$residuals ~ mice_weights$sex)
 ```
 
-This misspecification can have real implications since if more male mice received the high-fat diet, then this could explain the increase. Or if less received it, then we might underestimate the diet effect. Sex might be a confounder. Our model can certainly be improved. 
+This misspecification can have real implications; for instance, if more male mice received the high-fat diet, then this could explain the increase. Conversely, if fewer received it, we might underestimate the diet effect. Sex could be a confounder, indicating that our model can certainly be improved. 
 
 From examining the data:
 
@@ -128,24 +129,24 @@ From examining the data:
 mice_weights |> ggplot(aes(diet, log2(body_weight), fill = sex)) + geom_boxplot()
 ```
 
-we see that there diet effect is observed for both sexes and that males are heavier than females. Although not nearly as obvious, it also appears the diet effect is stronger in males. A linear models that permits a different expected value four groups, 1) female on chow diet, 2) females on high-fat diet, 3) male on chow diet, and 4)males on high-fat diet, 
+we see that the diet effect is observed for both sexes and that males are heavier than females. Although not nearly as obvious, it also appears the diet effect is stronger in males. FIX A linear model that permits a different expected value four groups, 1) female on chow diet, 2) females on high-fat diet, 3) male on chow diet, and 4 )males on high-fat diet, 
 
 $$
 Y_i = \beta_1 x_{i,1} + \beta_2 x_{i,2}  + \beta_3 x_{i,3}  + \beta_4 x_{i,4}  + \varepsilon_i
 $$
-with the $x_i$s indicator variables for each of the four groups. However, with this representation, none of the $\beta$s represent the effect of interest: the diet effect. Furthermore, we now are accounting for the possibility that the diet effect is different for males and females have a different, and can test that hypothesis as well. 
+with the $x_i$s indicator variables for each of the four groups. However, with this representation, none of the $\beta$s represent the effect of interest: the diet effect. FIX Furthermore, we are now accounting for the possibility that the diet effect is different for males and females have a different, and we can test that hypothesis as well. 
 
 
-A powerful feature of linear models is that we can rewrite the model so that we still have a different expected value for each group, but the parameters represent effects we are interested. So, for example, in the representation
+A powerful feature of linear models is that we can rewrite the model so that we still have a different expected value for each group, but the parameters represent the effects we are interested in. So, for example, in the representation:
 
 $$
 Y_i = \beta_0 + \beta_1 x_{i,1}  + \beta_2 x_{i,2}  + \beta_3 x_{i,1} x_{i,2}  + \varepsilon_i
 $$
-with $x_{i,1}$ and indicator that is one if you have the treatment and $x_{i,2}$ an indicator that is one if you are male, the $\beta_1$ can be interpreted as the treatment effect for females, $\beta_2$ as the difference between males and females, and $\beta_3$ the added treatment effect for males. In Statistics, this last effect is referred to as an _interaction_ effect. The $\beta_0$ is consider the baseline value which is the average weight of females on the chow diet. 
+FIX with $x_{i,1}$ an indicator that is one if you have the treatment and $x_{i,2}$ an indicator that is one if you are male, the $\beta_1$ can be interpreted as the treatment effect for females, $\beta_2$ as the difference between males and females, and $\beta_3$ the added treatment effect for males. In statistics, this last effect is referred to as an _interaction_ effect. The $\beta_0$ is considered the baseline value, which is the average weight of females on the chow diet. 
 
 Statistical textbooks describes several other ways in which the model can be rewritten to obtain other types of interpretations. For example, we might want $\beta_2$ to represent the average treatment effect between females and males, rather that the female treatment effects. This is achieved by defining what _contrasts_ we are interested. 
 
-In R we can specific this model using the following
+In R, we can specific this model using the following:
 
 ```{r}
 fit <- lm(body_weight ~ diet*sex, data = mice_weights)
@@ -160,35 +161,35 @@ tidy(fit, conf.int = TRUE) |> filter(!str_detect(term, "Intercept"))
 Note that the male effect is larger that the diet effect, and the diet effect is statistically significant for both sexes, with the males having a higher effect by between 1 and 4.5 grams.
 
 
-A common approach applied when more than one factor is thought to affect the measurement is to simply include an additive effect for each factor like this:
+A common approach applied when more than one factor is thought to affect the measurement is to simply include an additive effect for each factor, like this:
 
 $$
 Y_i = \beta_0 + \beta_1 x_{i,1}  + \beta_2 x_{i,2}   + \varepsilon_i
 $$
 
-In this model, the $\beta_1$ is a general diet effect that applies regardless of sex. In R we use the following code using a `+` instead of `*`:
+In this model, the $\beta_1$ is a general diet effect that applies regardless of sex. In R, we use the following code, employing a `+` instead of `*`:
 
 ```{r}
 fit <- lm(body_weight ~ diet + sex, data = mice_weights)
 ```
 
-Because their a strong interaction effect, a diagnostic plots shows that the residuals are biased: the average negative for females on the diet and positive for the males on the diet, rather than 0.
+FIX Because their a strong interaction effect, a diagnostic plots shows that the residuals are biased: the average negative for females on the diet and positive for the males on the diet, rather than 0.
 
 ```{r lm-diagnostic-plot}
 plot(fit, which = 1)
 ```
 
-Scientific studies, particularly within epidemiology and social sciences, frequently omit interaction terms from models due to the high number of variables. Adding interactions necessitates numerous parameters, which, in extreme cases, may prevent the model from fitting. However, this approach assumes that the interaction terms are zero, which, if incorrect, can skew the results' interpretation. Conversely, when this assumption is valid, models excluding interactions are simpler to interpret as parameters are typically viewed as the extent to which the outcome increases with the assigned treatment.
+Scientific studies, particularly within epidemiology and social sciences, frequently omit interaction terms from models due to the high number of variables. Adding interactions necessitates numerous parameters, which in extreme cases may prevent the model from fitting. However, this approach assumes that the interaction terms are zero, and if incorrect, it can skew the interpretation of the results. Conversely, when this assumption is valid, models excluding interactions are simpler to interpret, as parameters are typically viewed as the extent to which the outcome increases with the assigned treatment.
 
 :::{.callout-tip}
-Linear models are very flexible and can be applied in many contexts. For example, we can include many more factors than 2. We have just scratched the surface of how linear models can be used to estimate treatment effects. We highly recommend learning more about this through linear model textbooks and R manuals on using the `lm`, `contrasts`, and `model.matrix` functions.
+Linear models are highly flexible and applicable in many contexts. For example, we can include many more factors than just 2. We have only just scratched the surface of how linear models can be used to estimate treatment effects. We highly recommend learning more about this by exploring linear model textbooks and R manuals that cover the use of functions such as `lm`, `contrasts`, and `model.matrix`.
 :::
 
 ## Contrasts
 
-In the examples we have examined, each treatment had only two group: diet and chow and high-fat and sex had female and male. However, variables of interest often have more than one level. For example, we might have tested a third diet on the mice. In Statistics textbooks these variables are referred to as _factor_ and the groups in each factor are called its _levels_. 
+In the examples we have examined, each treatment had only two groups: diet and chow, and high-fat and sex had female and male. However, variables of interest often have more than one level. For example, we might have tested a third diet on the mice. In statistics textbooks, these variables are referred to as a _factor_, and the groups in each factor are called its _levels_. 
 
-When a factor is included in the formula, the default behavior for `lm` is to define the intercept term as the expected value for the first level and the other coefficient are to represent the difference, or _contrast_ between the other levels and first. We can see this if we fit estimate the sex effect with `lm`:
+When a factor is included in the formula, the default behavior for `lm` is to define the intercept term as the expected value for the first level, and the other coefficient are to represent the difference, or _contrast_, between the other levels and first. FIX We can see this if we fit estimate the sex effect with `lm`:
 
 
 ```{r}
@@ -196,13 +197,13 @@ fit <- lm(body_weight ~ sex, data = mice_weights)
 coefficients(fit)
 ```
 
-To recover the expected mean for males we can simply add the two coefficients:
+To recover the expected mean for males, we can simply add the two coefficients:
 
 ```{r}
 sum(fit$coefficients[1:2])
 ```
 
-The package **emmeans** makes this calculation simple and it also calculates standard errors:
+The package **emmeans** simplifies the calculation and also calculates standard errors:
 
 ```{r}
 library(emmeans)
@@ -215,9 +216,9 @@ Now, what if we really didn't want to define a reference level? What if we wante
 $$
 Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
 $$
-with $x_{i,1} = 1$ if observation $i$ is female and 0 otherwise, and $x_{i,2}=1$ if observation $i$ is male and 0 otherwise? Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is problem because the expected value for each group is just on number, say $\mu_f$ and $\mu_m$, and there is infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies we can't obtain a unique least squares estimates. In statistics we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
+with $x_{i,1} = 1$, if observation $i$ is female and 0 otherwise, and $x_{i,2}=1$, if observation $i$ is male and 0 otherwise? Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimates. In statistics, we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
 
-Notice that this is not the only constrain that permits estimation of the parameters. Any linear constrain will do as it adds a third equation to our system. A widely used constrain is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrast` in the following way:
+Keep in mind that this is not the only constraint that permits estimation of the parameters. Any linear constraint will do as it adds a third equation to our system. A widely used constraint is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrast` in the following way:
 
 
 ```{r}
@@ -225,15 +226,15 @@ fit <- lm(body_weight ~ sex, data = mice_weights, contrasts = list(sex = contr.s
 coefficients(fit)
 ```
 
-We see that the intercept is now larger because it now represents the overall mean, rather than the mean for females. The other coefficient  represents the contrast between females and the overall mean, $\beta_1$ in our model. The coefficient for men is not shown because it is redundant: $\beta_1= -\beta_2$. 
+We see that the intercept is now larger, reflecting the overall mean rather than just the mean for females. The other coefficient, $\beta_1$, represents the contrast between females and the overall mean in our model. The coefficient for men is not shown because it is redundant: $\beta_1= -\beta_2$. 
 
-If we want to see all the estimates, the package **emmeans** also makes the calculations for us:
+If we want to see all the estimates, the **emmeans** package also makes the calculations for us:
 
 ```{r}
 contrast(emmeans(fit, ~sex))
 ```
 
-The use of this alternative constrain is more practical when a factor has more than one level and choosing an baseline becomes less convenient. Furthermoe, we might be more interested in the variance of the coefficients rather than contrasts between groups and the reference level.
+The use of this alternative constraint is more practical when a factor has more than one level, and choosing an baseline becomes less convenient. Furthermore, we might be more interested in the variance of the coefficients rather than the contrasts between groups and the reference level.
 
 As an example, consider that the mice in our dataset are actually from several generations: 
 
@@ -242,7 +243,7 @@ table(mice_weights$gen)
 ```
 
 
-To estimate the variability due to the different generations, a convinient model is:
+To estimate the variability due to the different generations, a convenient model is:
 
 $$
 Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \varepsilon_i
@@ -254,27 +255,27 @@ $$
 \frac{1}{J} \sum_{j=1}^J \beta_j = 0 \implies \sum_{j=1}^J \beta_j = 0 
 $$
 
-This constrain makes the model identifiable and also let's us quantify the variability due to generations with 
+This constraint makes the model identifiable and also allows us to quantify the variability due to generations with:
 
 $$
 \sigma^2_{\text{gen}} = \frac{1}{J}\sum_{j=1}^J \beta_j^2
 $$
 
-We can see the estimated coefficients using:
+We can see the estimated coefficients using the following:
 
 ```{r}
 fit <- lm(body_weight ~ gen,  data = mice_weights, contrasts = list(gen = contr.sum))
 contrast(emmeans(fit, ~gen)) 
 ```
 
-In the next section we briefly describe a technique useful to study the variability associated with this factors.
+In the next section, we briefly describe a technique useful to study the variability associated with this factors.
 
 ## Analysis of variance (ANOVA) {#sec-anova}
 
-When a factor has more than one level it is common to want to know if there is important variability across the levels rather than specific difference between any given pair of levels. Analysis of variances (ANOVA) provides tools to do this.
+When a factor has more than one level, it is common to want to determine if there is significant variability across the levels rather than specific difference between any given pair of levels. Analysis of variances (ANOVA) provides tools to do this.
 
 
-ANOVA provides an estimate of $\sigma^2_{\text{gen}}$ and statistical approach to test the null hypothesis that the factor contributes no variability:  $\sigma^2_{\text{gen}} =0$.
+ANOVA provides an estimate of $\sigma^2_{\text{gen}}$ and a statistical test for the null hypothesis that the factor contributes no variability:  $\sigma^2_{\text{gen}} =0$.
 
 Once a linear model is fit using one or more factors, the R `aov` function can be used to perform ANOVA. Specifically, the estimate of the factor variability is computed along with a statistic that can be used for hypothesis testing:
 
@@ -282,25 +283,25 @@ Once a linear model is fit using one or more factors, the R `aov` function can b
 summary(aov(fit))
 ```
 
-Note that if given a model formula `aov` will fit the model:
+Keep in mind that if given a model formula, `aov` will fit the model:
 
 ```{r}
 #| eval: false
 summary(aov(body_weight ~ gen, data = mice_weights))
 ```
 
-We do not need to specify the constrain because ANOVA needs tto constrain the sum to be 0 for the results to be interpretable.
+We do not need to specify the constraint because ANOVA needs to constrain the sum to be 0 for the results to be interpretable.
 
-This analysis points that generation not being significant.
+This analysis indicates that generation is not statistically significant.
 
 :::{.callout-note}
-We do note include many details, for example on how the summary statistics and p-values shown by `aov` are defined and motivated. There are several books on analysis of variance and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult these textbooks.
+We do not include many details, for example, on how the summary statistics and p-values shown by `aov` are defined and motivated. There are several books dedicated to the analysis of variance, and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult these textbooks.
 :::
 
 
 ### Multiple factors
 
-ANOVA was developed to analyze agricultural data, which usually included several factors such as treatment, blocks, and breeds. 
+ANOVA was developed to analyze agricultural data, which typically included several factors such as treatment, blocks, and breeds. 
 
 
 We can perform ANOVA with multiple factors:
@@ -309,40 +310,40 @@ We can perform ANOVA with multiple factors:
 summary(aov(body_weight ~ sex + diet + gen,  data = mice_weights))
 ```
 
-This analysis points at sex being the biggest source of variability, which is consistent with previously made exploratory plots.
+This analysis suggests that sex is the biggest source of variability, which is consistent with previously made exploratory plots.
 
 :::{.callout-warning}
-One of the key aspects of ANOVA (Analysis of Variance) is its ability to decompose the total variance in the data, represented by $\sum_{i=1}^n Y_i^2$, into individual contributions attributable to each factor in the study. However, for the mathematical underpinnings of ANOVA to be valid, the experimental design must be balanced. This means that for every level of any given factor, there must be an equal representation of the levels of all other factors. In our study involving mice, the design is unbalanced, which necessitates a cautious approach to the interpretation of the ANOVA results.
+One of the key aspects of ANOVA (Analysis of Variance) is its ability to decompose the total variance in the data, represented by $\sum_{i=1}^n Y_i^2$, into individual contributions attributable to each factor in the study. However, for the mathematical underpinnings of ANOVA to be valid, the experimental design must be balanced. This means that for every level of any given factor, there must be an equal representation of the levels of all other factors. In our study involving mice, the design is unbalanced, requiring a cautious approach in the interpretation of the ANOVA results.
 :::
 
 ### Array representation 
 
-When the model includes more than one factor, writing down linear models can become cumbersome. For example, in our two factor model we would have to include indicator variables for both factors:
+When the model includes more than one factor, writing down linear models can become cumbersome. For example, in our two factor model, we would have to include indicator variables for both factors:
 
 
 $$
 Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i 
 $$
-with the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor. Note we would apply a constrain to assure identifiability. 
+with the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor. Remember that we would apply a constraint to assure identifiability. 
 
-An alternative approach, widely used in ANOVA, to avoid indicators variables, is to save the data in an array, then using different Greek letters to denote factors and indices to denote levels:
+An alternative approach widely used in ANOVA to avoid indicators variables, is to save the data in an array, using different Greek letters to denote factors and indices to denote levels:
 
 $$
 Y_{i,j,k} = \mu + \alpha_j + \beta_k + \varepsilon_{i,j,k}
 $$
-with $\mu$ the overall mean, $\alpha_j$ the effect of level $j$ in the first factor, and $\beta_k$ the effect of level $k$ in the second factor. The constrain can be written as 
+with $\mu$ the overall mean, $\alpha_j$ the effect of level $j$ in the first factor, and $\beta_k$ the effect of level $k$ in the second factor. The constraint can be written as: 
 
 $$
 \sum_{j=1}^J \alph_a_j = 0 \text{ and } \sum_{k=1}^K \beta_k = 0
 $$
 
-This notation lends itself for extimating the effects by computing means across dimensions of the array.
+This notation lends itself to estimating the effects by computing means across dimensions of the array.
 
 
 
 ## Exercises
 
-1\. Once you fit a model, the estimate of the standard error $\sigma$ can be obtained like this:
+1\. Once you fit a model, the estimate of the standard error $\sigma$ can be obtained as follows:
 
 ```{r}
 #| eval: false
@@ -351,28 +352,28 @@ fit <- lm(body_weight ~ diet, data = mice_weights)
 summary(fit)$sigma
 ```
 
-Compute the estimate of $\sigma$ using the model that includes just diet and a model that accounts for sex. Are the estimates the same? If not, why not?
+Compute the estimate of $\sigma$ using both the model that includes only diet and a model that accounts for sex. Are the estimates the same? If not, why not?
 
 
-2\. One of the assumption of the linear model fit by `lm` is that the standard deviation of the errors $\varepsilon_i$ is equal for all $i$. This implies it does not depend on the expected value. Group the mice by their weight like this:
+2\. One of the assumption of the linear model fit by `lm` is that the standard deviation of the errors $\varepsilon_i$ is equal for all $i$. This implies that it does not depend on the expected value. Group the mice by their weight like this:
 
 ```{r}
 breaks <- with(mice_weights, seq(min(body_weight), max(body_weight), 1))
 dat <- mutate(mice_weights, group = cut(body_weight, breaks, include_lowest = TRUE))
 ```
 
-Compute the average and standard deviation for groups having more than 10 observations and use data exploration to see if this assumption holds?
+Compute the average and standard deviation for groups with more than 10 observations and use data exploration to verify if this assumption holds.
 
 3\. The dataset also includes a variable indicating which litter the mice came from. Create a boxplot showing weights by litter. Use faceting to make separate plots for each diet and sex combination.
 
 
-4\. Use a linear model to test for a litter effect. Account for sex and diet. Use ANOVA to compare the variability explained by litter to other factors.
+4\. Use a linear model to test for a litter effect, taking into account sex and diet. Use ANOVA to compare the variability explained by litter with that of other factors.
 
-5\. The `mouse_weights` data includes two other outcomes: bone density and percent fat. Make a boxplot showing bone density by sex and diet. Compare what the visualizations shows for the diet effect by sex.
+5\. The `mouse_weights` data includes two other outcomes: bone density and percent fat. Create a boxplot illustrating bone density by sex and diet. Compare what the visualizations reveal about the diet effect by sex.
 
-6.  Fit a linear model and test for the diet effect on bone density separately for each sex. Note that the diet effect is statistically significant for females but not for males. Then fit the model to the entire dataset that includes diet, sex and their interaction. Note that the diet effect is significant, yet the interaction effect is not. Explain how this can happen? Hint: To fit a model to the entire dataset that fit a separate effect for males and females you can use the formula ` ~ sex + diet:sex`
+6.  Fit a linear model and conduct a separate test for the diet effect on bone density for each sex. Note that the diet effect is statistically significant for females but not for males. Then fit the model to the entire dataset that includes diet, sex and their interaction. Notice that the diet effect is significant, yet the interaction effect is not. Explain how this can happen. Hint: To fit a model to the entire dataset with a separate effect for males and females, you can use the formula `~ sex + diet:sex`
 
-7\. In Chapter @sec-models, we talked about pollster bias. We used visualization to motivate the presence of such bias. Here we will give it a more rigorous treatment. We will consider two pollsters that conducted daily polls. We will look at national polls for the month before the election.
+7\. In @sec-models, we talked about pollster bias and used visualization to motivate the presence of such bias. Here we will give it a more rigorous treatment. We will consider two pollsters that conducted daily polls. We will look at national polls for the month before the election:
 
 ```{r, eval=FALSE}
 polls <- polls_us_election_2016 |> 
@@ -389,13 +390,13 @@ We want to answer the question: is there a pollster bias? Make a plot showing th
 
 The urn model theory says nothing about pollster effect. Under the urn model, both pollsters have the same expected value: the election day difference, that we call $\mu$.
 
-To answer the question "is there an urn model?", we will model the observed data $Y_{i,j}$ in the following way:
+To answer the question "is there an urn model?" we will model the observed data $Y_{i,j}$ in the following way:
 
 $$
 Y_{i,j} = \mu + b_i + \varepsilon_{i,j}
 $$
 
-with $i=1,2$ indexing the two pollsters, $b_i$ the bias for pollster $i$ and $\varepsilon_ij$ poll to poll chance variability. We assume the $\varepsilon$ are independent from each other, have expected value $0$ and standard deviation $\sigma_i$ regardless of $j$.
+with $i=1,2$ indexing the two pollsters, $b_i$ the bias for pollster $i$, and $\varepsilon_ij$ poll to poll chance variability. We assume the $\varepsilon$ are independent from each other, have expected value $0$, and standard deviation $\sigma_i$ regardless of $j$.
 
 Which of the following best represents our question?
 
@@ -404,9 +405,9 @@ b.  How close are the $Y_{i,j}$ to $\mu$?
 c.  Is $b_1 \neq b_2$?
 d.  Are $b_1 = 0$ and $b_2 = 0$ ?
 
-9\. In the right side of this model only $\varepsilon_{i,j}$ is a random variable. The other two are constants. What is the expected value of $Y_{1,j}$?
+9\. On the right side of this model, only $\varepsilon_{i,j}$ is a random variable; the other two are constants. What is the expected value of $Y_{1,j}$?
 
-10\. Suppose we define $\bar{Y}_1$ as the average of poll results from the first poll, $Y_{1,1},\dots,Y_{1,N_1}$ with $N_1$ the number of polls conducted by the first pollster:
+10\. Suppose we define $\bar{Y}_1$ as the average of poll results from the first poll, $Y_{1,1},\dots,Y_{1,N_1}$, where $N_1$ is the number of polls conducted by the first pollster:
 
 ```{r, eval=FALSE}
 polls |> 
@@ -418,7 +419,7 @@ What is the expected values $\bar{Y}_1$?
 
 11\. What is the standard error of $\bar{Y}_1$ ?
 
-12\. Suppose we define $\bar{Y}_2$ as the average of poll results from the first poll, $Y_{2,1},\dots,Y_{2,N_2}$ with $N_2$ the number of polls conducted by the first pollster. What is the expected value $\bar{Y}_2$?
+12\. Suppose we define $\bar{Y}_2$ as the average of poll results from the first poll, $Y_{2,1},\dots,Y_{2,N_2}$, where $N_2$ is the number of polls conducted by the first pollster. What is the expected value $\bar{Y}_2$?
 
 13\. What is the standard error of $\bar{Y}_2$ ?
 
@@ -435,7 +436,7 @@ b.  Because the $Y_{ij}$ are approximately normal, so are the averages.
 c.  Note that $\bar{Y}_2$ and $\bar{Y}_1$ are sample averages, so if we assume $N_2$ and $N_1$ are large enough, each is approximately normal. The difference of normally distributed variables is also normally distributed.
 d.  The data are not 0 or 1, so CLT does not apply.
 
-18\. We have constructed a random variable that has expected value $b_2 - b_1$, the pollster bias difference. If our model holds, then this random variable has an approximately normal distribution and we know its standard error. The standard error depends on $\sigma_1$ and $\sigma_2$, but we can plug the sample standard deviations we computed above. We started off by asking: is $b_2 - b_1$ different from 0? Use all the information we have learned above to construct a 95% confidence interval for the difference $b_2$ and $b_1$.
+18\. We have constructed a random variable that has an expected value of $b_2 - b_1$, representing the difference in pollster bias. If our model holds, then this random variable has an approximately normal distribution, and we know its standard error. The standard error depends on $\sigma_1$ and $\sigma_2$, but we can plug the sample standard deviations we computed above. We began by asking: is $b_2 - b_1$ different from 0? FIX Using all the information we have gathered above, construct a 95% confidence interval for the difference $b_2$ and $b_1$.
 
 19\. The confidence interval tells us there is relatively strong pollster effect resulting in a difference of about 5%. Random variability does not seem to explain it. We can compute a p-value to relay the fact that chance does not explain it. What is the p-value?
 
@@ -459,5 +460,5 @@ polls <- polls_us_election_2016 |>
   ungroup()
 ```
 
-Compute the average and standard deviation for each pollster and examine the variability across the averages and how it compares to the variability within the pollsters, summarized by the standard deviation.
+Compute the average and standard deviation for each pollster and examine the variability across the averages. Compare this to the variability within the pollsters, summarized by the standard deviation.
 

@@ -1,12 +1,12 @@
 # Association is not causation
 
-*Association is not causation* is perhaps the most important lesson one learns in a statistics class. *Correlation is not causation* is another way to say this. Throughout the Statistics part of the book, we have described tools useful for quantifying associations between variables. However, we must be careful not to over-interpret these associations.
+*Association is not causation* is perhaps the most important lesson one can learn in a statistics class. *Correlation is not causation* is another way to say this. Throughout the statistics part of the book, we have described tools useful for quantifying associations between variables. However, we must be careful not to over-interpret these associations.
 
-There are many reasons that a variable $X$ can be correlated with a variable $Y$ without having any direct effect on $Y$. Here we examine four common ways that can lead to misinterpreting data.
+There are many reasons that a variable $X$ can be correlated with a variable $Y$, without having any direct effect on $Y$. Below we examine four common ways that can lead to misinterpreting data.
 
 ## Spurious correlation
 
-The following comical example underscores that correlation is not causation. It shows a very strong correlation between divorce rates and margarine consumption.
+The following comical example underscores the concept that correlation is not causation. It shows a very strong correlation between divorce rates and margarine consumption.
 
 ```{r divorce-versus-margarine, echo=FALSE, message=FALSE, warning=FALSE, cache=FALSE}
 library(tidyverse)
@@ -24,13 +24,13 @@ divorce_margarine |>
   ylab("Divorce rate in Maine (per 1000)")
 ```
 
-Does this mean that margarine causes divorces? Or do divorces cause people to eat more margarine? Of course the answer to both these questions is no. This is just an example of what we call a *spurious correlation*.
+Does this mean that margarine causes divorces? Or do divorces cause people to eat more margarine? Of course. the answer to both these questions is no. This is just an example of what we call a *spurious correlation*.
 
 You can see many more absurd examples on the Spurious Correlations website[^association-not-causation-1].
 
 [^association-not-causation-1]: http://tylervigen.com/spurious-correlations
 
-The cases presented in the spurious correlation site are all instances of what is generally called *data dredging*, *data fishing*, or *data snooping*. It's basically a form of what in the US they call *cherry picking*. An example of data dredging would be if you look through many results produced by a random process and pick the one that shows a relationship that supports a theory you want to defend.
+The cases presented on the website are all instances of what is generally called *data dredging*, *data fishing*, or *data snooping*. It's basically a form of what in the US they call *cherry picking*. An example of data dredging would be if you look through many results produced by a random process and pick the one that shows a relationship that supports a theory you want to defend.
 
 A Monte Carlo simulation can be used to show how data dredging can result in finding high correlations among uncorrelated variables. We will save the results of our simulation into a tibble:
 
@@ -43,7 +43,7 @@ sim_data <- tibble(group = rep(1:g, each = N),
                    y = rnorm(N*g))
 ```
 
-The first column denotes group. We created `r cat(prettyNum(g, big.mark=",",scientific=FALSE))` groups and for each one we generated a pair of independent vectors, $X$ and $Y$, with `r N` observations each, stored in the second and third columns. Because we constructed the simulation, we know that $X$ and $Y$ are not correlated.
+The first column denotes group. We created `r cat(prettyNum(g, big.mark=",",scientific=FALSE))` groups. For each group, we generated a pair of independent vectors, $X$ and $Y$, with `r N` observations each, stored in the second and third columns. Because we constructed the simulation, we know that $X$ and $Y$ are not correlated.
 
 Next, we compute the correlation between `X` and `Y` for each group and look at the max:
 
@@ -55,7 +55,7 @@ res <- sim_data |>
 res
 ```
 
-We see a maximum correlation of `r max(res$r)` and if you just plot the data from the group achieving this correlation, it shows a convincing plot that $X$ and $Y$ are in fact correlated:
+We see a maximum correlation of `r max(res$r)`. If you just plot the data from the group achieving this correlation, it shows a convincing plot that $X$ and $Y$ are in fact correlated:
 
 ```{r dredging}
 sim_data |> filter(group == res$group[which.max(res$r)]) |>
@@ -70,7 +70,7 @@ Remember that the correlation summary is a random variable. Here is the distribu
 res |> ggplot(aes(x=r)) + geom_histogram(binwidth = 0.1, color = "black")
 ```
 
-It's just a mathematical fact that if we observe `r cat(prettyNum(g, big.mark=",",scientific=FALSE))` random correlations that are expected to be 0, but have a standard error of `r sd(res$r)`, the largest one will be close to 1.
+It's simply a mathematical fact that if we observe `r cat(prettyNum(g, big.mark=",",scientific=FALSE))` random correlations that are expected to be 0, but have a standard error of `r sd(res$r)`, the largest one will be close to 1.
 
 If we performed regression on this group and interpreted the p-value, we would incorrectly claim this was a statistically significant relation:
 
@@ -82,7 +82,7 @@ sim_data |>
   filter(term == "x")
 ```
 
-This particular form of data dredging is referred to as *p-hacking*. P-hacking is a topic of much discussion because it is a problem in scientific publications. Because publishers tend to reward statistically significant results over negative results, there is an incentive to report significant results. In epidemiology and the social sciences, for example, researchers may look for associations between an adverse outcome and several exposures and report only the one exposure that resulted in a small p-value. Furthermore, they might try fitting several different models to account for confounding and pick the one that yields the smallest p-value. In experimental disciplines, an experiment might be repeated more than once, yet only the results of the one experiment with a small p-value reported. This does not necessarily happen due to unethical behavior, but rather as a result of statistical ignorance or wishful thinking. In advanced statistics courses, you can learn methods to adjust for these multiple comparisons.
+This particular form of data dredging is referred to as *p-hacking*. P-hacking is a topic of much discussion because it poses a problem in scientific publications. Since publishers tend to reward statistically significant results over negative results, there is an incentive to report significant results. In epidemiology and the social sciences, for example, researchers may look for associations between an adverse outcome and several exposures, and report only the one exposure that resulted in a small p-value. Furthermore, they might try fitting several different models to account for confounding and choose the one that yields the smallest p-value. In experimental disciplines, an experiment might be repeated more than once, yet only the results of the one experiment with a small p-value reported. This does not necessarily happen due to unethical behavior, but rather as a result of statistical ignorance or wishful thinking. In advanced statistics courses, you can learn methods to adjust for these multiple comparisons.
 
 ## Outliers
 
@@ -120,7 +120,7 @@ There is an alternative to the sample correlation for estimating the population 
 qplot(rank(x), rank(y))
 ```
 
-The outlier is no longer associated with a very large value and the correlation comes way down:
+The outlier is no longer associated with a very large value, and the correlation decreases significantly:
 
 ```{r}
 cor(rank(x), rank(y))
@@ -150,7 +150,7 @@ We can easily construct an example of cause and effect reversal using the father
 
 $$X_i = \beta_0 + \beta_1 y_i + \varepsilon_i, i=1, \dots, N$$
 
-to the father and son height data, with $X_i$ the father height and $y_i$ the son height, we do get a statistically significant result. We use the `galton_heights` dataset defined in Chapter @sec-regression:
+to the father and son height data, where $X_i$ is the father height and $y_i$ is the son height, we do get a statistically significant result. We use the `galton_heights` dataset defined in @sec-regression:
 
 ```{r, echo=FALSE, cache=FALSE}
 library(HistData)
@@ -169,13 +169,13 @@ galton_heights <- GaltonFamilies |>
 galton_heights |> summarize(tidy(lm(father ~ son)))
 ```
 
-The model fits the data very well. If we look at the mathematical formulation of the model above, it could easily be incorrectly interpreted so as to suggest that the son being tall caused the father to be tall. But given what we know about genetics and biology, we know it's the other way around. The model is technically correct. The estimates and p-values were obtained correctly as well. What is wrong here is the interpretation.
+The model fits the data very well. If we examine the mathematical formulation of the model above, it could easily be misinterpreted so as to suggest that the son being tall caused the father to be tall. However, based on our understanding of genetics and biology, we know it's the other way around. The model is technically correct. The estimates and p-values were obtained correctly as well. What is wrong here is the interpretation.
 
 ## Confounders
 
 Confounders are perhaps the most common reason that leads to associations begin misinterpreted.
 
-If $X$ and $Y$ are correlated, we call $Z$ a *confounder* if changes in $Z$ causes changes in both $X$ and $Y$. Earlier, when studying baseball data, we saw how Home Runs was a confounder that resulted in a higher correlation than expected when studying the relationship between Bases on Balls and Runs. In some cases, we can use linear models to account for confounders. However, this is not always the case.
+If $X$ and $Y$ are correlated, we call $Z$ a *confounder* if changes in $Z$ cause changes in both $X$ and $Y$. Earlier, when studying baseball data, we saw how Home Runs were a confounder that resulted in a higher correlation than expected when studying the relationship between Bases on Balls and Runs. In some cases, we can use linear models to account for confounders. However, this is not always the case.
 
 Incorrect interpretation due to confounders is ubiquitous in the lay press and they are often hard to detect. Here, we present a widely used example related to college admissions.
 
@@ -204,7 +204,7 @@ Four out of the six majors favor women. More importantly, all the differences ar
 
 The paradox is that analyzing the totals suggests a dependence between admission and gender, but when the data is grouped by major, this dependence seems to disappear. What's going on? This actually can happen if an uncounted confounder is driving most of the variability.
 
-So let's define three variables: $X$ is 1 for men and 0 for women, $Y$ is 1 for those admitted and 0 otherwise, and $Z$ quantifies the selectivity of the major. A gender bias claim would be based on the fact that $\mbox{Pr}(Y=1 | X = x)$ is higher for $x=1$ than $x=0$. However, $Z$ is an important confounder to consider. Clearly $Z$ is associated with $Y$, as the more selective a major, the lower $\mbox{Pr}(Y=1 | Z = z)$. But is major selectivity $Z$ associated with gender $X$?
+So let's define three variables: $X$ is 1 for men and 0 for women, $Y$ is 1 for those admitted and 0 otherwise, and $Z$ quantifies the selectivity of the major. A gender bias claim would be based on the fact that $\mbox{Pr}(Y=1 | X = x)$ is higher for $x=1$ than for $x=0$. However, $Z$ is an important confounder to consider. Clearly, $Z$ is associated with $Y$, as the more selective a major, the lower $\mbox{Pr}(Y=1 | Z = z)$. But is major selectivity $Z$ associated with gender $X$?
 
 One way to see this is to plot the total percent admitted to a major versus the percent of women that made up the applicants:
 
@@ -218,11 +218,11 @@ admissions |>
   geom_text()
 ```
 
-There seems to be association. The plot suggests that women were much more likely to apply to the two "hard" majors: gender and major's selectivity are confounded. Compare, for example, major B and major E. Major E is much harder to enter than major B and over 60% of applicants to major E were women, while less than 30% of the applicants of major B were women.
+There seems to be association. The plot suggests that women were much more likely to apply to the two "hard" majors, indicating a confounding between gender and major's selectivity. Compare, for example, major B and major E. Major E is much harder to enter than major B, and over 60% of applicants for major E were women, while less than 30% of the applicants for major B were women.
 
 ### Confounding explained graphically
 
-The following plot shows the number of applicants that were admitted and those that were not by:
+FIX BY WHAT The following plot shows the number of applicants that were admitted and those that were not by:
 
 ```{r confounding, echo=FALSE}
 admissions |>
@@ -235,7 +235,7 @@ admissions |>
 ```
 
 
-It also breaks down the acceptances by major. This breakdown allows us to see that the majority of accepted men came from two majors: A and B. It also lets us see that few women applied to these majors.
+It also breaks down the acceptances by major. This breakdown allows us to see that the majority of accepted men came from two majors, A and B. It also reveals that few women applied to these majors.
 
 ### Average after stratifying
 
@@ -257,7 +257,7 @@ admissions |>  group_by(gender) |> summarize(average = mean(admitted))
 
 ## Simpson's paradox
 
-The case we have just covered is an example of Simpson's paradox. It is called a paradox because we see the sign of the correlation flip when comparing the entire publication and specific strata. As an illustrative example, suppose you have three random variables $X$, $Y$, and $Z$ and that we observe realizations of these. Here is a plot of simulated observations for $X$ and $Y$ along with the sample correlation:
+The case we have just covered is an example of Simpson's paradox. It is called a paradox because we see the sign of the correlation flip when comparing the entire publication to specific strata. As an illustrative example, suppose you have three random variables $X$, $Y$, and $Z$, and we observe realizations of these. Here is a plot of simulated observations for $X$ and $Y$ along with the sample correlation:
 
 ```{r simpsons-paradox, echo=FALSE}
 N <- 100
@@ -281,7 +281,7 @@ dat |> ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
   ggtitle(paste("Correlation = ", round(cor(dat$x, dat$y), 2)))
 ```
 
-You can see that $X$ and $Y$ are negatively correlated. However, once we stratify by $Z$ (shown in different colors below) another pattern emerges:
+You can see that $X$ and $Y$ are negatively correlated. However, once we stratify by $Z$ (shown in different colors below), another pattern emerges:
 
 ```{r simpsons-paradox-explained, echo=FALSE}
 means <- do.call(rbind, means) |> 
@@ -296,7 +296,7 @@ dat |> ggplot(aes(x, y, color = z)) +
   annotate("text", x = means$x, y = means$y, label = paste("z =", means$z), cex = 5)  
 ```
 
-It is really $Z$ that is negatively correlated with $X$. If we stratify by $Z$, the $X$ and $Y$ are actually positively correlated as seen in the plot above.
+It is really $Z$ that is negatively correlated with $X$. If we stratify by $Z$, the $X$ and $Y$ are actually positively correlated, as seen in the plot above.
 
 ## Exercises
 
@@ -312,9 +312,9 @@ A response[^association-not-causation-4] was published a few months later titled
 
 > However, the overall gender effect borders on statistical significance, despite the large sample. Moreover, their conclusion could be a prime example of Simpson's paradox; if a higher percentage of women apply for grants in more competitive scientific disciplines (i.e., with low application success rates for both men and women), then an analysis across all disciplines could incorrectly show "evidence" of gender inequality.
 
-Who is right here? The original paper or the response? Here, you will examine the data and come to your own conclusion.
+Who is correct here, the original paper or the response? Below, you will examine the data and come to your own conclusion.
 
-1\. The main evidence for the conclusion of the original paper comes down to a comparison of the percentages. Table S1 in the paper includes the information we need:
+1\. The primary evidence for the conclusion of the original paper relies on a comparison of the percentages. Table S1 in the paper includes the information we need:
 
 ```{r,eval=FALSE}
 library(dslabs)
@@ -327,12 +327,12 @@ Construct the two-by-two table used for the conclusion about differences in awar
 
 3\. In the previous exercise, we noticed that the success rate is lower for women. But is it significant? Compute a p-value using a Chi-square test.
 
-4\. We see that the p-value is about 0.05. So there appears to be some evidence of an association. But can we infer causation here? Is gender bias causing this observed difference? The response to the original paper claims that what we see here is similar to the UC Berkeley admissions example. Specifically they state that this "could be a prime example of Simpson's paradox; if a higher percentage of women apply for grants in more competitive scientific disciplines, then an analysis across all disciplines could incorrectly show 'evidence' of gender inequality." To settle this dispute, create a dataset with number of applications, awards, and success rate for each gender. Re-order the disciplines by their overall success rate. Hint: use the `reorder` function to re-order the disciplines in a first step, then use `pivot_longer`, `separate`, and `pivot_wider` to create the desired table.
+4\. We see that the p-value is about 0.05. So there appears to be some evidence of an association. But can we infer causation here? Is gender bias causing this observed difference? The response to the original paper claims that what we see here is similar to the UC Berkeley admissions example. Specifically, they state that this "could be a prime example of Simpson's paradox; if a higher percentage of women apply for grants in more competitive scientific disciplines, then an analysis across all disciplines could incorrectly show 'evidence' of gender inequality." To settle this dispute, create a dataset with number of applications, awards, and success rate for each gender. Re-order the disciplines by their overall success rate. Hint: use the `reorder` function to re-order the disciplines in a first step, then use `pivot_longer`, `separate`, and `pivot_wider` to create the desired table.
 
 5\. To check if this is a case of Simpson's paradox, plot the success rates versus disciplines, which have been ordered by overall success, with colors to denote the genders and size to denote the number of applications.
 
-6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say there is a confounder here. However, we do see that, based on the observed rates, some fields favor men and others favor women and we do see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. So perhaps some of the selection committees are biased and others are not.
+6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say that there is a confounder here. However, we do see that, based on the observed rates, some fields favor men and others favor women. We also see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. So perhaps some of the selection committees are biased and others are not.
 
-But, before we conclude this, we must check if these differences are any different than what we get by chance. Are any of the differences seen above statistically significant? Keep in mind that even when there is no bias, we will see differences due to random variability in the review process as well as random variability across candidates. Perform a Chi-square test for each discipline. Hint: define a function that receives the total of a two-by-two table and returns a data frame with the p-value. Use the 0.5 correction. Then use the `summarize` function.
+FIX CHECK I REPHRASED However, before concluding this, we must check if any of the differences seen above are statistically significant or if they could occur by chance. Keep in mind that even when there is no bias, we will see differences due to random variability in the review process as well as random variability across candidates. Perform a Chi-square test for each discipline. Hint: define a function that receives the total of a two-by-two table and returns a data frame with the p-value. Use the 0.5 correction. Then use the `summarize` function.
 
-7\. For the medical sciences, there appears to be a statistically significant difference. But is this a spurious correlation? We performed 9 tests. Reporting only the one case with a p-value less than 0.05 might be considered an example of cherry picking. Repeat the exercise above, but instead of a p-value, compute a log odds ratio divided by their standard error. Then use qq-plot to see how much these log odds ratios deviate from the normal distribution we would expect: a standard normal distribution.
+7\. In the medical sciences, there appears to be a statistically significant difference, but could this be a spurious correlation? We performed 9 tests. Reporting only the one case with a p-value less than 0.05 might be considered an example of cherry picking. Repeat the exercise above, but instead of a p-value, compute a log odds ratio divided by their standard error. Then use qq-plot to see how much these log odds ratios deviate from the normal distribution we would expect: a standard normal distribution.
