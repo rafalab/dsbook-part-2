@@ -1,10 +1,10 @@
 # Continuous probability
 
-In Section @sec-ecdf-intro, we explained why when summarizing a list of numeric values, such as heights, it is not useful to construct a distribution that defines a proportion to each possible outcome. Similarly, for a random variable that can take any value in a continuous set, it impossible to assign a positive probabilities to the infinite number of possible values. Here we describe how we mathematically define distributions for continuos random variables and useful approximations often used in data analysis.
+In @sec-ecdf-intro, we explained why when summarizing a list of numeric values, such as heights, it is not useful to construct a distribution that defines a proportion to each possible outcome. Similarly, for a random variable that can take any value in a continuous set, it impossible to assign a positive probabilities to the infinite number of possible values. Here, we outline the mathematical definitions of distributions for continuous random variables and useful approximations frequently employed in data analysis.
 
 ## Cumulative distribution functions {#sec-cdf-intro}
 
-We used the heights of adult male students as an example
+We used the heights of adult male students as an example:
 
 ```{r,  message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -20,7 +20,7 @@ F <- function(a) mean(x<=a)
 
 which, for any value `a`, gives the proportion of values in the list `x` that are smaller or equal than `a`.
 
-Let's connect the eCDF to probability by asking: if I pick one of the male students at random, what is the chance that he is taller than 70.5 inches? Because every student has the same chance of being picked, the answer to this is equivalent to the proportion of students that are taller than 70.5 inches. Using the eCDF we obtain an answer by typing:
+Let's connect the eCDF to probability by asking: if I randomly pick one of the male students, what is the chance that he is taller than 70.5 inches? Since every student has the same chance of being picked, the answer to this is equivalent to the proportion of students that are taller than 70.5 inches. Using the eCDF we obtain an answer by typing:
 
 ```{r}
 1 - F(70)
@@ -36,15 +36,15 @@ $$
 \mbox{Pr}(a < X \leq b) = F(b)-F(a)
 $$
 
-Because we can compute the probability for any possible event this way, the CDF defines the probability distribution.
+Since we can compute the probability for any possible event using this approach, the CDF defines the probability distribution.
 
 ## Probability density function
 
-A mathematical result that is actually very useful in practice is that for most CDFs we can define a function, call it $f(x)$, that permits us to construct the CDF using Calculus, like this:
+A mathematical result that is very useful in practice is that, for most CDFs, we can define a function, call it $f(x)$, that permits us to construct the CDF using Calculus, like this:
 
 $$
 F(b) - F(a) = \int_a^b f(x)\,dx
-$$ $f(x)$ is referred to as the *probability density function*. The intuition is that even for continuous outcomes we can define tiny intervals, that are almost as small as points, that have positive probabilities. If we think of the size of these intervals as the base of a rectangle,the probability density function $f$ determines the height of the rectangle so that the summing up the area of these rectangles approximate the probability $F(b) - F(a)$. This sum can be written as Reimann sum that is approximated by an integral:
+$$ $f(x)$ is referred to as the *probability density function*. The intuition is that even for continuous outcomes we can define tiny intervals, that are almost as small as points, that have positive probabilities. If we think of the size of these intervals as the base of a rectangle, the probability density function $f$ determines the height of the rectangle so that the summing up of the area of these rectangles approximate the probability $F(b) - F(a)$. This sum can be written as Reimann sum that is approximated by an integral:
 
 ```{r echo=FALSE}
 cont <- data.frame(x=seq(0,5, len = 300), y=dgamma(seq(0,5, len = 300), 2, 2))
@@ -65,7 +65,7 @@ The cumulative distribution for the normal distribution is defined by a mathemat
 F(a) = pnorm(a, m, s)
 ```
 
-This is useful because if we are willing to use the normal approximation for, say, height, we don't need the entire dataset to answer questions such as: what is the probability that a randomly selected student is taller then 70 inches? We just need the average height and standard deviation:
+This is useful because, if we are willing to use the normal approximation for, let's say, height, we don't need the entire dataset to answer questions such as: What is the probability that a randomly selected student is taller then 70 inches? We just need the average height and standard deviation:
 
 ```{r}
 m <- mean(x)
@@ -75,7 +75,7 @@ s <- sd(x)
 
 ## Theoretical distributions as approximations
 
-The normal distribution is derived mathematically: we do not need data to define it. For practicing data scientists, almost everything we do involves data. Data is always, technically speaking, discrete. For example, we could consider our height data categorical with each specific height a unique category. The probability distribution is defined by the proportion of students reporting each height. Here is a plot of that probability distribution:
+The normal distribution is derived mathematically; we do not need data to define it. For practicing data scientists, almost everything we do involves data. Data is always, technically speaking, discrete. For example, we could consider our height data categorical, with each specific height a unique category. The probability distribution is defined by the proportion of students reporting each height. Below is a plot of that probability distribution:
 
 ```{r plot-of-height-frequencies, echo=FALSE}
 rafalib::mypar()
@@ -84,7 +84,7 @@ plot(prop.table(table(x)), xlab = "a = Height in inches", ylab = "Pr(X = a)")
 
 While most students rounded up their heights to the nearest inch, others reported values with more precision. One student reported his height to be 69.6850393700787, which is 177 centimeters. The probability assigned to this height is `r 1/length(x)` or 1 in `r length(x)`. The probability for 70 inches is much higher at `r mean(x==70)`, but does it really make sense to think of the probability of being exactly 70 inches as being different than 69.6850393700787? Clearly it is much more useful for data analytic purposes to treat this outcome as a continuous numeric variable, keeping in mind that very few people, or perhaps none, are exactly 70 inches, and that the reason we get more values at 70 is because people round to the nearest inch.
 
-With continuous distributions, the probability of a singular value is not even defined. For example, it does not make sense to ask what is the probability that a normally distributed value is 70. Instead, we define probabilities for intervals. We thus could ask what is the probability that someone is between 69.5 and 70.5.
+With continuous distributions, the probability of a singular value is not even defined. For instance, it does not make sense to ask what is the probability that a normally distributed value is 70. Instead, we define probabilities for intervals. We therefore could ask, what is the probability that someone is between 69.5 and 70.5?
 
 In cases like height, in which the data is rounded, the normal approximation is particularly useful if we deal with intervals that include exactly one round number. For example, the normal distribution is useful for approximating the proportion of students reporting values in intervals like the following three:
 
@@ -108,7 +108,7 @@ However, the approximation is not as useful for other intervals. For instance, n
 mean(x <= 70.9) - mean(x<=70.1)
 ```
 
-with
+with:
 
 ```{r}
 pnorm(70.9, m, s) - pnorm(70.1, m, s)
@@ -134,7 +134,7 @@ $$
 F(a) = \mbox{Pr}(X\leq a) = \int_{-\infty}^a f(x)\, dx
 $$
 
-For those that know calculus, remember that the integral is related to a sum: it is the sum of bars with widths approximating 0. If you don't know calculus, you can think of $f(x)$ as a curve for which the area under that curve up to the value $a$, gives you the probability $\mbox{Pr}(X\leq a)$.
+For those that know calculus, remember that the integral is related to a sum: it is the sum of bars with widths approximating 0. If you don't know calculus, you can think of $f(x)$ as a curve for which the area under that curve, up to the value $a$, gives you the probability $\mbox{Pr}(X\leq a)$.
 
 For example, to use the normal approximation to estimate the probability of someone being taller than 76 inches, we use:
 
@@ -157,11 +157,11 @@ ggplot(dat, aes(x, y)) +
 
 The curve you see is the probability density for the normal distribution. In R, we get this using the function `dnorm`.
 
-Although it may not be immediately obvious why knowing about probability densities is useful, understanding this concept will be essential to those wanting to fit models to data for which predefined functions are not available.
+While it may not be immediately apparent why knowing about probability densities is useful, understanding this concept is essential for individuals aiming to fit models to data for which predefined functions are not available.
 
 ## Monte Carlo 
 
-R provides functions to generate normally distributed outcomes. Specifically, the `rnorm` function takes three arguments: size, average (defaults to 0), and standard deviation (defaults to 1) and produces random numbers. Here is an example of how we could generate data that looks like our reported heights:
+R provides functions to generate normally distributed outcomes. Specifically, the `rnorm` function takes three arguments: size, average (defaults to 0), and standard deviation (defaults to 1), and produces random numbers. Here is an example of how we could generate data that looks like our reported heights:
 
 ```{r}
 n <- length(x)
@@ -178,9 +178,9 @@ data.frame(simulated_heights = simulated_heights) |>
   geom_histogram(color="black", binwidth = 1) 
 ```
 
-This is one of the most useful functions in R as it will permit us to generate data that mimics natural events and answers questions related to what could happen by chance by running Monte Carlo simulations.
+This is one of the most useful functions in R, as it will permit us to generate data that mimics natural events and answers questions related to what could happen by chance by running Monte Carlo simulations.
 
-If, for example, we pick 800 males at random, what is the distribution of the tallest person? How rare is a seven footer in a group of 800 males? The following Monte Carlo simulation helps us answer that question:
+If, for example, we pick 800 males at random, what is the distribution of the tallest person? How rare is a seven-footer in a group of 800 males? The following Monte Carlo simulation helps us answer that question:
 
 ```{r}
 B <- 10000
@@ -190,7 +190,7 @@ tallest <- replicate(B, {
 })
 ```
 
-Having a seven footer is quite rare:
+Having a seven-footer is quite rare:
 
 ```{r}
 mean(tallest >= 7*12)
@@ -214,7 +214,7 @@ x <- seq(-4, 4, length.out = 100)
 qplot(x, f, geom = "line", data = data.frame(x, f = dnorm(x)))
 ```
 
-For the student-t, described later in Section @sec-t-dist, the shorthand `t` is used so the functions are `dt` for the density, `qt` for the quantiles, `pt` for the cumulative distribution function, and `rt` for Monte Carlo simulation.
+For the student-t, described later in @sec-t-dist, the shorthand `t` is used so the functions are `dt` for the density, `qt` for the quantiles, `pt` for the cumulative distribution function, and `rt` for Monte Carlo simulation.
 
 ## Exercises
 
@@ -228,7 +228,7 @@ For the student-t, described later in Section @sec-t-dist, the shorthand `t` is 
 
 5\. Notice that the answer to the question does not change when you change units. This makes sense since the standard deviations from the average for an entry in a list are not affected by what units we use. In fact, if you look closely, you notice that 61 and 67 are both 1 SD away from the average. Compute the probability that a randomly picked, normally distributed random variable is within 1 SD from the average.
 
-6\. To see the math that explains why the answers to questions 3, 4, and 5 are the same, suppose we have a random variable with average $m$ and standard error $s$. Suppose we ask the probability of $X$ being smaller or equal to $a$. Remember that, by definition, $a$ is $(a - m)/s$ standard deviations $s$ away from the average $m$. The probability is:
+6\. To understand the mathematical rationale that explains why the answers to questions 3, 4, and 5 are the same, suppose we have a random variable with average $m$ and standard error $s$. Suppose we ask the probability of $X$ being smaller or equal to $a$. Remember that, by definition, $a$ is $(a - m)/s$ standard deviations $s$ away from the average $m$. The probability is:
 
 $$
 \mbox{Pr}(X \leq a)
@@ -246,7 +246,7 @@ $$
 \mbox{Pr}\left(Z \leq \frac{a-m}{s} \right)
 $$
 
-So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - m)/s$. If `mu` is the average and `sigma` the standard error, which of the following R code would give us the right answer in every situation:
+FIX So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - m)/s$. If `mu` is the average and `sigma` the standard error, which of the following R code would give us the right answer in every situation?
 
 a.  `mean(X<=a)`
 b.  `pnorm((a - m)/s)`
