@@ -326,9 +326,9 @@ This approach is actually the default approach in the **caret** package. We desc
 
 In @sec-knn-cv-intro, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of applying K-fold cross validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of a 10 fold increase in computation time.
 
-```{r}
+```{r k-fold-versus-bootstrap, echo=FALSE}
 set.seed(2023-11-30)
-boot <- train(y~., method = "knn", tuneGrid = data.frame(k=ks), 
+boot <- train(y ~ ., method = "knn", tuneGrid = data.frame(k=ks), 
               data = mnist_27$train, 
               trControl = trainControl(number = 100))
 cv <- train(y ~ ., method = "knn", 
@@ -340,10 +340,10 @@ cv <- train(y ~ ., method = "knn",
 data.frame(k = ks, naive = accuracy["test",], 
            cv = cv$results[,2],
            boot = boot$results[,2]) |>
-  pivot_longer(-k, values_to = "accuracy", names_to = "set") |>
+  pivot_longer(-k, values_to = "Accuracy", names_to = "set") |>
   mutate(set = factor(set, levels = c("naive", "cv", "boot"),
                       labels = c("Simple", "K-fold", "Boostrap"))) |>
-  ggplot(aes(k, accuracy, color = set)) + 
+  ggplot(aes(k, Accuracy, color = set)) + 
   geom_line() 
 ```
 
