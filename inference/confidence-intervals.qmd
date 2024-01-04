@@ -4,7 +4,7 @@ Confidence intervals are a very useful concept widely employed by data analysts.
 
 ```{r first-confidence-intervals-example, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
 library(tidyverse)
-data.frame(year = as.numeric(time(nhtemp)), temperature=as.numeric(nhtemp)) |>
+data.frame(year = as.numeric(time(nhtemp)), temperature = as.numeric(nhtemp)) |>
   ggplot(aes(year, temperature)) + 
   geom_point() + 
   geom_smooth() + 
@@ -31,19 +31,19 @@ N <- 1000
 And notice that the interval here:
 
 ```{r}
-x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1-p, p))
+x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
 x_hat <- mean(x)
-se_hat <- sqrt(x_hat * (1 - x_hat) / N)
-c(x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+se_hat <- sqrt(x_hat*(1 - x_hat)/N)
+c(x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
 ```
 
 is different from this one:
 
 ```{r}
-x <- sample(c(0,1), size=N, replace=TRUE, prob=c(1-p, p))
+x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
 x_hat <- mean(x)
-se_hat <- sqrt(x_hat * (1 - x_hat) / N)
-c(x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+se_hat <- sqrt(x_hat*(1 - x_hat)/N)
+c(x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
 ```
 
 Keep sampling and creating intervals, and you will see the random variation.
@@ -95,9 +95,8 @@ pnorm(z) - pnorm(-z)
 
 is `0.995 - 0.005 = 0.99`.
 
-We can use this approach for any probability, not just 0.95 and 0.99. In statistics textbooks, these are usually written for any probability as $1-\alpha$. FIX We can then obtain the $z$ for the equation above noting using `z = qnorm(1 - alpha / 2)` because $1 - \alpha/2 - \alpha/2 = 1 - \alpha$.
-
-FIX So, for example, for $\alpha=0.05$, $1 - \alpha/2 = 0.975$ and we get the 1.96 we have been using:
+We can use this approach for any probability, not just 0.95 and 0.99. In statistics textbooks, confidence interval formulas are given for arbitraty  probabilities written as $1-\alpha$. We can obtain the $z$ for the equation above using `z = qnorm(1 - alpha / 2)` because $1 - \alpha/2 - \alpha/2 = 1 - \alpha$.
+So, for example, for $\alpha=0.05$, $1 - \alpha/2 = 0.975$ and we get the $z=1.96$ we used above:
 
 ```{r}
 qnorm(0.975)
@@ -115,10 +114,10 @@ set.seed(1)
 N <- 1000
 B <- 10000
 inside <- replicate(B, {
-  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1-p, p))
+  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
   x_hat <- mean(x)
-  se_hat <- sqrt(x_hat * (1 - x_hat) / N)
-  between(p, x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
+  se_hat <- sqrt(x_hat*(1 - x_hat)/N)
+  between(p, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
 })
 mean(inside)
 ```
@@ -128,26 +127,25 @@ The following plot shows the first 100 confidence intervals. In this case, we cr
 ```{r confidence-interval-coverage, message=FALSE, echo=FALSE, fig.height=6}
 set.seed(1)
 tab <- replicate(100, {
-  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1-p, p))
+  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
   x_hat <- mean(x)
-  se_hat <- sqrt(x_hat * (1 - x_hat) / N)
-  hit <- between(p, x_hat - 1.96 * se_hat, x_hat + 1.96 * se_hat)
-  c(x_hat, x_hat - 1.96 * se_hat, x_hat + 2 * se_hat, hit)
+  se_hat <- sqrt(x_hat*(1 - x_hat)/N)
+  hit <- between(p, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
+  c(x_hat, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat, hit)
 })
 
-tab <- data.frame(poll=1:ncol(tab), t(tab))
-names(tab)<-c("poll", "estimate", "low", "high", "hit")
-tab <- mutate(tab, p_inside = ifelse(hit, "Yes", "No") )
-ggplot(tab, aes(poll, estimate, ymin=low, ymax=high, col = p_inside)) + 
-  geom_point()+
+tab <- data.frame(poll = 1:ncol(tab), t(tab))
+names(tab) <- c("poll", "estimate", "low", "high", "hit")
+tab <- mutate(tab, p_inside = ifelse(hit, "Yes", "No"))
+ggplot(tab, aes(poll, estimate, ymin = low, ymax = high, col = p_inside)) + 
+  geom_point() +
   geom_errorbar() + 
   coord_flip() + 
   geom_hline(yintercept = p)
 ```
 
-::: {.callout-note title = "The correct language"}
-
-When applying the theory we described above, it's important to remember that it's the intervals that are random, not $p$. In the plot above, we can see the random intervals moving around, while $p$, represented with the vertical line, remains in the same place. FIX The proportion of blue in the urn $p$ is not. So the 95% relates to the probability that this random interval falls on top of $p$. Stating that $p$ has a 95% chance of being between this and that is technically incorrect because $p$ is not random.
+::: {.callout-note}
+When applying the theory we described above, it's important to remember that it's the intervals that are random, not $p$. In the plot above, we can see the random intervals moving around, while the proportion of blue beads in the urn $p$, represented with the vertical line, remains in the same place. So the 95% relates to the probability that the random interval falls on top of $p$. Stating that $p$ has a 95% chance of being between this or that is technically incorrect because $p$ is not random.
 :::
 
 
@@ -189,7 +187,7 @@ Assume there are only two candidates and construct a 95% confidence interval for
 ```{r, message=FALSE, comment=FALSE}
 polls <- polls_us_election_2016 |> 
   filter(enddate >= "2016-10-31" & state == "U.S.")  |>
-  mutate(mu_hat = rawpoll_clinton / 100 - rawpoll_trump / 100)
+  mutate(mu_hat = rawpoll_clinton/100 - rawpoll_trump/100)
 ```
 
 7\. Now repeat exercise 3, but for the difference.

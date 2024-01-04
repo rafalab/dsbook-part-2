@@ -105,14 +105,17 @@ One of Bill James' first important insights is that the batting average ignores 
 
 ### Base on balls or stolen bases?
 
-One of the challenges in this analysis is that it is not obvious how to determine if a player produces runs because so much depends on his teammates. We do keep track of the number of runs scored by a player. FIX However, remember that if player X bats right before someone who hits many HRs, batter X will score many runs. But these runs don't necessarily happen if we hire player X, but not his HR hitting teammate. However, we can examine team-level statistics. How do teams with many SB compare to teams with few? How about BB? We have data! Let's examine some. FIX We start by creating with statistics from 1962, the first year all teams played 162 games (like today) instead of 154, to 2001, the year before the year for which we will construct a team. We convert the data to a _per game_ rate, because a small proportion of seasons had less games than usual due to strikes, and some teams played extra games due to tie breakers.
+One of the challenges in this analysis is that it is not obvious how to determine if a player produces runs because so much depends on his teammates. Although we keep track of the number of runs scored by a player, remember that if player X bats right before someone who hits many HRs, batter X will score many runs. Note these runs don't necessarily happen if we hire player X, but not his HR hitting teammate. 
+
+However, we can examine team-level statistics. How do teams with many SB compare to teams with few? How about BB? We have data! Let's examine some. We start by creating a data frame with statistics from 1962 (the first year all teams played 162 games, like today, instead of 154) to 2001 (the year before the year for which we will construct a team). We convert the data to a _per game_ rate, because a small proportion of seasons had less games than usual due to strikes, and some teams played extra games due to tie breakers.
 
 ```{r, cache=FALSE}
 library(tidyverse)
 library(Lahman)
 dat <- Teams |> filter(yearID %in% 1962:2002) |>
   mutate(team = teamID, year = yearID, r = R/G, 
-         singles = (H - X2B - X3B - HR)/G, doubles = X2B/G, triples = X3B/G, hr = HR/G,
+         singles = (H - X2B - X3B - HR)/G, 
+         doubles = X2B/G, triples = X3B/G, hr = HR/G,
          sb = SB/G, bb = BB/G) |>
   select(team, year, r, singles, doubles, triples, hr, sb, bb)
 ```
@@ -148,7 +151,7 @@ Linear regression will help us parse out the information and quantify the associ
 
 ### Regression applied to baseball statistics
 
-Can we use regression with these data? First, notice that the HR and Run data, shown above, appear to be bivariate normal. Specifically, the qqplots confirm that the normal approximation for each HR strata is useful here:
+Can we use regression with these data? First, notice that the HR and Run data, shown above, appear to be bivariate normal. Specifically, the qq-plots confirm that the normal approximation for each HR strata is useful here:
 
 ```{r hr-by-runs-qq}
 dat |> mutate(z_hr = round(scale(hr))) |>
@@ -194,13 +197,7 @@ Given that the outcome is a data frame, we can immediately use it with `summariz
 
 Now we return to discussing our original task of determining if slopes changed. The plot we just made, using `summarize` and `tidy`, shows that the confidence intervals overlap, which provides a nice visual confirmation that our assumption that the slope does not change is safe.
 
-The other functions provided by **broom**, `glance` and `augment`, relate to model-specific and observation-specific outcomes, respectively. FIX Here we can see the model fit summaries `glance` returns:
-
-```{r}
-glance(fit)
-```
-
-You can learn more about these summaries in any regression textbook.
+The other functions provided by **broom**, `glance` and `augment`, relate to model-specific and observation-specific outcomes, respectively. 
 
 ## Confounding
 
@@ -465,7 +462,7 @@ our_team <- players |>
   filter(lp_solution$solution == 1) |>
   arrange(desc(r_hat))
 tmp <- our_team |> select(nameFirst, nameLast, POS, salary, r_hat) 
-if(knitr::is_html_output()){
+if (knitr::is_html_output()) {
   knitr::kable(tmp, "html") |>
     kableExtra::kable_styling(bootstrap_options = "striped", full_width = FALSE)
 } else{
@@ -488,7 +485,7 @@ tmp <- players |> mutate(bb = my_scale(bb),
   filter(playerID %in% our_team$playerID) |>
   select(nameLast, bb, singles, doubles, triples, hr, avg, r_hat) |>
   arrange(desc(r_hat)) 
-if(knitr::is_html_output()){
+if (knitr::is_html_output()) {
   knitr::kable(tmp, "html") |>
     kableExtra::kable_styling(bootstrap_options = "striped", full_width = FALSE)
 } else{
@@ -501,13 +498,13 @@ if(knitr::is_html_output()){
 
 We have shown how BB and singles have similar predictive power for scoring runs. Another way to compare the usefulness of these baseball metrics is by assessing their stability across the years. Since we have to pick players based on their previous performances, we prefer metrics that are more stable. In these exercises, we will compare the stability of singles and BBs.
 
-1\. Before we begin, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. FIX Here is how we create the 2017 table. Keeping only players with more than 100 plate appearances.
+1\. Before we begin, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. Here is how we create the 2017 table, keeping only players with more than 100 plate appearances:
 
 ```{r, eval=FALSE}
 library(Lahman)
 dat <- Batting |> filter(yearID == 2002) |>
   mutate(pa = AB + BB, 
-         singles = (H - X2B - X3B - HR) / pa, bb = BB / pa) |>
+         singles = (H - X2B - X3B - HR)/pa, bb = BB/pa) |>
   filter(pa >= 100) |>
   select(playerID, singles, bb)
 ```

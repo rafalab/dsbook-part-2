@@ -1,6 +1,6 @@
 # Discrete probability
 
-We begin by covering some basic principles related to categorical data. FIX CHECK ENTIRE PARA I TWEAKED The specific area of probability which deals with categorical data is referred to as *discrete probability*. Understanding this topic, will help us comprehend the probability theory we will later introduce for numeric and continuous data, which is much more common in data science applications. Since discrete probability is more useful in card games, we will use these as illustrative examples.
+We begin by covering some basic principles related to categorical data. The specific area of probability which deals with categorical data is referred to as *discrete probability*. Understanding this topic, will help us comprehend the probability theory we will later introduce for numeric and continuous data, which is much more common in data analysis. Since discrete probability is invaluable in card games, we will use these as illustrative examples.
 
 ## Relative frequency
 
@@ -74,7 +74,7 @@ prop.table(tab)
 
 The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory, not covered here, tells us that as $B$ gets larger, the estimates get closer to 3/5=.6 and 2/5=.4.
 
-FIX EXACT WHAT? AT THE END Although this is a simple and not very useful example, we will use Monte Carlo simulations to estimate probabilities in cases in which it is harder to compute the exact ones. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
+This is a simple and not very useful example, since we can easily compute the probabilities mathematically. Monte Carlo simulations are useful when it is hard, or impossible, to compute the exact probabilities mathematically. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
 
 ### Setting the random seed
 
@@ -189,7 +189,7 @@ $$
 \mbox{Pr}(A \mbox{ and } B \mbox{ and } C) = \mbox{Pr}(A)\mbox{Pr}(B)\mbox{Pr}(C)
 $$
 
-FIX WHAT IS 'THIS' THE MULT RULE? However, we have to be very careful before using this, since assuming independence can result in very different and incorrect probability calculations when independence does not actually exist.
+However, we have to be very careful before using this version of the multiplication rule, since assuming independence can result in very different and incorrect probability calculations when events are not actually independent.
 
 As an example, imagine a court case in which the suspect was described as having a mustache and a beard. The defendant has a mustache and a beard, and the prosecution brings in an "expert" to testify that 1/10 men have beards and 1/5 have mustaches. Using the multiplication rule, we therefore conclude that only $1/10 \times 1/5$ or 0.02 have both.
 
@@ -425,7 +425,7 @@ monty_hall <- function(strategy){
   show <- sample(doors[!doors %in% c(my_pick, prize_door)],1)
   stick <- my_pick
   stick == prize_door
-  switch <- doors[!doors%in%c(my_pick, show)]
+  switch <- doors[!doors %in% c(my_pick, show)]
   choice <- ifelse(strategy == "stick", stick, switch)
   choice == prize_door
 }
@@ -435,7 +435,7 @@ switch <- replicate(B, monty_hall("switch"))
 mean(switch)
 ```
 
-FIX CHECK PARAGRAPH As we write the code, we see that the lines starting with `my_pick` and `show` have no influence on the last logical operation, when we stick to our original choice. From this, we should realize that the chance is 1 in 3, as we initially considered. When we switch, the Monte Carlo estimate confirms the 2/3 calculation. This helps us gain some insight by demonstrating that we are removing a door, `show`, that is definitely not a winner from our choices. We also see that unless we get it right when we first pick, we win: 1 - 1/3 = 2/3.
+As we write the code, we see that the lines starting with `my_pick` and `show` have no influence on the last logical operation, when we stick to our original choice. From this, we should realize that the chance is 1 in 3, as we initially considered. When we switch, the Monte Carlo estimate confirms the 2/3 calculation. This helps us gain some insight by demonstrating that we are removing a door, `show`, that is definitely not a winner from our choices. We also see that unless we get it right when we first pick, we win 1 - 1/3 = 2/3 of the times.
 
 ### Birthday problem
 
@@ -522,7 +522,7 @@ We can write a function that does this for any number:
 
 ```{r birthday-problem-exact-probabilities}
 exact_prob <- function(n){
-  prob_unique <- seq(365,365 - n + 1)/365 
+  prob_unique <- seq(365, 365 - n + 1)/365 
   1 - prod( prob_unique)
 }
 eprob <- sapply(n, exact_prob)
@@ -533,13 +533,15 @@ This plot shows that the Monte Carlo simulation provided a very good estimate of
 
 ## Infinity in practice
 
-FIX CHECK PARAGRAPH The theory described here requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. In practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
+The theory described here requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. 
 
-One practical approach we will describe here is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
+In practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
+
+One practical approach is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
 
 ```{r monte-carlo-convergence}
 B <- 10^seq(1, 5, len = 100)
-compute_prob <- function(B, n=25){
+compute_prob <- function(B, n = 25){
   same_day <- replicate(B, same_birthday(n))
   mean(same_day)
 }
@@ -547,7 +549,7 @@ prob <- sapply(B, compute_prob)
 plot(log10(B), prob)
 ```
 
-In this plot, we can see that the values start to stabilize (that is, they vary less than .01) around 1000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
+In this plot, we can see that the values start to stabilize at around 1000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
 
 ## Exercises
 
@@ -590,7 +592,7 @@ The Celtics must win one of these 4 games.
 prob_win <- function(p){
   B <- 10000
   result <- replicate(B, {
-    b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1-p, p))
+    b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1 - p, p))
     sum(b_win)>=4
   })
   mean(result)
@@ -602,11 +604,11 @@ Use the function `sapply` to compute the probability, call it `Pr`, of winning f
 13\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games,... Specifically, `N <- seq(1, 25, 2)`. Hint: use the function below.
 
 ```{r, eval = FALSE}
-prob_win <- function(N, p=0.75){
+prob_win <- function(N, p = 0.75){
   B <- 10000
   result <- replicate(B, {
-    b_win <- sample(c(1,0), N, replace = TRUE, prob = c(1-p, p))
-    sum(b_win)>=(N+1)/2
+    b_win <- sample(c(1,0), N, replace = TRUE, prob = c(1 - p, p))
+    sum(b_win) >= (N+1)/2
   })
   mean(result)
 }

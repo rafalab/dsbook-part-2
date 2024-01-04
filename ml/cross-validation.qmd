@@ -1,6 +1,6 @@
-# Cross validation {#sec-cross-validation}
+# Resampling methods {#sec-cross-validation}
 
-In this chapter, we introduce cross validation, one of the most important ideas in machine learning. Here we focus on the conceptual and mathematical aspects. We will describe how to implement cross validation in practice with the **caret** package later in @sec-caret-cv. To motivate the concept, we will use the two predictor digits data presented in \@ref-two-or-seven and introduce an actual machine learning algorithm, k-nearest neighbors (kNN), to demonstrate the ideas.
+In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here we focus on the conceptual and mathematical aspects. We will describe how to implement resampling methods in practice with the **caret** package later in @sec-caret-cv. To motivate the concept, we will use the two predictor digits data presented in \@ref-two-or-seven and introduce k-nearest neighbors (kNN), to demonstrate the ideas.
 
 ## Motivation with k-nearest neighbors {#sec-knn-cv-intro}
 
@@ -26,7 +26,8 @@ knn_fit <- knn3(y ~ ., data = mnist_27$train, k = 5)
 
 In this case, since our dataset is balanced and we care just as much about sensitivity as we do about specificity, we will use accuracy to quantify performance.
 
-The `predict` function for `knn` produces a probability for each class. We keep the probability of being a 7 as the estimate $\hat{p}(\mathbf{x})$:
+The `predict` function for `knn3` produces a probability for each class. We can keep the probability of being a 7 as the estimate $\hat{p}(\mathbf{x})$ using `type = "prob"`. Here we 
+obtain the actual prediction using `type = "class"`:
 
 ```{r}
 y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
@@ -72,9 +73,9 @@ confusionMatrix(y_hat_knn, mnist_27$test$y)$overall["Accuracy"]
 
 This is due to what we call *over-training*.
 
-### Over-training
+## Over-training
 
-With kNN, over-training is at its worst when we set $k = 1$. With $k = 1$, the estimate for each $\mathbf{x}$ in the training set is obtained with just the $y$ corresponding to that point. In this case, if the $x_1$ and $x_2$ are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself. Remember that if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly.
+With kNN, over-training is at its worst when we set $k = 1$. With $k = 1$, the estimate for each $\mathbf{x}$ in the training set is obtained with just the $y$ corresponding to that point. In this case, if the $x_1$ and $x_2$ are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself (if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly).
 
 Here we fit a kNN model with $k = 1$ and confirm we get nearer to perfect accuracy in the training set:
 
@@ -91,7 +92,8 @@ y_hat_knn_1 <- predict(knn_fit_1, mnist_27$test, type = "class")
 confusionMatrix(y_hat_knn_1, mnist_27$test$y)$overall["Accuracy"]
 ```
 
-We can see the over-fitting problem in this figure:
+We can see the over-fitting problem by plotting  the decision rule boundaries produced by $p(\mathbf{x})$:
+
 
 ```{r knn-1-overfit, echo = FALSE, out.width="100%"}
 tmp <- mnist_27$true_p
@@ -115,11 +117,10 @@ p2 <- tmp |>
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-The black curves denote the decision rule boundaries.
 
-The estimate $\hat{p}(\mathbf{x})$ follows the training data too closely (left). You can see that, in the training set, boundaries have been drawn to perfectly surround a single red point in a sea of blue. Because most points $\mathbf{x}$ are unique, the prediction is either 1 or 0 and the prediction for that point is the associated label. However, once we introduce the training set (right), we see that many of these small islands now have the opposite color and we end up making several incorrect predictions.
+The estimate $\hat{p}(\mathbf{x})$ follows the training data too closely (left). You can see that, in the training set, boundaries have been drawn to perfectly surround a single red point in a sea of blue. Because most points $\mathbf{x}$ are unique, the prediction is either 1 or 0 and the prediction for that point is the associated label. However, once we introduce the test set (right), we see that many of these small islands now have the opposite color and we end up making several incorrect predictions.
 
-### Over-smoothing
+## Over-smoothing
 
 Although not as badly as with $k=1$, we saw that with $k = 5$ we also over-trained. Hence, we should consider a larger $k$. Let's try, as an example, a much larger number: $k = 401$.
 
@@ -129,7 +130,7 @@ y_hat_knn_401 <- predict(knn_fit_401, mnist_27$test, type = "class")
 confusionMatrix(y_hat_knn_401, mnist_27$test$y)$overall["Accuracy"]
 ```
 
-This turns out to be similar to regression:
+The estimate turns out to be similar to the one obtained with regression:
 
 ```{r mnist-27-glm-est, echo = FALSE, out.width="100%"}
 fit_lm <- lm(y ~ ., data = mutate(mnist_27$train, y=y == "7"))
@@ -144,11 +145,13 @@ p2 <- plot_cond_prob(predict(knn_fit_401, mnist_27$true_p)[,2]) +
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-This size of $k$ is so large that it does not permit enough flexibility. We call this *over-smoothing*.
+In this case, $k$ is so large that it does not permit enough flexibility. We call this *over-smoothing*.
 
-### Parameter tuning
+## Parameter tuning
 
-So how do we pick $k$? In principle, we want to pick the $k$ that maximizes accuracy or minimizes the expected MSE as defined in @sec-mse. The goal of cross validation is to estimate these quantities for any given algorithm and set of tuning parameters such as $k$. To understand why we need a special method to do this, let's repeat what we did above, comparing the training set and test set accuracy, but for different values of $k$. We can plot the accuracy estimates for each value of $k$:
+It is very common for machine learning algorithms to require that we set a value, or values, before we even fit the model. An example is the $k$ in kNN. In @sec-example-alogirhms we learn of other examples. These values are referred to as _parameters_ and an important step in machine learning in practice is picking or _tunning_ those parameters.
+
+So how do we tune these parameters? For example, how do we pick the $k$ in kNN? In principle, we want to pick the $k$ that maximizes accuracy or minimizes the expected MSE as defined in @sec-mse. The goal of resampling methods is to estimate these quantities for any given algorithm and set of tuning parameters such as $k$. To understand why we need a special method to do this, let's repeat what we did above, comparing the training set and test set accuracy, but for different values of $k$. We can plot the accuracy estimates for each value of $k$:
 
 ```{r, echo=FALSE,warning = FALSE, message = FALSE}
 ks <- seq(3, 251, 2)
@@ -184,11 +187,11 @@ So do we simply pick the $k$ that maximizes accuracy and report this accuracy? T
 
 2.  Although for each $k$ we estimated MSE using the test set, we used the test set to pick the best $k$. As a result, we should not expect this minimum test set accuracy to extrapolate to the real world.
 
-Cross validation provides a solution to both these problems.
+Resampling methods provide a solution to both these problems.
 
-## Mathematical description of cross validation
+## Mathematical description of resampling methods
 
-In the previous section, we introduced kNN as an example to motivate the topic of this chapter. In this particular case, there is just one parameter, $k$, that affects the performance of the algorithm. However, in general, machine algorithms may have multiple parameters so we use the notation $\lambda$ to represent any set of parameters needed to define a machine learning algorithm. We also introduce notation to distinguish the predictions you get with each set of parameters with $\hat{y}(\lambda)$ and the MSE for this choice with $\text{MSE}(\lambda)$. Our goal is to find the $\lambda$ that minimizes $\text{MSE}(\lambda)$. Cross validation is a method the helps us estimate $\text{MSE}(\lambda)$.
+In the previous section, we introduced kNN as an example to motivate the topic of this chapter. In this particular case, there is just one parameter, $k$, that affects the performance of the algorithm. However, in general, machine algorithms may have multiple parameters so we use the notation $\lambda$ to represent any set of parameters needed to define a machine learning algorithm. We also introduce notation to distinguish the predictions you get with each set of parameters with $\hat{y}(\lambda)$ and the MSE for this choice with $\text{MSE}(\lambda)$. Our goal is to find the $\lambda$ that minimizes $\text{MSE}(\lambda)$. Resampling method help us estimate $\text{MSE}(\lambda)$.
 
 A intuitive first attempt is the apparent error defined in @sec-mse and used in the previous section:
 
@@ -198,17 +201,17 @@ $$
 
 As noted in the previous section, this estimate is a random error, based on just one test set, with enough variability to affect the choice of the best $\lambda$ substantially.
 
-Now imagine a world in which we could obtain data repeatedly, say from new random samples. We could take a very large number of new samples $B$, split them into training and test sets, and define: 
+Now imagine a world in which we could obtain data repeatedly, say from new random samples. We could take a very large number $B$ of new samples, split them into training and test sets, and define: 
 
 $$
 \frac{1}{B} \sum_{b=1}^B \frac{1}{N}\sum_{i=1}^N \left\{\hat{y}_i^b(\lambda) - y_i^b\right\}^2
 $$
 
-with $y_i^b$ the $i$th observation in sample $b$ and $\hat{y}_{i}^b(\lambda)$ the prediction obtained with the algorithm defined by parameter $\lambda$ and trained independently of $y_i^b$. The law of large numbers tells us that as $B$ becomes larger, this quantity gets closer and closer to $MSE(\lambda)$. This is of course a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires the idea behind cross-validation.
+with $y_i^b$ the $i$th observation in sample $b$ and $\hat{y}_{i}^b(\lambda)$ the prediction obtained with the algorithm defined by parameter $\lambda$ and trained independently of $y_i^b$. The law of large numbers tells us that as $B$ becomes larger, this quantity gets closer and closer to $MSE(\lambda)$. This is of course a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires the idea behind resampling methods.
 
-FIX [REPHSRASE ORACION 2. REPITES 'THE GENERAL IDEA'] The general idea is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but the general idea for all to randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. 
+The general idea is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe _cross validation_, one of the most widely used resampling resampling methods.
 
-## Cross validation in practice
+## Cross validation 
 
 ```{r, include = FALSE}
 if (knitr::is_html_output()) {
@@ -249,12 +252,12 @@ We will do this many times assuring that the estimates of MSE obtained in each d
 As a reminder, we are going to imitate the concept used when introducing this version of the MSE:
 
 $$
-\mbox{MSE}(\lambda) = \frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
+\mbox{MSE}(\lambda) \approx\frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
 $$
 
-We want to generate datasets that can be thought of as an independent random sample and we want to do this $B$ times. With K-fold cross validation, we do it $K$ times. In the illustrations, we are showing an example that uses $K = 5$.
+We want to generate a dataset that can be thought of as independent random sample, and do this $B$ times. The K in K-fold cross validation, represents the number of time $B$. In the illustrations, we are showing an example that uses $B = 5$.
 
-We will eventually end up with $K$ samples, but let's start by describing how to construct the first: we simply pick $M = N/K$ observations at random (we round if $M$ is not a round number) and think of these as a random sample $y_1^b, \dots, y_M^b$, with $b = 1$. We call this the validation set.
+We will eventually end up with $B$ samples, but let's start by describing how to construct the first: we simply pick $M = N/B$ observations at random (we round if $M$ is not a round number) and think of these as a random sample $y_1^b, \dots, y_M^b$, with $b = 1$. We call this the validation set.
 
 Now we can fit the model in the training set, then compute the apparent error on the independent set:
 
@@ -262,25 +265,25 @@ $$
 \hat{\mbox{MSE}}_b(\lambda) = \frac{1}{M}\sum_{i = 1}^M \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
 $$
 
-As a reminder, this is just one sample and will therefore return a noisy estimate of the true error.  In K-cross validation, we randomly split the observations into $K$ non-overlapping sets:
+As a reminder, this is just one sample and will therefore return a noisy estimate of the true error.  In K-fold cross validation, we randomly split the observations into $B$ non-overlapping sets:
 
 ```{r, echo = FALSE}
 knitr::include_graphics("img/cv-5.png")
 ```
 
-Now we repeat the calculation above for each of these sets $b = 1,\dots,K$ and obtain $\hat{\mbox{MSE}}_1(\lambda),\dots, \hat{\mbox{MSE}}_K(\lambda)$. Then, for our final estimate, we compute the average:
+Now we repeat the calculation above for each of these sets $b = 1,\dots,B$ and obtain $\hat{\mbox{MSE}}_1(\lambda),\dots, \hat{\mbox{MSE}}_B(\lambda)$. Then, for our final estimate, we compute the average:
 
 $$
-\hat{\mbox{MSE}}(\lambda) = \frac{1}{K} \sum_{b = 1}^K \hat{\mbox{MSE}}_b(\lambda)
+\hat{\mbox{MSE}}(\lambda) = \frac{1}{B} \sum_{b = 1}^B \hat{\mbox{MSE}}_b(\lambda)
 $$
 
 and obtain an estimate of our loss. A final step would be to select the $\lambda$ that minimizes the MSE.
 
 ### How many folds?
 
-Now how do we pick the cross validation $K$? Large values of $K$ are preferable because the training data better imitates the original dataset. However, larger values of $K$ will have much slower computation time: for example, 100-fold cross validation will be 10 times slower than 10-fold cross validation. For this reason, the choices of $K = 5$ and $K = 10$ are popular.
+Now how do we pick the cross validation fold? Large values of $B$ are preferable because the training data better imitates the original dataset. However, larger values of $B$ will have much slower computation time: for example, 100-fold cross validation will be 10 times slower than 10-fold cross validation. For this reason, the choices of $B = 5$ and $B = 10$ are popular.
 
-One way we can improve the variance of our final estimate is to take more samples. To do this, we would no longer require the training set to be partitioned into non-overlapping sets. Instead, we would just pick $K$ sets of some size at random.
+One way we can improve the variance of our final estimate is to take more samples. To do this, we would no longer require the training set to be partitioned into non-overlapping sets. Instead, we would just pick $B$ sets of some size at random.
 
 ### Estimate MSE of our optimized algorithm
 
@@ -309,19 +312,19 @@ knitr::include_graphics("img/cv-8.png")
 knitr::opts_chunk$set(out.width = "70%", out.extra = NULL)
 ```
 
-### Boostrap in cross-validation
+## Boostrap resampling
 
-Typically, cross-validation involves partitioning the original dataset into a training set to train the model and a testing set to evaluate it. With the bootstrap approach, based on the ideas described in @sec-bootstrap, you can create multiple different training datasets via bootstrapping. This method is sometimes called bootstrap aggregating or bagging. FIX [WHERE DO YOU PROVIDE THIS? BELOW? or "we will now"?] We provide a step-by-step description.
+Typically, cross-validation involves partitioning the original dataset into a training set to train the model and a testing set to evaluate it. With the bootstrap approach, based on the ideas described in @sec-bootstrap, you can create multiple different training datasets via bootstrapping. This method is sometimes called bootstrap aggregating or bagging. 
 
-From the original dataset, we create a large number of bootstrap samples. Each bootstrap sample is created by randomly selecting observations with replacement, usually the same size as the original dataset. For each bootstrap sample, fit the model and compute the MSE estimate on the observations not selected in the random sampling, referred to as the _out-of-bag observations_. These out-of-bag observations serve a similar role to a test set in standard cross-validation.
+In bootstrap resampling, we create a large number of bootstrap samples from the original training dataset. Each bootstrap sample is created by randomly selecting observations with replacement, usually the same size as the original training dataset. For each bootstrap sample, we fit the model and compute the MSE estimate on the observations not selected in the random sampling, referred to as the _out-of-bag observations_. These out-of-bag observations serve a similar role to a validation set in standard cross-validation.
 
 We then average the MSEs obtained in the out-of-bag observations from each bootstrap sample to estimate the model's performance.
 
-This approach is actually the default approach in the **caret** package. We describe how to implement cross validation with the **caret** package in the next chapter. In the next section, we include an explanation of how the bootstrap works in general.
+This approach is actually the default approach in the **caret** package. We describe how to implement resampling methods with the **caret** package in the next chapter. 
 
 ### Comparison of MSE estimates {#sec-mse-estimates}
 
-In @sec-knn-cv-intro, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of apply K-fold cross validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of increasing computation time by 10 fold.
+In @sec-knn-cv-intro, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of applying K-fold cross validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of a 10 fold increase in computation time.
 
 ```{r}
 set.seed(2023-11-30)
@@ -344,8 +347,6 @@ data.frame(k = ks, naive = accuracy["test",],
   geom_line() 
 ```
 
-
-
 ## Exercises
 
 Generate a set of random predictors and outcomes like this:
@@ -361,7 +362,7 @@ y <- rbinom(n, 1, 0.5) |> factor()
 x_subset <- x[ ,sample(p, 100)]
 ```
 
-1\. Because `x` and `y` are completely independent, you should not be able to predict `y` using `x` with accuracy larger than 0.5. Confirm this by running cross validation using logistic regression to fit the model. Because we have so many predictors, we selected a random sample `x_subset`. Use the subset when training the model. Hint: Use the caret `train` function. The `results` component of the output of `train` shows you the accuracy. Ignore the warnings.
+1\. Because `x` and `y` are completely independent, you should not be able to predict `y` using `x` with accuracy larger than 0.5. Confirm this by running cross validation using logistic regression to fit the model. Because we have so many predictors, we selected a random sample `x_subset`. Use the subset when training the model. Hint: use the caret `train` function. The `results` component of the output of `train` shows you the accuracy. Ignore the warnings.
 
 2\. Now instead of a random selection of predictors, we are going to search for those that are most predictive of the outcome. We can do this by comparing the values for the $y = 1$ group to those in the $y = 0$ group, for each predictor, using a t-test. You can perform this step as follows:
 

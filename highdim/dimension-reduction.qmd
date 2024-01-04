@@ -76,7 +76,7 @@ plot(dist(x) / sqrt(2), dist(z))
 abline(0, 1, col = "red")
 ```
 
-FIX (does ok -> is ok?) This one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that improves the approximation?
+This one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that improves the approximation?
 
 If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can *rotate* the points in a way that preserve the distance between points, while increasing the variability in one dimension and reducing it on the other. Using this method, we keep more of the *information* about distances in the first dimension. In the next section, we describe a mathematical approach that permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.
 
@@ -90,7 +90,7 @@ $$
 
 with $r$ the length of the hypotenuse and $\phi$ the angle between the hypotenuse and the x-axis.
 
-FIX We can *rotate* the point $(x_1, x_2)^\top$ around a circle with center $(0,0)^\top$ and radius $r$ by an angle $\theta$ by changing the angle in the previous equation to $\phi + \theta$:
+To *rotate* the point $(x_1, x_2)^\top$ around a circle with center $(0,0)^\top$ and radius $r$ by an angle $\theta$ we simply change the angle in the previous equation to $\phi + \theta$:
 
 $$
 z_1 = r \cos(\phi+ \theta), \,\,
@@ -128,10 +128,10 @@ draw.circle(theta, start = phi, r = 0.3)
 We can use trigonometric identities to rewrite $(z_1, z_2)$ as follows:
 
 $$
-\begin{align}
+\begin{aligned}
 z_1 = r \cos(\phi + \theta) = r \cos \phi \cos\theta -  r \sin\phi \sin\theta =  x_1 \cos(\theta) -  x_2 \sin(\theta)\\
 z_2 = r \sin(\phi + \theta) =  r \cos\phi \sin\theta + r \sin\phi \cos\theta =  x_1 \sin(\theta) + x_2 \cos(\theta)
-\end{align}
+\end{aligned}
 $$
 
 Now we can rotate each point in the dataset by simply applying the formula above to each pair $(x_{i,1}, x_{i,2})^\top$. Here is what the twin standardized heights look like after rotating each point by $-45$ degrees:
@@ -140,12 +140,12 @@ Now we can rotate each point in the dataset by simply applying the formula above
 z <- cbind((x[,1] + x[,2]) / sqrt(2), (x[,2] - x[,1]) / sqrt(2))
 lim <- range(z)
 rafalib::mypar(1,2)
-plot(x, xlim=lim, ylim = lim)
+plot(x, xlim = lim, ylim = lim)
 lines(x[c(1,2),], col = "blue", lwd = 2)
 lines(x[c(2,51),], col = "red", lwd = 2)
 points(x[c(1,2,51),], pch = 16)
 
-plot(z, xlim=lim, ylim = lim)
+plot(z, xlim = lim, ylim = lim)
 lines(z[c(1,2),], col = "blue", lwd = 2)
 lines(z[c(2,51),], col = "red", lwd = 2)
 points(z[c(1,2,51),], pch = 16)
@@ -157,7 +157,9 @@ Note that while the variability of $x_1$ and $x_2$ are similar, the variability 
 
 Any time a matrix $\mathbf{X}$ is multiplied by another matrix $\mathbf{A}$, we refer to the product $\mathbf{Z} = \mathbf{X}\mathbf{A}$ as a linear transformation of $\mathbf{X}$. Below, we show that the rotations described above are a linear transformation. To see this, note that for any row $i$, the first entry was:
 
-$$z_{i,1} = a_{1,1} x_{i,1} + a_{2,1} x_{i,2}$$
+$$
+z_{i,1} = a_{1,1} x_{i,1} + a_{2,1} x_{i,2}
+$$
 
 with $a_{1,1} = \cos\theta$ and $a_{2,1} = -\sin\theta$.
 
@@ -375,9 +377,8 @@ z <- x %*% V
 The following animation further illustrates how different rotations affect the variability explained by the dimensions of the rotated data:
 
 ```{r, echo=FALSE, fig.asp=1}
-#if(knitr::is_html_output()){
-if (TRUE) {
-  if(!file.exists("img/pca.gif")){
+if (knitr::is_html_output()) {
+  if (!file.exists("img/pca.gif")) {
     angles <- c(rep(0, 5),
                 seq(0, 45, 1),
                 rep(45, 15),
@@ -385,8 +386,8 @@ if (TRUE) {
                 seq(90, 45, -1),
                 rep(45, 15),
                 seq(45, 0, -1))
-    stop_ind <- which(angles==45)
-    thetas <- - 2*pi * angles/360
+    stop_ind <- which(angles == 45)
+    thetas <- -2*pi*angles/360
     lim <- c(-4, 4)
     dlim <- c(0, 1.25)
     bw <- 0.3
@@ -394,8 +395,9 @@ if (TRUE) {
     library(animation)
     saveGIF({
       rafalib::mypar(2,2)
-      for(i in seq_along(angles)){
-        A <- matrix(c(cos(thetas[i]), -sin(thetas[i]), sin(thetas[i]), cos(thetas[i])), 2, 2)
+      for (i in seq_along(angles)) {
+        A <- matrix(c(cos(thetas[i]), -sin(thetas[i]), 
+                      sin(thetas[i]), cos(thetas[i])), 2, 2)
         z <- x %*% A
         sds <- apply(z, 2, sd)
         plot(z, xlim = lim, ylim = lim,
@@ -418,16 +420,41 @@ if (TRUE) {
           text(-1.95, -0.5, expression(sqrt(2)), cex = 2)
           text(0, 2.2, "This rotation gives the\nprincipal components")
         } else{
-          the_text <- paste0(c(" cos ", "sin ", "-sin ", " cos "), format(angles[i], width = 2), "\u00B0")
-          text(0.75*c(-1, -1,1,1),c(1,-1,1,-1), the_text, cex=1.15, font = 2)
+          the_text <- paste0(c(" cos ", "sin ", "-sin ", " cos "),
+                             format(angles[i], width = 2), "\u00B0")
+          text(0.75*c(-1, -1,1,1),c(1,-1,1,-1), the_text, 
+               cex = 1.15, font = 2)
           text(c(-1.75, 1.75), c(0,0), c("(",")"), cex = 8)
         }
       }
-    }, interval=0.1, ani.width=600, ani.height=600, ani.res=90,
+    }, interval = 0.1, ani.width = 600, ani.height = 600, ani.res = 90,
     loop = TRUE, movie.name = "pca.gif")
     system(paste("mv pca.gif", file.path("img", "pca.gif")))
   }
   knitr::include_graphics("img/pca.gif")
+}
+```
+
+```{r pca-demo, echo=FALSE}
+if (!knitr::is_html_output()) {
+  library(ggExtra)
+  library(gridExtra)
+  thetas <- c(0,-45)*2*pi/360
+  ps <- vector("list", 2)
+  for (i in 1:2) {
+    A <- matrix(c(cos(thetas[i]), -sin(thetas[i]), 
+                  sin(thetas[i]), cos(thetas[i])), 2, 2)
+    z <- x %*% A
+    sds <- apply(z, 2, sd)
+    lim <- c(-4, 4)
+    p <- data.frame(x1 = z[,1], x2 = z[,2]) |>  
+      ggplot(aes(x1, x2)) + geom_point() +
+      xlim(lim) + ylim(lim) + 
+      xlab(paste("Dimension 1 SD =",format(round(sds[1],2)))) +
+      ylab(paste("Dimension 2 SD =",format(round(sds[2],2))))
+    ps[[i]] <- ggMarginal(p, bw = 0.375, fill = "grey")
+  }
+  grid.arrange(ps[[1]], ps[[2]], ncol = 2)
 }
 ```
 
@@ -499,13 +526,13 @@ illustrate_pca(x, flip = -1)
 ```
 
 
-This idea generalizes to dimensions higher than 2. FIX As demonstrated in our two dimensional example, we start by finding the $p\times1$ vector $\mathbf{v}_1$ with$||\mathbf{v}_1||=1$ that maximizes $||\mathbf{X} \mathbf{v}_1||$. $\mathbf{X} \mathbf{a}_1$ is the first PC. To find the second PC, we subtract the variation explained by first PC from $\mathbf{X}$:
+This idea generalizes to dimensions higher than 2. As done in our two dimensional example, we start by finding the $p \times 1$ vector $\mathbf{v}_1$ with $||\mathbf{v}_1||=1$ that maximizes $||\mathbf{X} \mathbf{v}_1||$. The projection $\mathbf{X} \mathbf{v}_1$ is the first PC. To find the second PC, we subtract the variation explained by first PC from $\mathbf{X}$:
 
 $$
 \mathbf{r} = \mathbf{X} - \mathbf{X} \mathbf{v}_1 \mathbf{v}_1^\top
 $$
 
-and then find the vector $\mathbf{v}_2$ with$||\mathbf{v}_2||=1$ that maximizes $||\mathbf{r} \mathbf{v}_2||$. $\mathbf{X} \mathbf{v}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
+and then find the vector $\mathbf{v}_2$ with$||\mathbf{v}_2||=1$ that maximizes $||\mathbf{r} \mathbf{v}_2||$. The projection $\mathbf{X} \mathbf{v}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
 
 $$
 \mathbf{V} =
@@ -515,12 +542,11 @@ $$
 \mathbf{Z} = \mathbf{X}\mathbf{V}
 $$
 
-The ideas of distance preservation extends to higher dimensions. For a multidimensional matrix with $p$ columns, the $\mathbf{A}$ transformation preserves the distance between rows, but with the variance explained by the columns in decreasing order.
-If the variances of the columns $\mathbf{Z}_j$, $j>k$ are very small, these dimensions have little to contribute to the distance calculation and we can approximate the distance between any two points with just $k$ dimensions. If $k$ is much smaller than $p$, then we can achieve a very efficient summary of our data.
+The ideas of distance preservation extends to higher dimensions. For a multidimensional matrix with $p$ columns, the $\mathbf{A}$ transformation preserves the distance between rows, but with the variance explained by the columns in decreasing order.If the variances of the columns $\mathbf{Z}_j$, $j>k$ are very small, these dimensions have little to contribute to the distance calculation and we can approximate the distance between any two points with just $k$ dimensions. If $k$ is much smaller than $p$, then we can achieve a very efficient summary of our data.
 
 
 :::{.callout-warning} 
-Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{v}|| = ||-\mathbf{X} \mathbf{v}||$. Also, note that if we multiply a column of $\mathbf{A}$ by $-1$, we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{V}^\top$ as long as we also multiple the corresponding column of $\matbf{V}$ by -1. FIX This implies that sign of each column of the rotation $\mathbf{V}$ and principal component matrix $\mathbf{Z}$ is arbitrary.
+Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{v}|| = ||-\mathbf{X} \mathbf{v}||$. Also, note that if we multiply a column of $\mathbf{A}$ by $-1$, we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{V}^\top$ as long as we also multiple the corresponding column of $\mathbf{V}$ by -1. This implies that we can arbitrarily change the sign of each column of the rotation $\mathbf{V}$ and principal component matrix $\mathbf{Z}$.
 :::
 
 In R, we can find the principal components of any matrix with the function `prcomp`:
@@ -552,7 +578,7 @@ summary(pca)
 ```
 
 
-FIX We also see that we can transform between `x` ($\mathbf{X}$) and `pca$x` ($\mathbf{Z}$) as explained with mathematical formulas above:
+We also see that we can rotate `x` ($\mathbf{X}$) and `pca$x` ($\mathbf{Z}$) as explained with the mathematical formulas above:
 
 ```{r}
 all.equal(pca$x, x %*% pca$rotation)
@@ -632,8 +658,7 @@ rafalib::mypar()
 illustrate_pca(x)
 ```
 
-FIX we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width, since these are red in first column, and subtract a weighted sepal width, since this is blue. The second PC is a weighted average of weighted average of petal length and petal width, minus a weighted average of sepal length and petal width. 
-
+we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in first column), and subtracting a a quantity proportional to sepal width (blue in first column). The second PC is a weighted average of petal length and petal width, minus a weighted average of sepal length and petal width. 
 
 ### MNIST example
 
@@ -674,7 +699,7 @@ data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], label = factor(mnist$train$label)) 
   geom_point(cex = 3, pch = 21)
 ```
 
-FIX We can also *see* the linear combinations on the grid to get an idea of how pixels are getting to compute the first four principal components:
+We can also _see_ the rotation values on the 28 $\times$ 28 grid to get an idea of how pixels are being weighted in the transformations that result in the PCs:
 
 ```{r mnist-pca-1-4, echo = FALSE, out.width="100%", fig.width=6, fig.height=1.75}
 library(RColorBrewer)
@@ -694,14 +719,13 @@ tmp |>
   facet_wrap(~label, nrow = 1)
 ```
 
-We can clearly see that first PC appears to be separating the 1s (red) from the 0s (blue). We can vaguely discern numbers in the other three PCs as well. By looking at the PCs stratified by digits, we get further insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:
+We can clearly see that first PC appears to be separating the 1s (red) from the 0s (blue). We can vaguely discern digits, or parts of digits, in the other three PCs as well. By looking at the PCs stratified by digits, we get further insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:
 
 ```{r digit-pc-boxplot}
 #| echo: false
 data.frame(label = factor(mnist$train$labels), PC2 = pca$x[,2]) |> 
   ggplot(aes(label, PC2)) + geom_boxplot() 
 ```
-
 
 We can also confirm that the lower variance PCs appear related to unimportant variability, mainly smudges in the corners:
 

@@ -66,11 +66,11 @@ train_qda <- train(y ~ ., method = "qda", data = mnist_27$train)
 train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
 ```
 
-FIX As we explain in more detail in #sec-caret-cv, the train function selects parameters for you using cross validation.
+As we explain in more detail in @sec-caret-cv, the `train` function selects parameters for you using a resampling method, with boostrap as the default.
 
 ### The `predict` function
 
-The `predict` function is very useful for machine learning applications. This function takes an object from a fitting function and a data frame with features \mathbf{x} for which to predict, and returns predictions for these features. 
+The `predict` function is very useful for machine learning applications. This function takes an object from a fitting function and a data frame with features $\mathbf{x}$ for which to predict, and returns predictions for these features. 
 
 Here is an example with logistic regression:
 
@@ -101,7 +101,7 @@ However, note that `predict` does not always return objects of the same types; i
 
 There are many other versions of `predict` and many machine learning algorithms have a `predict` function.
 
-As with `train`, the **caret** packages unifies the use of `predict` with the function `predict.train`. This function takes the output of `train` and produces prediction of categories or estimates of $p(\mathbf{x}).
+As with `train`, the **caret** packages unifies the use of `predict` with the function `predict.train`. This function takes the output of `train` and produces prediction of categories or estimates of $p(\mathbf{x})$.
 
 The code looks the same for all methods:
 
@@ -201,9 +201,9 @@ You can learn many more details about the **caret** package, from the manual ^[h
 
 We often transform predictors before running the machine algorithm. We also remove predictors that are clearly not useful. We call these steps *preprocessing*.
 
-Examples of preprocessing include standardizing the predictors, taking the log transform of some predictors, removing predictors that are highly correlated with others, and removing predictors with very few non-unique values or close to zero variation. FIX DO YOU NEED THIS SENT: We show an example below.
+Examples of preprocessing include standardizing the predictors, taking the log transform of some predictors, removing predictors that are highly correlated with others, and removing predictors with very few non-unique values or close to zero variation. 
 
-For example, we can run the `nearZero` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with 0 variability:
+For example, we can run the `nearZero` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with close to 0 variability:
 
 ```{r pixel-sds, message=FALSE, warning=FALSE, cache=FALSE}
 library(matrixStats)
@@ -219,7 +219,7 @@ The **caret** packages includes a function that recommends features to be remove
 nzv <- nearZeroVar(x)
 ```
 
-We can see the columns recommended for removal:
+We can see the columns recommended for removal are the near the edges:
 
 ```{r, eval=FALSE}
 image(matrix(1:784 %in% nzv, 28, 28))
@@ -312,10 +312,11 @@ y_hat_knn_pca <- predict(fit_knn_pca, newdata, type = "class")
 confusionMatrix(y_hat_knn_pca, factor(y_test))$overall["Accuracy"]
 ```
 
-FIX With obtain an improvement in accuracy, while using only 36 dimensions. 
+We obtain an improvement in accuracy, while using only 36 dimensions. 
 
 :::{.callout-note}
-Remember the entire algorithm needs to be developed on the training data. FIX This is why the column means subtracted from test set columns were those estimated in the training set and the rotation applied to the test data to obtained PCs we the one obtained with the train data. 
+Remember the entire algorithm needs to be developed on the training data. 
+This is why the column means, subtracted from test set columns, and the rotation applied to obtained PCs, were both computed using the train data. 
 :::
 
 
@@ -550,7 +551,7 @@ What is the variable importance in the random forest call for these predictors? 
 
 
 
-21\. FIX Previously, we have compared conditional probability give two predictors $p(x_1,x_2)$ to the fit $\hat{p}(x_1,x_2)$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
+21\. Previously, we compared the conditional probability $p(\mathbf{x})$ give two predictors $\mathbf{x} = (x_1, x_2)^\top$ to the fit $\hat{p}(\mathbf{x})$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
 
 ```{r}
 #| eval: false
@@ -607,9 +608,9 @@ We have not explained many of these, but apply them anyway using `train` with al
 
 30\. Now let's only consider the methods with an estimated accuracy of 0.8 when constructing the ensemble. What is the accuracy now?
 
-31\. FIX If two methods give results that are the same, ensembling them will not change the results at all. For each pair of metrics compare the percent of time they call the same thing. Then use the `heatmap` function to visualize the results. Hint: Use the `method = "binary"` argument in the `dist` function.
+31\. Note that if two machine algorithms methods predict the same outcome, ensembling them will not change the prediction. For each pair of algorithms compare the percent of observations for which they make the same prediction. Use this to define a function and then use the `heatmap` function to visualize the results. Hint: use the `method = "binary"` argument in the `dist` function.
 
-32\. Note that each method can also produce an estimated conditional probability. Instead of majority vote, we can take the average of these estimated conditional probabilities. For most methods, we can the use the `type = "prob"` in the train function. Note that some of the methods require you to use the argument `trControl=trainControl(classProbs=TRUE)` when calling train. Also, these methods do not work if classes have numbers as names. Hint: Change the levels as show below.
+32\. Note that each method can also produce an estimated conditional probability. Instead of majority vote, we can take the average of these estimated conditional probabilities. For most methods, we can the use the `type = "prob"` in the train function. Note that some of the methods require you to use the argument `trControl=trainControl(classProbs=TRUE)` when calling train. Also, these methods do not work if classes have numbers as names. Hint: change the levels like this:
 
 ```{r, eval = FALSE}
 dat$train$y <- recode_factor(dat$train$y, "2"="two", "7"="seven")

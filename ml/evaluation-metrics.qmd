@@ -2,12 +2,15 @@
 
 Before we start describing approaches to optimize the way we build algorithms, we first need to define what we mean when we say one approach is better than another. In this section, we focus on describing ways in which machine learning algorithms are evaluated. Specifically, we need to quantify what we mean by "better".
 
-For our first introduction to machine learning concepts, we will start with a boring and simple example: how to predict sex using height. As we explain machine learning step by step, this example will let us set down the first building block. Soon enough, we will be undertaking more interesting challenges. FIX We use the __caret__ package, which has several useful functions for building and assessing machine learning methods and we introduce in more detail in @sec-caret, and for a first example, we use the height data in dslabs.
+For our first introduction to machine learning concepts, we will start with a boring and simple example: how to predict sex using height. As we explain how to build a prediction algorithm with this example, we will start to set down the first building block needed to understand machine learning. Soon enough, we will be undertaking more interesting challenges. 
+
+
+We introduce the **caret** package, which provides useful functions to facilitate machine learning in R, and we describe it in more detail in @sec-caret. For our first example, we use the height data provided by the **dslabs** package.
 
 ```{r, message=FALSE, warning=FALSE, cache=FALSE}
-library(tidyverse)
 library(caret)
 library(dslabs)
+
 ```
 
 We start by defining the outcome and predictors. 
@@ -70,8 +73,9 @@ Not surprisingly, our accuracy is about 50%. We are guessing!
 
 Can we do better? Exploratory data analysis suggests we can because, on average, males are slightly taller than females:
 
-```{r}
-heights |> group_by(sex) |> summarize(mean(height), sd(height))
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+heights |> group_by(sex) |> summarize(avg = mean(height), sd = sd(height))
 ```
 
 But how do we make use of this insight? Let's try another simple approach: predict `Male` if height is within two standard deviations from the average male. 
@@ -92,7 +96,7 @@ Here we examine the accuracy of 10 different cutoffs and pick the one yielding t
 
 ```{r}
 cutoff <- seq(61, 70)
-accuracy <- map_dbl(cutoff, function(x){
+accuracy <- sapply(cutoff, function(x){
   y_hat <- factor(ifelse(train_set$height > x, "Male", "Female"), levels = levels(test_set$sex))
   mean(y_hat == train_set$sex)
 })
@@ -252,7 +256,7 @@ Let's rebuild our prediction algorithm, but this time maximizing the F-score ins
 
 ```{r}
 cutoff <- seq(61, 70)
-F_1 <- map_dbl(cutoff, function(x){
+F_1 <- sapply(cutoff, function(x){
   y_hat <- factor(ifelse(train_set$height > x, "Male", "Female"), levels(test_set$sex))
   F_meas(data = y_hat, reference = factor(train_set$sex))
 })
@@ -334,13 +338,12 @@ The ROC curve plots sensitivity, represented as the TPR, versus 1 - specificity 
 
 ```{r roc-1}
 probs <- seq(0, 1, length.out = 10)
-guessing <- map_df(probs, function(p){
+guessing <- sapply(probs, function(p){
   y_hat <- 
-    sample(c("Male", "Female"), nrow(test_set), replace = TRUE, prob = c(p, 1 - p)) |> 
+    sample(c("Male", "Female"), nrow(test_set), TRUE, c(p, 1 - p)) |> 
     factor(levels = c("Female", "Male"))
-  list(method = "Guessing",
-       FPR = 1 - specificity(y_hat, test_set$sex),
-       TPR = sensitivity(y_hat, test_set$sex))
+  c(FPR = 1 - specificity(y_hat, test_set$sex),
+    TPR = sensitivity(y_hat, test_set$sex))
 })
 ```
 
@@ -349,12 +352,11 @@ We can use similar code to compute these values for our our second approach. By 
 
 ```{r, echo=FALSE}
 cutoffs <- c(50, seq(60, 75), 80)
-height_cutoff <- map_df(cutoffs, function(x){
+height_cutoff <- sapply(cutoffs, function(x){
   y_hat <- ifelse(test_set$height > x, "Male", "Female") |> 
     factor(levels = c("Female", "Male"))
-   list(method = "Height cutoff",
-        FPR = 1 - specificity(y_hat, test_set$sex),
-        TPR = sensitivity(y_hat, test_set$sex))
+  c(FPR = 1 - specificity(y_hat, test_set$sex),
+    TPR = sensitivity(y_hat, test_set$sex))
 })
 ```
 
@@ -436,7 +438,7 @@ bind_rows(tmp_1, tmp_2) |>
   facet_wrap(~ Positive)
 ```
 
-From this plot, we immediately see that the precision of guessing is not high. This is because the prevalence is low. FIX [SHOULD MALE AND FEMALE BE IN CAPS?] We also see that if we change positives to mean male instead of female, the ROC curve remains the same, but the precision recall plot changes.
+From the plot on the left, we immediately see that the precision of guessing is not high. This is because the prevalence is low.  From the plot on the right, we also see that if we change $Y=1$ to mean `Male` instead of `Female`, the precision increases. Note that the ROC curve would remain the same.
 
 
 ## Mean Squared Error {#sec-mse}
@@ -472,9 +474,9 @@ In practice, we often report the root mean squared error (RMSE), which is simply
 :::
 
 However, the estimate $\hat{\text{MSE}}$ is a random variable. In fact, $\text{MSE}$ and $\hat{\text{MSE}}$ are often referred to as the true error and apparent error, respectively.
-Due to the complexity of some machine learning, it is difficult to derive its statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation and FIX an approach to estimating the MSE that get closer the true MSE. 
+Due to the complexity of some machine learning, it is difficult to derive the statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation an approach to estimating the MSE. 
 
-We end the chapter by pointing out that there are loss functions other than the squared loss. For example, the _Mean Absolute Error_ uses absolute values, $|\hat{Y}_i - Y_i|$ instead of squaring the errors 
+We end this chapter by pointing out that there are loss functions other than the squared loss. For example, the _Mean Absolute Error_ uses absolute values, $|\hat{Y}_i - Y_i|$ instead of squaring the errors 
 $(\hat{Y}_i - Y_i)^2$. However, in this book we focus on minimizing square loss since it is the most widely used.
 
 ## Exercises 
@@ -510,5 +512,6 @@ y <- factor(dat$sex, c("Female", "Male"))
 
   
 6\. What is the prevalence (% of females) in the `dat` dataset defined above?
+
 
   

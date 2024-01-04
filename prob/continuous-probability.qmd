@@ -9,13 +9,13 @@ We used the heights of adult male students as an example:
 ```{r,  message=FALSE, warning=FALSE}
 library(tidyverse)
 library(dslabs)
-x <- heights %>% filter(sex=="Male") %>% pull(height)
+x <- heights %>% filter(sex == "Male") %>% pull(height)
 ```
 
 and defined the empirical cumulative distribution function (eCDF) as
 
 ```{r}
-F <- function(a) mean(x<=a)
+F <- function(a) mean(x <= a)
 ```
 
 which, for any value `a`, gives the proportion of values in the list `x` that are smaller or equal than `a`.
@@ -44,12 +44,14 @@ A mathematical result that is very useful in practice is that, for most CDFs, we
 
 $$
 F(b) - F(a) = \int_a^b f(x)\,dx
-$$ $f(x)$ is referred to as the *probability density function*. The intuition is that even for continuous outcomes we can define tiny intervals, that are almost as small as points, that have positive probabilities. If we think of the size of these intervals as the base of a rectangle, the probability density function $f$ determines the height of the rectangle so that the summing up of the area of these rectangles approximate the probability $F(b) - F(a)$. This sum can be written as Reimann sum that is approximated by an integral:
+$$ 
+
+$f(x)$ is referred to as the *probability density function*. The intuition is that even for continuous outcomes we can define tiny intervals, that are almost as small as points, that have positive probabilities. If we think of the size of these intervals as the base of a rectangle, the probability density function $f$ determines the height of the rectangle so that the summing up of the area of these rectangles approximate the probability $F(b) - F(a)$. This sum can be written as Reimann sum that is approximated by an integral:
 
 ```{r echo=FALSE}
-cont <- data.frame(x=seq(0,5, len = 300), y=dgamma(seq(0,5, len = 300), 2, 2))
-disc <- data.frame(x=seq(0, 5, 0.075), y=dgamma(seq(0, 5, 0.075), 2, 2))
-ggplot(mapping = aes(x,y)) +
+cont <- data.frame(x = seq(0, 5, len = 300), y = dgamma(seq(0, 5, len = 300), 2, 2))
+disc <- data.frame(x = seq(0, 5, 0.075), y = dgamma(seq(0, 5, 0.075), 2, 2))
+ggplot(mapping = aes(x, y)) +
   geom_col(data =  disc) +
   geom_line(data = cont) +
   ylab("f(x)")
@@ -105,7 +107,7 @@ pnorm(70.5, m, s) - pnorm(69.5, m, s)
 However, the approximation is not as useful for other intervals. For instance, notice how the approximation breaks down when we try to estimate:
 
 ```{r}
-mean(x <= 70.9) - mean(x<=70.1)
+mean(x <= 70.9) - mean(x <= 70.1)
 ```
 
 with:
@@ -124,7 +126,9 @@ $$
 \mbox{Pr}(X=4) = 1/6
 $$
 
-The CDF can then easily be defined: $$
+The CDF can then easily be defined: 
+
+$$
 F(4) = \mbox{Pr}(X\leq 4) =  \mbox{Pr}(X = 4) +  \mbox{Pr}(X = 3) +  \mbox{Pr}(X = 2) +  \mbox{Pr}(X = 1) 
 $$
 
@@ -145,10 +149,10 @@ For example, to use the normal approximation to estimate the probability of some
 which mathematically is the grey area below:
 
 ```{r intergrals, echo=FALSE}
-dat <- tibble(x = seq(-4, 4, length=100) * s + m,
+dat <- tibble(x = seq(-4, 4, length = 100)*s + m,
               y = dnorm(x, m, s))
 
-dat_ribbon <- filter(dat, x >= 2 * s + m)
+dat_ribbon <- filter(dat, x >= 2*s + m)
 
 ggplot(dat, aes(x, y)) +
   geom_line() +
@@ -175,7 +179,7 @@ Not surprisingly, the distribution looks normal:
 ```{r simulated-heights, echo=FALSE}
 data.frame(simulated_heights = simulated_heights) |>
   ggplot(aes(simulated_heights)) + 
-  geom_histogram(color="black", binwidth = 1) 
+  geom_histogram(color = "black", binwidth = 1) 
 ```
 
 This is one of the most useful functions in R, as it will permit us to generate data that mimics natural events and answers questions related to what could happen by chance by running Monte Carlo simulations.
@@ -200,7 +204,7 @@ Here is the resulting distribution:
 
 ```{r simulated-tallest-height, echo=FALSE}
 data.frame(tallest = tallest) |> ggplot(aes(tallest)) + 
-  geom_histogram(color="black", binwidth = 1) 
+  geom_histogram(color = "black", binwidth = 1) 
 ```
 
 Note that it does not look normal.
@@ -237,18 +241,18 @@ $$
 Now we subtract $\mu$ to both sides and then divide both sides by $\sigma$:
 
 $$
-\mbox{Pr}\left(\frac{X-m}{s} \leq \frac{a-m}{s} \right)
+\mbox{Pr}\left(\frac{X-\mu}{\sigma} \leq \frac{a-\mu}{\sigma} \right)
 $$
 
 The quantity on the left is a standard normal random variable. It has an average of 0 and a standard error of 1. We will call it $Z$:
 
 $$
-\mbox{Pr}\left(Z \leq \frac{a-m}{s} \right)
+\mbox{Pr}\left(Z \leq \frac{a-\mu}{\sigma} \right)
 $$
 
-FIX So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - m)/s$. If `mu` is the average and `sigma` the standard error, which of the following R code would give us the right answer in every situation?
+So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - \mu)/\sigma$. If `mu` is the average and `sigma` the standard error, which of the following R code would give us the right answer in every situation?
 
-a.  `mean(X<=a)`
+a.  `mean(X <= a)`
 b.  `pnorm((a - m)/s)`
 c.  `pnorm((a - m)/s, m, s)`
 d.  `pnorm(a)`

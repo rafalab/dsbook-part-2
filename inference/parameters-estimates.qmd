@@ -15,7 +15,7 @@ img_path <- "img"
 
 We start by connecting probability theory to the task of using polls to learn about a population.
 
-FIX ARE WE TALKING ABOUT TWO DIFFERENT POLLS? Although typically the results of these polls are kept private, similar polls are conducted by news organizations because results tend to be of interest to the general public and made public. FIX WHICH DATA We will eventually be looking at such data.
+Although typically the results of polls run by political candidates are kept private, polls are also conducted by news organizations because results tend to be of interest to the general public and made public. We will eventually be looking at these public datasets.
 
 Real Clear Politics[^parameters-estimates-1] is an example of a news aggregator that organizes and publishes poll results. For example, they present the following poll results, reporting estimates of the popular vote for the 2016 presidential election[^parameters-estimates-2]:
 
@@ -37,7 +37,7 @@ tab <- tab |> mutate(Poll = stringr::str_remove(Poll, "\\/.*")) |>
     Poll == "CBS NewsCBS News" ~ "CBS News",
     TRUE ~ Poll))
 names(tab) <- stringr::str_remove_all(names(tab), "\\s(.*)")    
-if(knitr::is_html_output()){
+if (knitr::is_html_output()) {
   knitr::kable(tab, "html") |>
     kableExtra::kable_styling(bootstrap_options = "striped", full_width = FALSE)
 } else{
@@ -92,7 +92,7 @@ Can we do this with the 25 observations above? It is certainly informative. For 
 We want to construct an estimate of $p$ using only the information we observe. An estimate should be thought of as a summary of the observed data that we think is informative about the parameter of interest. It seems intuitive to think that the proportion of blue beads in the sample $0.48$ must be at least related to the actual proportion $p$. But do we simply predict $p$ to be 0.48? First, remember that the sample proportion is a random variable. If we run the command `take_poll(25)` four times, we get a different answer each time, since the sample proportion is a random variable.
 
 ```{r four-simulated-polls, echo=FALSE}
-par(mfrow=c(2,2), mar = c(3, 1, 3, 0), mgp = c(1.5, 0.5, 0)) 
+par(mfrow = c(2,2), mar = c(3, 1, 3, 0), mgp = c(1.5, 0.5, 0)) 
 take_poll(25); take_poll(25); take_poll(25); take_poll(25)
 ```
 
@@ -100,7 +100,7 @@ Observe that in the four random samples shown above, the sample proportions rang
 
 ### The sample average
 
-FIX CHECK PARA Conducting an opinion poll is being modeled as taking a random sample from an urn. We propose using the proportion of blue beads in our sample as an *estimate* of the parameter $p$. Once we have this estimate, we can easily report an estimate for the spread $2p-1$. However, for simplicity, we will illustrate the concepts for estimating $p$. We will use our knowledge of probability to justify our use of the sample proportion and to quantify its proximity to the population proportion $p$.
+Conducting an opinion poll is being modeled as taking a random sample from an urn. We propose using the proportion of blue beads in our sample as an *estimate* of the parameter $p$. Once we have this estimate, we can easily report an estimate for the spread $2p-1$. However, for simplicity, we will illustrate the concepts for estimating $p$. We will use our knowledge of probability to justify our use of the sample proportion and to quantify its proximity to the population proportion $p$.
 
 We start by defining the random variable $X$ as $X=1$, if we pick a blue bead at random, and $X=0$ if it is red. This implies that the population is a list of 0s and 1s. If we sample $N$ beads, then the average of the draws $X_1, \dots, X_N$ is equivalent to the proportion of blue beads in our sample. This is because adding the $X$s is equivalent to counting the blue beads, and dividing this count by the total $N$ is equivalent to computing a proportion. We use the symbol $\bar{X}$ to represent this average. In statistics textbooks, a bar on top of a symbol typically denotes the average. The theory we just covered about the sum of draws becomes useful because the average is a sum of draws multiplied by the constant $1/N$:
 
@@ -112,9 +112,13 @@ Here, we encounter an important difference compared to what we did in the sectio
 
 ### Parameters
 
-FIX CHECK SENT Just as we use variables to define unknowns in systems of equations, in statistical inference, we define *parameters* to represent unknown parts of our models. In the urn model, which we are using to simulate an opinion poll, we do not know the proportion of blue beads in the urn. We define the parameters $p$ to represent this quantity. $p$ is the average of the urn because if we take the average of the 1s (blue) and 0s (red), we get the proportion of blue beads. Since our main goal is determining $p$, we are going to *estimate this parameter*.
+Just as we use variables to define unknowns in systems of equations, in statistical inference, we define *parameters* to represent unknown parts of our models. In the urn model, which we are using to simulate an opinion poll, we do not know the proportion of blue beads in the urn. We define the parameters $p$ to represent this quantity. Since our main goal is determining $p$, we are going to *estimate this parameter*.
 
-FIX PARA The concepts presented here on how we estimate parameters, and provide insights into how good these estimates are, extend to many data science tasks. For example, we may want to determine the difference in health improvement between patients receiving treatment and a control group, investigate the health effects of smoking on a population, analyze the differences in racial groups of fatal shootings by police, or assess the rate of change in life expectancy in the US during the last 10 years. All these questions can be framed as a task of estimating a parameter from a sample.
+:::{.callout-note}
+Introductory statistics textbooks usually use the population average as the first example of a parameter. Note that in our example the parameter of interest $p$ is defined by the proportion of 1s (blue) and 0s (red) in the urn, which is also the average of the numbers in the urn. Our parameter of interest can therefore be thought of as a population average.
+:::
+
+The concepts presented here on how we estimate parameters, and provide insights into how good these estimates are, extend to many data analysis tasks. For example, we may want to determine the difference in health improvement between patients receiving treatment and a control group, investigate the health effects of smoking on a population, analyze the differences in racial groups of fatal shootings by police, or assess the rate of change in life expectancy in the US during the last 10 years. All these questions can be framed as a task of estimating a parameter from a sample.
 
 ## Polling versus forecasting
 
@@ -179,6 +183,6 @@ or 1.5 percentage points. So even with large polls, for close elections, $\bar{X
 10\. Given the answer to exercise 9, which of the following best describes your strategy of using a sample size of $N=25$?
 
 a.  The expected value of our estimate $2\bar{X}-1$ is $\mu$, so our prediction will be accurate.
-b.  FIX 'THROWING US OFF' HOW ABOUT GIVING US AN INACCURATE PREDICTION? Our standard error is larger than the difference, so the chances of $2\bar{X}-1$ being positive and throwing us off were not that small. We should pick a larger sample size.
+b.  Our standard error is larger than the difference, so the chances of $2\bar{X}-1$ representing a large margin are not small. We should pick a larger sample size.
 c.  The difference is 10% and the standard error is about 0.2, therefore much smaller than the difference.
 d.  Because we don't know $p$, we have no way of knowing that making $N$ larger would actually improve our standard error.

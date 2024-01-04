@@ -145,13 +145,13 @@ p <- t(qr.solve(crossprod(q)) %*% t(q) %*% t(e))
 ```
 :::
 
-FIX We can see that there type of users:
+The histogram below shows there are three type of users: those that love mob movies and hate romance movies, those that don't care, and those that love romance movies and hate mob movies. 
 
 ```{r}
 hist(p, breaks = seq(-2,2,0.1))
 ```
 
-love mob and hate romance movies, don't care, and love romance and hate mob movies. We see that we approximate $\varepsilon_{i,j}$ with $p_iq_j$. We convert the vectors to matrices to be able to use linear algebra:
+To see that we can approximate $\varepsilon_{i,j}$ with $p_iq_j we convert the vectors to matrices and use linear algebra:
 
 ```{r}
 p <- matrix(p); q <- matrix(q)
@@ -171,13 +171,13 @@ q <- cbind(c(-1, -1, -1, 1, 1, 1),
            c(1, 1, -1, 1, -1, 1))
 ```
 
-And obtain estimates for each user:
+We can then obtain estimates for each user:
 
 ```{r}
-p <- t(apply(e, 1, function(y) lm(y~q-1)$coef))
+p <- t(apply(e, 1, function(y) lm(y~q-1)$coefficient))
 ```
 
-We use the transpose because `apply` binds results into columns and we want a row for each user. 
+Note that we use the transpose `t` because `apply` binds results into columns and we want a row for each user. 
 
 Our approximation based on two factors does a even better job of predicting how our residuals deviate from 0:
 
@@ -185,7 +185,7 @@ Our approximation based on two factors does a even better job of predicting how 
 plot(p %*% t(q), e)
 ```
 
-This analysis provides insights into the process generating our data. Note that it also provides compression: the $\120 \times 6$ matrix $\boldsymbol{\varepsilon}$, with 720 observation, is well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of 252 parameters. 
+This analysis provides insights into the process generating our data. Note that it also provides compression: the $120 \times 6$ matrix $\boldsymbol{\varepsilon}$, with 720 observation, is well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of 252 parameters. 
 
 Our approximation with two factors can be written as:
 
@@ -251,7 +251,7 @@ $$
 $$
 
 
-Notice this model is not identifiable since we can multiply the $\mathbf{P}$ by any positive constant and obtain the same model by dividing $\mathbf{Q}$ by this same constant. FIX (constrainT?) To avoid this, we impose the constrain that the matrix $\mathbf{Q}$ is orthogonal:
+Notice this model is not identifiable since we can multiply the $\mathbf{P}$ by any positive constant and obtain the same model by dividing $\mathbf{Q}$ by this same constant.  To avoid this, we impose the constraint that $\mathbf{Q}$ is orthogonal:
 
 $$
 \mathbf{Q}^\top\mathbf{Q} = \mathbf{I}
@@ -285,13 +285,12 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 $$
 
 
-Unfortunately, we can't fit this model with `prcomp` due to the missing values. We introduce the **missMDA** package that provides an approach `imputePCA` to fit such models when matrix entries are missing, a very common occurrence in movie recommendations. Also, because there are small sample sizes for several movie pairs, it is useful to regularize the $p$s. The `imputePCA` function also permits regularization.
+Unfortunately, we can't fit this model with `prcomp` due to the missing values. We introduce the **missMDA** package that provides an approach to fit such models when matrix entries are missing, a very common occurrence in movie recommendations, through the function `imputePCA`. Also, because there are small sample sizes for several movie pairs, it is useful to regularize the $p$s. The `imputePCA` function also permits regularization.
 
-FIX We estimate use the estimates for $\mu$, the $\alpha$s and the $\beta$s from the previous chapter and estimate two factors (`ncp = 2`) to movies rated more than 25 times (and _Scent of a Woman_), using the same penalty we used for the $\beta$s (`coeff.ridge = `) for the penalization.
+We use the estimates for $\mu$, the $\alpha$s and $\beta$s from the previous chapter, and estimate two factors (`ncp = 2`). We fit the model to movies rated more than 25 times, include _Scent of a Woman_, which does not meet this criterion, because we previously used it as an example. Finally, we use regularization by setting the parameter `coeff.ridge` to the same value used to estimate the $\beta$s.
 
 ```{r}
 library(missMDA)
-
 ind <- colSums(!is.na(y)) >= 25 | colnames(y) == "3252"
 imputed <- imputePCA(r[,ind], ncp = 2, coeff.ridge = lambda)
 ```
@@ -326,7 +325,7 @@ We see that our prediction improves:
 rmse(y_test - pred[rownames(y_test), colnames(y_test)])
 ```
 
-We note that further improvements can be obtained by optimizing the regularization penalty, considering more factors, FIX and accounting for the fact that missing that is likely more predictive of not liking the movie.
+We note that further improvements can be obtained by 1) optimizing the regularization penalty, 2) considering more than 2 factors, and 3) accounting for the fact that a missing rating provides information: people tend to not watch movies they know they won't like.
 
 ### Visualizing factors
 
@@ -388,7 +387,7 @@ $$
 \mathbf{U}^\top\mathbf{D}\mathbf{U} = \mathbf{D}^2
 $$
 
-FIX In, we can obtain the SVD using the function `svd`. To see the connection to PCA, notice that:
+In R, we can obtain the SVD using the function `svd`. To see the connection to PCA, notice that:
 
 ```{r}
 x <- matrix(rnorm(1000), 100, 10)
@@ -499,10 +498,11 @@ plot `ss_y` against the column number and then do the same for `ss_yv`. What do 
     
 7\. We see that almost 99% of the variability is explained by the first three columns of $\mathbf{YV}  = \mathbf{UD}$. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let's show a useful computational trick to avoid creating the matrix `diag(s$d)`. To motivate this, we note that if we write $\mathbf{U}$ out in its columns $[\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]$, then $\mathbf{UD}$ is equal to:
 
-$$\mathbf{UD} = [\mathbf{u}_1 d_{1,1}, \mathbf{u}_2 d_{2,2}, \dots, \mathbf{u}_p d_{p,p}]$$
+$$
+\mathbf{UD} = [\mathbf{u}_1 d_{1,1}, \mathbf{u}_2 d_{2,2}, \dots, \mathbf{u}_p d_{p,p}]
+$$
 
-FIX Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` nor matrix multiplication.
-
+Use the `sweep` function to compute $UD$ without constructing `diag(s$d)` and without using matrix multiplication.
 
 
 8\. We know that $\mathbf{u}_1 d_{1,1}$, the first column of $\mathbf{UD}$, has the most variability of all the columns of $\mathbf{UD}$. Earlier we saw an image of $Y$: 
@@ -528,7 +528,7 @@ This implies that multiplying $\mathbf{Y}$ by the first column of $\mathbf{V}$ m
 10\. We already saw that we can rewrite $UD$ as:
 
 $$
-\mathbf{u}_1 d_{1,1} + \mathbf{u}_2 d_{2,2} + \dots + \mathbf{u}_p d_{p,p}$
+\mathbf{u}_1 d_{1,1} + \mathbf{u}_2 d_{2,2} + \dots + \mathbf{u}_p d_{p,p}
 $$
 
 with $\mathbf{u}_j$ the j-th column of $\mathbf{U}$. This implies that we can rewrite the entire SVD as:
@@ -541,7 +541,9 @@ with $\mathbf{V}_j$ the jth column of $\mathbf{V}$. Plot $\mathbf{u}_1$, then pl
 
 11\. We see that with just a vector of length 100, a scalar, and a vector of length 24, we actually come close to reconstructing the original $100 \times 24$ matrix. This is our first matrix factorization:
 
-$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top}$$
+$$ 
+\mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top}
+$$
 We know it explains `s$d[1]^2/sum(s$d^2) * 100` percent of the total variability. Our approximation only explains the observation that good students tend to be good in all subjects. But another aspect of the original data that our approximation does not explain was the higher similarity we observed within subjects. We can see this by computing the difference between our approximation and original data and then computing the correlations. You can see this by running this code:
 
 ```{r, eval=FALSE}
@@ -555,7 +557,9 @@ Now that we have removed the overall student effect, the correlation plot reveal
 
 12\. The second column clearly relates to a student's difference in ability in math/science versus the arts. We can see this most clearly from the plot of `s$v[,2]`. Adding the matrix we obtain with these two columns will help with our approximation:
 
-$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} $$
+$$
+\mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top}
+$$
 
 We know it will explain:
 
@@ -577,7 +581,9 @@ and see that the structure that is left is driven by the differences between mat
 13\. The third column clearly relates to a student's difference in ability in math and science. We can see this most clearly from the plot of `s$v[,3]`. Adding the matrix we obtain with these two columns will help with our approximation:
 
 
-$$ \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}$$
+$$
+\mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}
+$$
 
 We know it will explain:
 
@@ -595,7 +601,9 @@ axis(side = 2, 1:ncol(y), rev(colnames(y)), las = 2)
 
 We no longer see structure in the residuals: they seem to be independent of each other. This implies that we can describe the data with the following model:
 
-$$ \mathbf{Y} =  \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top} + \varepsilon$$
+$$
+\mathbf{Y} =  \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top} + \varepsilon
+$$
 
 with $\varepsilon$ a matrix of independent identically distributed errors. This model is useful because we summarize $100 \times 24$ observations with $3 \times (100+24+1) = 375$ numbers. Furthermore, the three components of the model have useful interpretations: 1) the overall ability of a student, 2) the difference in ability between the math/sciences and arts, and 3) the remaining differences between the three subjects. The sizes $d_{1,1}, d_{2,2}$ and $d_{3,3}$ tell us the variability explained by each component. Finally, note that the components $d_{j,j} \mathbf{u}_j \mathbf{v}_j^{\top}$ are equivalent to the jth principal component.
 

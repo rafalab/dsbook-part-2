@@ -58,7 +58,7 @@ g^{-1}(\hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2) = 0.5 \implies
 x_2 = -\hat{\beta}_0/\hat{\beta}_2 -\hat{\beta}_1/\hat{\beta}_2 x_1
 $$
 
-Thus, much like with regression, $x_2$ is a linear function of $x_1$. This implies that our logistic regression approach has no chance of capturing the non-linear nature of the true $p(\mathbf{x})$. FIX We now described some techniques that estimate the conditional probability in a way that is more flexible. 
+Thus, much like with regression, $x_2$ is a linear function of $x_1$. This implies that our logistic regression approach has no chance of capturing the non-linear nature of the true $p(\mathbf{x})$. We now describe some techniques that estimate the conditional probability in a more flexible way. 
 
 :::{.callout-note}
 You are ready to do exercises 1 - 11.
@@ -646,7 +646,7 @@ train_rpart <- train(y ~ .,
 y_hat <- predict(train_rpart, mnist_27$test)
 ```
 
-FIX If we use classification tree performs on the 2 or 7 example, we achieve an accuracy of `r confusionMatrix(y_hat, mnist_27$test$y)$overall["Accuracy"]` which is better than regression, but is not as good as what we achieved with kernel methods.
+If we use a classification tree on the 2 or 7 example, we achieve an accuracy of `r confusionMatrix(y_hat, mnist_27$test$y)$overall["Accuracy"]` which is better than regression, but is not as good as what we achieved with kernel methods.
 
 The plot of the estimated conditional probability shows us the limitations of classification trees:
 
@@ -662,11 +662,11 @@ grid.arrange(p2, p1, nrow = 1)
 
 Note that with decision trees, it is difficult to make the boundaries smooth since each partition creates a discontinuity.
 
-Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are easy to visualize (if small enough). Finally, they can model human decision processes and don't require use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-train and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.
+Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are also easy to visualize (if small enough). Finally, they can model human decision processes and don't require use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-train and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.
 
 ## Random forests
 
-Random forests are a **very popular** machine learning approach that addresses the shortcomings of decision trees using a clever idea. The goal is to improve prediction performance and reduce instability by *averaging* multiple decision trees (a forest of trees constructed with randomness). It has two features that help accomplish this.
+Random forests are a **very popular** machine learning approach that addresses the shortcomings of decision trees using a clever idea. The goal is to improve prediction performance and reduce instability by *averaging* multiple decision trees: a _forest_ of trees constructed with _randomness_. It has two features that help accomplish this.
 
 The first step is *bootstrap aggregation* or *bagging*. The general idea is to generate many predictors, each using regression or classification trees, and then forming a final prediction based on the average prediction of all these trees. To assure that the individual trees are not the same, we use the bootstrap to induce randomness. These two features combined explain the name: the bootstrap makes the individual trees **randomly** different, and the combination of trees is the **forest**. The specific steps are as follows.
 
@@ -689,7 +689,7 @@ library(randomForest)
 fit <- randomForest(margin ~ ., data = polls_2008) 
 ```
 
-Note that if we apply the function `plot` to the resulting object, stored in `fit`, we see how the error rate of our algorithm changes as we add trees:
+Note that if we apply the function `plot` to the resulting object, we see how the error rate of our algorithm changes as we add trees:
 
 ```{r, eval = FALSE}
 rafalib::mypar()
@@ -701,9 +701,15 @@ rafalib::mypar()
 plot(fit)
 ```
 
-FIX [until WE HAVE about] In this case, the accuracy improves as we add more trees until about 30 trees where accuracy stabilizes.
+In this case, the accuracy improves as we add more trees until we have used about 30 trees after which  accuracy stabilizes.
 
-The resulting estimate for this random forest can be seen like this:
+The resulting estimate for this random forest, obtained with
+
+```{r, eval=FALSE}
+y_hat <-  predict(fit, newdata = polls_2008
+```
+
+is shown with the red curve below:
 
 ```{r polls-2008-rf-fit, echo=FALSE}
 polls_2008 |>
@@ -851,7 +857,7 @@ dat <- MASS::mvrnorm(n = 100, c(69, 69), Sigma) |>
   data.frame() |> setNames(c("x", "y"))
 ```
 
-Use the __caret__ package to partition into a test and training set of equal size. Train a linear model and report the RMSE. Repeat this exercise 100 times and make a histogram of the RMSEs and report the average and standard deviation. Hint: Adapt the code shown earlier as seen below.
+Use the __caret__ package to partition into a test and training set of equal size. Train a linear model and report the RMSE. Repeat this exercise 100 times and make a histogram of the RMSEs and report the average and standard deviation. Hint: adapt the code shown earlier like this:
 
 ```{r, eval = FALSE}
 library(caret)
@@ -867,7 +873,7 @@ sqrt(mean((y_hat - test_set$y)^2))
 and put it inside a call to `replicate`.
 
 
-2\. Now we will repeat the above but using larger datasets. Repeat exercise 1 but for datasets with `n <- c(100, 500, 1000, 5000, 10000)`. Save the average and standard deviation of RMSE from the 100 repetitions. Hint: Use the `sapply` or `map` functions.
+2\. Now we will repeat the above but using larger datasets. Repeat exercise 1 but for datasets with `n <- c(100, 500, 1000, 5000, 10000)`. Save the average and standard deviation of RMSE from the 100 repetitions. Hint: use the `sapply` or `map` functions.
 
 
 3\. Describe what you observe with the RMSE as the size of the dataset becomes larger.

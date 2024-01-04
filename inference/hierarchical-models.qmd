@@ -21,7 +21,7 @@ Since the 2008 elections, organizations other than FiveThirtyEight have started 
 ```{r, echo=FALSE, out.width="100%"}
 #knitr::include_graphics(file.path(img_path, "pollster-2016-predictions.png"))
 tmp <- data.frame(NYT = "  85%", `538` = "  71%", HuffPost = "  98%", PW = "  89%", PEC = " >99%", DK = "  92%", Cook = " Lean Dem", Roth = " Lean Dem", check.names = FALSE, row.names = "Win Prob")
-if(knitr::is_html_output()){
+if (knitr::is_html_output()) {
   knitr::kable(tmp, "html") |>
     kableExtra::kable_styling(bootstrap_options = "striped", full_width = FALSE)
 } else{
@@ -39,7 +39,7 @@ Meanwhile, the Princeton Election Consortium (PEC) gave Trump less than 1% chanc
 So why did FiveThirtyEight's model fair so much better than others? How could PEC and Huffington Post get it so wrong if they were using the same data? In this chapter, we describe how FiveThirtyEight used a hierarchical model to correctly account for key sources of variability and outperform all other forecasters. For illustrative purposes, we will continue examining our popular vote example. In the final section, we will describe the more complex approach used to forecast the electoral college result.
 
 
-## The general bias
+## The general bias {#sec-general-bias}
 
 In the previous chapter, we computed the posterior probability of Hillary Clinton winning the popular vote with a standard Bayesian analysis and found it to be very close to 100%. However, FiveThirtyEight gave her a 81.4% chance[^models-4]. What explains this difference?
 Below, we describe the _general bias_, another source of variability, included in the FiveThirtyEight model, that accounts for the difference.
@@ -67,7 +67,7 @@ J <- 6
 N <- 2000
 mu <- .021
 p <- (mu + 1)/2
-X <- rnorm(J, mu, 2 * sqrt(p * (1 - p) / N))
+X <- rnorm(J, mu, 2*sqrt(p*(1 - p)/N))
 ```
 
 Now, suppose we have $J=6$ polls from each of $I=5$ different pollsters. For simplicity, let's say all polls had the same sample size $N$. The urn model tell us the distribution is the same for all pollsters, so to simulate data, we use the same model for each:
@@ -77,7 +77,7 @@ I <- 5
 J <- 6
 N <- 2000
 X <- sapply(1:I, function(i){
-  rnorm(J, mu, 2 * sqrt(p * (1 - p) / N))
+  rnorm(J, mu, 2*sqrt(p*(1 - p)/N))
 })
 ```
 
@@ -94,7 +94,7 @@ polls |> group_by(pollster) |>
   select(pollster, spread) |>
   mutate(type = "Observed data", pollster = as.character(pollster)) |>
   bind_rows(tibble(spread = as.vector(X) , 
-                      pollster = rep(as.character(1:I), each=J),
+                      pollster = rep(as.character(1:I), each = J),
                       type = "Simulated data")) |>
   mutate(type = factor(type, levels = c("Simulated data", "Observed data"))) |>
   ggplot(aes(pollster, spread)) + 
@@ -120,10 +120,10 @@ I <- 5
 J <- 6
 N <- 2000
 mu <- .021
-p <- (mu + 1) / 2
+p <- (mu + 1)/2
 h <- rnorm(I, 0, 0.025)
 X <- sapply(1:I, function(i){
-  mu + h[i] + rnorm(J, 0, 2 * sqrt(p * (1 - p) / N))
+  mu + h[i] + rnorm(J, 0, 2*sqrt(p*(1 - p)/N))
 })
 ```
 
@@ -139,7 +139,7 @@ data.frame(Spread = as.vector(X) , Pollster = as.factor(rep(1:I, each = J))) |>
 
 Note that $h_i$ is common to all the observed spreads from a specific pollster. Different pollsters have a different $h_i$, which explains why we can see the groups of points shift up and down from pollster to pollster. 
 
-Now, in the model above, we assume the average house effect is 0. We think that for every pollster biased in favor of our party, there is another one in favor of the other, and assume the standard deviation is $\sigma_h$. But, historically, we see that every election has a general bias affecting all polls. We can observe this with the 2016 data, but if we collect historical data, we see that the average of polls misses by more than models like the one above predict. To see this, we would take the average of polls for each election year and compare it to the actual value. If we did this, we would see a difference with a standard deviation of between 2-3%. FIX To incorporate this into the model, we can add another level account for this variability: 
+Now, in the model above, we assume the average house effect is 0. We think that for every pollster biased in favor of our party, there is another one in favor of the other, and assume the standard deviation is $\sigma_h$. But, historically, we see that every election has a general bias affecting all polls. We can observe this with the 2016 data, but if we collect historical data, we see that the average of polls misses by more than models like the one above predict. To see this, we would take the average of polls for each election year and compare it to the actual value. If we did this, we would see a difference with a standard deviation of between 2-3%. To account for this variability we can add another level to the model as follows: 
 
 $$
 \begin{aligned}
@@ -186,7 +186,7 @@ has expected value $\mu$; thus, it provides an unbiased estimate of the outcome 
 It turns out that, because the $X_i$ are correlated, estimating the standard error is more complex than what we have described up to now. Specifically, using advanced statistical calculations not shown here, we can show that the typical variance (standard error squared) estimate:
 
 ```{r}
-s2 <- with(one_poll_per_pollster, sd(spread)^2 / length(spread))
+s2 <- with(one_poll_per_pollster, sd(spread)^2/length(spread))
 ```
 
 will consistently underestimate the true standard error by about $\sigma_b^2$. And, as mentioned earlier, to estimate $\sigma_b$, we need data from several elections. By collecting and analyzing polling data from several elections, FiveThirtyEight estimates this variability and finds that $\sigma_b \approx 0.025$. We can therefore greatly improve our standard error estimate by adding this quantity:
@@ -201,9 +201,9 @@ If we redo the Bayesian calculation taking this variability into account, we obt
 ```{r}
 mu <- 0
 tau <- 0.035
-B <- se^2 / (se^2 + tau^2)
-posterior_mean <- B*mu + (1-B)*x_bar
-posterior_se <- sqrt( 1/ (1/se^2 + 1/tau^2))
+B <- se^2/(se^2 + tau^2)
+posterior_mean <- B*mu + (1 - B)*x_bar
+posterior_se <- sqrt(1/(1/se^2 + 1/tau^2))
 
 1 - pnorm(0, posterior_mean, posterior_se)
 ```
@@ -212,7 +212,7 @@ Notice that by accounting for the general bias term, our Bayesian analysis now p
 
 
 :::{.callout-note}
-Keep in mind that we are simplifying FiveThirtyEight's calculations related to the general bias $b$. For example, one of the many ways their analysis is more complex than the one presented here, FIX ADD "TO"? is that they permit $b$ vary across regions of the country. This helps because, historically, we have observed geographical patterns in voting behaviors.
+Keep in mind that we are simplifying FiveThirtyEight's calculations related to the general bias $b$. For example, one of the many ways their analysis is more complex than the one presented here is that  FiveThirtyEight permits $b$ to vary across regions of the country. This helps because, historically, we have observed geographical patterns in voting behaviors.
 :::
 
 ## Predicting the electoral college
@@ -233,9 +233,9 @@ We are now ready to predict the electoral college result for 2016. We start by a
 
 ```{r}
 results <- polls_us_election_2016 |>
-  filter(state!="U.S." & 
+  filter(state != "U.S." & 
            !grepl("CD", state) & 
-           enddate >="2016-10-31" & 
+           enddate >= "2016-10-31" & 
            (grade %in% c("A+","A","A-","B+") | is.na(grade))) |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) |>
   group_by(state) |>
@@ -277,18 +277,18 @@ To make probabilistic arguments, we will use a Monte Carlo simulation. For each 
 mu <- 0
 tau <- 0.02
 results |> mutate(sigma = sd/sqrt(n), 
-                   B = sigma^2 / (sigma^2 + tau^2),
-                   posterior_mean = B * mu + (1 - B) * avg,
-                   posterior_se = sqrt(1/ (1/sigma^2 + 1/tau^2)))
+                   B = sigma^2/(sigma^2 + tau^2),
+                   posterior_mean = B*mu + (1 - B)*avg,
+                   posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2)))
 ```
 
-FIX The estimates based on posterior do move the estimates towards 0, although the states with many polls are influenced less. This is expected as the more poll data we collect, the more we trust those results:
+The estimates based on posterior do move the estimates towards 0, although the states with many polls are influenced less. This is expected as the more poll data we collect, the more we trust those results:
 
 ```{r posterior-versus-original-estimates, echo=FALSE}
-results |> mutate(sigma = sd / sqrt(n), 
-                   B = sigma^2 / (sigma^2 + tau^2),
-                   posterior_mean = B * mu + (1 - B) * avg,
-                   posterior_se = sqrt(1/ (1/sigma^2 + 1/tau^2))) |>
+results |> mutate(sigma = sd/sqrt(n), 
+                   B = sigma^2/(sigma^2 + tau^2),
+                   posterior_mean = B*mu + (1 - B)*avg,
+                   posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2))) |>
   ggplot(aes(avg, posterior_mean, size = n)) + geom_point() + 
   geom_abline(slope = 1, intercept = 0)
 ```
@@ -302,8 +302,8 @@ tau <- 0.02
 clinton_EV <- replicate(B, {
   results |> mutate(sigma = sd/sqrt(n), 
                    B = sigma^2 / (sigma^2 + tau^2),
-                   posterior_mean = B * mu + (1 - B) * avg,
-                   posterior_se = sqrt(1 / (1/sigma^2 + 1/tau^2)),
+                   posterior_mean = B*mu + (1 - B)*avg,
+                   posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2)),
                    result = rnorm(length(posterior_mean), 
                                   posterior_mean, posterior_se),
                    clinton = ifelse(result > 0, electoral_votes, 0)) |> 
@@ -316,19 +316,21 @@ mean(clinton_EV > 269)
 
 This model gives Clinton over 99% chance of winning. A similar prediction was made by the Princeton Election Consortium. We now know it was quite off. What happened?
 
-The model above ignores the general bias and assumes the results from different states are independent. After the election, we realized that the general bias in 2016 was not that big: it was between 1 and 2%. But because the election was close in several big states and these states had a large number of polls, pollsters that ignored the general bias greatly underestimated the standard error. FIX 'WITH WHICH' READS FUNNY Using the notation we introduced, they assumed the standard error was $\sqrt{\sigma^2/N}$ which with large N is quite smaller than the more accurate estimate $\sqrt{\sigma^2/N + \sigma_b^2}$. FiveThirtyEight, which models the general bias in a rather sophisticated way, reported a closer result. We can simulate the results now with a bias term. For the state level, the general bias can be larger so we set it at $\sigma_b = 0.03$:
+The model above ignores the general bias and assumes the results from different states are independent. After the election, we realized that the general bias in 2016 was not that big: it was between 1 and 2%. But because the election was close in several big states and these states had a large number of polls, pollsters that ignored the general bias greatly underestimated the standard error. Using the notation we introduced, they assumed the standard error was $\sqrt{\sigma^2/N}$. With large $N$, this estimate is substiantially closer to 0 than the more accurate estimate $\sqrt{\sigma^2/N + \sigma_b^2}$. 
+
+FiveThirtyEight, which models the general bias in a rather sophisticated way, reported a closer result. We can simulate the results now with a bias term. For the state level, the general bias can be larger so we set it at $\sigma_b = 0.03$:
 
 ```{r  election-forecast-posterior-with-bias, , cache=TRUE}
 tau <- 0.02
 bias_sd <- 0.03
 clinton_EV_2 <- replicate(1000, {
   results |> mutate(sigma = sqrt(sd^2/n  + bias_sd^2),  
-                   B = sigma^2 / (sigma^2 + tau^2),
-                   posterior_mean = B*mu + (1-B)*avg,
-                   posterior_se = sqrt( 1/ (1/sigma^2 + 1/tau^2)),
+                   B = sigma^2/(sigma^2 + tau^2),
+                   posterior_mean = B*mu + (1 - B)*avg,
+                   posterior_se = sqrt(1/(1/sigma^2 + 1/tau^2)),
                    result = rnorm(length(posterior_mean), 
                                   posterior_mean, posterior_se),
-                   clinton = ifelse(result>0, electoral_votes, 0)) |> 
+                   clinton = ifelse(result > 0, electoral_votes, 0)) |> 
     summarize(clinton = sum(clinton) + 7) |> 
     pull(clinton)
 })
@@ -338,11 +340,11 @@ mean(clinton_EV_2 > 269)
 This gives us a much more sensible estimate. Looking at the outcomes of the simulation, we see how the bias term adds variability to the final results.
 
 ```{r comparison-forecast-with-and-without-bias, echo=FALSE}
-data.frame(no_bias=clinton_EV, with_bias=clinton_EV_2) |> gather(approach, result) |>
+data.frame(no_bias = clinton_EV, with_bias = clinton_EV_2) |> gather(approach, result) |>
   ggplot(aes(result)) + 
   geom_histogram(binwidth = 1) +
   geom_vline(xintercept = 269) +
-  facet_grid(approach~., scales="free")
+  facet_grid(approach ~ ., scales = "free")
 ```
 
 FiveThirtyEight includes many other features we do not include here. One is that they model variability with distributions that have high probabilities for extreme events compared to the normal. One way we could do this is by changing the distribution used in the simulation from a normal distribution to a t-distribution. FiveThirtyEight predicted a probability of 71%.
@@ -364,8 +366,7 @@ Since there is no pollster effect, then perhaps the theoretical standard error m
 ```{r}
 se <- one_pollster |> 
   summarize(empirical = sd(spread), 
-            theoretical = 2 * sqrt(mean(spread) * (1 - mean(spread)) /
-                                     min(samplesize)))
+            theoretical = 2*sqrt(mean(spread)*(1 - mean(spread))/min(samplesize)))
 se
 ```
 
@@ -389,12 +390,12 @@ Some of the peaks and valleys we see coincide with events such as the party conv
 polls_us_election_2016 |>
   filter(state == "U.S.") |>
   group_by(pollster) |>
-  filter(n()>=10) |>
+  filter(n() >= 10) |>
   ungroup() |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) |>
   ggplot(aes(enddate, spread)) + 
   geom_smooth(method = "loess", span = 0.1) + 
-  geom_point(aes(color=pollster), show.legend = FALSE, alpha=0.6) 
+  geom_point(aes(color = pollster), show.legend = FALSE, alpha = 0.6) 
 ```
 
 This implies that if we are going to forecast, our model must include a term to accounts for the time effect. We need to write a model including a bias term for time, denoted as $b_t$.
@@ -405,16 +406,16 @@ We usually see the trend estimate not for the difference, but for the actual per
 
 ```{r trend-estimate-for-all-pollsters, warning=FALSE, message=FALSE, echo=FALSE}
 polls_us_election_2016 |>
-  filter(state == "U.S." & enddate>="2016-07-01") |>
+  filter(state == "U.S." & enddate >= "2016-07-01") |>
   select(enddate, pollster, rawpoll_clinton, rawpoll_trump) |>
   rename(Clinton = rawpoll_clinton, Trump = rawpoll_trump) |>
   gather(candidate, percentage, -enddate, -pollster) |> 
-  mutate(candidate = factor(candidate, levels = c("Trump","Clinton")))|>
+  mutate(candidate = factor(candidate, levels = c("Trump", "Clinton"))) |>
   group_by(pollster) |>
-  filter(n()>=10) |>
+  filter(n() >= 10) |>
   ungroup() |>
   ggplot(aes(enddate, percentage, color = candidate)) +  
-  geom_point(show.legend = FALSE, alpha=0.4)  + 
+  geom_point(show.legend = FALSE, alpha = 0.4)  + 
   geom_smooth(method = "loess", span = 0.15) +
   scale_y_continuous(limits = c(30,50))
 ```
@@ -446,9 +447,9 @@ cis <- cis |>
   left_join(add, by = "state")
 ```
 
-Now, determine how often the 95% confidence interval includes the actual result.
+Now, determine how often the 95% confidence interval includes the election night result stored in `actual_spread`.
 
-3\. Repeat this, but show the proportion of hits for each pollster. Show only pollsters with more than 5 polls and order them from best to worst. Show the number of polls conducted by each pollster and the FiveThirtyEight grade of each pollster. Hint: Use `n=n(), grade = grade[1]` in the call to summarize.
+3\. Repeat this, but show the proportion of hits for each pollster. Consider only pollsters with more than 5 polls and order them from best to worst. Show the number of polls conducted by each pollster and the FiveThirtyEight grade of each pollster. Hint: Use `n=n(), grade = grade[1]` in the call to summarize.
 
 4\. Repeat exercise 3, but instead of pollster, stratify by state. Note that here we can't show grades.
 
@@ -456,14 +457,13 @@ Now, determine how often the 95% confidence interval includes the actual result.
 
 6\. Add two columns to the `cis` table by computing, for each poll, the difference between the predicted spread and the actual spread, and define a column `hit` that is true if the signs are the same. Hint: Use the function `sign`. Call the object `resids`.
 
-7\. FIX SIGN OF THE SPREAD' Create a plot like in exercise 5, but for the proportion of times the sign of the spread agreed.
+7\. Create a plot like in exercise 5, but for the proportion of times the sign of the spread agreed with the election night result.
 
 8\. In exercise 7, we see that for most states the polls had it right 100% of the time. For only 9 states did the polls miss more than 25% of the time. In particular, notice that in Wisconsin every single poll got it wrong. In Pennsylvania and Michigan, more than 90% of the polls had the signs wrong. Make a histogram of the errors. What is the median of these errors?
 
-9\. We see that at the state level, the median error was 3% in favor of Clinton. The distribution is not centered at 0, but at 0.03. FIX IN THE SECTION ABOVE? This is the general bias we described in the section above. Create a boxplot to see if the bias was general to all states or it affected some states differently. Use `filter(grade %in% c("A+","A","A-","B+") | is.na(grade)))` to only include pollsters with high grades.
+9\. We see that at the state level, the median error was 3% in favor of Clinton. The distribution is not centered at 0, but at 0.03. This related to the _general bias_ described in @sec-general-bias. Create a boxplot to see if the bias was general to all states or it affected some states differently. Use `filter(grade %in% c("A+","A","A-","B+") | is.na(grade)))` to only include pollsters with high grades.
 
 10\. Some of these states only have a few polls. Repeat exercise 9, but only include states with 5 good polls or more. Hint: Use `group_by`, `filter` then `ungroup`. You will see that the West (Washington, New Mexico, California) underestimated Hillary's performance, while the Midwest (Michigan, Pennsylvania, Wisconsin, Ohio, Missouri) overestimated it. In our simulation, we did not model this behavior since we added general bias, rather than a regional bias. Note that some pollsters may now be modeling correlation between similar states and estimating this correlation from historical data. To learn more about this, you can explore concepts related to random effects and mixed models.
-
 
 
 11\. In April 2013, José Iglesias, a professional baseball player was starting his career. He was performing exceptionally well, with an excellent _batting average_ (AVG) of .450. The batting average statistic is one way of measuring success. Roughly speaking, it tells us the success rate when batting. José had 9 successes out of 20 tries. An AVG of .450 means José has been successful 45% of the times he has batted, which is rather high historically speaking. In fact, no one has finished a season with an `AVG` of .400 or more since Ted Williams did it in 1941! We want to predict José's batting average at the end of the season after players have had about 500 tries or _at bats_. With the frequentist techniques, we have no choice but to predict that his AVG will be .450 at the end of the season. Compute a confidence interval for the success rate.

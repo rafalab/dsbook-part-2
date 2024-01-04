@@ -33,13 +33,13 @@ d <- dist(x)
 
 ## Hierarchical clustering
 
-With the distance between each pair of movies computed, we need an algorithm to define groups from these. FIX Hierarchical clustering starts by defining each observation as a separate group, then the two closest groups are joined into a group iteratively until there is just one group including all the observations. The `hclust` function implements this algorithm and it takes a distance as input.
+With the distance between each pair of movies computed, we need an algorithm to define groups, based on these distances. Hierarchical clustering starts by defining each observation as a separate group, then the two closest groups are joined into new groups. We then continue joining the closest groups into new groups iteratively until there is just one group including all the observations. The `hclust` function implements this algorithm and takes a distance as input.
 
 ```{r}
 h <- hclust(d)
 ```
 
-FIX We can see the resulting groups using a _dendrogram_. 
+We can see the resulting groups using a _dendrogram_. The funciton `plot` applied to an `hclust` object creates a dendrogram:
 
 ```{r, eval=FALSE}
 plot(h, cex = 0.65, main = "", xlab = "")
@@ -108,9 +108,9 @@ k <- kmeans(x_0, centers = 10, nstart = 25)
 
 ## Heatmaps
 
-A powerful visualization tool for discovering clusters or patterns in your data is the heatmap. The idea is simple: plot an image of your data matrix with colors used as the visual cue and both the columns and rows ordered according to the results of a clustering algorithm. We will demonstrate this with the `tissue_gene_expression` dataset. We will scale the rows of the gene expression matrix.
+A powerful visualization tool for discovering clusters or patterns in your data is the heatmap. The idea is simple: plot an image of your data matrix with colors used as the visual cue and both the columns and rows ordered according to the results of a clustering algorithm. We will demonstrate this with the `tissue_gene_expression` dataset. 
 
-FIX The first step is compute: 
+We start by scaling the columns of the gene expression matrix because we only care about relative differences in gene expression. After scaling, we compute perform clustering on both the observations and the predictors:
 
 ```{r}
 x <- sweep(tissue_gene_expression$x, 2, colMeans(tissue_gene_expression$x))
@@ -118,24 +118,25 @@ h_1 <- hclust(dist(x))
 h_2 <- hclust(dist(t(x)))
 ```
 
-
 Now we can use the results of this clustering to order the rows and columns:
 
 ```{r heatmap, out.width="100%", fig.height=7, eval=FALSE}
 image(x[h_1$order, h_2$order])
 ```
 
-But there is `heatmap` function that does it for us:
+The `heatmap` function that does all this for us:
 
 ```{r heatmap-2, out.width="100%", fig.height=7, eval=FALSE}
 heatmap(x, col = RColorBrewer::brewer.pal(11, "Spectral"))
 ```
 
-We do not show the results of the heatmap function because there are too many features for the plot to be useful. We will therefore filter some columns and remake the plots.
+Note we do not show the results of the heatmap function because there are too many features for the plot to be useful. We will therefore filter some columns and remake the plots.
 
 ### Filtering features
 
-FIX If the information about clusters is included in just a few features, including all the features can add enough noise that detecting clusters becomes challenging. One simple approach to try to remove features with no information is to only include those with high variance. In the movie example, a user with low variance in their ratings is not really informative: all the movies seem about the same to them. Here is an example of how we can include only the features with high variance.
+If only a few features are different between clusters, including all the features can add enough noise that making cluster detection challenging. A simple approach to avoid this is to assume low variability features are not informative and include only high variance features. For example, in the movie example, users with low variance in their ratings are not really distinguishing movies: all the movies seem about the same to them. 
+
+Here is an example code showing how we can include only the features with high variance in a heatmap:
 
 ```{r heatmap-3, out.width="100%", fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
 library(matrixStats)
@@ -157,5 +158,5 @@ Note there are several other heatmap functions in R. A popular example is the `h
 3\. Run a k-means clustering on the data with $K=7$. Make a table comparing the identified clusters to the actual tissue types. Run the algorithm several times to see how the answer changes.
 
 
-4\. Select the 50 most variable genes. Make sure the observations show up in the columns, that the predictors are centered, and add a color bar to show the different tissue types. Hint: Use the `ColSideColors` argument to assign colors. Also, use `col = RColorBrewer::brewer.pal(11, "RdBu")` for a better use of colors.
+4\. Select the 50 most variable genes. Make sure the observations show up in the columns, that the predictors are centered, and add a color bar to show the different tissue types. Hint: use the `ColSideColors` argument to assign colors. Also, use `col = RColorBrewer::brewer.pal(11, "RdBu")` for a better use of colors.
 

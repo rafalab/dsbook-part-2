@@ -51,12 +51,13 @@ $$
 \rho = \frac{1}{n} \sum_{i=1}^n \left( \frac{x_i-\mu_x}{\sigma_x} \right)\left( \frac{y_i-\mu_y}{\sigma_y} \right)
 $$ 
 
-with $\mu_x, \mu_y$ the averages of $x_1,\dots, x_n$ and $y_1, \dots, y_n$, respectively, and $\sigma_x, \sigma_y$ the standard deviations. The Greek letter $\rho$ is commonly used in statistics books to denote the correlation. FIX The Greek letter for $r$, $\rho$, because it is the first letter of regression. Soon we learn about the connection between correlation and regression. We can represent the formula above with R code using:
+with $\mu_x, \mu_y$ the averages of $x_1,\dots, x_n$ and $y_1, \dots, y_n$, respectively, and $\sigma_x, \sigma_y$ the standard deviations. The Greek letter for $r$, $\rho$ is commonly used in statistics books to denote the correlation. It is not a coincidence that $r$ is the first letter in "regression". Soon we learn about the connection between correlation and regression. 
+
+We can represent the formula above with R code using:
 
 ```{r, eval=FALSE}
 rho <- mean(scale(x) * scale(y))
 ```
-
 
 To understand why this equation does in fact summarize how two variables move together, consider the $i$-th entry of $x$ is $\left( \frac{x_i-\mu_x}{\sigma_x} \right)$ SDs away from the average. Similarly, the $y_i$ that is paired with $x_i$, is $\left( \frac{y_1-\mu_y}{\sigma_y} \right)$ SDs away from the average $y$. If $x$ and $y$ are unrelated, the product $\left( \frac{x_i-\mu_x}{\sigma_x} \right)\left( \frac{y_i-\mu_y}{\sigma_y} \right)$ will be positive ( $+ \times +$ and $- \times -$ ) as often as negative ($+ \times -$ and $- \times +$) and will average out to about 0. This correlation is the average and therefore unrelated variables will have 0 correlation. If instead the quantities vary together, then we are averaging mostly positive products ($+ \times +$ and $- \times -$) and we get a positive correlation. If they vary in opposite directions, we get a negative correlation.
 
@@ -78,7 +79,7 @@ galton_heights |> summarize(r = cor(father, son)) |> pull(r)
 ```
 
 :::{callout-warning}
-FIX For reasons similar to those explained in Section @sec-population-sd, for the standard deviation, `cor(x,y)` divides by `length(x)-1` rather than `length(x)`. 
+The function `cor(x, y)` computes the sample correlation, which divides the sum of products by `length(x)-1` rather than `length(x)`. The rationale for this is akin to the reason we divide by `length(x)-1` when computing the sample standard deviation `sd(x)`. Namely, this adjustment helps account for the degrees of freedom in the sample, which is necessary for unbiased estimates.
 :::
 
 To see what data looks like for different values of $\rho$, here are six examples of pairs with correlations ranging from -0.9 to 0.99:
@@ -200,7 +201,7 @@ fathers that are exactly 72 inches. If we change the number to 72.5, we get even
 sum(galton_heights$father == 72.5)
 ```
 
-FIX A practical way to improve these estimates of the conditional expectations is to define strata of with similar values of $x$. In our example, we can round father heights to the nearest inch and assume that they are all 72 inches. If we do this, we end up with the following prediction for the son of a father that is 72 inches tall:
+A practical way to improve these estimates of the conditional expectations is to define strata of observations with similar value of $x$. In our example, we can round father heights to the nearest inch and assume that they are all 72 inches. If we do this, we end up with the following prediction for the son of a father that is 72 inches tall:
 
 ```{r}
 conditional_avg <- galton_heights |> 
@@ -332,13 +333,15 @@ So why not always use the regression for prediction? Because it is not always ap
 
 ## Bivariate normal distribution
 
-Correlation and the regression slope are a widely used summary statistic, but they are often misused or misinterpreted. FIX Anscombe's examples provide over-simplified cases of dataset in which summarizing with correlation would be a mistake. But there are many more real-life examples.
+Correlation and the regression slope are a widely used summary statistic, but they are often misused or misinterpreted. Anscombe's examples provide over-simplified cases in which the correlation is not a useful summary. But there are many real-life examples. 
 
-The main way we motivate the use of correlation involves what is called the *bivariate normal distribution*.
+The main way we motivate appropriate use of correlation as a summary, involves the *bivariate normal distribution*.
 
-When a pair of random variables is approximated by the bivariate normal distribution, scatterplots look like ovals. As we saw in Section @sec-corr-coef), they can be thin (high correlation) or circle-shaped (no correlation).
+When a pair of random variables is approximated by the bivariate normal distribution, scatterplots look like ovals. As we saw in @sec-corr-coef, they can be thin (high correlation) or circle-shaped (no correlation).
 
-A more technical way to define the bivariate normal distribution is the following: if $X$ is a normally distributed random variable, $Y$ is also a normally distributed random variable, and the conditional distribution of $Y$ for any $X=x$ is approximately normal, then the pair is approximately bivariate normal. When three or more variables have the property that each pair is bivariate normal, we say the variables follow a *multivariate* normal distribution or that they are *jointly normal*.
+A more technical way to define the bivariate normal distribution is the following: if $X$ is a normally distributed random variable, $Y$ is also a normally distributed random variable, and the conditional distribution of $Y$ for any $X=x$ is approximately normal, then the pair is approximately bivariate normal. 
+
+When three or more variables have the property that each pair is bivariate normal, we say the variables follow a *multivariate* normal distribution or that they are *jointly* normal.
 
 If we think the height data is well approximated by the bivariate normal distribution, then we should see the normal approximation hold for each strata. Here we stratify the son heights by the standardized father heights and see that the assumption appears to hold:
 
@@ -466,15 +469,18 @@ Later, specifically in Sections @sec-multivariate-regression and @treatment-effe
 
 ## Least Squares Estimates  {#sec-lse}
 
-For linear models to be useful, we have to estimate the unknown $\beta$s. The standard approach in science is to find the values that minimize the distance of the fitted model to the data. The following is called the least squares (LS) equation and we will see it often in this chapter. For Galton's data, we would write:
+For linear models to be useful, we have to estimate the unknown $\beta$s. The standard approach is to find the values that minimize the distance of the fitted model to the data. Specifically, we find the $\beta$s that minize the least squares (LS) equation show below. For Galton's data, the LS equation looks like this:
 
 $$ 
 RSS = \sum_{i=1}^n \left\{  y_i - \left(\beta_0 + \beta_1 x_i \right)\right\}^2 
 $$
 
-This quantity is called the residual sum of squares (RSS). Once we find the values that minimize the RSS, we will call the values the least squares estimates (LSE) and denote them with $\hat{\beta}_0$ and $\hat{\beta}_1$. Let's demonstrate this with the previously defined dataset:
+The quantity we try to minimize is called the residual sum of squares (RSS). 
 
-```{r, message=FALSE}
+Once we find the values that minimize the RSS, we will call the values the least squares estimates (LSE) and denote them by placing a _hat_ over the parameters. In our example we use $\hat{\beta}_0$ and $\hat{\beta}_1$.
+
+
+```{r, message=FALSE, echo=FALSE}
 library(HistData)
 set.seed(1983)
 galton_heights <- GaltonFamilies |>
@@ -486,7 +492,8 @@ galton_heights <- GaltonFamilies |>
   rename(son = childHeight)
 ```
 
-Let's write a function that computes the RSS for any pair of values $\beta_0$ and $\beta_1$.
+We will demonstrate how we find these values using the previously defined `galton_heights` dataset. Let's start bywriting a function that computes the RSS for any pair of values $\beta_0$ and $\beta_1$.
+
 
 ```{r}
 rss <- function(beta0, beta1, data){
@@ -507,7 +514,7 @@ results |> ggplot(aes(beta1, rss)) + geom_line() +
 
 We can see a clear minimum for $\beta_1$ at around 0.65. However, this minimum for $\beta_1$ is for when $\beta_0 = 25$, a value we arbitrarily picked. We don't know if (25, 0.65) is the pair that minimizes the equation across all possible pairs.
 
-Trial and error is not going to work in this case. We could search for a minimum within a fine grid of $\beta_0$ and $\beta_1$ values, but this is unnecessarily time-consuming since we can use calculus: take the partial derivatives, set them to 0, and solve for $\beta_1$ and $\beta_2$. Of course, if we have many parameters, these equations can get rather complex. But there are functions in R that do these calculations for us. We will study these next. To learn the mathematics behind this, you can consult a book on linear models.
+Trial and error is not going to work in this case. We could search for a minimum within a fine grid of $\beta_0$ and $\beta_1$ values, but this is unnecessarily time-consuming since we can use calculus. Specifically, we take the partial derivatives, set them to 0, and solve for $\beta_1$ and $\beta_2$. Of course, if we have many parameters, these equations can get rather complex. But there are functions in R that do these calculations for us. We will study these next. To learn the mathematics behind this, you can consult a book on linear models.
 
 ## The `lm` function
 
@@ -521,7 +528,7 @@ with $Y_i$ being the son's height and $x_i$ being the father's height, we can us
 
 ```{r}
 fit <- lm(son ~ father, data = galton_heights)
-fit$coef
+fit$coefficients
 ```
 
 The most common way we use `lm` is by using the character `~` to let `lm` know which is the variable we are predicting (left of `~`) and which we are using to predict (right of `~`). The intercept is added automatically to the model that will be fit.
@@ -534,7 +541,7 @@ summary(fit)
 
 To understand some of the information included in this summary, we need to remember that the LSE are random variables. Mathematical statistics gives us some ideas of the distribution of these random variables.
 
-In Section @sec-multivariate-regression, after describing a more complex case study, we gain further insights into the application of regression in R.
+In @sec-multivariate-regression, after describing a more complex case study, we gain further insights into the application of regression in R.
 
 ## LSE are random variables
 
@@ -562,7 +569,9 @@ p2 <- lse |> ggplot(aes(beta_1)) +
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-The reason these look normal is because the central limit theorem applies here as well: for large enough $N$, the least squares estimates will be approximately normal with expected value $\beta_0$ and $\beta_1$, respectively. The standard errors are a bit complicated to compute, but mathematical theory does allow us to compute them and they are included in the summary provided by the `lm` function. FIX Here it is for one of our simulated data sets:
+The reason these look normal is because the central limit theorem applies here as well: for large enough $N$, the least squares estimates will be approximately normal with expected value $\beta_0$ and $\beta_1$, respectively. 
+
+The standard errors are a bit complicated to compute, but mathematical theory does allow us to compute them and they are included in the summary provided by the `lm` function. The function `summary` shows us the standard error estimates:
 
 ```{r}
 sample_n(galton_heights, N, replace = TRUE) |> 
@@ -571,13 +580,13 @@ sample_n(galton_heights, N, replace = TRUE) |>
   coef()
 ```
 
-You can see that the standard errors estimates reported by the `summary` are close to the standard errors from the simulation:
+You can see that the standard errors estimates reported above are close to the standard errors from the simulation:
 
 ```{r}
 lse |> summarize(se_0 = sd(beta_0), se_1 = sd(beta_1))
 ```
 
-The `summary` function also reports t-statistics (`t value`) and p-values (`Pr(>|t|)`). The t-statistic is not actually based on the central limit theorem, but rather on the assumption that the $\varepsilon$s follow a normal distribution. Under this assumption, mathematical theory tells us that the LSE divided by their standard error, $\hat{\beta}_0 / \hat{\mbox{SE}}(\hat{\beta}_0 )$ and $\hat{\beta}_1 / \hat{\mbox{SE}}(\hat{\beta}_1 )$, follow a t-distribution with $N-p$ degrees of freedom, with $p$ the number of parameters in our model. In the case of height $p=2$, the two p-values are testing the null hypothesis that $\beta_0 = 0$ and $\beta_1=0$, respectively.
+The `summary` function also reports t-statistics (`t value`) and p-values (`Pr(>|t|)`). The t-statistic is not actually based on the central limit theorem, but rather on the assumption that the $\varepsilon$s follow a normal distribution. Under this assumption, mathematical theory tells us that the LSE divided by their standard error, $\hat{\beta}_0 / \hat{\mbox{SE}}(\hat{\beta}_0 )$ and $\hat{\beta}_1 / \hat{\mbox{SE}}(\hat{\beta}_1 )$, follow a t-distribution with $N-p$ degrees of freedom, with $p$ the number of parameters in our model. In our example  $p=2$, and the two p-values are obtained from testing the null hypothesis that $\beta_0 = 0$ and $\beta_1=0$, respectively.
 
 Remember that, as we described in Section @sec-t-dist, for large enough $N$, the CLT works and the t-distribution becomes almost the same as the normal distribution. Also, notice that we can construct confidence intervals, but we will soon learn about **broom**, an add-on package that makes this easy.
 
@@ -651,8 +660,7 @@ plot(fit, which = 1:3)
 
 This function can produce six different plots, and the argument `which` let's you specify which you want to see. You can learn more by reading the `plot.lm` help file. However, some of the plots are based on more advanced concepts beyond the scope of this book. To learn more, we recommend an advanced book on regression analysis.
 
-FIX In Sections @sec-multivariate-regression and @sec-treatment-effect-models, we introduce data analysis challenges in which more than one variables some not included in the model. FIX In these cases, an important diagnostic test to add checks if the residuals are related to variables not included in the model.
-
+In @sec-multivariate-regression and @sec-treatment-effect-models, we introduce data analysis challenges in which we may decide to not to include certain variables in the model. In these cases, an important diagnostic test to add checks if the residuals are related to variables not included in the model.
 
 
 ## The regression fallacy
