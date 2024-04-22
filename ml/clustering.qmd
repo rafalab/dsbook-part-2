@@ -10,7 +10,7 @@ A first step in any clustering algorithm is defining a distance between observat
 
 We will construct a simple example based on movie ratings. Here we quickly construct a matrix `x` that has ratings for the 50 movies with the most ratings.
 
-```{r, cache=FALSE}
+```{r, cache=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 library(janitor)
 library(dslabs)
@@ -23,6 +23,7 @@ x <- x |> filter(userId %in% top_users) |>
   column_to_rownames("title") |>
   as.matrix()
 rownames(x) <- str_remove(rownames(x), ": Episode") |> str_trunc(20)
+x <- x - rowMeans(x, na.rm = TRUE)
 ```
 
 We want to use these data to find out if there are clusters of movies based on the ratings from  `r ncol(x)` movie raters. A first step is to find the distance between each pair of movies using the `dist` function: 
