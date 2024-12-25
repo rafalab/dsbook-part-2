@@ -224,9 +224,12 @@ To compute a posterior distribution and construct a credible interval, we define
 ```{r}
 theta <- 0
 tau <- 0.035
-sigma <- results$se
+sigma_n <- results$se
+sigma <- one_poll_per_pollster |>
+  summarise(sigma = sd(spread)) %>%
+  pull(sigma)
 x_bar <- results$avg
-B <- sigma^2 / (sigma^2 + tau^2)
+B <- sigma_n^2 / (sigma_n^2 + tau^2)
 
 posterior_mean <- B*theta + (1 - B)*x_bar
 posterior_se <- sqrt(1/(1/sigma^2 + 1/tau^2))
