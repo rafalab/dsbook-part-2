@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.5.57">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
-<title>Introduction to Data Science - 28&nbsp; Smoothing</title>
+<title>28&nbsp; Smoothing – Introduction to Data Science</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,7 +20,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -31,7 +31,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -77,7 +77,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "start",
   "type": "textbox",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -86,28 +92,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
-}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 </head>
 <body class="nav-sidebar floating">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../ml/intro-ml.html">Machine Learning</a></li><li class="breadcrumb-item"><a href="../ml/smoothing.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Smoothing</span></a></li></ol></nav>
-      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-      </a>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../ml/intro-ml.html">Machine Learning</a></li><li class="breadcrumb-item"><a href="../ml/smoothing.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Smoothing</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
   </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Introduction to Data Science</a> 
         <div class="sidebar-tools-main">
@@ -143,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Summary statistics</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -166,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Probability</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -186,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></span></a>
   </div>
 </li>
       </ul>
@@ -195,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Statistical inference</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -254,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Linear Models</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -301,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">High dimensional data</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -342,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -399,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
     </ul>
 </div>
-</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
@@ -418,10 +451,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
   <li><a href="#sec-smoothing-ml-connection" id="toc-sec-smoothing-ml-connection" class="nav-link" data-scroll-target="#sec-smoothing-ml-connection"><span class="header-section-number">28.6</span> Connecting smoothing to machine learning</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">28.7</span> Exercises</a></li>
-  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/blob/main/ml/smoothing.qmd" class="toc-action">View source</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/ml/smoothing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../ml/intro-ml.html">Machine Learning</a></li><li class="breadcrumb-item"><a href="../ml/smoothing.html"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Smoothing</span></a></li></ol></nav><div class="quarto-title">
 <h1 class="title">
 <span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Smoothing</span>
 </h1>
@@ -437,11 +470,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header><p>Before continuing learning about machine learning algorithms, we introduce the important concept of <em>smoothing</em>. Smoothing is a very powerful technique used all across data analysis. Other names given to this technique are <em>curve fitting</em> and <em>low pass filtering</em>. It is designed to detect trends in the presence of noisy data in cases in which the shape of the trend is unknown. The <em>smoothing</em> name comes from the fact that to accomplish this feat, we assume that the trend is <em>smooth</em>, as in a smooth surface. In contrast, the noise, or deviation from the trend, is unpredictably wobbly:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/signal-plus-noise-example-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/signal-plus-noise-example-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -457,17 +491,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span><span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span>, color <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/two-or-seven-scatter-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/two-or-seven-scatter-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We can immediately see some patterns. For example, if <span class="math inline">\(x_1\)</span> (the upper left panel) is very large, then the digit is probably a 7. Also, for smaller values of <span class="math inline">\(x_1\)</span>, the 2s appear to be in the mid range values of <span class="math inline">\(x_2\)</span>.</p>
 <p>To illustrate how to interpret <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>, we include four example images. On the left are the original images of the two digits with the largest and smallest values for <span class="math inline">\(x_1\)</span> and on the right we have the images corresponding to the largest and smallest values of <span class="math inline">\(x_2\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/two-or-seven-images-large-x1_8e54053ad25992d7af9f6570c7ca40d7">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/two-or-seven-images-large-x1-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/two-or-seven-images-large-x1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -481,10 +515,10 @@ p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x}) = \mbox{Pr}(Y=1 \mid X
 <p>We fit can fit this model using least squares and obtain an estimate <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> by using the least square estimates <span class="math inline">\(\hat{\beta}_0\)</span>, <span class="math inline">\(\hat{\beta}_1\)</span> and <span class="math inline">\(\hat{\beta}_2\)</span>. We define a decision rule by predicting <span class="math inline">\(\hat{y}=1\)</span> if <span class="math inline">\(\hat{p}(\mathbf{x})&gt;0.5\)</span> and 0 otherwise.</p>
 <p>We get an accuracy of 0.775, well above 50%. Not bad for our first try. But can we do better?</p>
 <p>Because we constructed the <code>mnist_27</code> example and we had at our disposal 60,000 digits in just the MNIST dataset, we used this to build the <em>true</em> conditional distribution <span class="math inline">\(p(\mathbf{x})\)</span>. Keep in mind that in practice we don’t have access to the true conditional distribution. We include it in this educational example because it permits the comparison of <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> to the true <span class="math inline">\(p(\mathbf{x})\)</span>. This comparison teaches us the limitations of different algorithms. We have stored the true <span class="math inline">\(p(\mathbf{x})\)</span> in the <code>mnist_27</code> and can plot it as an image. We draw a curve that separates pairs <span class="math inline">\((\mathbf{x})\)</span> for which <span class="math inline">\(p(\mathbf{x}) &gt; 0.5\)</span> and pairs for which <span class="math inline">\(p(\mathbf{x}) &lt; 0.5\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/true-p-better-colors_8d4d1c4cf4d260ba18bd99930aca358e">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/true-p-better-colors-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/true-p-better-colors-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -496,10 +530,10 @@ p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x}) = \mbox{Pr}(Y=1 \mid X
 x_2 = (0.5-\hat{\beta}_0)/\hat{\beta}_2  -\hat{\beta}_1/\hat{\beta}_2 x_1
 \]</span></p>
 <p>This implies that for the boundary, <span class="math inline">\(x_2\)</span> is a linear function of <span class="math inline">\(x_1\)</span>, which suggests that our regression approach has no chance of capturing the non-linear nature of the true <span class="math inline">\(p(\mathbf{x})\)</span>. Below is a visual representation of <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> which clearly shows how it fails to capture the shape of <span class="math inline">\(p(\mathbf{x})\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/regression-p-hat_bddf1bb344b6d195ea8dcd44d2e55520">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/regression-p-hat-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/regression-p-hat-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -512,7 +546,7 @@ x_2 = (0.5-\hat{\beta}_0)/\hat{\beta}_2  -\hat{\beta}_1/\hat{\beta}_2 x_1
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_2008</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/polls-2008-data-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/polls-2008-data-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -523,11 +557,11 @@ x_2 = (0.5-\hat{\beta}_0)/\hat{\beta}_2  -\hat{\beta}_1/\hat{\beta}_2 x_1
 Y_i = f(x_i) + \varepsilon_i
 \]</span></p>
 <p>To think of this as a machine learning problem, consider that we want to predict <span class="math inline">\(Y\)</span> given a day <span class="math inline">\(x\)</span>. If we knew the conditional expectation <span class="math inline">\(f(x) = \mbox{E}(Y \mid X=x)\)</span>, we would use it. But since we don’t know this conditional expectation, we have to estimate it. Let’s use regression, since it is the only method we have learned up to now.</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/linear-regression-not-flexible_56e83385b274e3a66dd998e0b4bea550">
+<div class="cell" data-layout-align="center">
 <pre><code>#&gt; `geom_smooth()` using formula = 'y ~ x'</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/linear-regression-not-flexible-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/linear-regression-not-flexible-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -546,25 +580,25 @@ E[Y_i | X_i = x_i ] \approx \mu \mbox{   if   }  |x_i - x_0| \leq 3.5
 \hat{f}(x_0) = \frac{1}{N_0} \sum_{i \in A_0}  Y_i
 \]</span></p>
 <p>We make this calculation with each value of <span class="math inline">\(x\)</span> as the center. In the poll example, for each day, we would compute the average of the values within a week with that day in the center. Here are two examples: <span class="math inline">\(x_0 = -125\)</span> and <span class="math inline">\(x_0 = -55\)</span>. The blue segment represents the resulting average.</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/binsmoother-expained_30f5c33d37704baae6a81bd6023b4995">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/binsmoother-expained-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/binsmoother-expained-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>By computing this mean for every point, we form an estimate of the underlying curve <span class="math inline">\(f(x)\)</span>. Below we show the procedure happening as we move from the -155 up to 0. At each value of <span class="math inline">\(x_0\)</span>, we keep the estimate <span class="math inline">\(\hat{f}(x_0)\)</span> and move on to the next point:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/binsmoother-animation_8df45603587d5a3aa4da3fb98127c832">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="img/binsmoother-animation.gif" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="img/binsmoother-animation.gif" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The final code and resulting estimate look like this:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/binsmoother-final_01109132721722d1339a3ec7b540b1ad">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">span</span> <span class="op">&lt;-</span> <span class="fl">7</span> </span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">polls_2008</span>, <span class="fu"><a href="https://rdrr.io/r/stats/ksmooth.html">ksmooth</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span>, kernel <span class="op">=</span> <span class="st">"box"</span>, bandwidth <span class="op">=</span> <span class="va">span</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -574,7 +608,7 @@ E[Y_i | X_i = x_i ] \approx \mu \mbox{   if   }  |x_i - x_0| \leq 3.5
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">fit</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/binsmoother-final-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/binsmoother-final-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -587,16 +621,16 @@ E[Y_i | X_i = x_i ] \approx \mu \mbox{   if   }  |x_i - x_0| \leq 3.5
 \hat{f}(x_0) = \sum_{i=1}^N w_0(x_i) Y_i
 \]</span></p>
 <p>in which each point receives a weight of either <span class="math inline">\(0\)</span> or <span class="math inline">\(1/N_0\)</span>, with <span class="math inline">\(N_0\)</span> the number of points in the week. In the code above, we used the argument <code>kernel="box"</code> in our call to the function <code>ksmooth</code>. This is because the weight function looks like a box. The <code>ksmooth</code> function provides a “smoother” option which uses the normal density to assign weights.</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/gaussian-kernel_e6ec481d03dbc2bd097bfca405dbee9c">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/gaussian-kernel-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/gaussian-kernel-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The final code and resulting plot for the normal kernel look like this:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/final-ksmooth-normal-kernel_7fc652505e6f3eddd4f60ffa3cf92f62">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">span</span> <span class="op">&lt;-</span> <span class="fl">7</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">polls_2008</span>, <span class="fu"><a href="https://rdrr.io/r/stats/ksmooth.html">ksmooth</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span>, kernel <span class="op">=</span> <span class="st">"normal"</span>, bandwidth <span class="op">=</span> <span class="va">span</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -606,7 +640,7 @@ E[Y_i | X_i = x_i ] \approx \mu \mbox{   if   }  |x_i - x_0| \leq 3.5
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">smooth</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/final-ksmooth-normal-kernel-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/final-ksmooth-normal-kernel-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -623,26 +657,26 @@ E[Y_i | X_i = x_i ] \approx \mu \mbox{   if   }  |x_i - x_0| \leq 3.5
 E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) \mbox{   if   }  |x_i - x_0| \leq 21
 \]</span></p>
 <p>For every point <span class="math inline">\(x_0\)</span>, loess defines a window and fits a line within that window. Here is an example showing the fits for <span class="math inline">\(x_0=-125\)</span> and <span class="math inline">\(x_0 = -55\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/loess_b2b166e237fd948868fa3a7e7245c8bf">
+<div class="cell" data-layout-align="center">
 <pre><code>#&gt; `geom_smooth()` using formula = 'y ~ x'</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/loess-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/loess-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The fitted value at <span class="math inline">\(x_0\)</span> becomes our estimate <span class="math inline">\(\hat{f}(x_0)\)</span>. Below we show the procedure happening as we move from the -155 up to 0:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/loess-animation_d0bffab70f83cfa94d77721628707cdb">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="img/loess-animation.gif" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="img/loess-animation.gif" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The final result is a smoother fit than the bin smoother since we use larger sample sizes to estimate our local parameters:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/final-loess_a0284e349ba6871b017debbecaad8710">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">total_days</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">polls_2008</span><span class="op">$</span><span class="va">day</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">span</span> <span class="op">&lt;-</span> <span class="fl">21</span><span class="op">/</span><span class="va">total_days</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/loess.html">loess</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">day</span>, degree <span class="op">=</span> <span class="fl">1</span>, span <span class="op">=</span> <span class="va">span</span>, data <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span></span>
@@ -652,25 +686,25 @@ E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) \mbox{   if   }  |x_i - x_0| \
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">smooth</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/final-loess-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/final-loess-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Different spans give us different estimates. We can see how different window sizes lead to different estimates:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/loess-multi-span-animation_a8c459debaf410c2d81a5b51119b26ed">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="img/loess-multi-span-animation.gif" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="img/loess-multi-span-animation.gif" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Here are the final estimates:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/loess-final_2cc822747d802ef7fd370a947409aa2a">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/loess-final-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/loess-final-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -690,10 +724,10 @@ W(u)= \left( 1  - |u|^3\right)^3 \mbox{ if } |u| \leq 1 \mbox{ and } W(u) = 0 \m
 w_0(x_i) = W\left(\frac{x_i - x_0}{h}\right)
 \]</span></p>
 <p>This kernel differs from the Gaussian kernel in that more points get values closer to the max:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/triweight-kernel_c82f30c1e827d64b2f3f28481743f70e">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/triweight-kernel-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/triweight-kernel-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
 </figure>
 </div>
 </div>
@@ -706,7 +740,7 @@ w_0(x_i) = W\left(\frac{x_i - x_0}{h}\right)
 E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) + \beta_2 (x_i-x_0)^2 \mbox{   if   }  |x_i - x_0| \leq h
 \]</span></p>
 <p>You may have noticed that when we showed the code for using loess, we set <code>degree = 1</code>. This tells loess to fit polynomials of degree 1, a fancy name for lines. If you read the help page for loess, you will see that the argument <code>degree</code> defaults to 2. By default, loess fits parabolas not lines. Here is a comparison of the fitting lines (red dashed) and fitting parabolas (orange solid):</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/polls-2008-parabola-line-loess_c8dca5b4077a6a08d53dd056513c2ba0">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">total_days</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">polls_2008</span><span class="op">$</span><span class="va">day</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">span</span> <span class="op">&lt;-</span> <span class="fl">28</span><span class="op">/</span><span class="va">total_days</span></span>
 <span><span class="va">fit_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/loess.html">loess</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">day</span>, degree <span class="op">=</span> <span class="fl">1</span>, span <span class="op">=</span> <span class="va">span</span>, data <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span></span>
@@ -719,7 +753,7 @@ E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) + \beta_2 (x_i-x_0)^2 \mbox{  
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">smooth_2</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"orange"</span>, lty <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/polls-2008-parabola-line-loess-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/polls-2008-parabola-line-loess-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -728,47 +762,47 @@ E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) + \beta_2 (x_i-x_0)^2 \mbox{  
 </section><section id="beware-of-default-smoothing-parameters" class="level3" data-number="28.5.2"><h3 data-number="28.5.2" class="anchored" data-anchor-id="beware-of-default-smoothing-parameters">
 <span class="header-section-number">28.5.2</span> Beware of default smoothing parameters</h3>
 <p><code>ggplot</code> uses loess in its <code>geom_smooth</code> function:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/ggplot-loess-default_509b4a1f14f480e9c48be02c4e586c4c">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_2008</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="va">loess</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/ggplot-loess-default-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/ggplot-loess-default-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>But be careful with default parameters as they are rarely optimal. However, you can conveniently change them:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/ggplot-loess-degree-1_a4ea3de32bc1d1e055ec3ccb763494d8">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_2008</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html">geom_smooth</a></span><span class="op">(</span>method <span class="op">=</span> <span class="va">loess</span>, method.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>span <span class="op">=</span> <span class="fl">0.15</span>, degree <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="smoothing_files/figure-html/ggplot-loess-degree-1-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="smoothing_files/figure-html/ggplot-loess-degree-1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 </section></section><section id="sec-smoothing-ml-connection" class="level2" data-number="28.6"><h2 data-number="28.6" class="anchored" data-anchor-id="sec-smoothing-ml-connection">
 <span class="header-section-number">28.6</span> Connecting smoothing to machine learning</h2>
-<p>To see how smoothing relates to machine learning with a concrete example, consider again our <a href="#sec-two-or-seven"><span>Section&nbsp;28.1</span></a> example. If we define the outcome <span class="math inline">\(Y = 1\)</span> for digits that are seven and <span class="math inline">\(Y=0\)</span> for digits that are 2, then we are interested in estimating the conditional probability:</p>
+<p>To see how smoothing relates to machine learning with a concrete example, consider again our <a href="#sec-two-or-seven" class="quarto-xref"><span>Section 28.1</span></a> example. If we define the outcome <span class="math inline">\(Y = 1\)</span> for digits that are seven and <span class="math inline">\(Y=0\)</span> for digits that are 2, then we are interested in estimating the conditional probability:</p>
 <p><span class="math display">\[
 p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid X_1=x_1 , X_2 = x_2).
 \]</span></p>
-<p>with <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> the two predictors defined in <a href="#sec-two-or-seven"><span>Section&nbsp;28.1</span></a>. In this example, the 0s and 1s we observe are “noisy” because for some regions the probabilities <span class="math inline">\(p(\mathbf{x})\)</span> are not that close to 0 or 1. We therefore need to estimate <span class="math inline">\(p(\mathbf{x})\)</span>. Smoothing is an alternative to accomplishing this. In <a href="#sec-two-or-seven"><span>Section&nbsp;28.1</span></a>, we saw that linear regression was not flexible enough to capture the non-linear nature of <span class="math inline">\(p(\mathbf{x})\)</span>, thus smoothing approaches provide an improvement. In <a href="resampling-methods.html#sec-knn-cv-intro"><span>Section&nbsp;29.1</span></a>, we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.</p>
+<p>with <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> the two predictors defined in <a href="#sec-two-or-seven" class="quarto-xref"><span>Section 28.1</span></a>. In this example, the 0s and 1s we observe are “noisy” because for some regions the probabilities <span class="math inline">\(p(\mathbf{x})\)</span> are not that close to 0 or 1. We therefore need to estimate <span class="math inline">\(p(\mathbf{x})\)</span>. Smoothing is an alternative to accomplishing this. In <a href="#sec-two-or-seven" class="quarto-xref"><span>Section 28.1</span></a>, we saw that linear regression was not flexible enough to capture the non-linear nature of <span class="math inline">\(p(\mathbf{x})\)</span>, thus smoothing approaches provide an improvement. In <a href="resampling-methods.html#sec-knn-cv-intro" class="quarto-xref"><span>Section 29.1</span></a>, we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.</p>
 </section><section id="exercises" class="level2" data-number="28.7"><h2 data-number="28.7" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">28.7</span> Exercises</h2>
 <p>1. The <strong>dslabs</strong> package provides the following dataset with mortality counts for Puerto Rico for 2015-2018.</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/unnamed-chunk-3_018f4e9374a4b5c1dfd1fa1815bdbfc3">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="va">pr_death_counts</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Remove data from before May 2018, then use the <code>loess</code> function to obtain a smooth estimate of the expected number of deaths as a function of date. Plot this resulting smooth function. Make the span about two months long.</p>
 <p>2. Plot the smooth estimates against day of the year, all on the same plot but with different colors.</p>
 <p>3. Suppose we want to predict 2s and 7s in our <code>mnist_27</code> dataset with just the second covariate. Can we do this? On first inspection it appears the data does not have much predictive power. In fact, if we fit a regular logistic regression, the coefficient for <code>x_2</code> is not significant!</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/unnamed-chunk-4_c4ed25351bc61e175b81e6ed0c4108bc">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/">broom</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> </span>
@@ -776,7 +810,7 @@ p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid X_1=x_1 , X_2 = x_2).
 <span>  <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Plotting a scatterplot here is not useful since <code>y</code> is binary:</p>
-<div class="cell" data-layout-align="center" data-hash="smoothing_cache/html/unnamed-chunk-5_0b5759544f7991760bbf2e2d8546d242">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/qplot.html">qplot</a></span><span class="op">(</span><span class="va">x_2</span>, <span class="va">y</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Fit a loess line to the data above and plot the results. Notice that there is predictive power, except the conditional probability is not linear.</p>
@@ -822,18 +856,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -865,11 +888,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -879,8 +941,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -892,7 +963,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -936,6 +1130,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -961,6 +1156,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1020,23 +1241,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="../ml/conditionals.html" class="pagination-link">
+      <a href="../ml/conditionals.html" class="pagination-link" aria-label="Conditional probabilities and expectations">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Conditional probabilities and expectations</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../ml/resampling-methods.html" class="pagination-link">
+      <a href="../ml/resampling-methods.html" class="pagination-link" aria-label="Resampling methods">
         <span class="nav-page-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Resampling methods</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">Introduction to Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
-    </div>
-    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/ml/smoothing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
   </div>
 </footer>
 

@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.5.57">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
-<title>Introduction to Data Science - 9&nbsp; Hypothesis testing</title>
+<title>9&nbsp; Hypothesis testing – Introduction to Data Science</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,7 +20,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -31,7 +31,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -77,7 +77,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "start",
   "type": "textbox",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -86,28 +92,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
-}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 </head>
 <body class="nav-sidebar floating">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../inference/intro-inference.html">Statistical inference</a></li><li class="breadcrumb-item"><a href="../inference/hypothesis-testing.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></a></li></ol></nav>
-      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-      </a>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../inference/intro-inference.html">Statistical inference</a></li><li class="breadcrumb-item"><a href="../inference/hypothesis-testing.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
   </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Introduction to Data Science</a> 
         <div class="sidebar-tools-main">
@@ -143,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Summary statistics</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -166,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Probability</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -186,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></span></a>
   </div>
 </li>
       </ul>
@@ -195,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Statistical inference</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -254,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Linear Models</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -301,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">High dimensional data</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -342,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -399,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
     </ul>
 </div>
-</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
@@ -408,10 +441,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><a href="#p-values" id="toc-p-values" class="nav-link active" data-scroll-target="#p-values"><span class="header-section-number">9.1</span> p-values</a></li>
   <li><a href="#power" id="toc-power" class="nav-link" data-scroll-target="#power"><span class="header-section-number">9.2</span> Power</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">9.3</span> Exercises</a></li>
-  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/blob/main/inference/hypothesis-testing.qmd" class="toc-action">View source</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/inference/hypothesis-testing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../inference/intro-inference.html">Statistical inference</a></li><li class="breadcrumb-item"><a href="../inference/hypothesis-testing.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></a></li></ol></nav><div class="quarto-title">
 <h1 class="title"><span id="sec-hypothesis-testing" class="quarto-section-identifier"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Hypothesis testing</span></span></h1>
 </div>
 
@@ -425,28 +458,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header><p>In scientific studies, you’ll often see phrases like “the results are statistically significant”. This points to a technique called hypothesis testing, where we use p-values, a type of probability, to test our initial assumption or hypothesis.</p>
 <p>In hypothesis testing, rather than providing an estimate of the parameter we’re studying, we provide a probability that serves as evidence supporting or contradicting a specific hypothesis. The hypothesis usually involves whether a parameter is different from a predetermined value (often 0).</p>
 <p>Hypothesis testing is used when you can phrase your research question in terms of whether a parameter differs from this predetermined value. It’s applied in various fields, asking questions such as: Does a medication extend the lives of cancer patients? Does an increase in gun sales correlate with more gun violence? Does class size affect test scores?</p>
 <p>Take, for instance, the previously used example with colored beads. We might not be concerned about the exact proportion of blue beads, but instead ask: Are there more blue beads than red ones? This could be rephrased as asking if the proportion of blue beads is more than 0.5.</p>
 <p>The initial hypothesis that the parameter equals the predetermined value is called the “null hypothesis”. It’s popular because it allows us to focus on the data’s properties under this null scenario. Once data is collected, we estimate the parameter and calculate the p-value, which is the probability of the estimate being as extreme as observed if the null hypothesis is true. If the p-value is small, it indicates the null hypothesis is unlikely, providing evidence against it.</p>
-<p>We will see more examples of hypothesis testing in <a href="../linear-models/treatment-effect-models.html"><span>Chapter&nbsp;17</span></a>.</p>
+<p>We will see more examples of hypothesis testing in <a href="../linear-models/treatment-effect-models.html" class="quarto-xref"><span>Chapter 17</span></a>.</p>
 <section id="p-values" class="level2" data-number="9.1"><h2 data-number="9.1" class="anchored" data-anchor-id="p-values">
 <span class="header-section-number">9.1</span> p-values</h2>
-<p>Suppose we take a random sample of <span class="math inline">\(N=100\)</span> and we observe <span class="math inline">\(52\)</span> blue beads, which gives us <span class="math inline">\(\bar{X} = 0.52\)</span>. This seems to be pointing to the existence of more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual <span class="math inline">\(p=0.5\)</span>. We call the assumption that <span class="math inline">\(p = 0.5\)</span> a <em>null hypothesis</em>. The null hypothesis is the skeptic’s hypothesis.</p>
+<p>Suppose we take a random sample of <span class="math inline">\(N=100\)</span> and we observe <span class="math inline">\(52\)</span> blue beads, which gives us <span class="math inline">\(\bar{X} = 0.52\)</span>. This seems to be pointing to the existence of more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual <span class="math inline">\(p=0.5\)</span>. We call the assumption that <span class="math inline">\(\theta = 0.5\)</span> a <em>null hypothesis</em>. The null hypothesis is the skeptic’s hypothesis.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>We use <span class="math inline">\(\theta\)</span> (<code>theta</code> in R) to represent the probability of drawing a blue bead, instead of <span class="math inline">\(p\)</span> as in previous sections, to avoid confusion with the p-value.</p>
+</div>
+</div>
+</div>
 <p>We have observed a random variable <span class="math inline">\(\bar{X} = 0.52\)</span>, and the p-value is the answer to the question: How likely is it to see a value this large, when the null hypothesis is true? If the p-value is small enough, we <em>reject the null hypothesis</em> and say that the results are <em>statistically significant</em>.</p>
 <div class="{callout-warning}">
 <p>The p-value of 0.05 as a threshold for statistical significance is conventionally used in many areas of research. A cutoff of 0.01 is also used to define <em>highly significance</em>. The choice of 0.05 is somewhat arbitrary and was popularized by the British statistician Ronald Fisher in the 1920s. We do not recommend using these cutoff without justification and recommend avoiding the phrase <em>statistically significant</em>.</p>
 </div>
 <p>To obtain a p-value for our example, we write:</p>
 <p><span class="math display">\[\mbox{Pr}(\mid \bar{X} - 0.5 \mid &gt; 0.02 ) \]</span></p>
-<p>assuming the <span class="math inline">\(p=0.5\)</span>. Under the null hypothesis we know that:</p>
+<p>assuming the <span class="math inline">\(\theta=0.5\)</span>. Under the null hypothesis we know that:</p>
 <p><span class="math display">\[
 \sqrt{N}\frac{\bar{X} - 0.5}{\sqrt{0.5(1-0.5)}}
 \]</span></p>
 <p>is standard normal. We, therefore, can compute the probability above, which is the p-value.</p>
 <p><span class="math display">\[\mbox{Pr}\left(\sqrt{N}\frac{\mid \bar{X} - 0.5\mid}{\sqrt{0.5(1-0.5)}} &gt; \sqrt{N} \frac{0.02}{ \sqrt{0.5(1-0.5)}}\right)\]</span></p>
-<div class="cell" data-layout-align="center" data-hash="hypothesis-testing_cache/html/unnamed-chunk-1_c3b75c11447e862f91310b642e4c8915">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">N</span><span class="op">)</span><span class="op">*</span><span class="fl">0.02</span><span class="op">/</span><span class="fl">0.5</span></span>
 <span><span class="fl">1</span> <span class="op">-</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="op">-</span><span class="va">z</span><span class="op">)</span><span class="op">)</span></span>
@@ -461,14 +505,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section><section id="power" class="level2" data-number="9.2"><h2 data-number="9.2" class="anchored" data-anchor-id="power">
 <span class="header-section-number">9.2</span> Power</h2>
 <p>Pollsters are not successful at providing correct confidence intervals, but rather at predicting who will win. When we took a 25 bead sample size, the confidence interval for the spread:</p>
-<div class="cell" data-layout-align="center" data-hash="hypothesis-testing_cache/html/unnamed-chunk-2_24d1c62d28c1490521962bdf7cdd0a6a">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">25</span></span>
 <span><span class="va">x_hat</span> <span class="op">&lt;-</span> <span class="fl">0.48</span></span>
 <span><span class="op">(</span><span class="fl">2</span><span class="op">*</span><span class="va">x_hat</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.96</span>, <span class="fl">1.96</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">x_hat</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">x_hat</span><span class="op">)</span><span class="op">/</span><span class="va">N</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.432  0.352</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>included 0. If this were a poll and we were forced to make a declaration, we would have to say it was a “toss-up”.</p>
-<p>One problem with our poll results is that, given the sample size and the value of <span class="math inline">\(p\)</span>, we would have to sacrifice the probability of an incorrect call to create an interval that does not include 0.</p>
+<p>One problem with our poll results is that, given the sample size and the value of <span class="math inline">\(\theta\)</span>, we would have to sacrifice the probability of an incorrect call to create an interval that does not include 0.</p>
 <p>This does not mean that the election is close. It only means that we have a small sample size. In statistical textbooks, this is called lack of <em>power</em>. In the context of polls, <em>power</em> is the probability of detecting spreads different from 0.</p>
 <p>By increasing our sample size, we lower our standard error, and thus, have a much better chance of detecting the direction of the spread.</p>
 </section><section id="exercises" class="level2" data-number="9.3"><h2 data-number="9.3" class="anchored" data-anchor-id="exercises">
@@ -476,14 +520,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ol type="1">
 <li>Generate a sample of size <span class="math inline">\(N=1000\)</span> from an urn model with 50% blue beads:</li>
 </ol>
-<div class="cell" data-layout-align="center" data-hash="hypothesis-testing_cache/html/unnamed-chunk-3_6765ac924f733c05c43cc76ac5ea006d">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
+<span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">0.5</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>then, compute a p-value to test if <span class="math inline">\(p=0.5\)</span>. Repeat this 10,000 times and report how often the p-value is lower than 0.05? How often is it lower than 0.01?</p>
+<p>then, compute a p-value if <span class="math inline">\(\theta=0.5\)</span>. Repeat this 10,000 times and report how often the p-value is lower than 0.05? How often is it lower than 0.01?</p>
 <ol start="2" type="1">
-<li>Make a histogram of the p-values you generated in exercise 1. Which of the following seems to be true?</li>
+<li>Make a histogram of the p-values you generated in exercise 1.</li>
 </ol>
 <ol type="a">
 <li>The p-values are all 0.05.</li>
@@ -492,22 +536,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>The p-values are all less than 0.05.</li>
 </ol>
 <ol start="3" type="1">
-<li><p>Demonstrate, mathematically, why see the histogram we see in exercise 2.</p></li>
+<li><p>Demonstrate, mathematically, why see the histogram we see in exercise 2. Hint: To compute the p-value, we need to calculate a test statistic, <span class="math inline">\(Z\)</span>. We can approximate <span class="math inline">\(Z\)</span> using the CLT, which tells us that <span class="math inline">\(Z\)</span> approximately follows a standard normal distribution. FThe p-value is calculated as: <span class="math inline">\(p = 2\{1 - \Phi(|z|)\}\)</span> where:<br><span class="math inline">\(z\)</span> is the observed value of <span class="math inline">\(Z\)</span> and <span class="math inline">\(\Phi(z)\)</span> is the CDF of the standard normal distribution (<code>pnorm(z)</code> in R). To understand the distribution of the p-values, consider the probability that the p-value is less than or equal to some threshold <span class="math inline">\(a\)</span> between 0 and 1: <span class="math inline">\(\mbox{Pr}(p \leq a) = \mbox{Pr}(\{2\{1 - \Phi(|z|)\} \leq a)\)</span>. Remember that <span class="math inline">\(p\)</span> follows a uniform distribution if <span class="math inline">\(\mbox{Pr}(p \leq a) =a\)</span>.</p></li>
 <li><p>Generate a sample of size <span class="math inline">\(N=1000\)</span> from an urn model with 52% blue beads:</p></li>
 </ol>
-<div class="cell" data-layout-align="center" data-hash="hypothesis-testing_cache/html/unnamed-chunk-4_787209f36d193c47658bb423c0b30889">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">1000</span> </span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">0.52</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">0.52</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">N</span>, <span class="fl">1</span>, <span class="va">theta</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Compute a p-value to test if <span class="math inline">\(p=0.5\)</span>. Repeat this 10,000 times and report how often the p-value is larger than 0.05? Note that you are computing 1 - power.</p>
+<p>Compute a p-value to test if <span class="math inline">\(\theta=0.5\)</span>. Repeat this 10,000 times and report how often the p-value is larger than 0.05? Note that you are computing 1 - power.</p>
 <ol start="5" type="1">
 <li>Repeat exercise for but for the following values:</li>
 </ol>
-<div class="cell" data-layout-align="center" data-hash="hypothesis-testing_cache/html/unnamed-chunk-5_605869660c47e3e82a9f84daab328911">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.51</span> ,<span class="fl">0.75</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.51</span> ,<span class="fl">0.75</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Plot power as a function of <span class="math inline">\(N\)</span> with a different color curve for each value of <code>p</code>.</p>
+<p>Plot power as a function of <span class="math inline">\(N\)</span> with a different color curve for each value of <code>theta</code>.</p>
 
 
 </section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
@@ -545,18 +589,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -588,11 +621,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -602,8 +674,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -615,7 +696,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -659,6 +863,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -684,6 +889,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -743,23 +974,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="../inference/confidence-intervals.html" class="pagination-link">
+      <a href="../inference/confidence-intervals.html" class="pagination-link" aria-label="Confidence intervals">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Confidence intervals</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../inference/bootstrap.html" class="pagination-link">
+      <a href="../inference/bootstrap.html" class="pagination-link" aria-label="Bootstrap">
         <span class="nav-page-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Bootstrap</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">Introduction to Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
-    </div>
-    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/inference/hypothesis-testing.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
   </div>
 </footer>
 

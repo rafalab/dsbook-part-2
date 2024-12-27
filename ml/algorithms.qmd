@@ -18,7 +18,7 @@ $$
 p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid X_1=x_1 , X_2 = x_2) = 
 \beta_0 + \beta_1 x_1 + \beta_2 x_2
 $$
-using least squares after assigning numeric values of 0 and 1 to the outcomes $y$, and applied regression as if the data were continuous. A obvious problem with this approach is that $\hat{p}(\mathbf{x})$ can be negative and larger than 1:
+using least squares after assigning numeric values of 0 and 1 to the outcomes $y$, and applied regression as if the data were continuous. An obvious problem with this approach is that $\hat{p}(\mathbf{x})$ can be negative and larger than 1:
 
 ```{r}
 fit_lm <- lm(y ~ x_1 + x_2, data = mutate(mnist_27$train,y = ifelse(y == 7, 1, 0)))
@@ -468,10 +468,11 @@ fit <- train(region ~ .,  method = "knn",
 Using kNN, we can achieve a test set accuracy of `r fit$results[1,2]`. However, a bit of data exploration reveals that we should be able to do even better. For example, if we look at the distribution of each predictor stratified by region we see that eicosenoic is only present in Southern Italy and that linoleic separates Northern Italy from Sardinia.
 
 ```{r olive-eda, fig.height = 3, fig.width = 6, echo = FALSE}
-olive |> gather(fatty_acid, percentage, -region) |>
-  ggplot(aes(region, percentage, fill = region)) +
-  geom_boxplot() +
-  facet_wrap(~fatty_acid, scales = "free", ncol = 4) +
+olive |> 
+  pivot_longer(cols = -region, names_to = "fatty_acid", values_to = "percentage") |> 
+  ggplot(aes(region, percentage, fill = region)) + 
+  geom_boxplot() + 
+  facet_wrap(~fatty_acid, scales = "free", ncol = 4) + 
   theme(axis.text.x = element_blank(), legend.position = "bottom")
 ```
 
@@ -706,7 +707,7 @@ In this case, the accuracy improves as we add more trees until we have used abou
 The resulting estimate for this random forest, obtained with
 
 ```{r, eval=FALSE}
-y_hat <-  predict(fit, newdata = polls_2008
+y_hat <-  predict(fit, newdata = polls_2008)
 ```
 
 is shown with the red curve below:
@@ -814,7 +815,7 @@ library(randomForest)
 train_rf <- randomForest(y ~ ., data = mnist_27$train)
 ```
 
-The accuracy for the random forest fit for our 2 or 7 example is `confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"`. Here is what the conditional probabilities look like:
+The accuracy for the random forest fit for our 2 or 7 example is `r `confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. Here is what the conditional probabilities look like:
 
 ```{r cond-prob-rf, echo = FALSE, out.width = "100%"}
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")

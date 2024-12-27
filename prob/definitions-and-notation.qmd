@@ -1,0 +1,171 @@
+# Definitions and notation
+
+In probability theory, clear definitions and consistent notations are essential for effective communication and problem-solving. This chapter introduces some terms and symbols used throughout the study of probability. By establishing a common language, we ensures that we can describe probability topics with clarity and precision.
+
+## Events
+
+In probability theory, _events_ are fundamental concepts that help us understand and quantify uncertainty in various situations. 
+An event is defined as a specific outcome or a collection of outcomes from a random experiment. Understanding how to define and compute probabilities for events is crucial for analyzing random processes. 
+
+Simple examples of events can be constructed with urn[^discrete-probability-1] (most probability books use this archaic term, so we do too). If we have 2 red beads and 3 blue beads inside an urn, and we perform the random experiment of picking 1 bead,  
+there are two outcomes: bead is red or blue. There are four possible events:  "bead is red", "bead is blue", "bead is red or blue", and an event with no outcomes. In more complex random experiment, we can define many more events. For example if the random experiment is picking 2 beads, we can define events such as "first bead is red", "second bead is blue", "both beads are red", and so on. In a random experiment such as political poll, where we randomly phone 100 likely voters at random, we can form many million events, for example _calling 48 Democrats and 52 Republicans_. We usually use capital letters $A$, $B$, $C$, ... to to denote events. If we denote an event as $A$ then we use the notation $\mbox{Pr}(A)$ to denote the probability of event $A$ occurring. 
+
+We can combine events in different ways to form new events. For example,
+ if event $A$="first bead is red and second bead is blue", and $B$="first bead is red and second bead is red" then $A \cup B$ ($A$ or $B$) is the event "first bead is red", while $A \cap B$ ($A$ and $B$) is the empty event since both can't happen. 
+
+With continuous variables, events will relate to questions, such as "Is this person taller than 6 feet?" In these cases, we represent events in a more mathematical form: $A = X > 6$. 
+
+
+## Random Variables
+
+Random variables are numeric outcomes resulting from random processes. We can easily generate random variables using the simple examples we have shown. For example, define `X` to be 1 if a bead is blue and red otherwise:
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+set.seed(1)
+```
+
+```{r}
+beads <- rep( c("red", "blue"), times = c(2,3))
+x <- ifelse(sample(beads, 1) == "blue", 1, 0)
+```
+
+Here `X` is a random variable, changing randomly each time we select a new bead. Sometimes it's 1 and sometimes it's 0. See below:
+
+```{r}
+ifelse(sample(beads, 1) == "blue", 1, 0)
+ifelse(sample(beads, 1) == "blue", 1, 0)
+ifelse(sample(beads, 1) == "blue", 1, 0)
+```
+
+More interesting random variables are the number of times we win in a game of chance, the number of democrats in a random sample of 1,000 voters, and the proportion of patients randomly assigned to a control group in drug trial. 
+
+## Independence
+
+We say two events are independent if the outcome of one does not affect the other. The classic example is coin tosses. Every time we toss a fair coin, the probability of seeing heads is 1/2, regardless of what previous tosses have revealed. The same is true when we pick beads from an urn with replacement. In the example above, the probability of red is 0.40 regardless of previous draws.
+
+Many examples of events that are not independent come from card games. When we deal the first card, the probability of getting a King is 1/13 since there are thirteen possibilities: Ace, Deuce, Three, $\dots$, Ten, Jack, Queen, King, and Ace. Now, if we deal a King for the first card and do not replace it in the deck, the probability of a second card being a King decreases because there are only three Kings left. The probability is 3 out of 51. These events are therefore **not independent**: the first outcome affected the next one.
+
+To see an extreme case of non-independent events, consider our example of drawing five beads at random **without** replacement:
+
+```{r, echo=FALSE}
+set.seed(1)
+```
+
+```{r}
+x <- sample(beads, 5)
+```
+
+If you have to guess the color of the first bead, you will predict blue since blue has a 60% chance. However, if I show you the result of the last four outcomes:
+
+```{r}
+x[2:5]
+```
+
+would you still guess blue? Of course not. Now, you know the the only bead left is red. The events are not independent, so the probabilities change.
+
+## Conditional probabilities
+
+When events are not independent, *conditional probabilities* are useful. We have already described an example of a conditional probability: 
+
+$$
+\mbox{Pr}(\mbox{Card 2 is a king} \mid \mbox{Card 1 is a king}) = 3/51
+$$
+
+We use the $\mid$ is shorthand for "given that" or "conditional on."
+
+When two events, say $A$ and $B$, are independent, we have:
+
+$$
+\mbox{Pr}(A \mid B) = \mbox{Pr}(A) 
+$$
+
+This is the mathematical way of saying: the fact that $B$ happened does not affect the probability of $A$ happening. In fact, this can be considered the mathematical definition of independence.
+
+## Basic probability rules
+
+### Multiplication rule
+
+If we want to determine the probability of two events, say $A$ and $B$, occurring, we can use the multiplication rule:
+
+$$ 
+\mbox{Pr}(A \cap B) = \mbox{Pr}(A)\mbox{Pr}(B \mid A)
+$$ 
+
+Let's use Blackjack as an example. In Blackjack, you are assigned two random cards. After you see what you have, you can ask for more. The goal is to get closer to 21 than the dealer, without going over. Face cards are worth 10 points and Aces are worth 11 or 1 (you choose).
+
+In a Blackjack game, to calculate the chances of obtaining a 21 by drawing an Ace and then a face card, we compute the probability of the first card being an Ace and multiply it by the probability of drawing a face card or a 10, given that the first card was an Ace: $1/13 \times 16/51 \approx 0.025$
+
+The multiplication rule also applies to more than two events. We can use induction to expand for more events:
+
+$$ 
+\mbox{Pr}(A \cap B \cap C) = \mbox{Pr}(A)\mbox{Pr}(B \mid A)\mbox{Pr}(C \mid A \mbox{ and } B)
+$$
+
+### Multiplication rule under independence
+
+When dealing with independent events, the multiplication rule becomes simpler:
+
+$$ 
+\mbox{Pr}(A \cap B \cup C) = \mbox{Pr}(A)\mbox{Pr}(B)\mbox{Pr}(C)
+$$
+
+However, we have to be very careful before using this version of the multiplication rule, since assuming independence can result in very different and incorrect probability calculations when events are not actually independent.
+
+As an example, imagine a court case in which the suspect was described as having a mustache and a beard. The defendant has a mustache and a beard, and the prosecution brings in an "expert" to testify that 1/10 men have beards and 1/5 have mustaches. Using the multiplication rule, we therefore conclude that only $1/10 \times 1/5$ or 0.02 have both.
+
+But, to multiply like this, we need to assume independence! Let's say the conditional probability of a man having a mustache, conditional on him having a beard, is .95. Then, the correct calculation probability is much higher: $1/10 \times 95/100 = 0.095$.
+
+The multiplication rule also gives us a general formula for computing conditional probabilities:
+
+$$ 
+\mbox{Pr}(B \mid A) = \frac{\mbox{Pr}(A \cap B)}{ \mbox{Pr}(A)}
+$$
+
+To illustrate how we use these formulas and concepts in practice, we will use several examples related to card games.
+
+### Addition rule
+
+The addition rule tells us that:
+
+$$
+\mbox{Pr}(A \cup B) = \mbox{Pr}(A) + \mbox{Pr}(B) - \mbox{Pr}(A \cap B)
+$$
+
+This rule is intuitive; consider a Venn diagram. If we simply add the probabilities, we count the intersection twice, so we need to subtract one instance.
+
+```{r venn-diagram-addition-rule, fig.height=7.5, fig.width=7.5, echo=FALSE, warning=FALSE, message=FALSE, out.width="35%", cache=FALSE}
+library(VennDiagram)
+rafalib::mypar()
+grid.newpage()
+tmp <- draw.pairwise.venn(22, 20, 11, category = c("A", "B"), 
+                   lty = rep("blank", 2), 
+                   fill = c("light blue", "pink"), 
+                   alpha = rep(0.5, 2),  
+                   cat.dist = rep(0.025, 2), cex = 0, cat.cex = rep(2.5,2))
+```
+
+## Exercises
+
+1. Consider a fair six-sided die. The event $A$ is "rolling an even number." 
+List all the outcomes in event $A$.
+
+2. Consider tossing two fair six-sided die. The event $A$ is "the sum is 7". Write out seven different events that are a subset of $A$.  
+
+
+3. Two events $A$ and $B$ are independent if $\mbox{Pr}(A \mbox{ and } B) = \mbox{Pr}(A) P(B)$. Under which situation are the draws independent?
+
+a.  You don't replace the draw.
+b.  You replace the draw.
+c.  Neither.
+d.  Both.
+
+
+4. Let $A$ and $B$ be two independent events with  $\mbox{Pr}(A) = 0.4$ and $\mbox{P}(B) = 0.5$. What is $\mbox{Pr}(A \cap B)$, the probability that both $A$ and $B$ occur?
+
+5.Given two events $A$ and $B$ with $\mbox{Pr}(A) = 0.6$, $\mbox{Pr}(B|A) = 0.3$, calculate $\mbox{Pr}(A  \cap B)$ using the multiplication rule.
+
+
+6. Let $A$ and $B$ be two events such that  $\mbox{Pr}(A) = 0.3$,  $\mbox{Pr}(B) = 0.4$, and  $\mbox{Pr}(A|B) = 0.1$, What is  $\mbox{Pr}(A\cup B)$, the probability that either $A$ or $B$ or both occur?
+
+7. Let $A$ and $B$ be two events such that  $\mbox{Pr}(A) = 0.5$,  $\mbox{Pr}(B) = 0.2$, and  $\mbox{Pr}(A \cap B) = 0.1$. What is $\mbox{Pr}(B|A)$, the conditional probability that $B$ occurs given that $A$ has occurred?
+

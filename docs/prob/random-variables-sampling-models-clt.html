@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.5.57">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
-<title>Introduction to Data Science - 5&nbsp; Random variables</title>
+<title>5&nbsp; Foundations of statistical inference – Introduction to Data Science</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,7 +20,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -31,7 +31,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -77,7 +77,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "start",
   "type": "textbox",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -86,28 +92,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
-}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 </head>
 <body class="nav-sidebar floating">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../prob/intro-to-prob.html">Probability</a></li><li class="breadcrumb-item"><a href="../prob/random-variables-sampling-models-clt.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></a></li></ol></nav>
-      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-      </a>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../prob/intro-to-prob.html">Probability</a></li><li class="breadcrumb-item"><a href="../prob/random-variables-sampling-models-clt.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
   </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Introduction to Data Science</a> 
         <div class="sidebar-tools-main">
@@ -143,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Summary statistics</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -166,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Probability</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -186,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></span></a>
   </div>
 </li>
       </ul>
@@ -195,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Statistical inference</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -254,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Linear Models</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -301,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">High dimensional data</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -342,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -399,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
     </ul>
 </div>
-</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
@@ -424,12 +457,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul>
 </li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">5.9</span> Exercises</a></li>
-  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/blob/main/prob/random-variables-sampling-models-clt.qmd" class="toc-action">View source</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/prob/random-variables-sampling-models-clt.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../prob/intro-to-prob.html">Probability</a></li><li class="breadcrumb-item"><a href="../prob/random-variables-sampling-models-clt.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></a></li></ol></nav><div class="quarto-title">
 <h1 class="title">
-<span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span>
+<span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span>
 </h1>
 </div>
 
@@ -443,17 +476,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
-</header><p>In data science, we often work with data that is affected by chance, whether it comes from a random sample, is subject to measurement error, or measures some outcome that is random in nature. Being able to quantify the uncertainty introduced by randomness is one of the most important jobs of a data analyst. Statistical inference offers a framework, as well as several practical tools, for accomplishing this. The first step is learning how to mathematically describe random variables.</p>
+
+</header><p>We often work with data that is affected by chance, whether it comes from a random sample, is subject to measurement error, or measures some outcome that is random in nature. Being able to quantify the uncertainty introduced by randomness is one of the most important jobs of a data analyst. Statistical inference offers a framework, as well as several practical tools, for accomplishing this. The first step is learning how to mathematically describe random variables.</p>
 <p>In this chapter, we introduce random variables and their properties, starting with their application to games of chance. We then describe some of the events surrounding the financial crisis of 2007-2008<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> using probability theory. This financial crisis was in part caused by underestimating the risk of certain securities<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> sold by financial institutions. Specifically, the risks of mortgage-backed securities (MBS) and collateralized debt obligations (CDO) were grossly underestimated. These assets were sold at prices that assumed most homeowners would make their monthly payments, and the probability of this not occurring was calculated as being low. A combination of factors resulted in many more defaults than were expected, which led to a price crash of these securities. As a consequence, banks lost so much money that they required government bailouts to avoid complete closure.</p>
 <section id="random-variables" class="level2" data-number="5.1"><h2 data-number="5.1" class="anchored" data-anchor-id="random-variables">
 <span class="header-section-number">5.1</span> Random variables</h2>
 <p>Random variables are numeric outcomes resulting from random processes. We can easily generate random variables using some of the simple examples we have shown. For example, define <code>X</code> to be 1 if a bead is blue and red otherwise:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-2_05f311c9b48d5f66530ac78e0051028f">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">beads</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"blue"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">2</span>,<span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">beads</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">==</span> <span class="st">"blue"</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Here <code>X</code> is a random variable, changing randomly each time we select a new bead. See below:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-3_a92fb94e075e7ae2e43dead4dfaa489e">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">beads</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">==</span> <span class="st">"blue"</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">beads</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">==</span> <span class="st">"blue"</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span></span>
@@ -467,22 +501,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Many data generation procedures, those that produce the data we study, can be effectively modeled as draws from an urn. For instance, we can model the process of polling likely voters as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the 0 and 1 codes for all likely voters. In epidemiological studies, we often assume that the subjects in our study are a random sample from the population of interest. The data related to a specific outcome can be modeled as a random sample from an urn containing the outcomes for the entire population of interest. Similarly, in experimental research, we often assume that the individual organisms we are studying, for example worms, flies, or mice, are a random sample from a larger population. Randomized experiments can be modeled by draws from an urn, reflecting the way individuals are assigned into group; when getting assigned, individuals draw their group at random. Sampling models are therefore ubiquitous in data science. Casino games offer a plethora of real-world cases in which sampling models are used to answer specific questions. We will therefore start with these examples.</p>
 <p>Suppose a very small casino hires you to consult on whether they should set up roulette wheels. To keep the example simple, we will assume that 1,000 people will play, and that the only game available on the roulette wheel is to bet on red or black. The casino wants you to predict how much money they will make or lose. They want a range of values and, in particular, they want to know what’s the chance of losing money. If this probability is too high, they will decide against installing roulette wheels.</p>
 <p>We are going to define a random variable <span class="math inline">\(S\)</span> that will represent the casino’s total winnings. Let’s start by constructing the urn. A roulette wheel has 18 red pockets, 18 black pockets and 2 green ones. So playing a color in one game of roulette is equivalent to drawing from this urn:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-4_395fb63cf168b6561f84e16ee9ce50d0">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">color</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Black"</span>, <span class="st">"Red"</span>, <span class="st">"Green"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">18</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The 1,000 outcomes from 1,000 people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in a draw a -$1. Otherwise, the casino wins a dollar, and we draw a $1. To construct our random variable <span class="math inline">\(S\)</span>, we can use this code:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-5_747c80abd9176c7e8ccb9e43bcddb1af">
+<p>The 1,000 outcomes from 1,000 people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in the observed random variable being -$1. Otherwise, the casino wins a dollar, and the random variable is $1. To construct our random variable <span class="math inline">\(S\)</span>, we can use this code:</p>
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">color</span> <span class="op">==</span> <span class="st">"Red"</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,  <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">]</span></span>
 <span><span class="co">#&gt;  [1] -1  1  1 -1 -1 -1  1  1  1  1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Because we know the proportions of 1s and -1s, we can generate the draws with one line of code, without defining <code>color</code>:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-6_035f57a1d0e21d054c74316773f3d6d3">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We call this a <strong>sampling model</strong>, as it involves modeling the random behavior of roulette through the sampling of draws from an urn. The total winnings <span class="math inline">\(S\)</span> is simply the sum of these 1,000 independent draws:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-7_c5ff607bda531993417a3285d81ea8b4">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span><span class="va">S</span></span>
@@ -490,10 +524,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </section><section id="the-probability-distribution-of-a-random-variable" class="level2" data-number="5.3"><h2 data-number="5.3" class="anchored" data-anchor-id="the-probability-distribution-of-a-random-variable">
 <span class="header-section-number">5.3</span> The probability distribution of a random variable</h2>
-<p>If you run the code above, you see that <span class="math inline">\(S\)</span> changes every time. This is, of course, because <span class="math inline">\(S\)</span> is a <strong>random variable</strong>. The probability distribution of a random variable informs us about the probability of the observed value falling at any given interval. For example, if we want to know the probability that we lose money, we are asking the probability that <span class="math inline">\(S\)</span> is in the interval <span class="math inline">\(S&lt;0\)</span>.</p>
+<p>If you rerun the code above, you see that <span class="math inline">\(S\)</span> changes every time. This is, of course, because <span class="math inline">\(S\)</span> is a <strong>random variable</strong>. The probability distribution of a random variable informs us about the probability of the observed value falling in any given interval. For example, if we want to know the probability that we lose money, we are asking the probability that <span class="math inline">\(S\)</span> is in the interval <span class="math inline">\((-\infty,0)\)</span>.</p>
 <p>Keep in mind that if we can define a cumulative distribution function <span class="math inline">\(F(a) = \mbox{Pr}(S\leq a)\)</span>, then we will be able to answer any question related to the probability of events defined by our random variable <span class="math inline">\(S\)</span>, including the event <span class="math inline">\(S&lt;0\)</span>. We call this <span class="math inline">\(F\)</span> the random variable’s <em>distribution function</em>.</p>
 <p>We can estimate the distribution function for the random variable <span class="math inline">\(S\)</span> by using a Monte Carlo simulation to generate many realizations of the random variable. With this code, we run the experiment of having 1,000 people repeatedly play roulette, specifically <span class="math inline">\(B = 10,000\)</span> times:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-8_c8f5a60631dbae6274fe7003d47065f8">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
 <span><span class="va">roulette_winnings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">{</span></span>
@@ -502,20 +536,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span><span class="op">}</span></span>
 <span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="va">B</span>, <span class="fu">roulette_winnings</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Now, we can ask the following: in our simulations, how often did we get sums less than or equal to <code>a</code>?</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-9_9a9b544060b3940ffd160f58fafe9cb0">
+<p>Now, we can ask the following: in our simulation, how often did we get sums less than or equal to <code>a</code>?</p>
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">S</span> <span class="op">&lt;=</span> <span class="va">a</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This will be a very good approximation of <span class="math inline">\(F(a)\)</span>, allowing us to easily answer the casino’s question: How likely is it that we will lose money? We can see it is quite low:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-10_eaf2277fdcd5abed19f2dc72038f6823">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">S</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0456</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can visualize the distribution of <span class="math inline">\(S\)</span> by creating a histogram showing the probability <span class="math inline">\(F(b)-F(a)\)</span> for several intervals <span class="math inline">\((a,b]\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/normal-approximates-distribution_09b92fb9f5f64583808a6528fa7b5e88">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="random-variables-sampling-models-clt_files/figure-html/normal-approximates-distribution-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="random-variables-sampling-models-clt_files/figure-html/normal-approximates-distribution-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -526,13 +560,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>We can use the function <code>dbinom</code> and <code>pbinom</code> to compute the probabilities exactly. For example, to compute <span class="math inline">\(\mbox{Pr}(S &lt; 0)\)</span>, we note that:</p>
 <p><span class="math display">\[\mbox{Pr}(S &lt; 0) = \mbox{Pr}((S+n)/2 &lt; (0+n)/2)\]</span></p>
 <p>and we can use the <code>pbinom</code> to compute <span class="math display">\[\mbox{Pr}(S \leq 0)\]</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-11_bd45546d26ecad71e5e486c0d6610033">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">pbinom</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span>, size <span class="op">=</span> <span class="va">n</span>, prob <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0511</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Since this is a discrete probability function, to obtain <span class="math inline">\(\mbox{Pr}(S &lt; 0)\)</span> rather than <span class="math inline">\(\mbox{Pr}(S \leq 0)\)</span>, we write:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-12_ea392be23f5d60bceae3ab2161a9f2ba">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">pbinom</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="va">n</span>, prob <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0448</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -541,7 +575,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section><section id="distributions-versus-probability-distributions" class="level2" data-number="5.4"><h2 data-number="5.4" class="anchored" data-anchor-id="distributions-versus-probability-distributions">
 <span class="header-section-number">5.4</span> Distributions versus probability distributions</h2>
 <p>Before we continue, let’s establish an important distinction and connection between the distribution of a list of numbers and a probability distribution. Any list of numbers <span class="math inline">\(x_1,\dots,x_n\)</span> has a distribution. The definition is quite straightforward. We define <span class="math inline">\(F(a)\)</span> as the function that indicates what proportion of the list is less than or equal to <span class="math inline">\(a\)</span>. Given their usefulness as summaries when the distribution is approximately normal, we also define the average and standard deviation. These are determined with a straightforward operation involving the vector containing the list of numbers, denoted as <code>x</code>:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-13_84f696f62b0ec49439345b1d1505333f">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="va">m</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -551,7 +585,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section><section id="notation-for-random-variables" class="level2" data-number="5.5"><h2 data-number="5.5" class="anchored" data-anchor-id="notation-for-random-variables">
 <span class="header-section-number">5.5</span> Notation for random variables</h2>
 <p>In statistical textbooks, upper case letters denote random variables, and we will adhere to this convention. Lower case letters are used for observed values. You will see some notation that include both. For example, you will see events defined as <span class="math inline">\(X \leq x\)</span>. Here <span class="math inline">\(X\)</span> is a random variable and <span class="math inline">\(x\)</span> is an arbitrary value and not random. So, for example, <span class="math inline">\(X\)</span> might represent the number on a die roll and <span class="math inline">\(x\)</span> will represent an actual value we see: 1, 2, 3, 4, 5, or 6. In this case, the probability of <span class="math inline">\(X=x\)</span> is 1/6 regardless of the observed value <span class="math inline">\(x\)</span>.</p>
-<p>This notation may seem a bit strange because when we inquire about probability, <span class="math inline">\(X\)</span> is not an observed quantity; it’s a random quantity that we will encounter in the future. We can discuss what we expect <span class="math inline">\(X\)</span> to be, what values are probable, but we can’t discuss what value <span class="math inline">\(X\)</span> is. Once we have data, we do see a realization of <span class="math inline">\(X\)</span>. Therefore, data analysits often speak of what could have been after observing what actually happened.</p>
+<p>This notation may seem a bit strange because when we inquire about probability, <span class="math inline">\(X\)</span> is not an observed quantity; it’s a random quantity that we will encounter in the future. We can discuss what we expect <span class="math inline">\(X\)</span> to be, what values are probable, but we can’t discuss what value <span class="math inline">\(X\)</span> is. Once we have data, we do see a realization of <span class="math inline">\(X\)</span>. Therefore, data analysts often speak of what could have been after observing what actually happened.</p>
 </section><section id="the-expected-value-and-standard-error" class="level2" data-number="5.6"><h2 data-number="5.6" class="anchored" data-anchor-id="the-expected-value-and-standard-error">
 <span class="header-section-number">5.6</span> The expected value and standard error</h2>
 <p>We have described sampling models for draws. We will now review the mathematical theory that allows us to approximate the probability distributions for the sum of draws. Once we do this, we will be able to help the casino predict how much money they will make. The same approach we use for the sum of draws will be useful for describing the distribution of averages and proportion, which we will need to understand how polls work.</p>
@@ -575,7 +609,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \mbox{E}[X] = (20 + -18)/38
 \]</span></p>
 <p>which is about 5 cents. You might consider it a bit counterintuitive to say that <span class="math inline">\(X\)</span> varies around 0.05 when it only takes the values 1 and -1. One way to make sense of the expected value in this context is by realizing that, if we play the game over and over, the casino wins, on average, 5 cents per game. A Monte Carlo simulation confirms this:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-14_5c9f89c2cf4f7ab83bda76f48ccf43d2">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">10</span><span class="op">^</span><span class="fl">6</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">B</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -602,7 +636,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \]</span> Using the definition of standard deviation, we can derive, with a bit of math, that if an urn contains two values <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> with proportions <span class="math inline">\(p\)</span> and <span class="math inline">\((1-p)\)</span>, respectively, the standard deviation is:</p>
 <p><span class="math display">\[\mid b - a \mid \sqrt{p(1-p)}.\]</span></p>
 <p>So in our roulette example, the standard deviation of the values inside the urn is <span class="math inline">\(\mid 1 - (-1) \mid \sqrt{10/19 \times 9/19}\)</span> or:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-15_41b23484560c8f2e830cf87586a6578f">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
 <span><span class="co">#&gt; [1] 0.999</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -612,7 +646,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \sqrt{\mbox{number of draws}} \times \mbox{ standard deviation of the numbers in the urn}
 \]</span></p>
 <p>Using this formula, the sum of 1,000 people playing has standard error of about $32:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-16_fbbb816c51a199c064aeab086149e2f7">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
 <span><span class="co">#&gt; [1] 31.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -633,7 +667,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The Central Limit Theorem (CLT) tells us that when the number of draws, also called the <em>sample size</em>, is large, the probability distribution of the sum of the independent draws is approximately normal. Given that sampling models are used for so many data generation processes, the CLT is considered one of the most important mathematical insights in history.</p>
 <p>Previously, we discussed that if we know that the distribution of a list of numbers is approximated by the normal distribution, all we need to describe the list are the average and standard deviation. We also know that the same applies to probability distributions. If a random variable has a probability distribution that is approximated with the normal distribution, then all we need to describe the probability distribution are the average and standard deviation, referred to as the expected value and standard error.</p>
 <p>We previously ran this Monte Carlo simulation:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-17_8100712df9ef97fbab3b5864c6761536">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">B</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
 <span><span class="va">roulette_winnings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">{</span></span>
@@ -643,28 +677,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="va">B</span>, <span class="fu">roulette_winnings</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The Central Limit Theorem (CLT) tells us that the sum <span class="math inline">\(S\)</span> is approximated by a normal distribution. Using the formulas above, we know that the expected value and standard error are:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-18_0a994af58a78ed3104f12e286e96fd7e">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">*</span> <span class="op">(</span><span class="fl">20</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">/</span><span class="fl">38</span> </span>
 <span><span class="co">#&gt; [1] 52.6</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span> </span>
 <span><span class="co">#&gt; [1] 31.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The theoretical values above match those obtained with the Monte Carlo simulation:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-19_9f9fd29e3ce127e83131f4c4dcb465d8">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 52.2</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 31.7</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Using the CLT, we can skip the Monte Carlo simulation and instead compute the probability of the casino losing money using this approximation:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-20_8e7a44d44e67e2e8eb3aa322a30c1d6e">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="va">n</span><span class="op">*</span><span class="op">(</span><span class="fl">20</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">/</span><span class="fl">38</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span> </span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">mu</span>, <span class="va">se</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0478</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>which is also in very good agreement with our Monte Carlo result:</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-21_11126d408d45483b599971ab9bca2945">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">S</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.0458</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -727,7 +761,7 @@ The assumption of independence is important
 <div class="callout-body-container callout-body">
 <p>Let’s make the explanation more concise and clear:</p>
 <p>The given equation reveals crucial insights for practical scenarios. Specifically, it suggests that the standard error can be minimized by increasing the sample size, <span class="math inline">\(n\)</span>, and we can quantify this reduction. However, this principle holds true only when the variables <span class="math inline">\(X_1, X_2, ... X_n\)</span> are independent. If they are not, the estimated standard error can be significantly off.</p>
-<p>In <a href="../linear-models/regression.html#sec-corr-coef"><span>Section&nbsp;14.2</span></a>, we introduce the concept of correlation, which quantifies the degree to which variables are interdependent. If the correlation coefficient among the ( X ) variables is ( ), the standard error of their average is:</p>
+<p>In <a href="../linear-models/regression.html#sec-corr-coef" class="quarto-xref"><span>Section 14.2</span></a>, we introduce the concept of correlation, which quantifies the degree to which variables are interdependent. If the correlation coefficient among the ( X ) variables is ( ), the standard error of their average is:</p>
 <p><span class="math display">\[
 \mbox{SE}\left(\bar{X}\right) = \sigma \sqrt{\frac{1 + (n-1) \rho}{n}}
 \]</span></p>
@@ -753,10 +787,7 @@ Misinterpretation of the law of averages
 </section></section><section id="exercises" class="level2" data-number="5.9"><h2 data-number="5.9" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">5.9</span> Exercises</h2>
 <p>1. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks and 2 greens (0 and 00). What are the chances the green comes out?</p>
-<p>2. The payout for winning on green is $17 dollars. This means that if you bet a dollar and it lands on green, you get $17. Create a sampling model using sample to simulate the random variable <span class="math inline">\(X\)</span> for your winnings. Hint: Refer to the example below for how it should look like when betting on red.</p>
-<div class="cell" data-layout-align="center" data-hash="random-variables-sampling-models-clt_cache/html/unnamed-chunk-22_e5f32195ea257197c08452d70325bd02">
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span>, <span class="fl">1</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<p>2. The payout for winning on green is $17 dollars. This means that if you bet a dollar and it lands on green, you get $17. Create a sampling model using <code>sample</code> to simulate the random variable <span class="math inline">\(X\)</span> for your winnings. Hint: Refer to the example below for how it should look like when betting on red.</p>
 <p>3. Compute the expected value of <span class="math inline">\(X\)</span>.</p>
 <p>4. Compute the standard error of <span class="math inline">\(X\)</span>.</p>
 <p>5. Now create a random variable <span class="math inline">\(S\)</span> that is the sum of your winnings after betting on green 1000 times. Hint: change the argument <code>size</code> and <code>replace</code> in your answer to exercise 2. Start your code by setting the seed to 1 with <code>set.seed(1)</code>.</p>
@@ -844,18 +875,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -887,11 +907,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -901,8 +960,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -914,7 +982,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -958,6 +1149,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -983,6 +1175,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1042,23 +1260,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="../prob/continuous-probability.html" class="pagination-link">
+      <a href="../prob/continuous-probability.html" class="pagination-link" aria-label="Continuous probability">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Continuous probability</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../inference/intro-inference.html" class="pagination-link">
+      <a href="../inference/intro-inference.html" class="pagination-link" aria-label="Statistical inference">
         <span class="nav-page-text">Statistical inference</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">Introduction to Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
-    </div>
-    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/prob/random-variables-sampling-models-clt.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
   </div>
 </footer>
 

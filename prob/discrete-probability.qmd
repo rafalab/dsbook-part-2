@@ -12,11 +12,6 @@ For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-prob
 
 A more tangible way to think about the probability of an event is as the proportion of times the event occurs when we repeat the experiment an infinite number of times, independently, and under the same conditions.
 
-## Notation
-
-We use the notation $\mbox{Pr}(A)$ to denote the probability of event $A$ occurring. We use the very general term *event* to refer to things that can happen when something occurs by chance. In our previous example, the event was "picking a red bead." In a political poll, where we randomly phone 100 likely voters at random, an example of an event is "calling 48 Democrats and 52 Republicans."
-
-In data science applications, we often encounter continuous variables. These events will often be questions, such as "Is this person taller than 6 feet?" In these cases, we represent events in a more mathematical form: $X > 6$. We will see more of these examples later, but for now, we will focus on categorical data.
 
 ## Probability distributions
 
@@ -121,108 +116,6 @@ prop.table(table(events))
 
 Not surprisingly, we get results very similar to those previously obtained with `replicate`.
 
-## Independence
-
-We say two events are independent if the outcome of one does not affect the other. The classic example is coin tosses. Every time we toss a fair coin, the probability of seeing heads is 1/2, regardless of what previous tosses have revealed. The same is true when we pick beads from an urn with replacement. In the example above, the probability of red is 0.40 regardless of previous draws.
-
-Many examples of events that are not independent come from card games. When we deal the first card, the probability of getting a King is 1/13 since there are thirteen possibilities: Ace, Deuce, Three, $\dots$, Ten, Jack, Queen, King, and Ace. Now, if we deal a King for the first card and do not replace it in the deck, the probability of a second card being a King decreases because there are only three Kings left. The probability is 3 out of 51. These events are therefore **not independent**: the first outcome affected the next one.
-
-To see an extreme case of non-independent events, consider our example of drawing five beads at random **without** replacement:
-
-```{r, echo=FALSE}
-set.seed(1)
-```
-
-```{r}
-x <- sample(beads, 5)
-```
-
-If you have to guess the color of the first bead, you will predict blue since blue has a 60% chance. However, if I show you the result of the last four outcomes:
-
-```{r}
-x[2:5]
-```
-
-would you still guess blue? Of course not. Now, you know that the probability of red, as the the only bead left is red. The events are not independent, so the probabilities change.
-
-## Conditional probabilities
-
-When events are not independent, *conditional probabilities* are useful. We have already demonstrated an example of a conditional probability: we computed the probability that a second dealt card is a King given that the first was a King. In probability, we use the following notation:
-
-$$
-\mbox{Pr}(\mbox{Card 2 is a king} \mid \mbox{Card 1 is a king}) = 3/51
-$$
-
-We use the $\mid$ as shorthand for "given that" or "conditional on."
-
-When two events, say $A$ and $B$, are independent, we have:
-
-$$
-\mbox{Pr}(A \mid B) = \mbox{Pr}(A) 
-$$
-
-This is the mathematical way of saying: the fact that $B$ happened does not affect the probability of $A$ happening. In fact, this can be considered the mathematical definition of independence.
-
-## Addition and multiplication rules
-
-### Multiplication rule
-
-If we want to determine the probability of two events, say $A$ and $B$, occurring, we can use the multiplication rule:
-
-$$ 
-\mbox{Pr}(A \mbox{ and } B) = \mbox{Pr}(A)\mbox{Pr}(B \mid A)
-$$ Let's use Blackjack as an example. In Blackjack, you are assigned two random cards. After you see what you have, you can ask for more. The goal is to get closer to 21 than the dealer, without going over. Face cards are worth 10 points and Aces are worth 11 or 1 (you choose).
-
-In a Blackjack game, to calculate the chances of obtaining a 21 by drawing an Ace and then a face card, we compute the probability of the first card being an Ace and multiply it by the probability of drawing a face card or a 10, given that the first card was an Ace: $1/13 \times 16/51 \approx 0.025$
-
-The multiplication rule also applies to more than two events. We can use induction to expand for more events:
-
-$$ 
-\mbox{Pr}(A \mbox{ and } B \mbox{ and } C) = \mbox{Pr}(A)\mbox{Pr}(B \mid A)\mbox{Pr}(C \mid A \mbox{ and } B)
-$$
-
-### Multiplication rule under independence
-
-When dealing with independent events, the multiplication rule becomes simpler:
-
-$$ 
-\mbox{Pr}(A \mbox{ and } B \mbox{ and } C) = \mbox{Pr}(A)\mbox{Pr}(B)\mbox{Pr}(C)
-$$
-
-However, we have to be very careful before using this version of the multiplication rule, since assuming independence can result in very different and incorrect probability calculations when events are not actually independent.
-
-As an example, imagine a court case in which the suspect was described as having a mustache and a beard. The defendant has a mustache and a beard, and the prosecution brings in an "expert" to testify that 1/10 men have beards and 1/5 have mustaches. Using the multiplication rule, we therefore conclude that only $1/10 \times 1/5$ or 0.02 have both.
-
-But, to multiply like this, we need to assume independence! Let's say the conditional probability of a man having a mustache, conditional on him having a beard, is .95. Then, the correct calculation probability is much higher: $1/10 \times 95/100 = 0.095$.
-
-The multiplication rule also gives us a general formula for computing conditional probabilities:
-
-$$ 
-\mbox{Pr}(B \mid A) = \frac{\mbox{Pr}(A \mbox{ and } B)}{ \mbox{Pr}(A)}
-$$
-
-To illustrate how we use these formulas and concepts in practice, we will use several examples related to card games.
-
-### Addition rule
-
-The addition rule tells us that:
-
-$$
-\mbox{Pr}(A \mbox{ or } B) = \mbox{Pr}(A) + \mbox{Pr}(B) - \mbox{Pr}(A \mbox{ and } B)
-$$
-
-This rule is intuitive; consider a Venn diagram. If we simply add the probabilities, we count the intersection twice, so we need to subtract one instance.
-
-```{r venn-diagram-addition-rule, fig.height=7.5, fig.width=7.5, echo=FALSE, warning=FALSE, message=FALSE, out.width="35%", cache=FALSE}
-library(VennDiagram)
-rafalib::mypar()
-grid.newpage()
-tmp <- draw.pairwise.venn(22, 20, 11, category = c("A", "B"), 
-                   lty = rep("blank", 2), 
-                   fill = c("light blue", "pink"), 
-                   alpha = rep(0.5, 2),  
-                   cat.dist = rep(0.025, 2), cex = 0, cat.cex = rep(2.5,2))
-```
 
 ## Combinations and permutations
 
@@ -505,7 +398,7 @@ We can now make a plot of the estimated probabilities of two people having the s
 ```{r birthday-problem-mc-probabilities, warning=FALSE, message=FALSE}
 library(tidyverse)
 prob <- sapply(n, compute_prob)
-qplot(n, prob)
+plot(n, prob)
 ```
 
 Now, let's compute the exact probabilities instead of relying on Monte Carlo approximations. Not only do we obtain the exact answer using math, but the computations are much faster since we did not have to generate experiments.
@@ -526,7 +419,8 @@ exact_prob <- function(n){
   1 - prod( prob_unique)
 }
 eprob <- sapply(n, exact_prob)
-qplot(n, prob) + geom_line(aes(n, eprob), col = "red")
+plot(n, prob)
+lines(n, eprob, col = "red")
 ```
 
 This plot shows that the Monte Carlo simulation provided a very good estimate of the exact probability. Had we not been able to compute the exact probabilities, we could still accurately estimate them.
@@ -561,20 +455,14 @@ In this plot, we can see that the values start to stabilize at around 1000. Note
 
 4\. Now repeat the experiment, but this time, after taking the first draw and recording the color, return it to the box and shake the box. We call this sampling **with** replacement. What is the probability of the first draw being cyan and the second draw not being cyan?
 
-5\. Two events $A$ and $B$ are independent if $\mbox{Pr}(A \mbox{ and } B) = \mbox{Pr}(A) P(B)$. Under which situation are the draws independent?
 
-a.  You don't replace the draw.
-b.  You replace the draw.
-c.  Neither.
-d.  Both.
+5\. Let's say you've drawn 5 balls from the box, with replacement, and all have been yellow. What is the probability that the next one will be yellow?
 
-6\. Let's say you've drawn 5 balls from the box, with replacement, and all have been yellow. What is the probability that the next one will be yellow?
+6\. If you roll a 6-sided die six times, what is the probability of not seeing a 6?
 
-7\. If you roll a 6-sided die six times, what is the probability of not seeing a 6?
+7\. Two teams, let's say the Celtics and the Cavs, are playing a seven game series. The Cavs are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game?
 
-8\. Two teams, let's say the Celtics and the Cavs, are playing a seven game series. The Cavs are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game?
-
-9\. Create a Monte Carlo simulation to confirm your answer to the previous problem. Use `B <- 10000` simulations. Hint: use the following code to generate the results of the first four games:
+8\. Create a Monte Carlo simulation to confirm your answer to the previous problem. Use `B <- 10000` simulations. Hint: use the following code to generate the results of the first four games:
 
 ```{r, eval=FALSE}
 celtic_wins <- sample(c(0,1), 4, replace = TRUE, prob = c(0.6, 0.4))
@@ -582,11 +470,11 @@ celtic_wins <- sample(c(0,1), 4, replace = TRUE, prob = c(0.6, 0.4))
 
 The Celtics must win one of these 4 games.
 
-10\. Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games, therefore, wins the series. The teams are equally good so they each have a 50-50 chance of winning each game. If the Cavs lose the first game, what is the probability that they win the series?
+9\. Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games, therefore, wins the series. The teams are equally good so they each have a 50-50 chance of winning each game. If the Cavs lose the first game, what is the probability that they win the series?
 
-11\. Confirm the results of the previous question with a Monte Carlo simulation.
+10\. Confirm the results of the previous question with a Monte Carlo simulation.
 
-12\. Two teams, $A$ and $B$, are playing a seven game series. Team $A$ is better than team $B$ and has a $p>0.5$ chance of winning each game. Given a value $p$, the probability of winning the series for the underdog team $B$ can be computed with the following function based on a Monte Carlo simulation:
+11\. Two teams, $A$ and $B$, are playing a seven game series. Team $A$ is better than team $B$ and has a $p>0.5$ chance of winning each game. Given a value $p$, the probability of winning the series for the underdog team $B$ can be computed with the following function based on a Monte Carlo simulation:
 
 ```{r, eval=FALSE}
 prob_win <- function(p){
@@ -601,14 +489,14 @@ prob_win <- function(p){
 
 Use the function `sapply` to compute the probability, call it `Pr`, of winning for `p <- seq(0.5, 0.95, 0.025)`. Then plot the result.
 
-13\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games,... Specifically, `N <- seq(1, 25, 2)`. Hint: use the function below.
+12\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games,... Specifically, `N <- seq(1, 25, 2)`. Hint: use the function below.
 
 ```{r, eval = FALSE}
-prob_win <- function(N, p = 0.75){
+prob_win <- function(n, p = 0.75){
   B <- 10000
   result <- replicate(B, {
-    b_win <- sample(c(1,0), N, replace = TRUE, prob = c(1 - p, p))
-    sum(b_win) >= (N+1)/2
+    b_win <- sample(c(1,0), n, replace = TRUE, prob = c(1 - p, p))
+    sum(b_win) >= (n + 1)/2
   })
   mean(result)
 }

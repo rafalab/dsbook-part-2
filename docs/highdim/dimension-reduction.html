@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.5.57">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
-<title>Introduction to Data Science - 22&nbsp; Dimension reduction</title>
+<title>22&nbsp; Dimension reduction – Introduction to Data Science</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,7 +20,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -31,7 +31,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -77,7 +77,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "start",
   "type": "textbox",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -86,28 +92,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
-}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 </head>
 <body class="nav-sidebar floating">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/dimension-reduction.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Dimension reduction</span></a></li></ol></nav>
-      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-      </a>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/dimension-reduction.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Dimension reduction</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
   </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Introduction to Data Science</a> 
         <div class="sidebar-tools-main">
@@ -143,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Summary statistics</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -166,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Probability</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -186,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></span></a>
   </div>
 </li>
       </ul>
@@ -195,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Statistical inference</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -254,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Linear Models</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -301,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">High dimensional data</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -342,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -399,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
     </ul>
 </div>
-</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
@@ -418,10 +451,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul>
 </li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">22.7</span> Exercises</a></li>
-  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/dimension-reduction.qmd" class="toc-action">View source</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/dimension-reduction.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/dimension-reduction.html"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Dimension reduction</span></a></li></ol></nav><div class="quarto-title">
 <h1 class="title">
 <span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Dimension reduction</span>
 </h1>
@@ -437,12 +470,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
-</header><p>A typical machine learning task involves working with a large number of predictors, which makes visualization somewhat challenging. We have shown methods for visualizing univariate and paired data, but plots that reveal relationships between many variables are more complicated in higher dimensions. For example, to compare each of the 784 features in our predicting digits example, we would have to create 306,936 scatterplots. Creating one single scatterplot of the data is impossible due to the high dimensionality.</p>
-<p>Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as <em>dimension reduction</em>. The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations. With fewer dimensions, visualization then becomes more feasible. The general technique behind it all, the singular value decomposition, is also useful in other contexts. Principal component analysis (PCA) is the approach we will be showing. We will motivate the ideas with a simple illustrative example and present some mathematical concepts needed to understand PCA. We finish the chapter by demonstrating the use of PCA in two more complex datasets.</p>
+
+</header><p>A typical machine learning task involves working with a large number of predictors, which can make data analysis quite challenging. For example, to compare each of the 784 features in our predicting digits example, we would have to create 306,936 scatterplots. Creating one single scatterplot of the data is impossible due to the high dimensionality.</p>
+<p>Here we describe powerful techniques useful for exploratory data analysis, among other things, generally referred to as <em>dimension reduction</em>. The general idea is to reduce the dimension of the dataset while preserving important characteristics, such as the distance between features or observations. With fewer dimensions, visualization then becomes more feasible. The general technique behind it all, the singular value decomposition, is also useful in other contexts. Principal Component Analysis (PCA) is the approach we will be showing. We will motivate the ideas with a simple illustrative example and present some mathematical concepts needed to understand PCA. We finish the chapter by demonstrating the use of PCA in two more complex datasets.</p>
 <section id="motivation-preserving-distance" class="level2" data-number="22.1"><h2 data-number="22.1" class="anchored" data-anchor-id="motivation-preserving-distance">
 <span class="header-section-number">22.1</span> Motivation: preserving distance</h2>
-<p>We consider an example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points that represent the number of standard deviations each individual is from the mean height. Each point is a pair of twins. We use the <code>mvrnorm</code> function from the <strong>MASS</strong> package to simulate bivariate normal data.</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-1_f5e2ed90b9ecd4dcecc43379a25c8e5d">
+<p>We consider an example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points with each point is a pair of twins. We use the <code>mvrnorm</code> function from the <strong>MASS</strong> package to simulate bivariate normal data.</p>
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1983</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.stats.ox.ac.uk/pub/MASS4/">MASS</a></span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
@@ -453,23 +487,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span>           <span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">60</span>, <span class="fl">60</span><span class="op">)</span>, <span class="va">s</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>A scatterplot quickly reveals that the correlation is high and that there are two groups of twins, the adults (upper right points) and the children (lower left points):</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-illustration_28716ad3636133df72880f2303070360">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-illustration-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-illustration-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:40.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Our features are <span class="math inline">\(n\)</span> two-dimensional points, the two heights. For illustrative purposes, we will pretend that visualizing two dimensions is too challenging and we want to explore the data through a histogram of a one-dimensional variable. We therefore want to reduce the dimensions from two to one, but still be able to understand important characteristics of the data, in particular that the observations cluster into two groups: adults and children. To show the ideas presented here are generally useful, we will standardize the data so that observations are in standard units rather than inches:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-2_0097cdf474582f4f71a70398a603ef1e">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/matrixStats">matrixStats</a></span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"/"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>In the figure above, we show the distance between observation 1 and 2 (blue), and observation 1 and 51 (red). Note that the blue line is shorter, which implies that 1 and 2 are closer.</p>
 <p>We can compute these distances using <code>dist</code>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-3_0de0a9af85006905a45522575741d2cb">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 0.595</span></span>
@@ -478,7 +512,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>This distance is based on two dimensions and we need a distance approximation based on just one.</p>
 <p>Let’s start with the naive approach of simply removing one of the two dimensions. Let’s compare the actual distances to the distances computed with just the first dimension:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-4_e4377268eb7f7d2da24f805c83f48df5">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To make the distances comparable, we divide the sum of squares by the number of dimensions being added. So for the two dimensional case, we have:</p>
@@ -486,14 +520,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 \sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 },
 \]</span></p>
 <p>To make the distances comparable, we divide by <span class="math inline">\(\sqrt{2}\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-5_6173f1d82b626e9dadb0900f33ddbe51">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-approx-1_0132557bf50bb3639af789c7f013037d">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-1-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-1-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:40.0%"></p>
 </figure>
 </div>
 </div>
@@ -512,10 +546,10 @@ x_1 = r \cos\phi, \,\, x_2 = r \sin\phi
 z_1 = r \cos(\phi+ \theta), \,\,
 z_2 = r \sin(\phi + \theta)
 \]</span></p>
-<div class="cell" data-layout-align="center" data-fig.asp="0.7" data-hash="dimension-reduction_cache/html/rotation-diagram_3dc61c8ea2294216bf8f34e4ca40807e">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/rotation-diagram-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/rotation-diagram-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -528,10 +562,10 @@ z_2 = r \sin(\phi + \theta) =  r \cos\phi \sin\theta + r \sin\phi \cos\theta =  
 \end{aligned}
 \]</span></p>
 <p>Now we can rotate each point in the dataset by simply applying the formula above to each pair <span class="math inline">\((x_{i,1}, x_{i,2})^\top\)</span>. Here is what the twin standardized heights look like after rotating each point by <span class="math inline">\(-45\)</span> degrees:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/before-after-rotation_59ccb2c09ac018768456e0bfa0b6512a">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/before-after-rotation-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/before-after-rotation-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -591,12 +625,12 @@ a_{2,1}&amp;a_{2,2}
 .
 \]</span></p>
 <p>If we define:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-6_96c2c07e063a866114e5d98d53abfb1c">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">2</span><span class="op">*</span><span class="va">pi</span><span class="op">*</span><span class="op">-</span><span class="fl">45</span><span class="op">/</span><span class="fl">360</span> <span class="co">#convert to radians</span></span>
 <span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can write code implementing a rotation by any angle <span class="math inline">\(\theta\)</span> using linear algebra:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-7_e9eb0132b224176ec37984f16d3164cd">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rotate</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">theta</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">2</span><span class="op">*</span><span class="va">pi</span><span class="op">*</span><span class="va">theta</span><span class="op">/</span><span class="fl">360</span></span>
 <span>  <span class="va">A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
@@ -623,7 +657,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 \mathbf{Z} \mathbf{A}^\top = \mathbf{X} \mathbf{A}\mathbf{A}^\top\ = \mathbf{X}
 \]</span></p>
 <p>and therefore that <span class="math inline">\(\mathbf{A}^\top\)</span> is the inverse of <span class="math inline">\(\mathbf{A}\)</span>. This also implies that all the information in <span class="math inline">\(\mathbf{X}\)</span> is included in the rotation <span class="math inline">\(\mathbf{Z}\)</span>, and it can be retrieved via a linear transformation. A consequence is that for any rotation the distances are preserved. Here is an example for a 30 degree rotation, although it works for any angle:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-8_112260767f8b668c4fd504d0cffdd9f8">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="fl">30</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -654,7 +688,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <p>Note that if <span class="math inline">\(\mathbf{A} \mathbf{A} ^\top= \mathbf{I}\)</span>, then the distance between the <span class="math inline">\(h\)</span>th and <span class="math inline">\(i\)</span>th rows is the same for the original and transformed data.</p>
 <p>We refer to transformation with the property <span class="math inline">\(\mathbf{A} \mathbf{A}^\top = \mathbf{I}\)</span> as <em>orthogonal transformations</em>. These are guaranteed to preserve the distance between any two points.</p>
 <p>We previously demonstrated our rotation has this property. We can confirm using R:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-9_3ce05bc0152a7c19d913d91e646afcda">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">A</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          [,1]     [,2]</span></span>
 <span><span class="co">#&gt; [1,] 1.00e+00 1.01e-17</span></span>
@@ -665,7 +699,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 \sum_{1=1}^n ||\mathbf{z}_i||^2 = \sum_{i=1}^n ||\mathbf{A}^\top\mathbf{x}_i||^2 = \sum_{i=1}^n \mathbf{x}_i^\top \mathbf{A}\mathbf{A}^\top  \mathbf{x}_i = \sum_{i=1}^n \mathbf{x}_i^\top\mathbf{x}_i = \sum_{i=1}^n||\mathbf{x}_i||^2
 \]</span></p>
 <p>We can confirm using R:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-10_bf181a82edb2b6c503bc12b94192c019">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">45</span></span>
 <span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="va">theta</span><span class="op">)</span> <span class="co"># works for any theta</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
@@ -675,12 +709,12 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 </div>
 <p>This can be interpreted as a consequence of the fact that an orthogonal transformation guarantees that all the information is preserved.</p>
 <p>However, although the total is preserved, the sum of squares for the individual columns changes. Here we compute the proportion of TSS attributed to each column, referred to as the <em>variance explained</em> or <em>variance captured</em> by each column, for <span class="math inline">\(\mathbf{X}\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-11_26c39a43b56d5af32c10b20b48572745">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.5 0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>and <span class="math inline">\(\mathbf{Z}\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-12_c4ca05ae6f1fbd5315a21bdba4901033">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="va">z</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">z</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.9848 0.0152</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -689,22 +723,22 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <span class="header-section-number">22.5</span> Principal Component Analysis (PCA)</h2>
 <p>We have established that orthogonal transformations preserve the distance between observations and the total sum of squares. We have also established that, while the TSS remains the same, the way this total is distributed across the columns can change.</p>
 <p>The general idea behind Principal Component Analysis (PCA) is to try to find orthogonal transformations that concentrate the variance explained in the first few columns. We can then focus on these few columns, effectively reducing the dimension of the problem. In our specific example, we are looking for the rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from -90 to 0:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/max-rotation_6acfad6a4808939b6472ebb1ac40577b">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/max-rotation-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/max-rotation-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
 </figure>
 </div>
 </div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-13_978e8fbcd3ff60a7cb56eaca49fe4a19">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">angles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">90</span><span class="op">)</span></span>
 <span><span class="va">v</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="va">angles</span>, <span class="kw">function</span><span class="op">(</span><span class="va">angle</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="fu">rotate</span><span class="op">(</span><span class="va">x</span>, <span class="va">angle</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">variance_explained</span> <span class="op">&lt;-</span> <span class="va">v</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">angles</span>, <span class="va">variance_explained</span>, type <span class="op">=</span> <span class="st">"l"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this rotation matrix with <span class="math inline">\(\mathbf{V}\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-14_54aa238bd4a8c59e5688a4ebc949dd1d">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">2</span><span class="op">*</span><span class="va">pi</span><span class="op">*</span><span class="op">-</span><span class="fl">45</span><span class="op">/</span><span class="fl">360</span> <span class="co">#convert to radians</span></span>
 <span><span class="va">V</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Trig.html">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -712,46 +746,46 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <p><span class="math display">\[
 \mathbf{Z} = \mathbf{X}\mathbf{V}
 \]</span></p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-15_2ecb3a393677dd00fe07fa0636e58bb6">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">z</span> <span class="op">&lt;-</span> <span class="va">x</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="va">V</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The following animation further illustrates how different rotations affect the variability explained by the dimensions of the rotated data:</p>
-<div class="cell" data-layout-align="center" data-fig.asp="1" data-hash="dimension-reduction_cache/html/unnamed-chunk-16_dc64f405cbbb972fa45c5f6545b323a5">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="img/pca.gif" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="img/pca.gif" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>The first dimension of <code>z</code> is referred to as the <em>first principal component (PC)</em>. Because almost all the variation is explained by this first PC, the distance between rows in <code>x</code> can be very well approximated by the distance calculated with just <code>z[,1]</code>.</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/distance-approx-2_b41989c4ad9378d99d334fe209d7d73e">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-2-1.png" class="img-fluid figure-img" style="width:40.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/distance-approx-2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:40.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We also notice that the two groups, adults and children, can be clearly observed with the one number summary, better than with any of the two original dimensions.</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/histograms-of-dimensions_89c906ae089a74d98b39d9b2574b037f">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/histograms-of-dimensions-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/histograms-of-dimensions-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-17_9f671b6d095a452d5cbb74dccf821635">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">z</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">4</span>,<span class="fl">4</span>,<span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can visualize these to see how the first component summarizes the data. In the plot below, red represents high values and blue negative values:</p>
-<div class="cell" data-layout-align="center" height="5" data-hash="dimension-reduction_cache/html/illustrate-pca-twin-heights_f66700fe465dd08f100048303c90bfdd">
+<div class="cell" data-layout-align="center" height="5">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -780,25 +814,25 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 </div>
 </div>
 <p>In R, we can find the principal components of any matrix with the function <code>prcomp</code>:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-18_2841d2fb66011f26a7ebbb9651ef97fb">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">x</span>, center <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Keep in mind that default behavior is to center the columns of <code>x</code> before computing the PCs, an operation we don’t need because our matrix is scaled.</p>
 <p>The object <code>pca</code> includes the rotated data <span class="math inline">\(Z\)</span> in <code>pca$x</code> and the rotation <span class="math inline">\(\mathbf{V}\)</span> in <code>pca$rotation</code>.</p>
 <p>We can see that columns of the <code>pca$rotation</code> are indeed the rotation obtained with -45 (remember the sign is arbitrary):</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-19_d0eea11c6881d72f22c965a5ba5d6acf">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span></span>
 <span><span class="co">#&gt;         PC1    PC2</span></span>
 <span><span class="co">#&gt; [1,] -0.707  0.707</span></span>
 <span><span class="co">#&gt; [2,] -0.707 -0.707</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The square root of the variation of each column is included in the <code>pca$sdev</code> component. This implies we can compute the variance explained by each PC using:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-20_67836fbd5f0420fab04b3d0e5e78ec87">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.9848 0.0152</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The function <code>summary</code> performs this calculation for us:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-21_3dbc23c50d0fae624720237092d902ff">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Importance of components:</span></span>
 <span><span class="co">#&gt;                          PC1    PC2</span></span>
@@ -807,7 +841,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <span><span class="co">#&gt; Cumulative Proportion  0.985 1.0000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We also see that we can rotate <code>x</code> (<span class="math inline">\(\mathbf{X}\)</span>) and <code>pca$x</code> (<span class="math inline">\(\mathbf{Z}\)</span>) as explained with the mathematical formulas above:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-22_b921f08df51e73647a750fa8d0257fea">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span>, <span class="va">x</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html">all.equal</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">pca</span><span class="op">$</span><span class="va">x</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">)</span><span class="op">)</span></span>
@@ -818,28 +852,28 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <section id="iris-example" class="level3" data-number="22.6.1"><h3 data-number="22.6.1" class="anchored" data-anchor-id="iris-example">
 <span class="header-section-number">22.6.1</span> Iris example</h3>
 <p>The iris data is a widely used example in data analysis courses. It includes four botanical measurements related to three flower species:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-23_d80212e9db175a9638efb00428bd0bc9">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Sepal.Length" "Sepal.Width"  "Petal.Length" "Petal.Width" </span></span>
 <span><span class="co">#&gt; [5] "Species"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>If you print <code>iris$Species</code>, you will see that the data is ordered by the species.</p>
 <p>If we visualize the distances, we can clearly see the three species with one species very different from the other two:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-24_2fa34ded6d95e7f5cfa8162f02f4a9c5">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">iris</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span>, col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu">RColorBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">"RdBu"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/iris-distances_f2fdb1b517b4c2a66a4767fc4dded85f">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-distances-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-distances-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>Our features matrix has four dimensions, but three are very correlated:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-25_52fd7ad401d5de337fe74b8edffbabf0">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt;              Sepal.Length Sepal.Width Petal.Length Petal.Width</span></span>
 <span><span class="co">#&gt; Sepal.Length        1.000      -0.118        0.872       0.818</span></span>
@@ -848,7 +882,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <span><span class="co">#&gt; Petal.Width         0.818      -0.366        0.963       1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>If we apply PCA, we should be able to approximate this distance with just two dimensions, compressing the highly correlated dimensions. Using the <code>summary</code> function, we can see the variability explained by each PC:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-26_eaf5bc75ff6d8eb10af894069bf7048c">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Importance of components:</span></span>
@@ -858,37 +892,37 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <span><span class="co">#&gt; Cumulative Proportion  0.925 0.9777 0.9948 1.00000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>The first two dimensions account for almost 98% of the variability. Thus, we should be able to approximate the distance very well with two dimensions. We confirm this by computing the distance from first two dimensions and comparing to the original:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-27_46fd915d308cd87db1c29f44a117cd39">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">d_approx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/dist.html">dist</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">d_approx</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/dist-approx-4_5dfaead61bf8930552dec19dd05baef3">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/dist-approx-4-1.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/dist-approx-4-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>A useful application of this result is that we can now visualize the distance between each observation with a two-dimensional plot.</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/iris-pca_6d39137cee2ef15d33276542f78f5074">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, Species <span class="op">=</span> <span class="va">iris</span><span class="op">$</span><span class="va">Species</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">PC1</span>, <span class="va">PC2</span>, fill <span class="op">=</span> <span class="va">Species</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">geom_point</span><span class="op">(</span>cex <span class="op">=</span> <span class="fl">3</span>, pch <span class="op">=</span> <span class="fl">21</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">coord_fixed</span><span class="op">(</span>ratio <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-pca-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/iris-pca-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We color the observations by their labels and notice that, with these two dimensions, we achieve almost perfect separation.</p>
 <p>Looking more closely at the resulting PCs and rotations:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/illustrate-pca-twin-heights-iris_73ce04865dd49e2fa8359f13ee5df30c">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-iris-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/illustrate-pca-twin-heights-iris-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -898,59 +932,59 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 <span class="header-section-number">22.6.2</span> MNIST example</h3>
 <p>The written digits example has 784 features. Is there any room for data reduction? We will use PCA to answer this.</p>
 <p>If not already loaded, let’s begin by loading the data:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-28_05d795a448e558e383d1696c2f11e6b9">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/exists.html">exists</a></span><span class="op">(</span><span class="st">"mnist"</span><span class="op">)</span><span class="op">)</span> <span class="va">mnist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/read_mnist.html">read_mnist</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Because the pixels are so small, we expect pixels close to each other on the grid to be correlated, meaning that dimension reduction should be possible.</p>
 <p>Let’s compute the PCs. This will take a few seconds as it is a rather large matrix:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-29_a6f6d75bf41708419a7b22428de4fecb">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-variance-explained_fb59ce36bb026e4a670439e5f13ffdf3">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-variance-explained-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-variance-explained-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-30_4d9983b1b0299af97a3e55e83bbed9a7">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"PC"</span>, ylab <span class="op">=</span> <span class="st">"Variance explained"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can see that the first few PCs already explain a large percent of the variability.</p>
 <p>Simply by looking at the first two PCs we already see information about the labels. Here is a random sample of 500 digits:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-1-2-scatter_7055326f81dda49c4c2f86ac73c13329">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-2-scatter-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-2-scatter-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We can also <em>see</em> the rotation values on the 28 <span class="math inline">\(\times\)</span> 28 grid to get an idea of how pixels are being weighted in the transformations that result in the PCs:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-1-4_af5f38da134dfcdfa8bc4ea0ce526a7f">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-4-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-1-4-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We can clearly see that first PC appears to be separating the 1s (red) from the 0s (blue). We can vaguely discern digits, or parts of digits, in the other three PCs as well. By looking at the PCs stratified by digits, we get further insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/digit-pc-boxplot_23220bc9892edfe6f88645f5e1e6c0e7">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/digit-pc-boxplot-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/digit-pc-boxplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>We can also confirm that the lower variance PCs appear related to unimportant variability, mainly smudges in the corners:</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/mnist-pca-last,_46d043f297f75a0567ee5ccbbd2e4062">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-last,-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figure class="figure"><p><img src="dimension-reduction_files/figure-html/mnist-pca-last,-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -958,7 +992,7 @@ x_{i,2} = b_{1,2} z_{i,1} + b_{2,2} z_{i,2}
 </section></section><section id="exercises" class="level2" data-number="22.7"><h2 data-number="22.7" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">22.7</span> Exercises</h2>
 <p>1. We want to explore the <code>tissue_gene_expression</code> predictors by plotting them.</p>
-<div class="cell" data-layout-align="center" data-hash="dimension-reduction_cache/html/unnamed-chunk-31_2ccdcf41be153d18ed4a0a339dee6e56">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">tissue_gene_expression</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We hope to get an idea of which observations are close to each other, but the predictors are 500-dimensional so plotting is difficult. Plot the first two principal components with color representing tissue type.</p>
@@ -1003,18 +1037,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -1046,11 +1069,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -1060,8 +1122,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -1073,7 +1144,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -1117,6 +1311,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -1142,6 +1337,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1201,23 +1422,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="../highdim/linear-algebra.html" class="pagination-link">
+      <a href="../highdim/linear-algebra.html" class="pagination-link" aria-label="Applied Linear Algebra">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../highdim/regularization.html" class="pagination-link">
+      <a href="../highdim/regularization.html" class="pagination-link" aria-label="Regularization">
         <span class="nav-page-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Regularization</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">Introduction to Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
-    </div>
-    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/dimension-reduction.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
   </div>
 </footer>
 

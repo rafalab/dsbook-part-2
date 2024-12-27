@@ -2,10 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.3.353">
+<meta name="generator" content="quarto-1.5.57">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
-<title>Introduction to Data Science - 24&nbsp; Matrix Factorization</title>
+<title>24&nbsp; Matrix Factorization – Introduction to Data Science</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -20,7 +20,7 @@ ul.task-list li input[type="checkbox"] {
 }
 /* CSS for syntax highlighting */
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -31,7 +31,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -77,7 +77,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   "collapse-after": 3,
   "panel-placement": "start",
   "type": "textbox",
-  "limit": 20,
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
   "language": {
     "search-no-results-text": "No results",
     "search-matching-documents-text": "matching documents",
@@ -86,28 +92,55 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-more-match-text": "more match in this document",
     "search-more-matches-text": "more matches in this document",
     "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
     "search-detached-cancel-button-title": "Cancel",
-    "search-submit-button-title": "Submit"
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
-}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 </head>
 <body class="nav-sidebar floating">
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/matrix-factorization.html"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Matrix Factorization</span></a></li></ol></nav>
-      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-      </a>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/matrix-factorization.html"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Matrix Factorization</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
         <i class="bi bi-search"></i>
       </button>
     </div>
   </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
       <a href="../">Introduction to Data Science</a> 
         <div class="sidebar-tools-main">
@@ -143,7 +176,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Summary statistics</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -166,7 +199,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Probability</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -186,7 +219,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../prob/random-variables-sampling-models-clt.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Random variables</span></span></a>
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Foundations of statistical inference</span></span></a>
   </div>
 </li>
       </ul>
@@ -195,7 +228,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Statistical inference</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -254,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Linear Models</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -301,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">High dimensional data</span></a>
-          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -342,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="sidebar-item-container"> 
             <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">Machine Learning</span></a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="false" aria-label="Toggle section">
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
@@ -399,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
     </ul>
 </div>
-</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
@@ -415,10 +448,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
   <li><a href="#singular-value-decomposition" id="toc-singular-value-decomposition" class="nav-link" data-scroll-target="#singular-value-decomposition"><span class="header-section-number">24.4</span> Singular Value Decomposition</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">24.5</span> Exercises</a></li>
-  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/matrix-factorization.qmd" class="toc-action">View source</a></p><p><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/matrix-factorization.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../highdim/intro-highdim.html">High dimensional data</a></li><li class="breadcrumb-item"><a href="../highdim/matrix-factorization.html"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Matrix Factorization</span></a></li></ol></nav><div class="quarto-title">
 <h1 class="title">
 <span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Matrix Factorization</span>
 </h1>
@@ -434,6 +467,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
   
 
+
 </header><p>In the previous chapter, we described how the model:</p>
 <p><span class="math display">\[
 Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
@@ -443,14 +477,14 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
 <p><span class="math display">\[
 r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 \]</span> using the <code>mu</code>, <code>a</code> and <code>b_reg</code> computed in the previous chapter:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-2_58b7ba0949f556a16d6650e3b660d08c">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">y</span> <span class="op">-</span> <span class="va">mu</span> <span class="op">-</span> <span class="va">a</span>,  <span class="fl">2</span>, <span class="va">b_reg</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>and see how the residuals for three different movies correlate with <em>The Godfather</em>:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/movie-cor_eba3f385d82e5369608228a6300c9df5">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="matrix-factorization_files/figure-html/movie-cor-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figure class="figure"><p><img src="matrix-factorization_files/figure-html/movie-cor-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%"></p>
 </figure>
 </div>
 </div>
@@ -460,7 +494,7 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 <section id="sec-factor-analysis" class="level2" data-number="24.1"><h2 data-number="24.1" class="anchored" data-anchor-id="sec-factor-analysis">
 <span class="header-section-number">24.1</span> Factor analysis</h2>
 <p>We start with a simple illustration. We simulate <span class="math inline">\(\varepsilon_{i,j}\)</span> for 6 movies and 120 users and save it in <code>e</code>. If we examine the correlation, we notice a pattern:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-4_dc8d91b400c630f22bedf8c697a57dda">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                      Godfather Godfather 2 Goodfellas Scent of a Woman</span></span>
 <span><span class="co">#&gt; Godfather                1.000       0.671      0.558           -0.527</span></span>
@@ -478,11 +512,11 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 <span><span class="co">#&gt; Sleepless in Seattle           0.756                1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>It seems there is positive correlation within mob and romance movies, and negative across the two genres. In statistics, we define <em>factors</em> as unobserved or <em>latent</em> variables that are inferred from the patterns of correlations or associations between the observed variables. We can quantify a factor that distinguishes between mob and romance movies with:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-5_8ecf92f0239b5df40c5c631cb22b3512">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To determine which users prefer each genre, we can fit a linear model to each user:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-6_e393d8b90469922fde6882660c471575">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">e</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">y</span><span class="op">~</span><span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">coef</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Notice we use the <code>-1</code> because the errors have mean 0 and we don’t need an intercept.</p>
@@ -496,35 +530,35 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 <p><span class="math display">\[
 (\mathbf{q}^\top\mathbf{q}) \, \hat{\boldsymbol{\beta}}  = \mathbf{q}^\top \mathbf{y}
 \]</span> with <span class="math inline">\(\mathbf{y}\)</span> the row of <code>e</code> passed to <code>y</code> in the apply function. Because <span class="math inline">\(\mathbf{q}\)</span> does not change for each user, rather than have <code>lm</code> recompute the equation for each user, we can perform the calculation on each column of <span class="math inline">\(e\)</span> to get the <span class="math inline">\(\beta_j\)</span> for all users <span class="math inline">\(j\)</span> like this:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-7_a4e34c5efb226199b645bc6bc19a9bf1">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/qr.html">qr.solve</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/crossprod.html">crossprod</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
 </div>
 <p>The histogram below shows there are three type of users: those that love mob movies and hate romance movies, those that don’t care, and those that love romance movies and hate mob movies.</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/factor-histogram-example_8b7fe03a73fb86e5b06e5633a9f9346b">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">p</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>,<span class="fl">2</span>,<span class="fl">0.1</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="matrix-factorization_files/figure-html/factor-histogram-example-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="matrix-factorization_files/figure-html/factor-histogram-example-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>To see that we can approximate <span class="math inline">\(\varepsilon_{i,j}\)</span> with $p_iq_j we convert the vectors to matrices and use linear algebra:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/e-vs-pq_5dcbcc7c00ef1360479882671fc77466">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span>; <span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">p</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span>, <span class="va">e</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="matrix-factorization_files/figure-html/e-vs-pq-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="matrix-factorization_files/figure-html/e-vs-pq-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>However, after removing this mob/romance effect, we still see structure in the correlation:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/corr-due-to-alpacino_237766ff4631d5e130d2f3d99f6b18f9">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">e</span> <span class="op">-</span> <span class="va">p</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                      Godfather Godfather 2 Goodfellas Scent of a Woman</span></span>
 <span><span class="co">#&gt; Godfather                1.000       0.185     -0.545            0.557</span></span>
@@ -542,21 +576,21 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 <span><span class="co">#&gt; Sleepless in Seattle           0.353                1.000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>This structure seems to be driven by Al Pacino being in the movie or not. This implies we could add another factor:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-8_983eb697eee4cbac697bbc3768985f75">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>           <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We can then obtain estimates for each user:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-9_22dbe768fac1a8cf42d4dd68cac9edff">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">e</span>, <span class="fl">1</span>, <span class="kw">function</span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">y</span><span class="op">~</span><span class="va">q</span><span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">$</span><span class="va">coefficient</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Note that we use the transpose <code>t</code> because <code>apply</code> binds results into columns and we want a row for each user.</p>
 <p>Our approximation based on two factors does a even better job of predicting how our residuals deviate from 0:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/e-vs-pq-2_b2d09944213f857a1cd69000edad4491">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">p</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">q</span><span class="op">)</span>, <span class="va">e</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="matrix-factorization_files/figure-html/e-vs-pq-2-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="matrix-factorization_files/figure-html/e-vs-pq-2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
@@ -576,16 +610,16 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 \]</span></p>
 <p>with <span class="math inline">\(\mathbf{Z}\)</span> the matrix of principal components.</p>
 <p>Let’s perform PCA and examine the results:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-10_a9cbd8faa0c1c3d68bb5232cacf3b4eb">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">e</span>, center <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>First, notice that the first two PCs explain over 95% of the variability:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-11_63a5dd3ceafd12547f958bf1edbfc1a5">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">sdev</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.6939 0.1790 0.0402 0.0313 0.0303 0.0253</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Next, notice that the first column of <span class="math inline">\(\mathbf{V}\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-12_c4688ef82e3d0946934821271c6354d6">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
 <span><span class="co">#&gt;            Godfather          Godfather 2           Goodfellas </span></span>
 <span><span class="co">#&gt;                0.306                0.261                0.581 </span></span>
@@ -594,12 +628,12 @@ r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 </div>
 <p>is assigning positive values to the mob movies and negative values to the romance movies.</p>
 <p>The second column:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-13_ca4738e9c893d687f2245584659349c1">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span><span class="op">$</span><span class="va">rotation</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span></span>
 <span><span class="co">#&gt;            Godfather          Godfather 2           Goodfellas </span></span>
-<span><span class="co">#&gt;               -0.354               -0.377                0.382 </span></span>
+<span><span class="co">#&gt;                0.354                0.377               -0.382 </span></span>
 <span><span class="co">#&gt;     Scent of a Woman      You've Got Mail Sleepless in Seattle </span></span>
-<span><span class="co">#&gt;               -0.437                0.448                0.442</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;                0.437               -0.448               -0.442</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>is coding for Al Pacino movies.</p>
 <p>PCA is automatically finding what we deduced with our knowledge of movies. This is not a coincidence.</p>
@@ -619,7 +653,7 @@ Y_{i,j} = \sum_{k=1}^K p_{i,k}q_{j,k} + \varepsilon_{i,j}
 </section><section id="case-study-movie-recommendations" class="level2" data-number="24.3"><h2 data-number="24.3" class="anchored" data-anchor-id="case-study-movie-recommendations">
 <span class="header-section-number">24.3</span> Case study: movie recommendations</h2>
 <p>Note that if we look at the correlation structure of the movies for which we simulated data in the previous sections, we see structure as well:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-14_ecd07e91ee7a34dd75f5b552a21a9f83">
+<div class="cell" data-layout-align="center">
 <pre><code>#&gt;                         Godfather, The Godfather: Part II, The
 #&gt; Godfather, The                   1.000                   0.842
 #&gt; Godfather: Part II, The          0.842                   1.000
@@ -649,20 +683,20 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 \]</span></p>
 <p>Unfortunately, we can’t fit this model with <code>prcomp</code> due to the missing values. We introduce the <strong>missMDA</strong> package that provides an approach to fit such models when matrix entries are missing, a very common occurrence in movie recommendations, through the function <code>imputePCA</code>. Also, because there are small sample sizes for several movie pairs, it is useful to regularize the <span class="math inline">\(p\)</span>s. The <code>imputePCA</code> function also permits regularization.</p>
 <p>We use the estimates for <span class="math inline">\(\mu\)</span>, the <span class="math inline">\(\alpha\)</span>s and <span class="math inline">\(\beta\)</span>s from the previous chapter, and estimate two factors (<code>ncp = 2</code>). We fit the model to movies rated more than 25 times, include <em>Scent of a Woman</em>, which does not meet this criterion, because we previously used it as an example. Finally, we use regularization by setting the parameter <code>coeff.ridge</code> to the same value used to estimate the <span class="math inline">\(\beta\)</span>s.</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-15_51dcda555208594fd5d18b0725d9acbe">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://factominer.free.fr/missMDA/index.html">missMDA</a></span><span class="op">)</span></span>
 <span><span class="va">ind</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colSums</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">25</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span> <span class="op">==</span> <span class="st">"3252"</span></span>
-<span><span class="va">imputed</span> <span class="op">&lt;-</span> <span class="fu">imputePCA</span><span class="op">(</span><span class="va">r</span><span class="op">[</span>,<span class="va">ind</span><span class="op">]</span>, ncp <span class="op">=</span> <span class="fl">2</span>, coeff.ridge <span class="op">=</span> <span class="va">lambda</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">imputed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/missMDA/man/imputePCA.html">imputePCA</a></span><span class="op">(</span><span class="va">r</span><span class="op">[</span>,<span class="va">ind</span><span class="op">]</span>, ncp <span class="op">=</span> <span class="fl">2</span>, coeff.ridge <span class="op">=</span> <span class="va">lambda</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>To see how much we improve our previous prediction, we construct a matrix with the ratings in the test set:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-16_859c6077f27749e51e39ea9980cac6e1">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_test</span> <span class="op">&lt;-</span> <span class="fu">select</span><span class="op">(</span><span class="va">test_set</span>, <span class="va">movieId</span>, <span class="va">userId</span>, <span class="va">rating</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">pivot_wider</span><span class="op">(</span>names_from <span class="op">=</span> <span class="va">movieId</span>, values_from <span class="op">=</span> <span class="va">rating</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">column_to_rownames</span><span class="op">(</span><span class="st">"userId"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>and construct our predictor obtained with <code>imputePCA</code>. We start by constructing the predictor from the previous chapter:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-17_189f5697dae7719b790b75b7b8e71002">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">rownames</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">rownames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">pred</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu">clamp</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">pred</span> <span class="op">+</span> <span class="va">mu</span> <span class="op">+</span> <span class="va">a</span>, <span class="fl">2</span>, <span class="va">b_reg</span>, FUN <span class="op">=</span> <span class="st">"+"</span><span class="op">)</span><span class="op">)</span></span>
@@ -670,11 +704,11 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <span><span class="co">#&gt; [1] 0.889</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then we adjust the prediction to include the imputed residuals for the test set:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-18_640ed778d38321c32e2469b39b0bda0d">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pred</span><span class="op">[</span>,<span class="va">ind</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu">clamp</span><span class="op">(</span><span class="va">pred</span><span class="op">[</span>,<span class="va">ind</span><span class="op">]</span> <span class="op">+</span> <span class="va">imputed</span><span class="op">$</span><span class="va">completeObs</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We see that our prediction improves:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-19_42827f71fa90e56bcf7f691ab33556a1">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">rmse</span><span class="op">(</span><span class="va">y_test</span> <span class="op">-</span> <span class="va">pred</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">rownames</a></span><span class="op">(</span><span class="va">y_test</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y_test</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.875</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -682,25 +716,25 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <section id="visualizing-factors" class="level3" data-number="24.3.1"><h3 data-number="24.3.1" class="anchored" data-anchor-id="visualizing-factors">
 <span class="header-section-number">24.3.1</span> Visualizing factors</h3>
 <p>We can compute the first two principal components used for the prediction using <code>prcomp</code>.</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-20_faaa2970ee366b06f10c96c7c086f5b4">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">imputed</span><span class="op">$</span><span class="va">completeObs</span>, center <span class="op">=</span> <span class="cn">FALSE</span>, rank. <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>By adding the movie names to the rotation matrix:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-21_f0b023503412516947249baaf482c2ac">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">v</span> <span class="op">&lt;-</span> <span class="va">pca</span><span class="op">$</span><span class="va">rotation</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">rownames</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">movie_map</span>, <span class="va">title</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/match.html">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">r</span><span class="op">[</span>,<span class="va">ind</span><span class="op">]</span><span class="op">)</span>, <span class="va">movieId</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>and visually explore the results, we see that the mob movies discussed above are close to each other, as are the romance movies without Al Pacino.</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/movies-pca_d7cf5307431722573914e8435d148380">
+<div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="matrix-factorization_files/figure-html/movies-pca-1.png" class="img-fluid figure-img" style="width:70.0%"></p>
+<figure class="figure"><p><img src="matrix-factorization_files/figure-html/movies-pca-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
 </figure>
 </div>
 </div>
 </div>
 <p>By looking at the highest and lowest values for the first principal component, we see a meaningful pattern. The first PC shows the difference between Hollywood blockbusters on one side:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-22_0659b4ef5debe51136c04619c69c34e4">
+<div class="cell" data-layout-align="center">
 <pre><code>#&gt;  [1] "Armageddon"                    "Pearl Harbor"                 
 #&gt;  [3] "X2: X-Men United"              "Dark Knight Rises, The"       
 #&gt;  [5] "X-Men"                         "Independence Day (a.k.a. ID4)"
@@ -708,7 +742,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 #&gt;  [9] "World Is Not Enough, The"      "Spider-Man 2"</code></pre>
 </div>
 <p>and critically acclaimed movies on the other:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-23_4052521db06852d42e497556f47f67c5">
+<div class="cell" data-layout-align="center">
 <pre><code>#&gt;  [1] "2001: A Space Odyssey"          "American Psycho"               
 #&gt;  [3] "Royal Tenenbaums, The"          "Harold and Maude"              
 #&gt;  [5] "Apocalypse Now"                 "Fear and Loathing in Las Vegas"
@@ -725,7 +759,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 \mathbf{U}^\top\mathbf{D}\mathbf{U} = \mathbf{D}^2
 \]</span></p>
 <p>In R, we can obtain the SVD using the function <code>svd</code>. To see the connection to PCA, notice that:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-24_8270d6f136f04adc50dd69420ee2d0dd">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html">prcomp</a></span><span class="op">(</span><span class="va">x</span>, center <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/svd.html">svd</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -742,7 +776,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <span class="header-section-number">24.5</span> Exercises</h2>
 <p>In this exercise set, we use the singular value decomposition (SVD) to estimate factors in an example related to the first application of factor analysis: finding factors related to student performance in school.</p>
 <p>We construct a dataset that represents grade scores for 100 students in 24 different subjects. The overall average has been removed so this data represents the percentage points each student received above or below the average test score. So a 0 represents an average grade (C), a 25 is a high grade (A+), and a -25 represents a low grade (F). You can simulate the data like this:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-25_86cd90fa7064d9bec925362d64b84359">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1987</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">k</span> <span class="op">&lt;-</span> <span class="fl">8</span></span>
@@ -757,7 +791,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 </div>
 <p>Our goal is to describe the student performances as succinctly as possible. For example, we want to know if these test results are all simply random independent numbers. Are all students just about as good? Does being good in one subject imply one will be good in another? How does the SVD help with all this? We will go step by step to show that with just three relatively small pairs of vectors, we can explain much of the variability in this <span class="math inline">\(100 \times 24\)</span> dataset.</p>
 <p>You can visualize the 24 test scores for the 100 students by plotting an image:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-26_dc3f723edc34be10d0f12f63b928b715">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">my_image</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">zlim</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">colors</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu">RColorBrewer</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/RColorBrewer/man/ColorBrewer.html">brewer.pal</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">"RdBu"</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -778,7 +812,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <li>The students that are good at math are not good at humanities.</li>
 </ol>
 <p>2. You can examine the correlation between the test scores directly like this:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-27_1c96935f11be4fc36ec2a28d4ed0f6f7">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">my_image</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/range.html">range</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html">axis</a></span><span class="op">(</span>side <span class="op">=</span> <span class="fl">2</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -794,12 +828,12 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <p><span class="math display">\[ \mathbf{Y V} = \mathbf{U D} \mbox{ or } \mathbf{U}^{\top}\mathbf{Y} = \mathbf{D V}^{\top}\]</span></p>
 <p>We can think of <span class="math inline">\(\mathbf{YV}\)</span> and <span class="math inline">\(\mathbf{U}^{\top}\mathbf{V}\)</span> as two transformations of <span class="math inline">\(\mathbf{Y}\)</span> that preserve the total variability.</p>
 <p>Use the function <code>svd</code> to compute the SVD of <code>y</code>. This function will return <span class="math inline">\(U\)</span>, <span class="math inline">\(V\)</span> and the diagonal entries of <span class="math inline">\(D\)</span>.</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-28_8c483fd06f6585ff543f8757e7a90cdf">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/svd.html">svd</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>You can check that the SVD works by typing:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-29_d73d48b2b34137566654f09badf29ec1">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_svd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">u</span>, <span class="va">d</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">v</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span><span class="op">(</span><span class="va">y</span> <span class="op">-</span> <span class="va">y_svd</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -807,13 +841,13 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <p>4. We see that the total sum of squares is preserved. This is because <span class="math inline">\(\mathbf{V}\)</span> is orthogonal. Now to start understanding how <span class="math inline">\(\mathbf{YV}\)</span> is useful, plot <code>ss_y</code> against the column number and then do the same for <code>ss_yv</code>. What do you observe?</p>
 <p>5. We see that the variability of the columns of <span class="math inline">\(\mathbf{YV}\)</span> is decreasing. Furthermore, we see that, relative to the first three, the variability of the columns beyond the third is almost 0. Now notice that we didn’t have to compute <code>ss_yv</code> because we already have the answer. How? Remember that <span class="math inline">\(\mathbf{YV} = \mathbf{UD}\)</span> and because <span class="math inline">\(\mathbf{U}\)</span> is orthogonal, we know that the sum of squares of the columns of <span class="math inline">\(\mathbf{UD}\)</span> are the diagonal entries of <span class="math inline">\(\mathbf{D}\)</span> squared. Confirm this by plotting the square root of <code>ss_yv</code> versus the diagonal entries of <span class="math inline">\(\mathbf{D}\)</span>.</p>
 <p>6. From the above we know that the sum of squares of the columns of <span class="math inline">\(\mathbf{Y}\)</span> (the total sum of squares) add up to the sum of <code>s$d^2</code>, and that the transformation <span class="math inline">\(\mathbf{YV}\)</span> gives us columns with sums of squares equal to <code>s$d^2</code>. Now compute what percent of the total variability is explained by just the first three columns of <span class="math inline">\(\mathbf{YV}\)</span>.</p>
-<p>7. We see that almost 99% of the variability is explained by the first three columns of <span class="math inline">\(\mathbf{YV} = \mathbf{UD}\)</span>. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let’s show a useful computational trick to avoid creating the matrix <code>diag(s$d)</code>. To motivate this, we note that if we write <span class="math inline">\(\mathbf{U}\)</span> out in its columns <span class="math inline">\([\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]\)</span>, then <span class="math inline">\(\mathbf{UD}\)</span> is equal to:</p>
+<p>7. We see that almost 99% of the variability is explained by the first three columns of <span class="math inline">\(\mathbf{YV}  = \mathbf{UD}\)</span>. So we get the sense that we should be able to explain much of the variability and structure we found while exploring the data with a few columns. Before we continue, let’s show a useful computational trick to avoid creating the matrix <code>diag(s$d)</code>. To motivate this, we note that if we write <span class="math inline">\(\mathbf{U}\)</span> out in its columns <span class="math inline">\([\mathbf{u}_1, \mathbf{u}_2, \dots, \mathbf{u}_p]\)</span>, then <span class="math inline">\(\mathbf{UD}\)</span> is equal to:</p>
 <p><span class="math display">\[
 \mathbf{UD} = [\mathbf{u}_1 d_{1,1}, \mathbf{u}_2 d_{2,2}, \dots, \mathbf{u}_p d_{p,p}]
 \]</span></p>
 <p>Use the <code>sweep</code> function to compute <span class="math inline">\(UD\)</span> without constructing <code>diag(s$d)</code> and without using matrix multiplication.</p>
 <p>8. We know that <span class="math inline">\(\mathbf{u}_1 d_{1,1}\)</span>, the first column of <span class="math inline">\(\mathbf{UD}\)</span>, has the most variability of all the columns of <span class="math inline">\(\mathbf{UD}\)</span>. Earlier we saw an image of <span class="math inline">\(Y\)</span>:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-30_22aff54741535d50e2896f6cbcb61837">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">my_image</span><span class="op">(</span><span class="va">y</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>in which we can see that the student to student variability is quite large and that it appears that students that are good in one subject are good in all. This implies that the average (across all subjects) for each student should explain a lot of the variability. Compute the average score for each student and plot it against <span class="math inline">\(\mathbf{u}_1 d_{1,1}\)</span>, and describe what you find.</p>
@@ -832,7 +866,7 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 <p><span class="math display">\[
 \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top}
 \]</span> We know it explains <code>s$d[1]^2/sum(s$d^2) * 100</code> percent of the total variability. Our approximation only explains the observation that good students tend to be good in all subjects. But another aspect of the original data that our approximation does not explain was the higher similarity we observed within subjects. We can see this by computing the difference between our approximation and original data and then computing the correlations. You can see this by running this code:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-31_0c96bc428e8236fe8fccef4d23d97f32">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">resid</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">s</span>,<span class="op">(</span><span class="va">u</span><span class="op">[</span>,<span class="fl">1</span>, drop<span class="op">=</span><span class="cn">FALSE</span><span class="op">]</span><span class="op">*</span><span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">v</span><span class="op">[</span>,<span class="fl">1</span>, drop<span class="op">=</span><span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">my_image</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">resid</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html">axis</a></span><span class="op">(</span>side <span class="op">=</span> <span class="fl">2</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -843,11 +877,11 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top}
 \]</span></p>
 <p>We know it will explain:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-32_88890dacd277423fd8249701d9546652">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">d</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>percent of the total variability. We can compute new residuals like this:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-33_4adf32275d3c1c3c32385608fccea7a5">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">resid</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">s</span>,<span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">u</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, <span class="fl">2</span>, <span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span>, FUN<span class="op">=</span><span class="st">"*"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">v</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">my_image</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">resid</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html">axis</a></span><span class="op">(</span>side <span class="op">=</span> <span class="fl">2</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -858,11 +892,11 @@ Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} +\varepsilon_{i
 \mathbf{Y} \approx d_{1,1} \mathbf{u}_1 \mathbf{v}_1^{\top} + d_{2,2} \mathbf{u}_2 \mathbf{v}_2^{\top} + d_{3,3} \mathbf{u}_3 \mathbf{v}_3^{\top}
 \]</span></p>
 <p>We know it will explain:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-34_9ba123c64b83499c295c4a293dc71598">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">s</span><span class="op">$</span><span class="va">d</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">*</span> <span class="fl">100</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>percent of the total variability. We can compute new residuals like this:</p>
-<div class="cell" data-layout-align="center" data-hash="matrix-factorization_cache/html/unnamed-chunk-35_76e5ac4cd4f9887423a2ba79c33115e2">
+<div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">resid</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">s</span>,<span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">u</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, <span class="fl">2</span>, <span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span>, FUN<span class="op">=</span><span class="st">"*"</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">v</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu">my_image</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">resid</span><span class="op">)</span>, zlim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html">axis</a></span><span class="op">(</span>side <span class="op">=</span> <span class="fl">2</span>, <span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, las <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -910,18 +944,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }
     return false;
   }
-  const clipboard = new window.ClipboardJS('.code-copy-button', {
-    text: function(trigger) {
-      const codeEl = trigger.previousElementSibling.cloneNode(true);
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
-        }
-      }
-      return codeEl.innerText;
-    }
-  });
-  clipboard.on('success', function(e) {
+  const onCopySuccess = function(e) {
     // button target
     const button = e.trigger;
     // don't keep focus
@@ -953,11 +976,50 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
     }, 1000);
     // clear code selection
     e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
   });
-  function tippyHover(el, contentFn) {
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
     const config = {
       allowHTML: true,
-      content: contentFn,
       maxWidth: 500,
       delay: 100,
       arrow: false,
@@ -967,8 +1029,17 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       interactive: true,
       interactiveBorder: 10,
       theme: 'quarto',
-      placement: 'bottom-start'
+      placement: 'bottom-start',
     };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
     window.tippy(el, config); 
   }
   const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
@@ -980,7 +1051,130 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       try { href = new URL(href).hash; } catch {}
       const id = href.replace(/^#\/?/, "");
       const note = window.document.getElementById(id);
-      return note.innerHTML;
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
     });
   }
       let selectedAnnoteEl;
@@ -1024,6 +1218,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
             }
             div.style.top = top - 2 + "px";
             div.style.height = height + 4 + "px";
+            div.style.left = 0;
             let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
             if (gutterDiv === null) {
               gutterDiv = window.document.createElement("div");
@@ -1049,6 +1244,32 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         });
         selectedAnnoteEl = undefined;
       };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
       // Attach click handler to the DT
       const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
       for (const annoteDlNode of annoteDls) {
@@ -1108,23 +1329,27 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
-      <a href="../highdim/regularization.html" class="pagination-link">
+      <a href="../highdim/regularization.html" class="pagination-link" aria-label="Regularization">
         <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Regularization</span></span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../ml/intro-ml.html" class="pagination-link">
+      <a href="../ml/intro-ml.html" class="pagination-link" aria-label="Machine Learning">
         <span class="nav-page-text">Machine Learning</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">Introduction to Data Science was written by Rafael A. Irizarry</div>   
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
     <div class="nav-footer-center">
       &nbsp;
-    </div>
-    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/highdim/matrix-factorization.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
   </div>
 </footer>
 
