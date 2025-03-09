@@ -6,7 +6,7 @@ So far, our analysis of poll-related results has been based on a simple sampling
 
 A more recent development since the original invention of opinion polls, is the use of computers to aggregate publicly available data from different sources and develop data-driven forecasting models. Here, we explore how poll aggregators collected and combined data reported by different experts to produce improved predictions. We will introduce ideas behind the statistical models used to improve election forecasts beyond the power of individual polls. Specifically, we introduce a useful model for constructing a confidence interval for the difference in popular vote. 
 
-It's important to note that this chapter only provides a glimpse into the vast realm of statistical models. For instance, the model we describe here does not allow us to assign a probability to a particular candidate winning the popular vote, as done by popular poll aggregators such as FiveThirtyEight. In the next section, we delve into Bayesian models, which provide the mathematical framework to make such probabilistic statements. Furthermore, in #sec-linear-models, we discuss linear models, which are widely used in statistical modeling. However, these introductions are just scratching the surface, and readers interested in statistical modeling should supplement the material presented in this book with additional references.
+It's important to note that this chapter only provides a glimpse into the vast realm of statistical models. For instance, the model we describe here does not allow us to assign a probability to a particular candidate winning the popular vote, as done by popular poll aggregators such as FiveThirtyEight. In the next section, we delve into Bayesian models, which provide the mathematical framework to make such probabilistic statements. Furthermore, in @sec-linear-models, we discuss linear models, which are widely used in statistical modeling. However, these introductions are just scratching the surface, and readers interested in statistical modeling should supplement the material presented in this book with additional references.
 
 ```{r, echo=FALSE, message=FALSE}
 set.seed(2)
@@ -161,7 +161,7 @@ polls |> group_by(pollster) |>
   summarize(se = 2*sqrt(p_hat*(1 - p_hat)/median(samplesize)))
 ```
 
-This agrees with the within poll variation we see. However, there appears to be differences *across the polls*. Observe, for example, how the USC Dornsife/LA Times pollster is predicting a 4% lead for Trump, while Ipsos is predicting a lead larger than 5% for Clinton. The theory we learned says nothing about different pollsters producing polls with different expected values, instead it assumes all the polls have the same expected value. FiveThirtyEight refers to these differences as _house effects_. We also call them _pollster bias_. Nothing in our simple urn model provides an explanation for these pollster-to-pollster differences. 
+This agrees with the poll variation we see. However, there appear to be differences *across the polls*. Observe, for example, how the USC Dornsife/LA Times pollster is predicting a 4% lead for Trump, while Ipsos is predicting a lead larger than 5% for Clinton. The theory we learned says nothing about different pollsters producing polls with different expected values, instead it assumes all the polls have the same expected value. FiveThirtyEight refers to these differences as _house effects_. We also call them _pollster bias_. Nothing in our simple urn model provides an explanation for these pollster-to-pollster differences. 
 
 This model misspecification led to an overconfident interval that ended up not including the election night result. So, rather than modeling the process generating these values with an urn model, we instead model the pollster results directly. To do this, we start by collecting some data. Specifically, for each pollster, we look at the last reported result before the election:
 
@@ -171,13 +171,13 @@ one_poll_per_pollster <- polls |> group_by(pollster) |>
   ungroup()
 ```
 
-Here is a histogram of the data for these `r nrow(one_poll_per_pollster)` pollsters:
+Here is a histogram of the calculated spread for these `r nrow(one_poll_per_pollster)` pollsters' final polls:
 
 ```{r pollster-bias-histogram}
 qplot(spread, data = one_poll_per_pollster, binwidth = 0.01)
 ```
 
-Although we are no longer using a model with red (Republicans) and blue (Democrats) beads in an urn, our new model can also be thought of as an urn model, but containing poll results from all possible pollsters. Think of our $N=$`r nrow(one_poll_per_pollster)` data points $X_1,\dots X_N$ as a random sample from this urn. To develop a useful model, we *assume* that the expected value of our urn is the actual spread $\mu=2p-1$, which implies that the sample average has expected value $\mu$. 
+Although we are no longer using a model with red (Republicans) and blue (Democrats) beads in an urn, our new model can also be thought of as an urn model, but containing poll results from all possible pollsters. Think of our $N=15$ data points $X_1,\dots X_N$ as a random sample from this urn. To develop a useful model, we *assume* that the expected value of our urn is the actual spread $\mu=2p-1$, which implies that the sample average has expected value $\mu$. 
 
 
 Now, because instead of 0s and 1s, our urn contains continuous numbers, the standard deviation of the urn is no longer $\sqrt{p(1-p)}$. Rather than voter sampling variability, the standard error now includes the pollster-to-pollster variability. Our new urn also includes the sampling variability from the polling. Regardless, this standard deviation is now an unknown parameter. In statistics textbooks, the Greek symbol $\sigma$ is used to represent this parameter.
@@ -189,8 +189,8 @@ $$
 $$
 Here the $\sim$ symbol tells us that the random variable on the left of the symbol follows the distribution on the right. We use the notation $N(a,b)$ to represent the normal distribution with mean $a$ and standard deviation $b$.
 
-:::{callout-important}
-This model for the sample average will be used again the next chapter.
+:::{callout-note}
+This model for the sample average will be used again in the next chapter.
 :::
 
 
@@ -244,7 +244,7 @@ one_poll_per_pollster <- polls |> group_by(pollster) |>
   ungroup()
 ```
 
-Above, we made use of the CLT with a sample size of 15. Because we are estimating a second parameters $\sigma$, further variability is introduced into our confidence interval, which results in intervals that are too small. For very large sample sizes, this extra variability is negligible, but in general, for values smaller than 30, we need to be cautious about using the CLT.
+Above, we made use of the CLT with a sample size of 15. Because we are estimating a second parameter $\sigma$, further variability is introduced into our confidence interval, which results in intervals that are too small. For very large sample sizes, this extra variability is negligible, but in general, for values smaller than 30, we need to be cautious about using the CLT.
 However, if the data in the urn is known to follow a normal distribution, then we actually have mathematical theory that tells us how much bigger we need to make the intervals to account for the estimation of $\sigma$. Applying this theory, we can construct confidence intervals for any $N$. But again, this works only if **the data in the urn is known to follow a normal distribution**. So for the 0, 1 data of our previous urn model, this theory definitely does not apply.
 
 ::: {.callout-warning}
@@ -268,7 +268,7 @@ This is referred to as a *t-statistic*. By substituting $\sigma$ with $s$, we in
 
 ```{r t-distribution-examples, echo=FALSE}
 x <- seq(-5, 5, len = 100)
-data.frame(x = x, Normal = dnorm(x, 0, 1), t_03 = dt(x, 3), t_05 = dt(x, 5), t_15 = dt(x, 15)) |> gather(distribution, f, -x) |> ggplot(aes(x, f, color = distribution)) + geom_line() + ylab("f(x)")
+data.frame(x = x, Normal = dnorm(x, 0, 1), t_03 = dt(x, 3), t_05 = dt(x, 5), t_15 = dt(x, 15)) |> pivot_longer(-x, names_to = "distribution", values_to = "f") |> ggplot(aes(x, f, color = distribution)) + geom_line() + ylab("f(x)")
 ```
 
 If we are willing to assume the pollster effect data is normally distributed, based on the sample data $X_1, \dots, X_N$,
@@ -287,13 +287,13 @@ one_poll_per_pollster |>
   mutate(start = avg - moe, end = avg + moe) 
 ```
 
-A bit larger than the one using normal is:
+Note that the quantile value for the t distribution:
 
 ```{r}
 qt(0.975, 14)
 ```
 
-is bigger than:
+is larger than that for the normal distribution:
 
 ```{r}
 qnorm(0.975)
