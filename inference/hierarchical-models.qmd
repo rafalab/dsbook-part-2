@@ -149,7 +149,7 @@ X_{i,j} | \, h_j, b &\sim \mbox{N}\left(\mu + h_j, \sqrt{p(1-p)/N}\right)
 \end{aligned}
 $$
 
-This model accounts for three levels of variability: 1) variability in the bias observed from election to election, quantified by $\sigma_b$, 2) pollster-to-pollster or house effect variability, quantified by $\sigma_h$, and 3) poll sampling variability, which we can derive to be $\sqrt(p(1-p)/N)$.
+This model accounts for three levels of variability: 1) variability in the bias observed from election to election, quantified by $\sigma_b$, 2) pollster-to-pollster or house effect variability, quantified by $\sigma_h$, and 3) poll sampling variability, which we can derive to be $\sqrt{(p(1-p)/N)}$.
 
 Note that not including a term like $b$ in the models is what led many forecasters to be overconfident. This random variable changes from election to election, but for any given election, it is the same for all pollsters and polls within one election (note it does not have an index). This implies that we can't estimate $\sigma_h$ with data from just one election. It also implies that the random variables $X_{i,j}$ for a fixed election year share the same $b$ and are therefore correlated.
 
@@ -229,7 +229,7 @@ With some minor exceptions we won't discuss, the electoral votes are won on an a
 Many people in the US consider the electoral college unfair and would like to see it abolished in favor of the popular vote.
 :::
 
-We are now ready to predict the electoral college result for 2016. We start by aggregating results from a poll taken during the last week before the election. We use the `grepl`, which finds strings in character vectors, to remove polls that are not for entire states.
+We are now ready to predict the electoral college result for 2016. We start by aggregating results from polls taken during the last week before the election. We use the `grepl`, which finds strings in character vectors, to remove polls that are not for entire states.
 
 ```{r}
 results <- polls_us_election_2016 |>
@@ -246,10 +246,10 @@ results <- polls_us_election_2016 |>
 Here are the five closest races according to the polls:
 
 ```{r}
-results |> arrange(abs(avg))
+results |> slice_min(abs(avg), n=5)
 ```
 
-We now introduce the command `left_join` that will let us easily add the number of electoral votes for each state from the dataset `us_electoral_votes_2016`. Here, we simply say that the function combines the two datasets so that the information from the second argument is added to the information in the first:
+We now introduce the command `left_join` that will let us easily add the number of electoral votes for each state from the dataset `results_us_election_2016`. Here, we simply say that the function combines the two datasets so that the information from the second argument is added to the information in the first:
 
 ```{r}
 results <- left_join(results, results_us_election_2016, by = "state")
@@ -293,7 +293,7 @@ results |> mutate(sigma = sd/sqrt(n),
   geom_abline(slope = 1, intercept = 0)
 ```
 
-Now, we repeat this 10,000 times and generate an outcome from the posterior. In each iteration, we track the total number of electoral votes for Clinton. Remember that Trump gets 270 votes minus the ones for Clinton. Also, note that the reason we add 7 in the code is to account for Rhode Island and D.C.:
+Now, we repeat this 10,000 times and generate an outcome from the posterior. In each iteration, we track the total number of electoral votes for Clinton. Remember that Trump gets 538 votes minus the ones for Clinton, and 270 are required to win. Also, note that the reason we add 7 in the code is to account for Rhode Island (4) and D.C. (3):
 
 ```{r, cache=TRUE}
 B <- 10000
@@ -381,7 +381,7 @@ The models we have described include pollster-to-pollster variability and sampli
 ```{r time-trend-estimate, echo=FALSE, warning=FALSE}
 one_pollster |> ggplot(aes(enddate, spread)) + 
   geom_point() + 
-  geom_smooth(method = "loess", span = 0.1)
+  geom_smooth(formula = y ~ x, method = "loess", span = 0.1)
 ```
 
 Some of the peaks and valleys we see coincide with events such as the party conventions, which tend to give the candidate a boost. We can see that the peaks and valleys are consistent across several pollsters:
@@ -394,7 +394,7 @@ polls_us_election_2016 |>
   ungroup() |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) |>
   ggplot(aes(enddate, spread)) + 
-  geom_smooth(method = "loess", span = 0.1) + 
+  geom_smooth(formula = y ~ x, method = "loess", span = 0.1) + 
   geom_point(aes(color = pollster), show.legend = FALSE, alpha = 0.6) 
 ```
 
@@ -416,7 +416,7 @@ polls_us_election_2016 |>
   ungroup() |>
   ggplot(aes(enddate, percentage, color = candidate)) +  
   geom_point(show.legend = FALSE, alpha = 0.4)  + 
-  geom_smooth(method = "loess", span = 0.15) +
+  geom_smooth(formula = y ~ x, method = "loess", span = 0.15) +
   scale_y_continuous(limits = c(30,50))
 ```
 
@@ -434,9 +434,9 @@ polls <- polls_us_election_2016 |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100)
 ```
 
-Now, for each poll, use the CLT to create a 95% confidence interval for the spread reported by each poll. Call the resulting object cis with columns lower and upper for the limits of the confidence intervals. Use the `select` function to keep the columns `state, startdate, end date, pollster, grade, spread, lower, upper`.
+Now, for each poll, use the CLT to create a 95% confidence interval for the spread reported by each poll. Call the resulting object cis with columns lower and upper for the limits of the confidence intervals. Use the `select` function to keep the columns `state, startdate, enddate, pollster, grade, spread, lower, upper`.
 
-2\. You can add the final result to the `cis` table you just created using the `right_join` function like this:
+2\. You can add the final result to the `cis` table you just created using the `left_join` function like this:
 
 ```{r, eval=FALSE}
 add <- results_us_election_2016 |> 
@@ -470,7 +470,7 @@ Now, determine how often the 95% confidence interval includes the election night
 
 12\. Despite the frequentist prediction of $.450$, not a single baseball enthusiast would make this prediction. Why is this? One reason is that they know the estimate has much uncertainty. However, the main reason is that they are implicitly using a hierarchical model that factors in information from years of following baseball. Use the following code to explore the distribution of batting averages in the three seasons prior to 2013, and describe what this tells us.
 
-```{r batting-averages-histogram, echo=FALSE, out.width="100%", fig.height=3, message=FALSE, warning=FALSE, echo=FALSE, eval=FALSE}
+```{r batting-averages-histogram, out.width="100%", fig.height=3, message=FALSE, warning=FALSE, eval=FALSE}
 library(tidyverse)
 library(Lahman)
 filter(Batting, yearID %in% 2010:2012) |> 
