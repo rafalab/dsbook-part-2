@@ -162,7 +162,7 @@ anscombe |> mutate(row = seq_len(n())) |>
   spread(axis, value) |> select(-row) |>
   ggplot(aes(x,y)) +
   facet_wrap(~group)  +
-  geom_smooth(method="lm", fill=NA, fullrange=TRUE) + 
+  geom_smooth(formula = 'y ~ x', method="lm", fill=NA, fullrange=TRUE) + 
   geom_point()
 #+  geom_point(bg="orange", color="red", cex=3, pch=21)
 ```
@@ -333,7 +333,7 @@ So why not always use the regression line for prediction? Because it is not alwa
 
 ## Bivariate normal distribution
 
-Correlation and the regression slope are a widely used summary statistic, but they are often misused or misinterpreted. Anscombe's examples provide over-simplified cases in which the correlation is not a useful summary. But there are many real-life examples. 
+Correlation and the regression slope are widely used summary statistics, but they are often misused or misinterpreted. Anscombe's examples provide over-simplified cases in which the correlation is not a useful summary. But there are many real-life examples. 
 
 The main way we motivate appropriate use of correlation as a summary, involves the *bivariate normal distribution*.
 
@@ -457,7 +457,7 @@ Although this model is exactly the same one we derived earlier by assuming bivar
 
 One reason linear models are popular is that they are _interpretable_. In the case of Galton's data, we can interpret the data like this: due to inherited genes, the son's height prediction grows by $\beta_1$ for each inch we increase the father's height $x$. Because not all sons with fathers of height $x$ are of equal height, we need the term $\varepsilon$, which explains the remaining variability. This remaining variability includes the mother's genetic effect, environmental factors, and other biological randomness.
 
-Given how we wrote the model above, the intercept $\beta_0$ is not very interpretable, as it is the predicted height of a son with a father with no height. Due to regression to the mean, the prediction will usually be a bit larger than 0. To make the slope parameter more interpretable, we can rewrite the model slightly as:
+Given how we wrote the model above, the intercept $\beta_0$ is not very interpretable, as it is the predicted height of a son of a father with no height. Due to regression to the mean, the prediction will usually be a bit larger than 0. To make the slope parameter more interpretable, we can rewrite the model slightly as:
 
 $$ 
 Y_i = \beta_0 + \beta_1 (x_i - \bar{x}) + \varepsilon_i, \, i=1,\dots,N 
@@ -465,11 +465,11 @@ $$
 
 with $\bar{x} = 1/N \sum_{i=1}^N x_i$ the average of the $x$. In this case, $\beta_0$ represents the height when $x_i = \bar{x}$, which is the height of the son of an average father.
 
-Later, specifically in Sections @sec-multivariate-regression and @treatment-effect-models, we will see how the linear model representation permits us to use the same mathematical frameworks in other contexts and to achieve more complicated goals than predict one variable from another.
+Later, specifically in Sections @sec-multivariate-regression and @sec-treatment-effect-models, we will see how the linear model representation permits us to use the same mathematical frameworks in other contexts and to achieve more complicated goals than predicting one variable from another.
 
 ## Least Squares Estimates  {#sec-lse}
 
-For linear models to be useful, we have to estimate the unknown $\beta$s. The standard approach is to find the values that minimize the distance of the fitted model to the data. Specifically, we find the $\beta$s that minize the least squares (LS) equation show below. For Galton's data, the LS equation looks like this:
+For linear models to be useful, we have to estimate the unknown $\beta$s. The standard approach is to find the values that minimize the distance of the fitted model to the data. Specifically, we find the $\beta$s that minimize the least squares (LS) equation shown below. For Galton's data, the LS equation looks like this:
 
 $$ 
 RSS = \sum_{i=1}^n \left\{  y_i - \left(\beta_0 + \beta_1 x_i \right)\right\}^2 
@@ -594,7 +594,7 @@ Although we do not show examples in this book, hypothesis testing with regressio
 
 ## Predicted values are random variables
 
-Once we fit our model, we can obtain prediction of $Y$ by plugging in the estimates into the regression model. For example, if the father's height is $x$, then our prediction $\hat{Y}$ for the son's height will be:
+Once we fit our model, we can obtain a prediction of $Y$ by plugging the estimates into the regression model. For example, if the father's height is $x$, then our prediction $\hat{Y}$ for the son's height will be:
 
 $$\hat{Y} = \hat{\beta}_0 + \hat{\beta}_1 x$$
 
@@ -605,7 +605,7 @@ Keep in mind that the prediction $\hat{Y}$ is also a random variable and mathema
 ```{r father-son-regression}
 galton_heights |> ggplot(aes(son, father)) +
   geom_point() +
-  geom_smooth(method = "lm")
+  geom_smooth(formula = y ~ x, method = "lm")
 ```
 
 The R function `predict` takes an `lm` object as input and returns the prediction. If requested, the standard errors and other information from which we can construct confidence intervals is provided:
@@ -640,7 +640,7 @@ In fact residuals are often denoted as $\hat{\varepsilon}$. This motivates sever
 
 3. Because we assume the standard deviation of the errors is constant, if we plot the absolute value of the residuals, it should appear constant.
 
-We prefer plots rather than summaries based on, for example, correlation because, as noted in Section @ascombe, correlation is not always the best summary of association. The function `plot` applied to an `lm` object automatically plots these.
+We prefer plots rather than summaries based on, for example, correlation because, as noted in Section @sec-ascombe, correlation is not always the best summary of association. The function `plot` applied to an `lm` object automatically plots these.
 
 ```{r diagnostic-plots}
 #| echo: false
@@ -660,7 +660,7 @@ plot(fit, which = 1:3)
 
 This function can produce six different plots, and the argument `which` let's you specify which you want to see. You can learn more by reading the `plot.lm` help file. However, some of the plots are based on more advanced concepts beyond the scope of this book. To learn more, we recommend an advanced book on regression analysis.
 
-In @sec-multivariate-regression and @sec-treatment-effect-models, we introduce data analysis challenges in which we may decide to not to include certain variables in the model. In these cases, an important diagnostic test to add checks if the residuals are related to variables not included in the model.
+In @sec-multivariate-regression and @sec-treatment-effect-models, we introduce data analysis challenges in which we may decide to not include certain variables in the model. In these cases, an important diagnostic test is to check if the residuals are related to variables not included in the model.
 
 
 ## The regression fallacy
@@ -782,7 +782,7 @@ Because the correlation is not perfect, regression tells us that, on average, ex
 
 ## Exercises
 
-1\. Load the `GaltonFamilies` data from the **HistData**. The children in each family are listed by gender and then by height. Create a dataset called `galton_heights` by picking a male and female at random.
+1\. Load the `GaltonFamilies` data from the **HistData** package. The children in each family are listed by gender and then by height. Create a dataset called `galton_heights` by picking a male and female at random.
 
 2\. Make a scatterplot for heights between mothers and daughters, mothers and sons, fathers and daughters, and fathers and sons.
 
