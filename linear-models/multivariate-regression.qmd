@@ -8,7 +8,7 @@ img_path <- "img"
 
 Since Galton's original development, regression has become one of the most widely used tools in data analysis. One reason is the fact that an adaptation of the original regression approach, based on linear models, permits us to find relationships between two variables taking into account the effects of other variables that affect both. This has been particularly popular in fields where randomized experiments are hard to run, such as economics and epidemiology.
 
-When we are unable to randomly assign each individual to a treatment or control group, confounding becomes particularly prevalent. For instance, consider estimating the effect of eating fast foods on life expectancy using data collected from a random sample of people in a jurisdiction. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Consequently, a naive regression model may lead to an overestimate of the negative health effects of fast food. So, how do we account for confounding in practice? In this chapter, we learn how _multivariate regression_ can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource limited sports team.
+When we are unable to randomly assign each individual to a treatment or control group, confounding becomes particularly prevalent. For instance, consider estimating the effect of eating fast foods on life expectancy using data collected from a random sample of people in a jurisdiction. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Consequently, a naive regression model may lead to an overestimate of the negative health effects of fast food. So, how do we account for confounding in practice? In this chapter, we learn how _multivariate regression_ can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource-limited sports team.
 
 ## Case study: Moneyball
 
@@ -37,7 +37,7 @@ h |> html_nodes("table") |>
   coord_flip()
 ```
 
-Statistics have been used in baseball since its beginnings. The dataset we will be using, included in the **Lahman** library, goes back to the 19th century. For example, a summary statistics we will describe soon, the *batting average*, has been used for decades to summarize a batter's success. Other statistics[^moneyball-motivation-1], such as home runs (HR), runs batted in (RBI), and stolen bases (SB), are reported for each player in the game summaries included in the sports section of newspapers, with players rewarded for high numbers. Although summary statistics such as these were widely used in baseball, data analysis per se was not. These statistics were arbitrarily chosen without much thought as to whether they actually predicted anything or were related to helping a team win.
+Statistics have been used in baseball since its beginnings. The dataset we will be using, included in the **Lahman** library, goes back to the 19th century. For example, a summary statistic we will describe soon, the *batting average*, has been used for decades to summarize a batter's success. Other statistics[^moneyball-motivation-1], such as home runs (HR), runs batted in (RBI), and stolen bases (SB), are reported for each player in the game summaries included in the sports section of newspapers, with players rewarded for high numbers. Although summary statistics such as these were widely used in baseball, data analysis per se was not. These statistics were arbitrarily chosen without much thought as to whether they actually predicted anything or were related to helping a team win.
 
 [^moneyball-motivation-1]: http://mlb.mlb.com/stats/league_leaders.jsp
 
@@ -74,7 +74,7 @@ A batter who *goes around the bases* and arrives home, scores a run.
 
 We are simplifying a bit, but there are five ways a batter can succeed, meaning not make an out:
 
--   Bases on balls (BB): The pitcher fails to throw the ball through a predefined area considered to be hittable (the strike zone), so the batter is permitted to go to first base.
+-   Base on balls (BB): The pitcher fails to throw the ball through a predefined area considered to be hittable (the strike zone), so the batter is permitted to go to first base.
 -   Single: The batter hits the ball and gets to first base.
 -   Double (2B): The batter hits the ball and gets to second base.
 -   Triple (3B): The batter hits the ball and gets to third base.
@@ -127,7 +127,7 @@ p <- dat |> ggplot(aes(hr, r)) + geom_point(alpha = 0.5)
 p 
 ```
 
-We defined `p` because we will add it to this plot latter. The plot shows a strong association: teams with more HRs tend to score more runs. Now let's examine the relationship between stolen bases and runs:
+We defined `p` because we will add to this plot later. The plot shows a strong association: teams with more HRs tend to score more runs. Now let's examine the relationship between stolen bases and runs:
 
 ```{r runs-vs-sb}
 dat |> ggplot(aes(sb, r)) + geom_point(alpha = 0.5)
@@ -174,12 +174,12 @@ Note that we can obtain the same plot quicker by using the **ggplot2** function 
 p + geom_smooth(method = "lm")
 ```
 
-In the example above, the slope is `r  round(lm(r ~ hr, data = dat)$coef[[2]],2)`. This tells us that teams that hit 1 more HR per game than the average team, score `r round(lm(r ~ hr, data = dat)$coef[[2]], 2)` more runs per game than the average team. Given that the most common final score is a difference of one run, this can certainly lead to a large increase in wins. Not surprisingly, HR hitters are very expensive. Because we are working on a budget, we will need to find some other way to increase wins. In the next chapter, we introduce _linear models_, which provide an framework for performing this analysis. In @moneyball, we apply what have learned to build a baseball team.
+In the example above, the slope is `r  round(lm(r ~ hr, data = dat)$coef[[2]],2)`. This tells us that teams that hit 1 more HR per game than the average team, score `r round(lm(r ~ hr, data = dat)$coef[[2]], 2)` more runs per game than the average team. Given that the most common final score is a difference of one run, this can certainly lead to a large increase in wins. Not surprisingly, HR hitters are very expensive. Because we are working on a budget, we will need to find some other way to increase wins. In the next chapter, we introduce _linear models_, which provide a framework for performing this analysis. In @moneyball, we apply what have learned to build a baseball team.
 
 
 ## The broom package
 
-The **broom** package facilitates the use of R function, such as `lm`, within the tidyverse. Recall the that `lm` does not take a data frame as a first argument and does not return a data frame, which makes using `lm` in conjunction with the **tidyverse** difficult. It has three main functions, all of which extract information from the object returned by `lm` and returns it in a **tidyverse** friendly data frame.  The `tidy` function returns estimates and related information as a data frame. We can add other important summaries, such as confidence intervals with the argument `conf.int = TRUE`:
+The **broom** package facilitates the use of R functions, such as `lm`, within the tidyverse. Recall the that `lm` does not take a data frame as a first argument and does not return a data frame, which makes using `lm` in conjunction with the **tidyverse** difficult. It has three main functions, all of which extract information from the object returned by `lm` and returns it in a **tidyverse** friendly data frame.  The `tidy` function returns estimates and related information as a data frame. We can add other important summaries, such as confidence intervals with the argument `conf.int = TRUE`:
 
 ```{r}
 library(broom)
@@ -220,7 +220,7 @@ It appears that pitchers, afraid of HRs, will sometimes avoid throwing strikes t
 
 ### Understanding confounding through stratification
 
-A first approach is to keep HRs fixed at a certain value and then examine the relationship between BB and runs. As we did when we stratified fathers by rounding to the closest inch, here we can stratify HR per game to the closest ten. We filter out the strata with few points to avoid highly variable estimates and then make a scatterplot for each strata:
+A first approach is to keep HRs fixed at a certain value and then examine the relationship between BB and runs. As we did when we stratified fathers by rounding to the closest inch, here we can stratify HR per game to the closest tenth. We filter out the strata with few points to avoid highly variable estimates and then make a scatterplot for each strata:
 
 
 ```{r runs-vs-bb-by-hr-strata, out.width="80%", fig.height=5, message=FALSE, warning=FALSE}
@@ -287,7 +287,7 @@ $$
 Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
 $$
 
-with $Y_i$ runs per game for team $i$, $x_{i,1}$ walks per game, and $x_{i,2}$. To use `lm` here, we need to let the function know we have two predictor variables. We therefore use the `+` symbol as follows:
+with $Y_i$ runs per game for team $i$, $x_{i,1}$ walks per game, and $x_{i,2}$ HRs per game. To use `lm` here, we need to let the function know we have two predictor variables. We therefore use the `+` symbol as follows:
 
 ```{r}
 tidy(lm(r ~ bb + hr, data = dat), conf.int = TRUE) 
@@ -379,7 +379,7 @@ hist(players$r_hat, main = "Predicted runs per game")
 ```
 
 
-To actually build the team, we will need to know their salaries as well as their defensive position. For this, we use the `righ_join` function to combine the `players` data frame we just created with the player information data frame included in some of the other Lahman data tables.
+To actually build the team, we will need to know their salaries as well as their defensive position. For this, we use the `right_join` function to combine the `players` data frame we just created with the player information data frame included in some of the other Lahman data tables.
 
 Start by adding the 2002 salary of each player:
 
@@ -491,7 +491,7 @@ if (knitr::is_html_output()) {
 
 We have shown how BB and singles have similar predictive power for scoring runs. Another way to compare the usefulness of these baseball metrics is by assessing their stability across the years. Since we have to pick players based on their previous performances, we prefer metrics that are more stable. In these exercises, we will compare the stability of singles and BBs.
 
-1\. Before we begin, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. Here is how we create the 2017 table, keeping only players with more than 100 plate appearances:
+1\. Before we begin, we want to generate two tables. One for 2002 and another for the average of 1999-2001 seasons. We want to define per plate appearance statistics. Here is how we create the 2002 table, keeping only players with more than 100 plate appearances:
 
 ```{r, eval=FALSE}
 library(Lahman)
@@ -502,9 +502,9 @@ dat <- Batting |> filter(yearID == 2002) |>
   select(playerID, singles, bb)
 ```
 
-Now, compute a similar table, but with rates computed over 1999-2001.
+Now, compute a similar table called `avg`, but with rates computed over 1999-2001.
 
-2\. You can use the `inner_join` function to combine the 2001 data and averages in the same table:
+2\. You can use the `inner_join` function to combine the 2002 data and averages in the same table:
 
 ```{r, eval = FALSE}
 dat <- inner_join(dat, avg, by = "playerID")
@@ -535,7 +535,7 @@ cors <- galton_heights |>
   summarize(cor = cor(parentHeight, childHeight))
 ```
 
-Are these differences statistically significant? To answer this, we will compute the slopes of the regression line along with their standard errors. Start by using `lm` and the **broom** package to compute the slopes LSE and the standard errors.
+Are these differences statistically significant? To answer this, we will compute the slopes of the regression lines along with their standard errors. Start by using `lm` and the **broom** package to compute the slopes' LSE and standard errors.
 
 6\. Repeat the exercise above, but compute a confidence interval as well.
 
