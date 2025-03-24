@@ -20,7 +20,7 @@ $$
 \begin{aligned}
 x +  3 y  - 2 z  &= 5\\
 3x + 5y + 6z &= 7\\
-2x + 4y + 3z &= 8.
+2x + 4y + 3z &= 8
 \end{aligned}
 $$
 
@@ -34,7 +34,7 @@ $$
 a_{11}&a_{12}&\dots&a_{1n}\\
 a_{21}&a_{22}&\dots&a_{2n}\\
 \vdots&\vdots&\ddots&\vdots\\
-a_{m1}&a_{2}&\dots&a_{mn}
+a_{m1}&a_{m2}&\dots&a_{mn}
 \end{pmatrix}, \,
 \mathbf{B} = \begin{pmatrix}
 b_{11}&b_{12}&\dots&b_{1p}\\
@@ -103,7 +103,7 @@ $$
 a_{11}&a_{12}&\dots&a_{1n}\\
 a_{21}&a_{22}&\dots&a_{2n}\\
 \vdots&\vdots&\ddots&\vdots\\
-a_{m1}&a_{22}&\dots&a_{nn}
+a_{n1}&a_{n2}&\dots&a_{nn}
 \end{pmatrix}
 ,\,
 \mathbf{b} = 
@@ -152,7 +152,7 @@ The function `solve` works well when dealing with small to medium-sized matrices
 The identity matrix, represented with a bold $\mathbf{I}$, is like the number 1, but for matrices: if you multiply a matrix by the identity matrix, you get back the matrix.
 
 $$
-\mathbf{I}\mathbf{X} = \mathbf{X}
+\mathbf{X} %*% \mathbf{I} = \mathbf{X}
 $$ 
 
 If you define $\mathbf{I}$ as matrix with the same number of rows and columns (referred to as square matrix) with 0s everywhere except the diagonal:
@@ -166,12 +166,17 @@ $$
 \end{pmatrix}
 $$ 
 
-you will obtain the desired property. 
+you will obtain the desired property. You can create an identity matrix with `diag`, and demonstrate that $\mathbf{A}\mathbf{I} = \mathbf{A}$:
+
+```{r}
+diag(nrow(A))
+A %*% diag(nrow(A)) == A
+```
 
 Note that the definition of an inverse matrix implies that:
 
 $$
-\mathbf{A}^{-1}\mathbf{A} = \mathbf{1}
+\mathbf{A}^{-1} * \mathbf{A} = \mathbf{1}
 $$
 
 Because the default for the second argument in `solve` is an identity matrix, if we simply type `solve(A)`, we obtain the inverse $\mathbf{A}^{-1}$. This means we can also obtain a solution to our system of equations with:
@@ -182,7 +187,7 @@ solve(A) %*% b
 
 ## Distance
 
-Many of the analyses we perform with high-dimensional data relate directly or indirectly to distance. For example, most machine learning techniques rely on being able to define distances between observations, using features or predictors. Clustering algorithms, for example, search of observations that are *similar*. But what does this mean mathematically?
+Many of the analyses we perform with high-dimensional data relate directly or indirectly to distance. For example, most machine learning techniques rely on being able to define distances between observations, using features or predictors. Clustering algorithms, for example, search for observations that are *similar*. But what does this mean mathematically?
 
 To define distance, we introduce another linear algebra concept: the *norm*. Recall that a point in two dimensions can be represented in polar coordinates as:
 
@@ -245,7 +250,7 @@ $$
 The reason we introduced the norm is because this distance is the size of the vector between the two points and this can be extrapolated to any dimension. The distance between two points, regardless of the dimensions, is defined as the norm of the difference:
 
 $$
-|| \mathbf{x}_1 - \mathbf{x}_2||.
+|| \mathbf{x}_1 - \mathbf{x}_2||
 $$
 
 If we use the digit data, the distance between the first and second observation will compute distance using all 784 features:
@@ -274,7 +279,7 @@ In R, the function `crossprod(x)` is convenient for computing norms. It multipli
 c(crossprod(x_1 - x_2), crossprod(x_1 - x_3), crossprod(x_2 - x_3)) |> sqrt()
 ```
 
-Note `crossprod` takes a matrix as the first argument. As a result, the vectors used here are being coerced into single column matrices. Also, note that `crossprod(x,y)` multiples `t(x)` by `y`.
+Note `crossprod` takes a matrix as the first argument. As a result, the vectors used here are being coerced into single column matrices. Also, note that `crossprod(x,y)` multiplies `t(x)` by `y`.
 
 We can see that the distance is smaller between the first two. This agrees with the fact that the first two are 2s and the third is a 7.
 
@@ -336,7 +341,7 @@ Other machine learning algorithms partition the predictor space into non-overlap
 
 ## Exercises
 
-1\. Generate two matrix, `A` and `B`, containing randomly generated and normally distributed numbers. The dimensions of these two matrices should be $4 \times 3$ and $3 \times 6$, respectively. Confirm that `C <- A %*% B` produces the same results as:
+1\. Generate two matrices, `A` and `B`, containing randomly generated and normally distributed numbers. The dimensions of these two matrices should be $4 \times 3$ and $3 \times 6$, respectively. Confirm that `C <- A %*% B` produces the same results as:
 
 ```{r, eval=FALSE}
 m <- nrow(A)
@@ -360,7 +365,7 @@ x + y + z + w &= 10\\
 \end{aligned}
 $$
 
-3\. Define `x`:
+3\. Define `x` and `y`:
 
 ```{r}
 #| eval: false
@@ -381,8 +386,7 @@ class(d)
 
 Generate a boxplot showing the distances for the second row of `d` stratified by digits. Do not include the distance to itself, which we know is 0. Can you predict what digit is represented by the second row of `x`?
 
-4\. Use the `apply` function and matrix algebra to compute the distance between the second digit `mnist$train$images[4,]` and all other digits represented in `mnist$train$images`. Then generate a boxplot as in exercise 2 and predict what digit is the fourth row.
+4\. Use the `apply` function and matrix algebra to compute the distance between the fourth digit `mnist$train$images[4,]` and all other digits represented in `mnist$train$images`. Then generate a boxplot as in exercise 2 and predict what digit is the fourth row.
 
 5\. Compute the distance between each feature and the feature representing the middle pixel (row 14 column 14). Create an image plot of where the distance is shown with color in the pixel position.
-
 
