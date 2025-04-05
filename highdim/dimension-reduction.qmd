@@ -6,7 +6,7 @@ Here we describe powerful techniques useful for exploratory data analysis, among
 
 ## Motivation: preserving distance
 
-We consider an example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points with each point is a pair of twins. We use the `mvrnorm` function from the **MASS** package to simulate bivariate normal data.
+We consider an example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points where each point is a pair of twins. We use the `mvrnorm` function from the **MASS** package to simulate bivariate normal data.
 
 ```{r, message=FALSE}
 set.seed(1983)
@@ -59,10 +59,10 @@ z <- x[,1]
 To make the distances comparable, we divide the sum of squares by the number of dimensions being added. So for the two dimensional case, we have:
 
 $$
-\sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 },
+\sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1,j}-x_{2,j})^2 }
 $$
 
-To make the distances comparable, we divide by $\sqrt{2}$:
+To make the distances comparable, we divide the two-dimensional distances by $\sqrt{2}$:
 
 ```{r}
 #| eval: false
@@ -78,7 +78,7 @@ abline(0, 1, col = "red")
 
 This one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that improves the approximation?
 
-If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can *rotate* the points in a way that preserve the distance between points, while increasing the variability in one dimension and reducing it on the other. Using this method, we keep more of the *information* about distances in the first dimension. In the next section, we describe a mathematical approach that permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.
+If we look back at the scatterplot and visualize a line between any pair of points, the length of this line is the distance between the two points. These lines tend to go along the direction of the diagonal. We will learn that we can *rotate* the points in a way that preserves the distance between points, while increasing the variability in one dimension and reducing it on the other. Using this method, we keep more of the *information* about distances in the first dimension. In the next section, we describe a mathematical approach that permits us to find rotations that preserve distance between points. We can then find the rotation that maximizes the variability in the first dimension.
 
 ## Rotations
 
@@ -236,7 +236,7 @@ rotate <- function(x, theta){
 }
 ```
 
-The columns of $\mathbf{A}$ are referred to as _directions_ because if we draw a vector from $(0,0)$ to $(a_{1,j}, a_{2,j})$, it points in the direction of the line that will become the $j-th$ dimension.
+The columns of $\mathbf{A}$ are referred to as _directions_ because if we draw a vector from $(0,0)$ to $(a_{1,j}, a_{2,j})$, it points in the direction of the line that will become the $j$-th dimension.
 
 Another advantage of linear algebra is that if we can find the inverse matrix of $\mathbf{A}^\top$, we can convert $\mathbf{Z}$ back to $\mathbf{X}$ again using a linear transformation.
 
@@ -297,7 +297,7 @@ $$
 
 Note that if $\mathbf{A} \mathbf{A} ^\top= \mathbf{I}$, then the distance between the $h$th and $i$th rows is the same for the original and transformed data.
 
-We refer to transformation with the property $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ as *orthogonal transformations*. These are guaranteed to preserve the distance between any two points.
+We refer to transformations with the property $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ as *orthogonal transformations*. These are guaranteed to preserve the distance between any two points.
 
 We previously demonstrated our rotation has this property. We can confirm using R:
 
@@ -534,7 +534,7 @@ $$
 \mathbf{r} = \mathbf{X} - \mathbf{X} \mathbf{v}_1 \mathbf{v}_1^\top
 $$
 
-and then find the vector $\mathbf{v}_2$ with$||\mathbf{v}_2||=1$ that maximizes $||\mathbf{r} \mathbf{v}_2||$. The projection $\mathbf{X} \mathbf{v}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
+and then find the vector $\mathbf{v}_2$ with$||\mathbf{v}_2||=1$ that maximizes $||\mathbf{X} \mathbf{v}_2||$. The projection $\mathbf{X} \mathbf{v}_2$ is the second PC. We then subtract the variation explained by the first two PCs, and continue this process until we have the entire *rotation* matrix and matrix of principal components, respectively:
 
 $$
 \mathbf{V} =
@@ -548,7 +548,7 @@ The ideas of distance preservation extends to higher dimensions. For a multidime
 
 
 :::{.callout-warning} 
-Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{v}|| = ||-\mathbf{X} \mathbf{v}||$. Also, note that if we multiply a column of $\mathbf{A}$ by $-1$, we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{V}^\top$ as long as we also multiple the corresponding column of $\mathbf{V}$ by -1. This implies that we can arbitrarily change the sign of each column of the rotation $\mathbf{V}$ and principal component matrix $\mathbf{Z}$.
+Notice that the solution to this maximization problem is not unique because $||\mathbf{X} \mathbf{v}|| = ||-\mathbf{X} \mathbf{v}||$. Also, note that if we multiply a column of $\mathbf{A}$ by $-1$, we still represent $\mathbf{X}$ as $\mathbf{Z}\mathbf{V}^\top$ as long as we also multiply the corresponding column of $\mathbf{V}$ by -1. This implies that we can arbitrarily change the sign of each column of the rotation $\mathbf{V}$ and principal component matrix $\mathbf{Z}$.
 :::
 
 In R, we can find the principal components of any matrix with the function `prcomp`:
@@ -660,7 +660,7 @@ rafalib::mypar()
 illustrate_pca(x)
 ```
 
-we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in first column), and subtracting a a quantity proportional to sepal width (blue in first column). The second PC is a weighted average of petal length and petal width, minus a weighted average of sepal length and petal width. 
+we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in first column), and subtracting a quantity proportional to sepal width (blue in first column). The second PC is a weighted average of petal length and petal width, minus a weighted average of sepal length and sepal width. 
 
 ### MNIST example
 
