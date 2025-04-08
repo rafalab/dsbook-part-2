@@ -125,7 +125,7 @@ test_set <- movielens[test_ind,]
 train_set <- movielens[-test_ind,]
 ```
 
-To make sure we don't include movies in the training set that should not be there, we remove entries using the `semi_join` function:
+To make sure we don't include movies in the test set that should not be there, we remove entries using the `semi_join` function:
 
 ```{r}
 test_set <- test_set |> semi_join(train_set, by = "movieId")
@@ -299,7 +299,7 @@ rmse2 <- test_set |>
 
 ## Penalized least squares
 
-If we look at the top movies based on our estimates of the movie effect $\hat{\beta}_j$, we find that they all obscure movies with just one rating:
+If we look at the top movies based on our estimates of the movie effect $\hat{\beta}_j$, we find that they are all obscure movies with just one rating:
 
 ```{r}
 n <- colSums(!is.na(y))
@@ -326,7 +326,7 @@ Regularization permits us to penalize large estimates that are formed using smal
 The general idea behind regularization is to constrain the total variability of the effect sizes. Why does this help? Consider a case in which we have movie $j=1$ with 100 user ratings and 4 movies $j=2,3,4,5$ with just one user rating. Suppose we know the average rating is, say, $\mu = 3$. If we use least squares, the estimate for the first movie effect is the average of 100 user ratings,  which we expect to be quite precise. However, the estimate for movies 2, 3, 4, and 5 will be based on one observation. Note that because the average is based on a single observation, the error for $j=2,3,4,5$ is 0, but we don't expect to be this lucky next time, when asked to predict. In fact, ignoring the one user and guessing that movies 2,3,4, and 5 are just average movies might provide a better prediction. The general idea of penalized regression is to control the total variability of the movie effects: $\sum_{j=1}^5 \beta_j^2$. Specifically, instead of minimizing the least squares equation, we minimize an equation that adds a penalty:
 
 $$ 
-\sum_{i,j} \left(y_{u,i} - \mu - \alpha_i - \beta_j \right)^2 + \lambda \sum_{j} \beta_j^2
+\sum_{i,j} \left(y_{i,j} - \mu - \alpha_i - \beta_j \right)^2 + \lambda \sum_{j} \beta_j^2
 $$
 The first term is just the sum of squares and the second is a penalty that gets larger when many $\beta_i$s are large. Using calculus, we can actually show that the values of $\beta_i$ that minimize this equation are:
 
@@ -342,7 +342,7 @@ When we estimate the parameters of a linear model with penalized least squares, 
 
 This approach will have our desired effect: when our sample size $n_j$ is very large, we obtain a stable estimate and the penalty $\lambda$ is effectively ignored since $n_j+\lambda \approx n_j$. Yet when the $n_j$ is small, then the estimate $\hat{\beta}_i(\lambda)$ is shrunken towards 0. The larger the $\lambda$, the more we shrink.
 
-But how do we select $\lambda$? In @sec-cross-validation, we describe an approach to do this. Here we will simply compute the RMSE we for different values of $\lambda$ to illustrate the effect:
+But how do we select $\lambda$? In @sec-cross-validation, we describe an approach to do this. Here we will simply compute the RMSE for different values of $\lambda$ to illustrate the effect:
 
 ```{r}
 n <- colSums(!is.na(y))
@@ -398,7 +398,7 @@ filter(test_set, movieId %in% names(b)[ind]) |>
 These make more sense with some movies that are watched more and have more ratings in the training set.
 
 :::{.callout-note}
-Notice _Swinger_ has a lower rating than the other top 10, yet a large movie effect estimate. This is due to the fact that it was rated by harsher users.
+Notice _Swingers_ has a lower rating than the other top 10, yet a large movie effect estimate. This is due to the fact that it was rated by harsher users.
 :::
 
 Note that regularization improves our RMSE:
@@ -551,5 +551,5 @@ and then define, for each school, how it deviates from that average. Write code 
 16\. Rank the schools based on the average obtained with the best $\alpha$. Note that no small school is incorrectly included.
 
 
-17\.  A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually obtain a very similar result. Confirm this by re-running the code from exercise 6, but without removing the overall mean. 
+17\.  A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually obtain a very similar result. Confirm this by re-running the code from exercise 14, but without removing the overall mean. 
 
