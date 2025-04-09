@@ -54,7 +54,7 @@ $$
 Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
 $$
 
-can be used to model movie ratings and help make useful predictions. This model accounts for user differences through $\alpha_i$ and movie effects through $\beta_j$. However, the model ignores an important source of information related to the fact that groups of movies, have similar rating patterns and groups of users have similar rating patterns as well.  
+can be used to model movie ratings and help make useful predictions. This model accounts for user differences through $\alpha_i$ and movie effects through $\beta_j$. However, the model ignores an important source of information related to the fact that groups of movies have similar rating patterns and groups of users have similar rating patterns as well.  
 
 To see an example of this, we compute residuals:
 
@@ -168,7 +168,7 @@ This structure seems to be driven by Al Pacino being in the movie or not. This i
 
 ```{r}
 q <- cbind(c(-1, -1, -1, 1, 1, 1),
-           c(1, 1, -1, 1, -1, 1))
+           c(1, 1, -1, 1, -1, -1))
 ```
 
 We can then obtain estimates for each user:
@@ -179,7 +179,7 @@ p <- t(apply(e, 1, function(y) lm(y~q-1)$coefficient))
 
 Note that we use the transpose `t` because `apply` binds results into columns and we want a row for each user. 
 
-Our approximation based on two factors does a even better job of predicting how our residuals deviate from 0:
+Our approximation based on two factors does an even better job of predicting how our residuals deviate from 0:
 
 ```{r e-vs-pq-2}
 plot(p %*% t(q), e)
@@ -214,7 +214,7 @@ Let's perform PCA and examine the results:
 pca <- prcomp(e, center = FALSE)
 ```
 
-First, notice that the first two PCs explain over 95% of the variability:
+First, notice that the first two PCs explain over 85% of the variability:
 
 ```{r}
 pca$sdev^2/sum(pca$sdev^2)
@@ -333,7 +333,7 @@ We can compute the first two principal components used for the prediction using 
 
 
 ```{r}
-pca <- prcomp(imputed$completeObs, center = FALSE, rank. = 3)
+pca <- prcomp(imputed$completeObs, center = FALSE, rank. = 2)
 ```
 
 By adding the movie names to the rotation matrix:
@@ -381,7 +381,7 @@ The analysis performed here with PCA is often performed with a related technique
 $$
 \mathbf{Y} = \mathbf{U}\mathbf{D}\mathbf{V}^\top
 $$
-With $\mathbf{U}$ and orthogonal $N\times p$ matrix, $\mathbf{V}$ an orthogonal $p \times p$ matrix, and $\mathbf{D}$ a diagonal matrix with $d_{1,1} \geq d_{2,2} \geq \dots \geq d_{p,p}$. SVD is related to PCA because we can show that $\mathbf{V}$ is the rotation that gives us principal components. This implies that $\mathbf{U}\mathbf{D}$ are the principal components. This also implies that if you square the diagonal entries of $\mathbf{D}$, you obtain the sum of squares of the principal components since:
+With $\mathbf{U}$ an orthogonal $N\times p$ matrix, $\mathbf{V}$ an orthogonal $p \times p$ matrix, and $\mathbf{D}$ a diagonal $p \times p$ matrix with $d_{1,1} \geq d_{2,2} \geq \dots \geq d_{p,p}$. SVD is related to PCA because we can show that $\mathbf{V}$ is the rotation that gives us principal components. This implies that $\mathbf{U}\mathbf{D}$ are the principal components. This also implies that if you square the diagonal entries of $\mathbf{D}$, you obtain the sum of squares of the principal components since:
 
 $$
 \mathbf{U}^\top\mathbf{D}\mathbf{U} = \mathbf{D}^2
@@ -480,7 +480,7 @@ names(s)
 You can check that the SVD works by typing:
 
 ```{r, eval=FALSE}
-y_svd <- sweep(s$u, d) %*% t(s$v)
+y_svd <- sweep(s$u, 2, s$d, '*') %*% t(s$v)
 max(abs(y - y_svd))
 ```
 
