@@ -142,7 +142,7 @@ The prediction rule we developed in the previous section predicts `Male` if the 
 Generally speaking, overall accuracy can be a deceptive measure. To see this, we will start by constructing what is referred to as the _confusion matrix_, which basically tabulates each combination of prediction and actual value. We can do this in R simply using `table(predicted = y_hat, actual = test_set$sex)`,
 
 
-but the `confusionMatrix`  **caret** package computes the confusion matrix and much more:
+but the `confusionMatrix` function in the **caret** package computes the confusion matrix and much more:
 
 ```{r}
 cm <- confusionMatrix(data = y_hat, reference = test_set$sex)
@@ -211,7 +211,7 @@ sensitivity | TPR | Recall | $\frac{\mbox{TP}}{\mbox{TP} + \mbox{FN}}$ | $\mbox{
 specificity | TNR | 1-FPR | $\frac{\mbox{TN}}{\mbox{TN}+\mbox{FP}}$ | $\mbox{Pr}(\hat{Y}=0 \mid Y=0)$ |
 specificity |  PPV | Precision | $\frac{\mbox{TP}}{\mbox{TP}+\mbox{FP}}$ | $\mbox{Pr}(Y=1 \mid \hat{Y}=1)$|
 
-The __caret__ function `confusionMatrix` computes all these metrics for us once we define which category is the "positive" (Y=1). The function expects factors as input, and the first level is considered the positive outcome or $Y=1$. In our example, `Female` is the first level because it comes before `Male` alphabetically. If you type this into R, you will see several metrics including accuracy, sensitivity, specificity, and PPV.
+The __caret__ function `confusionMatrix` computes all these metrics for us once we define which category is the "positive" (Y=1). The function expects factors as input, and by default the first level is considered the positive outcome or $Y=1$, though it can be redefined with the `positive` argument. In our example, `Female` is the first level because it comes before `Male` alphabetically. If you type this into R, you will see several metrics including accuracy, sensitivity, specificity, and PPV.
 
 You can access these directly, for example, like this:
 
@@ -387,7 +387,7 @@ bind_rows(tmp_1, tmp_2) |>
   geom_text_repel(nudge_x = 0.01, nudge_y = -0.01, show.legend = FALSE)
 ```
 
-We see that we obtain higher sensitivity with this approach for all values of specificity, which implies it is in fact a better method. Keep in mind that ROC curves for guessing always fall on the identity line. Also, note that when making ROC curves, it is often nice to add the cutoff associated with each point.
+We see that we obtain higher sensitivity with the cutoff approach for all values of specificity, which implies it is in fact a better method than guessing. Keep in mind that ROC curves for guessing always fall on the identity line. Also, note that when making ROC curves, it is often nice to add the cutoff associated with each point.
 
 The packages __pROC__ and __plotROC__ are useful for generating these plots.
 
@@ -413,14 +413,7 @@ height_cutoff <- map_df(cutoffs[-1], function(x){
 })
 tmp_1 <- bind_rows(guessing, height_cutoff) |> mutate(Positive = "Y = 1 if Female") 
 
-guessing <- map_df(rev(probs)[-1], function(p){
-  y_hat <- sample(c("Male", "Female"), length(test_index), replace = TRUE, 
-                  prob = c(p, 1 - p)) |> 
-    factor(levels = c("Male", "Female"))
-  list(method = "Guess",
-    recall = sensitivity(y_hat, relevel(test_set$sex, "Male", "Female")),
-    precision = precision(y_hat, relevel(test_set$sex, "Male", "Female")))
-})
+
 
 height_cutoff <- map_df(rev(cutoffs)[-1], function(x){
   y_hat <- ifelse(test_set$height > x, "Male", "Female") |> 
