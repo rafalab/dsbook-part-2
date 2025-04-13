@@ -22,9 +22,9 @@ Part of what we explain in this section are the assumptions that permit us to ex
 
 ## Example: Is it a 2 or a 7? {#sec-two-or-seven}
 
-To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or 7 from the proportion of dark pixels in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits, 500 in the training set and 500 in the test set. We provide this dataset in the _mnist_27_ object in the `dslabs` package.
+To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or 7 from the proportion of dark pixels in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits, 800 in the training set 200 in the test set. Both sets are almost evenly distributed with 2s and 7s. We provide this dataset in the _mnist_27_ object in the `dslabs` package.
 
-For the training data, we have $n=500$ observed outcomes $y_1,\dots,y_n$, with $Y$ defined as $1$ if the digit is 7 and 0 if it's 2, and $n=500$ features $\mathbf{x}_1, \dots, \mathbf{x}_n$, with each feature a two-dimensional point $\mathbf{x}_i = (x_{i,1}, x_{i,2})^\top$. Here is a plot of the $x_2$s versus the $x_1$s with color determining if $y$ is 1 (blue) or 0 (red):
+For the training data, we have $n=800$ observed outcomes $y_1,\dots,y_n$, with $Y$ indicating whether the digit is 7 or 2, and $n=800$ features $\mathbf{x}_1, \dots, \mathbf{x}_n$, with each feature a two-dimensional point $\mathbf{x}_i = (x_{i,1}, x_{i,2})^\top$. Here is a plot of the $x_2$s versus the $x_1$s with color determining if $y$ is 1 (blue) or 0 (red):
 
 ```{r two-or-seven-scatter, warning=FALSE, message=FALSE, cache=FALSE}
 library(caret)
@@ -163,7 +163,7 @@ resid <- ifelse(lm(margin~day, data = polls_2008)$resid > 0, "+", "-")
 polls_2008 |> 
   mutate(resid = resid) |> 
   ggplot(aes(day, margin)) + 
-  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  geom_smooth(method = "lm", formula = 'y ~ x', se = FALSE, color = "black") +
   geom_point(aes(color = resid), size = 3)
 ```
 
@@ -339,7 +339,7 @@ tmp |>
   ggplot(aes(day, margin)) +   
   scale_size(range = c(0, 3)) +
   geom_smooth(aes(group = center, weight = weight), 
-              method = "lm", se = FALSE) +
+              method = "lm", formula = 'y ~ x', se = FALSE) +
   geom_point(data = polls_2008, size = 3, alpha = .5, color = "grey") +
   geom_point(aes(size = weight)) +
   facet_wrap(~center)
@@ -521,7 +521,7 @@ The `degree = 2` gives us more wiggly results. In general, we actually prefer `d
 
 ### Beware of default smoothing parameters
 
-`ggplot` uses loess in its `geom_smooth` function:
+`ggplot`'s `geom_smooth` function supports a variety of smoothing methods. By default, it uses loess or gam (Generalized Additive Model), the latter if any window of data exceeds 1000 observations. (loess is said to have better appearance, but has an exponential memory footprint.)
 
 ```{r ggplot-loess-default, warning=FALSE, message=FALSE}
 polls_2008 |> ggplot(aes(day, margin)) +
