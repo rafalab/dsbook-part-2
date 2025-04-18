@@ -230,7 +230,7 @@ The new rule also gives us a very intuitive cutoff between 66-67, which is about
 
 ```{r naive-with-good-prevalence}
 plot(x, p_hat_bayes_unbiased)
-abline(h = 0.5, lty = 2) + 
+abline(h = 0.5, lty = 2)
 abline(v = 67, lty = 2)
 ```
 
@@ -330,9 +330,9 @@ mnist_27$train |> mutate(y = factor(y)) |>
   stat_ellipse(aes(x_1, x_2, color = y), data = tmp, type = "norm", lwd = 1.5)
 ```
 
-We can LDA using the **MASS** `lda` function:
+We can fit LDA using the **MASS** `lda` function:
 
-```{r, echo=FALSE}
+```{r}
 train_lda <- MASS::lda(y ~ ., data = mnist_27$train)
 y_hat <- predict(train_lda, mnist_27$test)$class
 ```
@@ -376,7 +376,7 @@ which is the negative of a distance squared scaled by the standard deviation. Fo
 
 
 :::{.callout-note}
-You are now ready to do exercises 14-22.
+You are now ready to do exercises 14-17.
 :::
 
 
@@ -587,7 +587,7 @@ polls_2008 |>
   geom_step(aes(day, y_hat), col = "red")
 ```
 
-Intuitively we know that this is not a good approach as it will generally result in over-training. These `cp`, `minsplit`, and `minbucket`, three parameters can be used to control the variability of the final predictors. The larger these values are the more data is averaged to compute a predictor and thus reduce variability. The drawback is that it restricts flexibility.
+Intuitively we know that this is not a good approach as it will generally result in over-training. These `cp`, `minsplit`, and `minbucket` parameters can be used to control the variability of the final predictors. The larger these values are the more data is averaged to compute a predictor and thus reduce variability. The drawback is that it restricts flexibility.
 
 
 ```{r polls-2008-tree-train, echo=FALSE}
@@ -815,7 +815,7 @@ library(randomForest)
 train_rf <- randomForest(y ~ ., data = mnist_27$train)
 ```
 
-The accuracy for the random forest fit for our 2 or 7 example is `r `confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. Here is what the conditional probabilities look like:
+The accuracy for the random forest fit for our 2 or 7 example is `r confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. Here is what the conditional probabilities look like:
 
 ```{r cond-prob-rf, echo = FALSE, out.width = "100%"}
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")
@@ -831,7 +831,7 @@ grid.arrange(p2, p1, nrow = 1)
 train_rf_2 <- randomForest(y ~ ., data = mnist_27$train, nodesize = 31)
 ```
 
-Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 31, the number of neighbors we used with kNN, we get an accuracy of `confusionMatrix(predict(train_rf_2, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. The selected model improves accuracy and provides a smoother estimate:
+Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 31, the number of neighbors we used with kNN, we get an accuracy of `r confusionMatrix(predict(train_rf_2, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. The selected model improves accuracy and provides a smoother estimate:
 
 ```{r cond-prob-final-rf, echo = FALSE, out.width = "100%"}
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")
@@ -969,32 +969,32 @@ dat$train |> ggplot(aes(x, color = y)) + geom_density()
 
 Compare the accuracy of linear regression and logistic regression. 
 
-10\. Repeat the simulation from exercise 1 100 times and compare the average accuracy for each method and notice they give practically the same answer.
+10\. Repeat the simulation from exercise 9 100 times and compare the average accuracy for each method and notice they give practically the same answer.
 
-11\. Generate 25 different datasets changing the difference between the two class: `delta <- seq(0, 3, len = 25)`. Plot accuracy versus `delta`.
+11\. Generate 25 different datasets with these values for mu_1: `delta <- seq(0, 3, len = 25)`. Plot accuracy versus `delta`.
 
-12\. We cam see what the data looks like if we add 1s to our 2 or 7 examples using this code:
+12\. We can see what the data looks like if we add 1s to our 2 or 7 examples using this code:
 
 ```{r, eval=FALSE}
 library(dslabs)
 mnist_127$train |> ggplot(aes(x_1, x_2, color = y)) + geom_point()
 ```
 
-Fit QDA using the `qda` function in the **MASS** package the create a confusion matrix for predictions on the test. Which of the following best describes the confusion matrix:
+Fit QDA using the `qda` function in the **MASS** package then create a confusion matrix for predictions on the test. Which of the following best describes the confusion matrix:
 
-a\. It is a two-by-two table.
-b\. Because we have three classes, it is a two-by-three table.
-c\. Because we have three classes, it is a three-by-three table.
-d\. Confusion matrices only make sense when the outcomes are binary.
+a. It is a two-by-two table.
+b. Because we have three classes, it is a two-by-three table.
+c. Because we have three classes, it is a three-by-three table.
+d. Confusion matrices only make sense when the outcomes are binary.
 
 
 
 13\. The `byClass` component returned by the `confusionMatrix` object provides sensitivity and specificity for each class. Because these terms only make sense when data is binary, each row represents sensitivity and specificity when a particular class is 1 (positives) and the other two are considered 0s (negatives). Based on the values returned by `confusionMatrix`, which of the following is the most common mistake:
 
-a\. Calling 1s either a 2 or 7.
-b\. Calling 2s either a 1 or 7.
-c\. Calling 7s either a 1 or 2.
-d\. All mistakes are equally common.
+a. Calling 1s either a 2 or 7.
+b. Calling 2s either a 1 or 7.
+c. Calling 7s either a 1 or 2.
+d. All mistakes are equally common.
 
 14. Create a grid of `x_1` and `x_2` using:
 
@@ -1018,7 +1018,7 @@ d. LDA can't be used with more than one class.
 15\. Now repeat exercise 13 for kNN with $k=31$ and compute and compare the overall accuracy for all three methods. 
 
 
-16. To understand how a simple method like kNN can outperform a model that explicitly tries to emulate Bayes' rule, explore the conditional distributions of `x_1` and `x_2` to see if the normal approximation holds. Generative models can be very powerful, but only when we are able to successfully approximate the joint distribution of predictors conditioned on each class. 
+16\. To understand how a simple method like kNN can outperform a model that explicitly tries to emulate Bayes' rule, explore the conditional distributions of `x_1` and `x_2` to see if the normal approximation holds. Generative models can be very powerful, but only when we are able to successfully approximate the joint distribution of predictors conditioned on each class. 
 
 
 17\. Earlier we used logistic regression to predict sex from height. Use kNN to do the same. Use the code described in this chapter to select the $F_1$ measure and plot it against $k$. Compare to the $F_1$ of about 0.6 we obtained with regression.
@@ -1047,7 +1047,7 @@ Use `rpart` to fit a regression tree and save the result to `fit`.
 23\. It seems that the default values for the random forest result in an estimate that is too flexible (not smooth). Re-run the random forest but this time with `nodesize` set at 50 and `maxnodes` set at 25. Remake the plot.
 
 
-24\. This **dslabs* dataset includes the `tissue_gene_expression` with a matrix `x`:
+24\. This **dslabs** dataset includes the `tissue_gene_expression` with a matrix `x`:
 
 ```{r, eval = FALSE}
 library(dslabs)
