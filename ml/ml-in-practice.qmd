@@ -62,7 +62,7 @@ The __caret__ package also provides a function that performs cross validation fo
 
 ### The `train` function 
 
-The R functions that fit machine algorithms are all slightly different. Functions such as `lm`, `glm`, `qda`, `lda`, `knn3`, `rpart` and `randomForrest` use different syntax, have different argument names and produce objects of different types.
+The R functions that fit machine algorithms are all slightly different. Functions such as `lm`, `glm`, `qda`, `lda`, `knn3`, `rpart` and `randomForest` use different syntax, have different argument names and produce objects of different types.
 
 The __caret__ `train` function lets us train different algorithms using similar syntax. So, for example, we can type the following to train three different models:
 
@@ -193,7 +193,7 @@ confusionMatrix(predict(train_knn, mnist_27$test, type = "raw"),
                 mnist_27$test$y)$overall["Accuracy"]
 ```
 
-Bootstrapping is not always the best approach to resampling (see @knn-in-practice, for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
+Bootstrapping is not always the best approach to resampling (see @sec-knn-in-practice, for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
 
 ```{r cv-10-fold-accuracy-estimate}
 control <- trainControl(method = "cv", number = 10, p = .9)
@@ -219,7 +219,7 @@ We often transform predictors before running the machine algorithm. We also remo
 
 Examples of preprocessing include standardizing the predictors, taking the log transform of some predictors, removing predictors that are highly correlated with others, and removing predictors with very few non-unique values or close to zero variation. 
 
-For example, we can run the `nearZero` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with close to 0 variability:
+For example, we can run the `nearZeroVar` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with close to 0 variability:
 
 ```{r pixel-sds, message=FALSE, warning=FALSE, cache=FALSE}
 library(matrixStats)
@@ -264,7 +264,7 @@ centered_subsetted_x_test <- predict(pp, newdata = x_test)
 dim(centered_subsetted_x_test)
 ```
 
-Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. We will explore this functionality further in the context of a k-Nearest Neighbors model @knn-in-practice.
+Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. We will explore this functionality further in the context of a k-Nearest Neighbors model @sec-knn-in-practice.
 
 ## Parallelization 
 
@@ -275,8 +275,8 @@ The **caret** package is set up to run in parallel but you have to let R know th
  
 ```{r}
 library(doParallel)
-nc <- detectCores() - 1
-cl <- makeCluster(nc) # it is convention to leave 1 core for OS
+nc <- detectCores() - 1   # it is convention to leave 1 core for OS
+cl <- makeCluster(nc)
 registerDoParallel(cl)
 ```
 
@@ -292,13 +292,13 @@ stopImplicitCluster()
 When parallelizing tasks across multiple processors, it's important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
 :::
 
-## k-nearest neighbors {#knn-in-practice}
+## k-nearest neighbors {#sec-knn-in-practice}
 
 :::{.callout-warning}
 Before starting this section, note that the first two calls to the `train` function in the code below can take several hours to run. This is a common challenge when training machine learning algorithms since we have to run the algorithm for each cross validation split and each set of tuning parameters being considered. In the next section, we will provide some suggestions on how to predict the duration of the process and ways to reduce. 
 :::
 
-As we will see soon, the optimal $k$ for the MNIST data is between 1 and 7. For small values of $k$, bootstrapping can be problematic for estimating MSE for a k-Nearest Neighbors (kNN). This is because bootstrapping involves sampling with replacement from the original dataset which implies the closest neighbor will often appear twice but considered two independent observations by kNN. This is a unrealistic scenario that can distort the estimate MSE when, for example, $k=3$. We therefore us cross-validation to estimate our MSE.
+As we will see soon, the optimal $k$ for the MNIST data is between 1 and 7. For small values of $k$, bootstrapping can be problematic for estimating MSE for a k-Nearest Neighbors (kNN). This is because bootstrapping involves sampling with replacement from the original dataset which implies the closest neighbor will often appear twice but considered two independent observations by kNN. This is a unrealistic scenario that can distort the estimate MSE when, for example, $k=3$. We therefore use cross-validation to estimate our MSE.
 
 The first step is to optimize for $k$.
 
@@ -341,7 +341,7 @@ We can then re-run our algorithm on these `r p` features:
 fit_knn_pca <- knn3(pca$x[,1:p], y, k = train_knn$bestTune)
 ```
 
-When predicting, it is important that we not use the test set when finding the PCs nor any summary of the data, as this could result in overtraining. We therefrom compute the averages needed for centering and the rotation on the training set:
+When predicting, it is important that we not use the test set when finding the PCs nor any summary of the data, as this could result in overtraining. We therefore compute the averages needed for centering and the rotation on the training set:
 
 ```{r}
 newdata <-  sweep(x_test, 2, colMeans(x)) %*% pca$rotation[,1:p]
@@ -503,7 +503,7 @@ stopImplicitCluster()
 
 1\. In the exercises in @sec-example-alogirhms we saw that changing `maxnodes` or `nodesize` in the `randomForest` function improved our estimate. Let's use the `train` function to help us pick these values. From the **caret** manual we see that we can't tune the `maxnodes` parameter or the `nodesize` argument with `randomForest`, so we will use the **Rborist** package and tune the `minNode` argument. Use the `train` function to try values `minNode <- seq(5, 250, 25)`. See which value minimizes the estimated RMSE.
 
-2\. This **dslabs* dataset includes a matrix `x`:
+2\. This **dslabs** `tissue_gene_expression` dataset includes a matrix `x`:
 
 ```{r, eval = FALSE}
 library(dslabs)
@@ -536,7 +536,7 @@ x <- x[, sample(ncol(x), 10)]
 
 5\. Repeat exercises 3 with QDA. Does it have a higher accuracy than LDA?
 
-6\. Are the same predictors (genes) driving the algorithm? Make a plot as in exercise 3.
+6\. Are the same predictors (genes) driving the algorithm? Make a plot as in exercise 4.
 
 7\. One thing we see in the previous plot is that the value of predictors correlate in both groups: some predictors are low in both groups while others are high in both groups. The mean value of each predictor, `colMeans(x)`, is not informative or useful for prediction and often, for interpretation purposes, it is useful to center or scale each column. This can be achieved with the `preProcessing` argument in `train`. Re-run LDA with `preProcessing = "scale"`. Note that accuracy does not change but see how it is easier to identify the predictors that differ more between groups in the plot made in exercise 4.
 
@@ -591,7 +591,7 @@ What is the variable importance in the random forest call for these predictors? 
 
 
 
-21\. Previously, we compared the conditional probability $p(\mathbf{x})$ give two predictors $\mathbf{x} = (x_1, x_2)^\top$ to the fit $\hat{p}(\mathbf{x})$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
+21\. Previously, we compared the conditional probability $p(\mathbf{x})$ given two predictors $\mathbf{x} = (x_1, x_2)^\top$ to the fit $\hat{p}(\mathbf{x})$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
 
 ```{r}
 #| eval: false
@@ -612,9 +612,9 @@ with(mnist_27$true_p, plot_cond_prob(x_1, x_2, p))
 ```
 
 
-Fit a kNN model and make this plot for the estimated conditional probability. Hint: Use the argument `newdata = mnist27$train` to obtain predictions for a grid points.
+Fit a kNN model and make this plot for the estimated conditional probability. Hint: Use the argument `newdata = mnist_27$train` to obtain predictions for a grid points.
 
-22\. Notice that, in the plot made in exercise 1, the boundary is somewhat wiggly. This is because kNN, like the basic bin smoother, does not use a kernel. To improve this we could try loess. By reading through the available models part of the **caret** manual, we see that we can use the `gamLoess` method. We need to install the __gam__ package, if we have not done so already. We see that we have two parameters to optimize:
+22\. Notice that, in the plot made in exercise 21, the boundary is somewhat wiggly. This is because kNN, like the basic bin smoother, does not use a kernel. To improve this we could try loess. By reading through the available models part of the **caret** manual, we see that we can use the `gamLoess` method. We need to install the __gam__ package, if we have not done so already. We see that we have two parameters to optimize:
 
 ```{r}
 modelLookup("gamLoess")
@@ -623,7 +623,7 @@ modelLookup("gamLoess")
 Use cross-validation to pick a span between 0.15 and 0.75. Keep `degree = 1`. What span does cross-validation select?
 
 
-23\. Show an image plot of the estimate $\hat{p}(x,y)$ resulting from the model fit in the exercise 2. How does the accuracy compare to that of kNN? Comment on the difference between the estimate obtained with kNN. 
+23\. Show an image plot of the estimate $\hat{p}(x,y)$ resulting from the model fit in the exercise 22. How does the accuracy compare to that of kNN? Comment on the difference between the estimate obtained with kNN. 
 
 24\. Use the `mnist_27` training set to build a model with several of the models available from the **caret** package. For example, you can try these:
 
