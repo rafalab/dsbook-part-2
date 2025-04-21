@@ -413,7 +413,14 @@ height_cutoff <- map_df(cutoffs[-1], function(x){
 })
 tmp_1 <- bind_rows(guessing, height_cutoff) |> mutate(Positive = "Y = 1 if Female") 
 
-
+guessing <- map_df(rev(probs)[-1], function(p){
+  y_hat <- sample(c("Male", "Female"), length(test_index), replace = TRUE, 
+                  prob = c(p, 1 - p)) |> 
+    factor(levels = c("Male", "Female"))
+  list(method = "Guess",
+    recall = sensitivity(y_hat, relevel(test_set$sex, "Male", "Female")),
+    precision = precision(y_hat, relevel(test_set$sex, "Male", "Female")))
+})
 
 height_cutoff <- map_df(rev(cutoffs)[-1], function(x){
   y_hat <- ifelse(test_set$height > x, "Male", "Female") |> 
