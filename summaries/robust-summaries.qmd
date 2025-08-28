@@ -2,7 +2,7 @@
 
 Note that the heights we explored in the @sec-summaries-distributions are not the original heights reported by students. A second challenge involves exploring the _original_ reported heights, which are also included in the **dslabs** package in the `reported_heights` object. We will see that due to errors in reporting, using _robust summaries_ are necessary to produce useful summaries.
 
-## Outliers
+## Outliers 
 
 We previously described how boxplots show *outliers*, but we did not provide a precise definition. Here we discuss outliers, approaches that can help detect them, and summaries that take into account their presence.
 
@@ -24,7 +24,7 @@ mean(outlier_example)
 sd(outlier_example)
 ```
 
-and writes a report on the interesting fact that this group of males is much taller than usual. The average height is over six feet tall! Using your data analysis skills, however, you notice something else that is unexpected: the standard deviation is over 7 feet. Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r mean(outlier_example) + c(-2, 2)*sd(outlier_example)` feet, which does not make sense. A quick plot reveals the problem:
+Our colleage writes a report on the interesting fact that this group of males is much taller than usual. The average height is over six feet tall! However, using your data analysis skills you notice something else that is unexpected: the standard deviation is over 7 feet. Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r mean(outlier_example) + c(-2, 2)*sd(outlier_example)` feet, which does not make sense. A quick plot reveals the problem:
 
 ```{r, eval=FALSE}
 boxplot(outlier_example)
@@ -39,7 +39,7 @@ There appears to be at least one value that is nonsensical, since we know that a
 
 ## The median
 
-When we have an outlier like this, the average can become very large. Mathematically, we can make the average as large as we want by simply changing one number: with `r length(outlier_example)` data points, we can increase the average by any amount $\Delta$ by adding $\Delta \times$ `r length(outlier_example)` to a single number. The median, defined as the value for which half the values are smaller and the other half are bigger, is robust to such outliers. No matter how large we make the largest point, the median remains the same.
+When we have an outlier like this, the average can become very large. Mathematically, we can make the average as large as we want by simply changing one number: with `r length(outlier_example)` data points, we can increase the average by any amount $\Delta$ by adding $\Delta \times$ `r length(outlier_example)` to a single observation. The median, defined as the value for which half the values are smaller and the other half are bigger, is robust to such outliers. No matter how large we make the largest point, the median remains the same.
 
 With this data the median is:
 
@@ -53,17 +53,17 @@ The median is what boxplots display as a horizontal line.
 
 ## The inter quartile range (IQR)
 
-The box in boxplots is defined by the first and third quartile. These are meant to provide an idea of the variability in the data: 50% of the data is within this range. The difference between the 3rd and 1st quartile (or 75th and 25th percentiles) is referred to as the inter quartile range (IQR). As is the case with the median, this quantity will be robust to outliers as large values do not affect it. We can do some math to see that for normally distributed data, the IQR / 1.349 approximates the standard deviation of the data had an outlier not been present. We can see that this works well in our example, since we get a standard deviation estimate of:
+The box in boxplots is defined by the first and third quartile. These are meant to provide an idea of the variability in the data: 50% of the data is within this range. The difference between the 3rd and 1st quartile (or 75th and 25th percentiles) is referred to as the inter quartile range (IQR). As is the case with the median, this quantity will be robust to outliers as large values do not affect it. We can do some math to see that for normally distributed data, the IQR divided by 1.349 approximates the standard deviation of the data had an outlier not been present. We can see that this works well in our example, since we get a standard deviation estimate of:
 
 ```{r}
-IQR(outlier_example) / 1.349
+IQR(outlier_example)/1.349
 ```
 
 which is about `r round(IQR(outlier_example)/1.349*12)` inches.
 
 ## A data-driven definition of outliers
 
-In R, points falling outside the whiskers of the boxplot are referred to as *outliers*. This definition of outlier was introduced by John Tukey. The top whisker ends at the 75th percentile plus 1.5 $\times$ IQR. Similarly the bottom whisker ends at the 25th percentile minus 1.5$\times$ IQR. If we define the first and third quartiles as $Q_1$ and $Q_3$, respectively, then an outlier is anything outside the range:
+definition of outlier used by the `boxplot` function was introduced by John Tukey. The top whisker ends at the 75th percentile plus 1.5 $\times$ IQR. Similarly the bottom whisker ends at the 25th percentile minus 1.5$\times$ IQR. If we define the first and third quartiles as $Q_1$ and $Q_3$, respectively, then an outlier is anything outside the range:
 
 $$[Q_1 - 1.5 \times (Q_3 - Q1), Q_3 + 1.5 \times (Q_3 - Q1)].$$
 
@@ -90,7 +90,7 @@ max_height <- quantile(outlier_example, 0.75) + 3*IQR(outlier_example)
 max_height
 ```
 
-If we take this value out, we can see that the data is in fact normally distributed as expected:
+If we remove this value, we can see that the data is in fact normally distributed as expected:
 
 ```{r eval=FALSE}
 x <- outlier_example[outlier_example < max_height]
@@ -124,7 +124,7 @@ library(HistData)
 x <- Galton$child
 ```
 
-1\. Compute the average and median of these data.
+1\. Compute the average and SD of these data.
 
 2\. Compute the median and median absolute deviation of these data.
 
@@ -157,9 +157,7 @@ d.  A scatterplot would show high levels of measurement error.
 
 10\. For the same dataset, compute the median and IQR murder rate for each region.
 
-11\. Add a column to the `reported_heights` with the year the height was entered. You can use the `year` function in the __lubridate__ package to extract the year from `reported_heights$time_stamp)`. Change the `height` column from characters to numbers using `parse_number` from the __readr__ package. Some of the heights will be converted to `NA` because they were incorrectly entered and include characters, for example `165cm`. These heights were supposed to be reported in inches, but many clearly did not. Convert any entry below 54 or above 72 to `NA` using the `na_if` function from __dplyr__. Once you do this, stratify by sex and year and report the percentage of incorrectly entered heights, represented by the `NA`.
-
-12\. The heights we have been looking at are not the original heights reported by students. The original reported heights are also included in the **dslabs** package in the object `reported_heights`. Note that the `height` column in this data frame is a character, and if we try to create a new column with the numeric version:
+11\. The heights we have been looking at in the `heights` data frameare not the original heights reported by students. The original reported heights are also included in the **dslabs** package in the object `reported_heights`. Note that the `height` column in this data frame is a character, and if we try to create a new column with the numeric version:
 
 ```{r}
 #| eval = FALSE
@@ -170,7 +168,9 @@ reported_heights <- reported_heights |>
 ```
 
 we get a warnings about NAs. Examine the rows that result in NAs and describe why this is happening.
- 
+
+12\. Add a column to the `reported_heights` with the year the height was entered. You can use the `year` function in the __lubridate__ package to extract the year from `reported_heights$time_stamp)`. Change the `height` column from characters to numbers using `as.numeric`. Some of the heights will be converted to `NA` because they were incorrectly entered and include characters, for example `165cm`. These heights were supposed to be reported in inches, but many clearly did not. Convert any entry with highly unlikely heights, below 54 or above 72, to `NA` using the `na_if` function from __dplyr__. Once you do this, stratify by sex and year and report the percentage of incorrectly entered heights, represented by the `NA`.
+
 13\. Remove the entries that result in NAs when attempting to convert heights to numbers. Compute the mean, standard deviation, median, and MAD by sex. What do you notice?
 
 14\. Generate boxplots summarizing the heights for males and females and describe what you see.
