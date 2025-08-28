@@ -34,7 +34,6 @@ An example is the `sample` function in R. We demonstrate its use in the code bel
 
 ```{r}
 beads <- rep(c("red", "blue"), times = c(2,3))
-beads
 ```
 
 and then use `sample` to pick a bead at random:
@@ -47,11 +46,10 @@ This line of code produces a single random outcome. We want to repeat this exper
 
 Much of what mathematical and theoretical statisticians study, topics that we do not cover in this book, relates to providing rigorous definitions of "practically equivalent". Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this section, we provide a practical approach to determining what is "large enough".
 
-To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event $B =$ 10,000 times:
+To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event 10,000 times:
 
 ```{r}
-B <- 10000
-events <- replicate(B, sample(beads, 1))
+events <- replicate(10000, sample(beads, 1))
 ```
 
 We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to see the distribution:
@@ -96,21 +94,14 @@ The function `sample` has an argument that allows us to pick more than one eleme
 ```{r}
 sample(beads, 5)
 sample(beads, 5)
-sample(beads, 5)
 ```
 
-This results in rearrangements that consistently comprise three blue and two red beads. If we ask that six beads be selected, we get an error:
-
-```{r, eval=FALSE}
-sample(beads, 6)
-```
-
-`Error in sample.int(length(x), size, replace, prob) :    cannot take a sample larger than the population when 'replace = FALSE'`
+This results in rearrangements that consistently comprise three blue and two red beads. If we ask that six beads be selected, we get an error.
 
 However, the `sample` function can be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
 
 ```{r}
-events <- sample(beads, B, replace = TRUE)
+events <- sample(beads, 10000, replace = TRUE)
 prop.table(table(events))
 ```
 
@@ -121,29 +112,9 @@ Not surprisingly, we get results very similar to those previously obtained with 
 
 In our very first example, we imagined an urn with five beads. As a reminder, to compute the probability distribution of a single draw, we simply listed out all the possibilities, which amounted to 5. Subsequently, for each event, we counted how many of these possibilities were associated with the event. The resulting probability of choosing a blue bead is 3/5, as three of the five possible outcomes were blue.
 
-For more complicated cases, the computations are not as straightforward. For instance, what is the probability that, if I draw five cards without replacement, I get all cards of the same suit, which is known as a "flush" in poker? In a discrete probability course, you learn theory on how to make these computations. Here, we focus on how to use R code to compute the answers.
+For more complicated cases, the computations are not as straightforward. For instance, what is the probability that, if I draw five cards without replacement, I get all cards of the same suit, which is known as a _flush_ in poker? In a discrete probability course, you learn theory on how to make these computations. Here, we focus on how to use R code to compute the answers.
 
-First, let's construct a deck of cards. For this, we will use the `expand.grid` and `paste` functions. We use `paste` to create strings by joining smaller strings. To do this, we take the number and suit of a card, and create the card name like this:
-
-```{r}
-number <- "Three"
-suit <- "Hearts"
-paste(number, suit)
-```
-
-`paste` also works on pairs of vectors performing the operation element-wise:
-
-```{r}
-paste(letters[1:5], as.character(1:5))
-```
-
-The function `expand.grid` gives us all the combinations of entries of two vectors. For example, if you have blue and black pants and white, grey, and plaid shirts, all your combinations are:
-
-```{r}
-expand.grid(pants = c("blue", "black"), shirt = c("white", "grey", "plaid"))
-```
-
-Here is how we generate a deck of cards:
+First, let's construct a deck of cards. For this, we will use the `expand.grid` and `paste` functions:
 
 ```{r}
 suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
@@ -156,8 +127,7 @@ deck <- paste(deck$number, deck$suit)
 With the deck constructed, we can double-check that the probability of a King as the first card is 1/13 by computing the proportion of possible outcomes that satisfy our condition:
 
 ```{r}
-kings <- paste("King", suits)
-mean(deck %in% kings)
+mean(deck %in% paste("King", suits))
 ```
 
 Now, what about the conditional probability of the second card being a King, given that the first card was a King? Earlier, we deduced that if one King is already drawn from the deck, leaving 51 cards, then this probability is 3/51. Let's confirm by listing out all possible outcomes.
@@ -175,9 +145,7 @@ Optionally, we can add a vector. If you want to see five random seven digit phon
 
 ```{r}
 all_phone_numbers <- permutations(10, 7, v = 0:9)
-n <- nrow(all_phone_numbers)
-index <- sample(n, 5)
-all_phone_numbers[index,]
+all_phone_numbers[sample(nrow(all_phone_numbers), 5),]
 ```
 
 Instead of using the numbers 1 through 10, the default, it uses what we provided through `v`: the digits 0 through 9.
@@ -205,15 +173,13 @@ sum(first_card %in% kings)
 To get the conditional probability, we compute what fraction of these have a King as the second card:
 
 ```{r}
-sum(first_card %in% kings & second_card %in% kings) / 
-  sum(first_card %in% kings)
+sum(first_card %in% kings & second_card %in% kings)/sum(first_card %in% kings)
 ```
 
 which is exactly 3/51, as we had already deduced. Notice that the code above is equivalent to:
 
 ```{r}
-mean(first_card %in% kings & second_card %in% kings) / 
-  mean(first_card %in% kings)
+mean(first_card %in% kings & second_card %in% kings)/mean(first_card %in% kings)
 ```
 
 which uses `mean` instead of `sum` and is an R version of:
@@ -234,11 +200,9 @@ So to compute the probability of a *Natural 21* in Blackjack, we can do this:
 
 ```{r}
 aces <- paste("Ace", suits)
-
 facecard <- c("King", "Queen", "Jack", "Ten")
 facecard <- expand.grid(number = facecard, suit = suits)
 facecard <- paste(facecard$number, facecard$suit)
-
 hands <- combinations(52, 2, v = deck)
 mean(hands[,1] %in% aces & hands[,2] %in% facecard)
 ```
@@ -255,15 +219,13 @@ mean((hands[,1] %in% aces & hands[,2] %in% facecard) |
 Instead of using `combinations` to deduce the exact probability of a Natural 21, we can use a Monte Carlo to estimate this probability. In this case, we draw two cards over and over and keep track of how many 21s we obtain. We can use the function sample to draw two cards without replacement:
 
 ```{r}
-hand <- sample(deck, 2)
-hand
+x <- sample(deck, 2)
 ```
 
 and then check if one card is an Ace and the other is a face card or a 10. Going forward, we include 10 when we refer to a *face card*. Now, we need to check both possibilities:
 
 ```{r}
-(hand[1] %in% aces & hand[2] %in% facecard) | 
-  (hand[2] %in% aces & hand[1] %in% facecard)
+(x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
 ```
 
 If we repeat this 10,000 times, we get a very good approximation of the probability of a Natural 21.
@@ -272,9 +234,8 @@ Let's start by writing a function that draws a hand and returns TRUE if we get a
 
 ```{r}
 blackjack <- function(){
-   hand <- sample(deck, 2)
-  (hand[1] %in% aces & hand[2] %in% facecard) | 
-    (hand[2] %in% aces & hand[1] %in% facecard)
+   x <- sample(deck, 2)
+  (x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
 }
 ```
 
@@ -287,8 +248,7 @@ blackjack()
 Now we can play this game, say, 10,000 times:
 
 ```{r}
-B <- 10000
-results <- replicate(B, blackjack())
+results <- replicate(10000, blackjack())
 mean(results)
 ```
 
@@ -309,7 +269,6 @@ We can use probability to demonstrate that if you stick with the original door c
 Let's start with the stick strategy:
 
 ```{r}
-B <- 10000
 monty_hall <- function(strategy){
   doors <- as.character(1:3)
   prize <- sample(c("car", "goat", "goat"))
@@ -322,6 +281,7 @@ monty_hall <- function(strategy){
   choice <- ifelse(strategy == "stick", stick, switch)
   choice == prize_door
 }
+B <- 10000
 stick <- replicate(B, monty_hall("stick"))
 mean(stick)
 switch <- replicate(B, monty_hall("switch"))
@@ -345,13 +305,7 @@ n <- 50
 bdays <- sample(1:365, n, replace = TRUE)
 ```
 
-To check if there are at least two people with the same birthday in this particular set of 50 people, we can use the `duplicated` function, which returns `TRUE` whenever an element of a vector is a duplicate. Here is an example:
-
-```{r}
-duplicated(c(1, 2, 3, 1, 4, 3, 5))
-```
-
-The second time 1 and 3 appear, we get a `TRUE`. So to check if two birthdays were the same, we simply use the `any` and `duplicated` functions like this:
+To check if there are at least two people with the same birthday in this particular set of 50 people, we can use the `duplicated` function, which returns `TRUE` whenever an element of a vector is a duplicate:
 
 ```{r}
 any(duplicated(bdays))
@@ -362,12 +316,11 @@ In this case, we see that it did happen; there were at least two people who had 
 To estimate the probability of a shared birthday in the group, we repeat this experiment by repeatedly sampling sets of 50 birthdays:
 
 ```{r birthday-problem}
-B <- 10000
 same_birthday <- function(n){
   bdays <- sample(1:365, n, replace = TRUE)
   any(duplicated(bdays))
 }
-results <- replicate(B, same_birthday(50))
+results <- replicate(10000, same_birthday(50))
 mean(results)
 ```
 
@@ -396,7 +349,6 @@ prob <- sapply(n, compute_prob)
 We can now make a plot of the estimated probabilities of two people having the same birthday in a group of size $n$:
 
 ```{r birthday-problem-mc-probabilities, warning=FALSE, message=FALSE}
-library(tidyverse)
 prob <- sapply(n, compute_prob)
 plot(n, prob)
 ```

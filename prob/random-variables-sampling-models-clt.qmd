@@ -1,12 +1,6 @@
 # Foundations of statistical inference
 
-We often work with data that is affected by chance, whether it comes from a random sample, is subject to measurement error, or measures some outcome that is random in nature. Being able to quantify the uncertainty introduced by randomness is one of the most important jobs of a data analyst. Statistical inference offers a framework, as well as several practical tools, for accomplishing this. The first step is learning how to mathematically describe random variables.
-
-In this chapter, we introduce random variables and their properties, starting with their application to games of chance. We then describe some of the events surrounding the financial crisis of 2007-2008[^random-variables-sampling-models-clt-1] using probability theory. This financial crisis was in part caused by underestimating the risk of certain securities[^random-variables-sampling-models-clt-2] sold by financial institutions. Specifically, the risks of mortgage-backed securities (MBS) and collateralized debt obligations (CDO) were grossly underestimated. These assets were sold at prices that assumed most homeowners would make their monthly payments, and the probability of this not occurring was calculated as being low. A combination of factors resulted in many more defaults than were expected, which led to a price crash of these securities. As a consequence, banks lost so much money that they required government bailouts to avoid complete closure.
-
-[^random-variables-sampling-models-clt-1]: https://en.wikipedia.org/w/index.php?title=Financial_crisis_of_2007%E2%80%932008
-
-[^random-variables-sampling-models-clt-2]: https://en.wikipedia.org/w/index.php?title=Security\_(finance)
+Most data we work with is affected by chance—whether it comes from a random sample, is subject to measurement error, or reflects outcomes that are inherently random. Being able to *quantify the uncertainty* introduced by this randomness is one of the most important responsibilities of a data analyst. *Statistical inference* provides a framework, along with practical tools, to accomplish this. The first step is learning how to mathematically describe random variables. In this chapter, we introduce *random variables* and their key properties, beginning with simple examples from games of chance.
 
 ## Random variables
 
@@ -33,9 +27,12 @@ ifelse(sample(beads, 1) == "blue", 1, 0)
 
 Sometimes it's 1 and sometimes it's 0.
 
+This particular random variable, which only takes values of 0 and 1, is referred to as a *Bernoulli trial*, with the 1s and 0s called successes and failures, respectively. Bernoulli trials appear frequently in practice because many data analysis projects involve counting how often something happens—this can be thought of as counting successes or, equivalently, adding Bernoulli random variables.
+
+
 ## Sampling models
 
-Many data generation procedures, those that produce the data we study, can be effectively modeled as draws from an urn. For instance, we can model the process of polling likely voters as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the 0 and 1 codes for all likely voters. In epidemiological studies, we often assume that the subjects in our study are a random sample from the population of interest. The data related to a specific outcome can be modeled as a random sample from an urn containing the outcomes for the entire population of interest. Similarly, in experimental research, we often assume that the individual organisms we are studying, for example worms, flies, or mice, are a random sample from a larger population. Randomized experiments can be modeled by draws from an urn, reflecting the way individuals are assigned into group; when getting assigned, individuals draw their group at random. Sampling models are therefore ubiquitous in data science. Casino games offer a plethora of real-world cases in which sampling models are used to answer specific questions. We will therefore start with these examples.
+Many data generation procedures can be effectively modeled as draws from an urn. For instance, we can model the process of polling likely voters as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the 0 and 1 codes for all likely voters. In epidemiological studies, we often assume that the subjects in our study are a random sample from the population of interest. The data related to a specific outcome can be modeled as a random sample from an urn containing the outcomes for the entire population of interest. Similarly, in experimental research, we often assume that the individual organisms we are studying, for example worms, flies, or mice, are a random sample from a larger population. Randomized experiments can be modeled by draws from an urn, reflecting the way individuals are assigned into group; when getting assigned, individuals draw their group at random. Sampling models are therefore ubiquitous in data science. Casino games offer a plethora of real-world cases in which sampling models are used to answer specific questions. We will therefore start with these examples.
 
 Suppose a very small casino hires you to consult on whether they should set up roulette wheels. To keep the example simple, we will assume that 1,000 people will play, and that the only game available on the roulette wheel is to bet on red or black. The casino wants you to predict how much money they will make or lose. They want a range of values and, in particular, they want to know what's the chance of losing money. If this probability is too high, they will decide against installing roulette wheels.
 
@@ -45,87 +42,84 @@ We are going to define a random variable $S$ that will represent the casino's to
 color <- rep(c("Black", "Red", "Green"), c(18, 18, 2))
 ```
 
-The 1,000 outcomes from 1,000 people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in the observed random variable being -\$1. Otherwise, the casino wins a dollar, and the random variable is \$1. To construct our random variable $S$, we can use this code:
+The 1,000 outcomes from people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in the observed random variable being -\$1. Otherwise, the casino wins a dollar, and the random variable is \$1. To construct our the 1,000 outcomes of the random variable $X$ we can use this code:
 
 ```{r}
 n <- 1000
-X <- sample(ifelse(color == "Red", -1, 1),  n, replace = TRUE)
-X[1:10]
+x <- sample(ifelse(color == "Red", -1, 1),  n, replace = TRUE)
 ```
 
 Because we know the proportions of 1s and -1s, we can generate the draws with one line of code, without defining `color`:
 
 ```{r}
-X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+x <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
 ```
 
-We call this a **sampling model**, as it involves modeling the random behavior of roulette through the sampling of draws from an urn. The total winnings $S$ is simply the sum of these 1,000 independent draws:
+We call this a *sampling model*, as it involves modeling the random behavior of roulette through the sampling of draws from an urn. The total winnings $S_n$ is simply the sum of these 1,000 independent draws:
 
 ```{r}
-X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
-S <- sum(X)
-S
+x <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+s <- sum(x)
 ```
 
 ## The probability distribution of a random variable
 
-If you rerun the code above, you see that $S$ changes every time. This is, of course, because $S$ is a **random variable**. The probability distribution of a random variable informs us about the probability of the observed value falling in any given interval. For example, if we want to know the probability that we lose money, we are asking the probability that $S$ is in the interval $(-\infty,0)$.
+If you rerun the code above, you see that `s` changes every time. This is, of course, because $S_n$ is a **random variable**. The probability distribution of a random variable informs us about the probability of the observed value falling in any given interval. For example, if we want to know the probability that we lose money, we are asking the probability that $S_n$ is in the interval $(-\infty,0)$.
 
-Keep in mind that if we can define a cumulative distribution function $F(a) = \mbox{Pr}(S\leq a)$, then we will be able to answer any question related to the probability of events defined by our random variable $S$, including the event $S<0$. We call this $F$ the random variable's *distribution function*.
+Keep in mind that if we can define a cumulative distribution function $F(a) = \mbox{Pr}(S_n\leq a)$, then we will be able to answer any question related to the probability of events defined by our random variable $S_n$, including the event $S_n<0$. We call this $F$ the random variable's *distribution function*.
 
 We can estimate the distribution function for the random variable $S$ by using a Monte Carlo simulation to generate many realizations of the random variable. With this code, we run the experiment of having 1,000 people repeatedly play roulette, specifically $B = 10,000$ times:
 
 ```{r}
 n <- 1000
-B <- 10000
 roulette_winnings <- function(n){
-  X <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
-  sum(X)
+  x <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
+  sum(x)
 }
-S <- replicate(B, roulette_winnings(n))
+s <- replicate(1000, roulette_winnings(n))
 ```
 
 Now, we can ask the following: in our simulation, how often did we get sums less than or equal to `a`?
 
 ```{r, eval=FALSE}
-mean(S <= a)
+mean(s <= a)
 ```
 
 This will be a very good approximation of $F(a)$, allowing us to easily answer the casino's question: How likely is it that we will lose money? We can see it is quite low:
 
 ```{r}
-mean(S < 0)
+mean(s < 0)
 ```
 
 We can visualize the distribution of $S$ by creating a histogram showing the probability $F(b)-F(a)$ for several intervals $(a,b]$:
 
 ```{r normal-approximates-distribution, echo=FALSE}
-s <- seq(min(S), max(S), length = 100)
-normal_density <- data.frame(s = s, f = dnorm(s, mean(S), sd(S)))
-data.frame(S = S) |> ggplot(aes(S, after_stat(density))) +
+normal_density <- data.frame(x = seq(min(s), max(s), length = 100)) |> 
+  mutate(f = dnorm(x, mean(s), sd(s)))
+data.frame(S_n = s) |> ggplot(aes(S_n, after_stat(density))) +
   geom_histogram(color = "black", binwidth = 10)  +
   ylab("Probability") + 
-  geom_line(data = normal_density, mapping = aes(s,f), color = "blue")
+  geom_line(data = normal_density, mapping = aes(x, f), color = "blue")
 ```
 
-We see that the distribution appears to be approximately normal. A qqplot will confirm that the normal approximation is close to a perfect approximation for this distribution. In fact, if the distribution is normal, all we need to define it are the average and the standard deviation. Since we have the original values from which the distribution is created, we can easily compute these with `mean(S)` and `sd(S)`. The blue curve added to the histogram above is a normal density with this average and standard deviation.
+We see that the distribution appears to be approximately normal. A qqplot will confirm that the normal approximation is close to a perfect approximation for this distribution. In fact, if the distribution is normal, all we need to define it are the average and the standard deviation. Since we have the original values from which the distribution is created, we can easily compute these with `mean(s)` and `sd(s)`. The blue curve added to the histogram above is a normal density with this average and standard deviation.
 
-This average and this standard deviation have special names; they are referred to as the *expected value* and *standard error* of the random variable $S$. More details on these concepts will be provided in the next section.
+This average and this standard deviation have special names; they are referred to as the *expected value* and *standard error* of the random variable $S_n$. More details on these concepts will be provided in the next section.
 
 Statistical theory offers a method to derive the distribution of random variables defined as the sum of independent random draw of numbers from an urn. Specifically, in our example above, we can demonstrate that $(S+n)/2$ follows a binomial distribution. We therefore do not need to run Monte Carlo simulations to determine the probability distribution of $S$. The simulations were conducted for illustrative purposes.
 
-We can use the function `dbinom` and `pbinom` to compute the probabilities exactly. For example, to compute $\mbox{Pr}(S < 0)$, we note that:
+We can use the function `dbinom` and `pbinom` to compute the probabilities exactly. For example, to compute $\mbox{Pr}(S_n < 0)$, we note that:
 
-$$\mbox{Pr}(S < 0) = \mbox{Pr}((S+n)/2 < (0+n)/2)$$
+$$\mbox{Pr}(S_n < 0) = \mbox{Pr}((S_n + n)/2 < (0+n)/2)$$
 
-and we can use the `pbinom` to compute $$\mbox{Pr}(S \leq 0)$$:
+and we can use the `pbinom` to compute $$\mbox{Pr}(S_n \leq 0)$$:
 
 ```{r}
 n <- 1000
 pbinom(n/2, size = n, prob = 10/19)
 ```
 
-Since this is a discrete probability function, to obtain $\mbox{Pr}(S < 0)$ rather than $\mbox{Pr}(S \leq 0)$, we write:
+Since this is a discrete probability function, to obtain $\mbox{Pr}(S_n < 0)$ rather than $\mbox{Pr}(S_n \leq 0)$, we write:
 
 ```{r}
 pbinom(n/2 - 1, size = n, prob = 10/19)
@@ -135,7 +129,7 @@ For the details of the binomial distribution, you can consult any basic probabil
 
 [^random-variables-sampling-models-clt-3]: https://en.wikipedia.org/w/index.php?title=Binomial_distribution
 
-We do not delve into these details here. Instead, we will explore an incredibly useful approximation provided by mathematical theory, which generally applies to sums and averages of draws from any urn: the Central Limit Theorem (CLT).
+We do not delve into these details here. Instead, we will explore a useful theorem provided by mathematical theory, which generally applies to sums and averages of draws from any urn: the Central Limit Theorem (CLT).
 
 ## Distributions versus probability distributions
 
@@ -158,7 +152,7 @@ In statistical textbooks, upper case letters denote random variables, and we wil
 
 This notation may seem a bit strange because when we inquire about probability, $X$ is not an observed quantity; it's a random quantity that we will encounter in the future. We can discuss what we expect $X$ to be, what values are probable, but we can't discuss what value $X$ is. Once we have data, we do see a realization of $X$. Therefore, data analysts often speak of what could have been after observing what actually happened.
 
-## The expected value and standard error
+## The expected value and standard error {#sec-mean-var-eqs}
 
 We have described sampling models for draws. We will now review the mathematical theory that allows us to approximate the probability distributions for the sum of draws. Once we do this, we will be able to help the casino predict how much money they will make. The same approach we use for the sum of draws will be useful for describing the distribution of averages and proportion, which we will need to understand how polls work.
 
@@ -457,6 +451,13 @@ a.  We are now computing averages instead of sums.
 b.  2,500 Monte Carlo simulations is not better than 1,000.
 c.  The CLT works better when the sample size is larger. We increased from 1,000 to 2,500.
 d.  It is not closer. The difference is within rounding error.
+
+The following exercises are inspired by the events surrounding the financial crisis of 2007-2008[^random-variables-sampling-models-clt-1]. This financial crisis was in part caused by underestimating the risk of certain securities[^random-variables-sampling-models-clt-2] sold by financial institutions. Specifically, the risks of mortgage-backed securities (MBS) and collateralized debt obligations (CDO) were grossly underestimated. These assets were sold at prices that assumed most homeowners would make their monthly payments, and the probability of this not occurring was calculated as being low. A combination of factors resulted in many more defaults than were expected, which led to a price crash of these securities. As a consequence, banks lost so much money that they required government bailouts to avoid complete closure.
+
+[^random-variables-sampling-models-clt-1]: https://en.wikipedia.org/w/index.php?title=Financial_crisis_of_2007%E2%80%932008
+
+[^random-variables-sampling-models-clt-2]: https://en.wikipedia.org/w/index.php?title=Security\_(finance)
+
 
 19\. More complex versions of the sampling models we have discussed are also used by banks to determine interest rates and insurance companies to determine premiums. To understand this, suppose you run a small bank that has a history of identifying potential homeowners that can be trusted to make payments. In fact, historically, only 2% of your customers default in a given year, meaning that they don't pay back the money that you lent them. Suppose your bank will give out $n=$1,000 loans for \$180,000 this year. Also, after adding up all costs, suppose your bank loses $l$=\$200,000 per foreclosure. For simplicity, we assume this includes all operational costs. What is the expected profit $S$ for you bank under this scenario?
 

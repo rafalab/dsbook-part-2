@@ -40,13 +40,16 @@ Since we can compute the probability for any possible event using this approach,
 
 ## Probability density function
 
-A mathematical result that is very useful in practice is that, for most CDFs, we can define a function, call it $f(x)$, that permits us to construct the CDF using Calculus, like this:
+A mathematical result that is very useful in practice is that, for most CDFs, we can define a function, call it  $f(x)$, that permits us to construct the CDF using Calculus, like this:
 
 $$
 F(b) - F(a) = \int_a^b f(x)\,dx
 $$ 
 
-$f(x)$ is referred to as the *probability density function*. The intuition is that even for continuous outcomes we can define tiny intervals, that are almost as small as points, that have positive probabilities. If we think of the size of these intervals as the base of a rectangle, the probability density function $f$ determines the height of the rectangle so that the summing up of the area of these rectangles approximate the probability $F(b) - F(a)$. This sum can be written as Reimann sum that is approximated by an integral:
+$f(x)$ is referred to as the *probability density function*. 
+
+
+The intuition is that $f(x)$ is analogous to the relative frequency distribution for a discrete variable. Even for continuous outcomes, we can define tiny intervals—almost as small as points—that have positive probabilities. If we think of the width of each interval as the base of a rectangle, then the probability density function $f$ determines the height of the rectangle so that the sum of the areas of these rectangles approximates the probability $F(b) - F(a)$. This approximation is a Riemann sum, which in the limit becomes an integral:
 
 ```{r echo=FALSE}
 cont <- data.frame(x = seq(0, 5, len = 300), y = dgamma(seq(0, 5, len = 300), 2, 2))
@@ -59,12 +62,15 @@ ggplot(mapping = aes(x, y)) +
 
 An example of such a continuous distribution is the normal distribution. As we saw in @sec-normal-distribution, the probability density function is given by:
 
-$$f(x) = e^{-\frac{1}{2}\left( \frac{x-m}{s} \right)^2} $$
+$$
+f(x) = \frac{1}{\sqrt{2\pi} \sigma}e^{-\frac{1}{2}\left( \frac{x-m}{s} \right)^2} 
+$$
 
-The cumulative distribution for the normal distribution is defined by a mathematical formula which in R can be obtained with the function `pnorm`. We say that a random quantity is normally distributed with average `m` and standard deviation `s` if its probability distribution is defined by:
+By integrating this probability density function, we obtain the cumulative distribution function (CDF) for the normal distribution. In R, this can be computed using the `pnorm` function. We say that a random quantity is _normally distributed_ with mean `m` and standard deviation `s` if its cumulative distribution function is defined by:
 
-```{r, eval=FALSE}
-F(a) = pnorm(a, m, s)
+```{r}
+#| eval: false
+F(a) <- pnorm(a, mean = m, sd = s)
 ```
 
 This is useful because, if we are willing to use the normal approximation for, let's say, height, we don't need the entire dataset to answer questions such as: What is the probability that a randomly selected student is taller then 70 inches? We just need the average height and standard deviation:
@@ -77,7 +83,7 @@ s <- sd(x)
 
 ## Theoretical distributions as approximations
 
-The normal distribution is derived mathematically; we do not need data to define it. For practicing data scientists, almost everything we do involves data. Data is always, technically speaking, discrete. For example, we could consider our height data categorical, with each specific height a unique category. The probability distribution is defined by the proportion of students reporting each height. Below is a plot of that probability distribution:
+The normal distribution is derived mathematically; we do not need data to define it. For practicing data analysts, almost everything we do involves data. Data is always, technically speaking, discrete. For example, we could consider our height data categorical, with each specific height a unique category. The probability distribution is defined by the proportion of students reporting each height. Below is a plot of that probability distribution:
 
 ```{r plot-of-height-frequencies, echo=FALSE}
 rafalib::mypar()
@@ -116,56 +122,12 @@ with:
 pnorm(70.9, m, s) - pnorm(70.1, m, s)
 ```
 
-In general, we call this situation *discretization*. Although the true height distribution is continuous, the reported heights tend to be more common at discrete values, in this case, due to rounding. As long as we are aware of how to deal with this reality, the normal approximation can still be a very useful tool.
+In practice, this issue arises from _discretization_. Although the true height distribution is continuous, the reported heights tend to be more common at discrete values, in this case, due to rounding. As long as we are aware of how to deal with this reality, the normal approximation can still be a very useful tool.
 
-## The probability density
-
-For categorical distributions, we can define the probability of a category. For example, a roll of a die, let's call it $X$, can be 1, 2, 3, 4, 5 or 6. The probability of 4 is defined as:
-
-$$
-\mbox{Pr}(X=4) = 1/6
-$$
-
-The CDF can then easily be defined: 
-
-$$
-F(4) = \mbox{Pr}(X\leq 4) =  \mbox{Pr}(X = 4) +  \mbox{Pr}(X = 3) +  \mbox{Pr}(X = 2) +  \mbox{Pr}(X = 1) 
-$$
-
-Although for continuous distributions the probability of a single value $\mbox{Pr}(X=x)$ is not defined, there is a theoretical definition that has a similar interpretation. The probability density at $x$ is defined as the function $f(a)$ such that:
-
-$$
-F(a) = \mbox{Pr}(X\leq a) = \int_{-\infty}^a f(x)\, dx
-$$
-
-For those that know calculus, remember that the integral is related to a sum: it is the sum of bars with widths approximating 0. If you don't know calculus, you can think of $f(x)$ as a curve for which the area under that curve, up to the value $a$, gives you the probability $\mbox{Pr}(X\leq a)$.
-
-For example, to use the normal approximation to estimate the probability of someone being taller than 76 inches, we use:
-
-```{r}
-1 - pnorm(76, m, s)
-```
-
-which mathematically is the grey area below:
-
-```{r intergrals, echo=FALSE}
-dat <- tibble(x = seq(-4, 4, length = 100)*s + m,
-              y = dnorm(x, m, s))
-
-dat_ribbon <- filter(dat, x >= 2*s + m)
-
-ggplot(dat, aes(x, y)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = 0, ymax = y), data = dat_ribbon)
-```
-
-The curve you see is the probability density for the normal distribution. In R, we get this using the function `dnorm`.
-
-While it may not be immediately apparent why knowing about probability densities is useful, understanding this concept is essential for individuals aiming to fit models to data for which predefined functions are not available.
 
 ## Monte Carlo 
 
-R provides functions to generate normally distributed outcomes. Specifically, the `rnorm` function takes three arguments: size, average (defaults to 0), and standard deviation (defaults to 1), and produces random numbers. Here is an example of how we could generate data that looks like our reported heights:
+R provides functions to generate normally distributed outcomes. Specifically, the `rnorm` function takes three arguments: size, mean (defaults to 0), and standard deviation (defaults to 1), and produces random numbers. Here is an example of how we could generate data that looks like our reported heights:
 
 ```{r}
 n <- length(x)
@@ -184,11 +146,10 @@ data.frame(simulated_heights = simulated_heights) |>
 
 This is one of the most useful functions in R, as it will permit us to generate data that mimics natural events and answers questions related to what could happen by chance by running Monte Carlo simulations.
 
-If, for example, we pick 800 males at random, what is the distribution of the tallest person? How rare is a seven-footer in a group of 800 males? The following Monte Carlo simulation helps us answer that question:
+If, for example, we repeatedly pick 800 males at random, what is the distribution of the tallest person? How rare is a seven-footer in a group of 800 males? The following Monte Carlo simulation helps us answer that question:
 
 ```{r}
-B <- 10000
-tallest <- replicate(B, {
+tallest <- replicate(10000, {
   simulated_data <- rnorm(800, m, s)
   max(simulated_data)
 })
@@ -207,15 +168,16 @@ data.frame(tallest = tallest) |> ggplot(aes(tallest)) +
   geom_histogram(color = "black", binwidth = 1) 
 ```
 
-Note that it does not look normal.
+Note that although the derivation is not straightforward, the distribution of the maximum can be computed analytically. Once derived, it provides a much faster and more efficient way to evaluate probabilities than relying on simulation. However, in cases where the derivation is too complex or not possible—either due to the form of the distribution or the nature of the problem—Monte Carlo simulation offers a practical alternative. By repeatedly generating random samples, we can approximate the distribution of the maximum, or any other statistic, and obtain reliable estimates even in analytically intractable situations.
+
 
 ## Continuous distributions
 
-The normal distribution is not the only useful theoretical distribution. Other continuous distributions that we may encounter are the student-t, Chi-square, exponential, gamma, beta, and beta-binomial. R provides functions to compute the density, the quantiles, the cumulative distribution functions and to generate Monte Carlo simulations. R uses a convention that lets us remember the names, namely using the letters `d`, `q`, `p`, and `r` in front of a shorthand for the distribution. We have already seen the functions `dnorm`, `pnorm`, and `rnorm` for the normal distribution. The functions `qnorm` gives us the quantiles. We can therefore draw a distribution like this:
+The normal distribution is not the only useful theoretical distribution. Other continuous distributions that we may encounter are the student-t, Chi-square, exponential, gamma, beta, and beta-binomial. For all these distributions, R provides functions to compute the density, the quantiles, the cumulative distribution functions and to generate Monte Carlo simulations. R uses a convention that lets us remember the names, namely using the letters `d`, `q`, `p`, and `r` in front of a shorthand for the distribution. We have already seen the functions `dnorm`, `pnorm`, and `rnorm` for the normal distribution;`qnorm` gives us the quantiles. We can draw a normal distribution density line like this:
 
 ```{r normal-density, eval=FALSE}
 x <- seq(-4, 4, length.out = 100)
-qplot(x, f, geom = "line", data = data.frame(x, f = dnorm(x)))
+plot(x, f, type = "line")
 ```
 
 For the student-t, described later in @sec-t-dist, the shorthand `t` is used so the functions are `dt` for the density, `qt` for the quantiles, `pt` for the cumulative distribution function, and `rt` for Monte Carlo simulation.
