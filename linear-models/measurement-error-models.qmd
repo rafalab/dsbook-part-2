@@ -1,6 +1,6 @@
 # Measurement error models
 
-Another major application of linear models occurs in measurement errors models. In these situations, non-random covariates, such as time, are frequently encountered, with randomness often arising from measurement errors rather than from sampling or inherent natural variability.
+Another major application of linear models occurs in measurement error models. In these situations, non-random covariates, such as time, are frequently encountered, with randomness often arising from measurement errors rather than from sampling or inherent natural variability.
 
 ## Example: modeling a falling object
 
@@ -35,9 +35,13 @@ $$
 Y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, i=1,\dots,n
 $$
 
-with $Y_i$ representing distance in meters, $x_i$ representing time in seconds, and $\varepsilon$ accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each $i$. We also assume that there is no bias, which means the expected value $\mbox{E}[\varepsilon] = 0$.
+with $Y_i$ representing distance in meters, $x_i$ representing time in seconds, and $\varepsilon_i$ accounting for measurement error. The measurement error is assumed to be random, independent from each other, and having the same distribution for each $i$. We also assume that there is no bias, which means the expected value $\mbox{E}[\varepsilon] = 0$.
 
 Note that this is a linear model because it is a linear combination of known quantities ($x$ and $x^2$ are known) and unknown parameters (the $\beta$s are unknown parameters to Galileo). Unlike our previous examples, here $x$ is a fixed quantity; we are not conditioning.
+
+:::{.callout-note}
+Small discrepancies between a model’s predictions and observations are often attributed to measurement error, as in our example. In many cases, this is a useful and practical approximation. However, such differences can also reveal limitations in the model itself. Galileo’s experiments on gravity showed slight deviations from his predicted uniform acceleration, largely due to air resistance rather than flawed measurements. Similarly, Newton’s laws of gravity accurately described planetary motion, but small discrepancies in Mercury’s orbit, once considered observational errors, ultimately led to Einstein’s general theory of relativity. While assuming measurement error is often reasonable, it is crucial to recognize when discrepancies signal model limitations. The diagnostic plots discussed in @sec-diagnostic-plots can help assess such limitations.
+:::
 
 ## Estimating parameters with least squares
 
@@ -49,14 +53,13 @@ LSE calculations do not require the errors to be approximately normal. The `lm` 
 fit <- falling_object |> 
   mutate(time_sq = time^2) |> 
   lm(observed_distance~time+time_sq, data = _)
-tidy(fit)
+summary(fit)$coefficients
 ```
 
 Let's check if the estimated parabola fits the data. The **broom** function `augment` allows us to do this easily:
 
 ```{r falling-object-fit}
-augment(fit) |> 
-  ggplot() +
+augment(fit) |> ggplot() +
   geom_point(aes(time, observed_distance)) + 
   geom_line(aes(time, .fitted), col = "blue")
 ```
@@ -80,7 +83,7 @@ The Tower of Pisa height is within the confidence interval for $\beta_0$, the in
 
 ## Exercises 
 
-1\. Plot CO2 levels for the first 12 months of the `co2` dataset and notice it seems to follow a sin wave with a frequency of 1 cycle per month. This means that a measurement error model that might work is 
+1\. The `co2` dataset is a time series object of 468 CO2 observations, monthly from 1959 to 1997.  Plot CO2 levels for the first 12 months and notice it seems to follow a sine wave with a frequency of 1 cycle per year. This means that a measurement error model that might work is 
 
 $$
 y_i = \mu + A \sin(2\pi \,t_i / 12 + \phi) + \varepsilon_i

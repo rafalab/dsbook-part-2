@@ -93,9 +93,9 @@ $$
 Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
 $$
 
-with $X_i$ 1, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average height of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
+with $X_i$ 1, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average weight of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
 
-A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. To perform hypothesis testing on the effect of the high fat diet we can estimate $\beta_1$ and compute the probability of an estimates being as large as the observed when the null hypothesis is true. So how do we estimate $\beta_1$ and compute this probability?
+A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. To perform hypothesis testing on the effect of the high fat diet we can estimate $\beta_1$ and compute the probability of an estimate being as large as the observed when the null hypothesis is true. So how do we estimate $\beta_1$ and compute this probability?
 
 A powerful characteristic of linear models is that we can estimate the  $\beta$s and their standard errors with the same LSE machinery:
 
@@ -103,7 +103,7 @@ A powerful characteristic of linear models is that we can estimate the  $\beta$s
 fit <- lm(body_weight ~ diet, data = mice_weights)
 ```
 
-Because `diet` is a factor with two entries, the `lm` function knows to fit the linear model above with a $x_i$ a indicator variable. The `summary` function shows us the resulting estimate, standard error, and p-value:
+Because `diet` is a factor with two entries, the `lm` function knows to fit the linear model above with an $x_i$, an indicator variable. The `summary` function shows us the resulting estimate, standard error, and p-value:
 
 ```{r}
 coefficients(summary(fit))
@@ -166,13 +166,13 @@ with $x_{i,1}$ an indicator that is 1 if individual $i$ is on the high-fat diet 
 
 Statistical textbooks describe several other ways in which the model can be rewritten to obtain other types of interpretations. For example, we might want $\beta_2$ to represent the overall diet effect (the average between female and male effect) rather than the diet effect on females. This is achieved by defining what _contrasts_ we are interested in.
 
-In R, we can specific the linear model above using the following:
+In R, we can specify the linear model above using the following:
 
 ```{r}
 fit <- lm(body_weight ~ diet*sex, data = mice_weights)
 ```
 
-The `*` implies that the term that multiplies $x_{i,1}$ and $x_{i,2}$ should be included, along with the  $x_{i,1}$ and $x_{i,2}$ terms. 
+Here, the `*` denotes _factor crossing_, not multiplication: `diet*sex` is shorthand for `diet+sex+diet:sex`,  to calculate diet; sex; and diet combined with sex.
 
 ```{r}
 tidy(fit, conf.int = TRUE) |> filter(!str_detect(term, "Intercept"))
@@ -237,9 +237,9 @@ Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
 $$
 with $x_{i,1} = 1$, if observation $i$ is female and 0 otherwise, and $x_{i,2}=1$, if observation $i$ is male and 0 otherwise? 
 
-Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimates. In statistics, we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
+Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimate. In statistics, we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
 
-Keep in mind that this is not the only constraint that permits estimation of the parameters. Any linear constraint will do as it adds a third equation to our system. A widely used constraint is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrast` in the following way:
+Keep in mind that this is not the only constraint that permits estimation of the parameters. Any linear constraint will do as it adds a third equation to our system. A widely used constraint is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrasts` in the following way:
 
 
 ```{r}
@@ -248,7 +248,7 @@ fit <- lm(body_weight ~ sex, data = mice_weights,
 coefficients(fit)
 ```
 
-We see that the intercept is now larger, reflecting the overall mean rather than just the mean for females. The other coefficient, $\beta_1$, represents the contrast between females and the overall mean in our model. The coefficient for men is not shown because it is redundant: $\beta_1= -\beta_2$. 
+We see that the intercept is now larger, reflecting the overall mean rather than just the mean for females. The other coefficient, $\beta_1$, represents the contrast between females and the overall mean in our model. The coefficient for males is not shown because it is redundant: $\beta_1= -\beta_2$. 
 
 If we want to see all the estimates, the **emmeans** package also makes the calculations for us:
 
@@ -349,7 +349,7 @@ $$
 
 the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor.
 
-An alternative approach widely used in ANOVA to avoid indicators variables, is to save the data in an array, using different Greek letters to denote factors and indices to denote levels:
+An alternative approach widely used in ANOVA to avoid indicator variables, is to save the data in an array, using different Greek letters to denote factors and indices to denote levels:
 
 $$
 Y_{i,j,k} = \mu + \alpha_j + \beta_k + \varepsilon_{i,j,k}
@@ -385,16 +385,16 @@ breaks <- with(mice_weights, seq(min(body_weight), max(body_weight), 1))
 dat <- mutate(mice_weights, group = cut(body_weight, breaks, include_lowest = TRUE))
 ```
 
-Compute the average and standard deviation for groups with more than 10 observations and use data exploration to verify if this assumption holds.
+Compute the average and standard deviation of `body_weight` for groups with more than 10 observations and use data exploration to verify if this assumption holds.
 
 3\. The dataset also includes a variable indicating which litter the mice came from. Create a boxplot showing weights by litter. Use faceting to make separate plots for each diet and sex combination.
 
 
 4\. Use a linear model to test for a litter effect, taking into account sex and diet. Use ANOVA to compare the variability explained by litter with that of other factors.
 
-5\. The `mouse_weights` data includes two other outcomes: bone density and percent fat. Create a boxplot illustrating bone density by sex and diet. Compare what the visualizations reveal about the diet effect by sex.
+5\. The `mice_weights` data includes two other outcomes: bone density and percent fat. Create a boxplot illustrating bone density by sex and diet. Compare what the visualizations reveal about the diet effect by sex.
 
-6.  Fit a linear model and conduct a separate test for the diet effect on bone density for each sex. Note that the diet effect is statistically significant for females but not for males. Then fit the model to the entire dataset that includes diet, sex and their interaction. Notice that the diet effect is significant, yet the interaction effect is not. Explain how this can happen. Hint: To fit a model to the entire dataset with a separate effect for males and females, you can use the formula `~ sex + diet:sex`
+6\.  Fit a linear model and conduct a separate test for the diet effect on bone density for each sex. Note that the diet effect is statistically significant for females but not for males. Then fit the model to the entire dataset that includes diet, sex and their interaction. Notice that the diet effect is significant, yet the interaction effect is not. Explain how this can happen. Hint: To fit a model to the entire dataset with a separate effect for males and females, you can use the formula `~ sex + diet:sex`
 
 7\. In @sec-models, we talked about pollster bias and used visualization to motivate the presence of such bias. Here we will give it a more rigorous treatment. We will consider two pollsters that conducted daily polls. We will look at national polls for the month before the election:
 
@@ -442,7 +442,7 @@ What is the expected values $\bar{Y}_1$?
 
 11\. What is the standard error of $\bar{Y}_1$ ?
 
-12\. Suppose we define $\bar{Y}_2$ as the average of poll results from the first poll, $Y_{2,1},\dots,Y_{2,N_2}$, where $N_2$ is the number of polls conducted by the first pollster. What is the expected value $\bar{Y}_2$?
+12\. Suppose we define $\bar{Y}_2$ as the average of poll results from the first poll, $Y_{2,1},\dots,Y_{2,N_2}$, where $N_2$ is the number of polls conducted by the second pollster. What is the expected value $\bar{Y}_2$?
 
 13\. What is the standard error of $\bar{Y}_2$ ?
 
