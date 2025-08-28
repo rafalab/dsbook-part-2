@@ -1,8 +1,67 @@
 # Matrices in R
 
-When the number of variables associated with each observation is large and they can all be represented as a number, it is often more convenient to store them in a matrix and perform the analysis with linear algebra operations, rather than storing them in a data frame and performing the analysis with **tidyverse** or **data.table** functions. With matrices, variables for each observation are stored in a row, resulting in a matrix with as many columns as variables. In statistics, we refer to values represented in the rows of the matrix as the *covariates* or *predictors* and, in machine learning, we refer to them as the *features*.
+When the number of variables associated with each observation is large and they can all be represented as numbers, it is often more convenient to store the data in a matrix and perform the analysis using linear algebra operations, rather than storing the data in a data frame and using **tidyverse** or **data.table** functions. Matrix operations form the computational foundation for many applications of linear algebra in data analysis.
 
-In linear algebra, we have three types of objects: scalars, vectors, and matrices. We have already learned about vectors in R, and, although there is no data type for scalars, we can represent them as vectors of length 1. In this chapter, we learn how to work with matrices in R and relate them to linear algebra notation and concepts.
+In fact, many of the most widely used machine learning algorithms—including linear regression, principal component analysis, neural networks, and deep learning—are built around linear algebra concepts, and their implementations rely heavily on efficient matrix operations. Becoming fluent in creating, manipulating, and interpreting matrices in R will make it easier to understand and implement these methods in practice.
+
+Although we introduce the mathematical framework of linear algebra in the next chapter, the examples we use there rely on being able to work with matrices in R. Therefore, before diving into the mathematical concepts, we begin here with the tools needed to create and operate on matrices in R.
+
+In [@sec-motivating-tasks], at the end of the chapter, we present motivating examples and specific practical tasks that commonly arise in machine learning workflows, such as centering and scaling variables, computing distances, and applying linear transformations. These tasks can be completed efficiently using matrix operations, and the skills you develop in the earlier sections of the chapter will help you solve them. If you would like to understand the motivation for learning the matrix operations introduced in the previous sections, you may find it helpful to read that section first.
+
+## Notation {#sec-matrix-notation}
+
+A matrix is a two-dimensional object defined by its number of rows and columns. In data analysis, it is common to organize data so that each row represents an observation and each column represents a variable measured on those observations. This structure allows us to perform computations across observations or variables using matrix operations, which are both efficient and conceptually aligned with the linear algebra techniques introduced in the next chapters.
+
+:::{callout-note}
+In machine learning, variables are often called *features*, while in statistics, they are often called *covariates*. Regardless of the terminology, when working with matrices, these are typically represented by the columns of the matrix, each column corresponds to one variable measured across all observations.
+:::
+
+In mathematical notation, matrices are usually represented with bold uppercase letters:
+
+$$
+\mathbf{X} = 
+\begin{bmatrix}
+x_{1,1}&x_{1,2}&\dots & x_{1,p}\\
+x_{2,1}&x_{2,2}&\dots & x_{2,p}\\
+\vdots & \vdots & \ddots & \vdots\\
+x_{n,1}&x_{n,2}&\dots&x_{n,p}\\
+\end{bmatrix}
+$$
+
+with $x_{i,j}$ representing the $j$-th variable for the $i$-th observation.
+The matrix is said to have dimensions $n \times p$, meaning it has $n$ rows and $p$ columns.
+
+We denote vectors with lower case bold letters and represent them as one column matrices, often referred to as *column vectors*. R follows this convention when converting a vector to a matrix.
+
+However, *column vectors* should not be confused with the columns of the matrix. They have this name simply because they have one column.
+
+Mathematical descriptions of machine learning often make reference to vectors representing the $p$ variables:
+
+$$ 
+\mathbf{x} =
+\begin{bmatrix}
+x_1\\\
+x_2\\\
+\vdots\\\
+x_p
+\end{bmatrix}
+$$
+
+To distinguish between variables associated with the observations $i=1,\dots,n$, we add an index:
+
+$$ 
+\mathbf{x}_i = \begin{bmatrix}
+x_{i,1}\\
+x_{i,2}\\
+\vdots\\
+x_{i,p}
+\end{bmatrix}
+$$
+
+:::{.callout-warning}
+Bold lower case letters are also commonly used to represent matrix columns rather than rows. This can be confusing because $\mathbf{x}_1$ can represent either the first row or the first column of $\mathbf{X}$. One way to distinguish is to use notation similar to computer code: using the colon $:$ to represent *all*. So $\mathbf{X}_{1,:}$ represents the first row and $\mathbf{X}_{:,1}$ is the first column. Another approach is to distinguish by the letter used to index, with $i$ used for rows and $j$ used for columns. So $\mathbf{x}_i$ is the $i$th row and $\mathbf{x}_j$ is the $j$th column. With this approach, it is important to clarify which dimension, row or column is being represented. Further confusion can arise because, as aforementioned, it is common to represent all vectors, including the rows of a matrix, as one-column matrices.
+:::
+
 
 ## Case study: MNIST {#sec-mnist}
 
@@ -33,7 +92,7 @@ tmp |> ggplot(aes(Row, Column, fill = value)) +
     facet_grid(.~label)
 ```
 
-The images are converted into $28 \times 28 = 784$ pixels and, for each pixel, we obtain a grey scale intensity between 0 (white) and 255 (black). The following plot shows the individual features for each image:
+The images are converted into $28 \times 28 = 784$ pixels and, for each pixel, we obtain a grey scale intensity between 0 (white) and 255 (black). The following plot shows the individual variables for each image:
 
 ```{r example-images, echo=FALSE}
 tmp |> ggplot(aes(Row, Column, fill = value)) + 
@@ -69,25 +128,6 @@ The labels associated with each image are included in a vector:
 table(mnist$train$labels)
 ```
 
-### Motivating tasks
-
-To motivate the use of matrices in R, we will pose six tasks related to the handwritten digits data and then show the fast and simple code that solves them.
-
-1\. Visualize the original image. The pixel intensities are provided as rows in a matrix. We will show how to convert these to a matrix that we can visualize.
-
-2\. Do some digits require more ink to write than others? We will study the distribution of the total pixel darkness and how it varies by digits.
-
-3\. Are some pixels uninformative? We will study the variation of each pixel across digits and remove predictors (columns) associated with pixels that don't change much and thus can't provide much information for classification.
-
-4\. Can we remove smudges? We will first look at the distribution of all pixel values. Next, we will use this to pick a cutoff to define unwritten space. Then, we set anything below that cutoff to 0.
-
-5\. Binarize the data. First, we will look at the distribution of all pixel values. We will then use this to pick a cutoff to distinguish between writing and no writing. Afterward, we will convert all entries into either 1 or 0.
-
-6\. Standardize the digits. We will scale each of the predictors in each entry to have the same average and standard deviation.
-
-To complete these, we will have to perform mathematical operations involving several variables. The **tidyverse** or **data.table** are not developed to perform these types of mathematical operations. For this task, it is convenient to use matrices.
-
-
 To simplify the code below, we will rename these `x` and `y` respectively:
 
 ```{r}
@@ -95,40 +135,17 @@ x <- mnist$train$images
 y <- mnist$train$labels
 ```
 
+Before we define and work through the tasks designed to teach matrix operations, we begin by reviewing some basic matrix functionality in R.
 
-## Dimensions of a matrix
+## Creating a matrix {#sec-creating-a-matrix}
 
-The dimension of a matrix is an important characteristic needed to assure that certain linear algebra operations can be performed. The dimension is a two-number summary defined as the number of rows $\times$ the number of columns. 
+Scalars, vectors, and matrices are the basic building blocks of linear algebra. We have already encountered vectors in earlier chapters, and in R, scalars are represented as vectors of length 1. We now extend this understanding to matrices, starting with how to create them in R.
 
-The `nrow` function tells us how many rows that matrix has:
-
-```{r}
-nrow(x)
-```
-
-and `ncol` tells us how many columns:
+We can create a matrix using the `matrix` function. The first argument is a vector containing the elements that will fill up the matrix. The second and third arguments determine the number of row and columns, respectively. So a typical way to create a matrix is to first obtain a vector of numbers containing the elements of the matrix and feeding it to the `matrix` function. For example, to create a $100 \times 2$ matrix of normally distributed random variables, we write:
 
 ```{r}
-ncol(x)
+mat <- matrix(rnorm(100*2), 100, 2)
 ```
-
-We learn that our dataset contains `r prettyNum(nrow(mnist$train$images), big.mark=",")` observations (images) and `r ncol(mnist$train$images)` features (pixels).
-
-The `dim` function returns the rows and columns:
-
-```{r}
-dim(x)
-```
-
-
-## Creating a matrix
-
-In R, we can create a matrix using the `matrix` function. The first argument is a vector containing the elements that will fill up the matrix. The second and third arguments determine the number of row and columns, respectively. So a typical way to create a matrix is to first obtain a vector of numbers containing the elements of the matrix and feeding it to the `matrix` function. For example, to create a $100 \times 2$ matrix of normally distributed random variables, we write:
-
-```{r}
-z <- matrix(rnorm(100*2), 100, 2)
-```
-
 
 Note that by default the matrix is filled in column by column:
 
@@ -158,18 +175,59 @@ matrix(1:3, 3, 5)
 ```
 :::
 
-## Subsetting 
+
+The function `as.matrix()` attempts to coerce its input into a matrix:
+
+```{r}
+df <- data.frame(a = 1:2, b = 3:4, c = 5:6)
+as.matrix(df)
+```
+
+
+## Dimensions of a matrix
+
+The dimension of a matrix is an important characteristic needed to assure that certain linear algebra operations can be performed. The dimension is a two-number summary defined as the number of rows $\times$ the number of columns. 
+
+The `nrow` function tells us how many rows that matrix has. Here is the number of rows `x` previously defined to store the MNIST training data:
+
+```{r}
+nrow(x)
+```
+
+The function `ncol` tells us how many columns:
+
+```{r}
+ncol(x)
+```
+
+We learn that our dataset contains `r prettyNum(nrow(x), big.mark=",")` observations (images) and `r ncol(x)` variables (pixels).
+
+The `dim` function returns the rows and columns:
+
+```{r}
+dim(x)
+```
+
+Now we can confirm that R follows the convention of defining vectors of length $n$ as $n\times 1$  matrices or _column vectors_:
+
+```{r}
+vec <- 1:10
+dim(matrix(vec))
+```
+
+
+## Subsetting {#sec-matrix-subsetting}
 
 To extract a specific entry from a matrix, for example the 300th row of the 100th column, we write:
 
 ```{r, eval=FALSE}
-x[300,100]
+x[300, 100]
 ```
 
 We can extract subsets of the matrices by using vectors of indexes. For example, we can extract the first 100 pixels from the first 300 observations like this:
 
 ```{r, eval=FALSE}
-x[1:300,1:100]
+x[1:300, 1:100]
 ```
 
 To extract an entire row or subset of rows, we leave the column dimension blank. So the following code returns all the pixels for the first 300 observations:
@@ -186,7 +244,7 @@ x[,1:100]
 ```
 
 :::{.callout-warning}
-If we subset just one row or just one column, the resulting object is no longer a matrix. For example:
+If we subset just one row or just one column, the resulting object is no longer a matrix. For example notice what happens here:
 
 ```{r}
 dim(x[300,])
@@ -199,89 +257,7 @@ dim(x[100,,drop = FALSE])
 ```
 :::
 
-### Task 1: Visualize the original image {.unnumbered}
-
-For instance, let's try to visualize the third observation. From the label, we know this is a:
-
-```{r}
-mnist$train$label[3]
-```
-
-The third row of the matrix `x[3,]` contains the 784 pixel intensities. We can assume these were entered in order and convert them back to a $28 \times 28$ matrix using:
-
-```{r}
-grid <- matrix(x[3,], 28, 28)
-```
-
-To visualize the data, we can use `image` in the followin way:
-
-```{r, eval=FALSE}
-image(1:28, 1:28, grid)
-```
-
-However, because the y-axis in `image` goes bottom to top and `x` stores pixels top to bottom the code above shows shows a flipped image. To flip it back we can use:
-
-```{r, eval=FALSE}
-image(1:28, 1:28, grid[, 28:1])
-```
-
-```{r matrix-image, fig.width = 4, fig.height = 4, echo=FALSE}
-rafalib::mypar(1,1)
-image(1:28, 1:28, grid[, 28:1])
-```
-
-## Mathematical notation {#sec-matrix-notation}
-
-Matrices are usually represented with bold upper case letters:
-
-$$
-\mathbf{X} = 
-\begin{bmatrix}
-x_{1,1}&x_{1,2}&\dots & x_{1,p}\\
-x_{2,1}&x_{2,2}&\dots & x_{2,p}\\
-\vdots & \vdots & \ddots & \vdots\\
-x_{n,1}&x_{n,2}&\dots&x_{n,p}\\
-\end{bmatrix}
-$$
-
-with $x_{i,j}$ representing the $j$-the feature for the $i$-th observation.
-
-We denote vectors with lower case bold letters and represent them as one column matrices, often referred to as *column vectors*. R follows this convention when converting a vector to a matrix:
-
-```{r}
-dim(matrix(x[300,]))
-```
-
-However, *column vectors* should not be confused with the columns of the matrix. They have this name simply because they have one column.
-
-Mathematical descriptions of machine learning often make reference to vectors representing the $p$ features:
-
-$$ 
-\mathbf{x} =
-\begin{bmatrix}
-x_1\\\
-x_2\\\
-\vdots\\\
-x_p
-\end{bmatrix}
-$$
-
-To distinguish between features associated with the observations $i=1,\dots,n$, we add an index:
-
-$$ 
-\mathbf{x}_i = \begin{bmatrix}
-x_{i,1}\\
-x_{i,2}\\
-\vdots\\
-x_{i,p}
-\end{bmatrix}
-$$
-
-:::{.callout-warning}
-Bold lower case letters are also commonly used to represent matrix columns rather than rows. This can be confusing because $\mathbf{x}_1$ can represent either the first row or the first column of $\mathbf{X}$. One way to distinguish is to use notation similar to computer code: using the colon $:$ to represent *all*. So $\mathbf{X}_{1,:}$ represents the first row and $\mathbf{X}_{:,1}$ is the first column. Another approach is to distinguish by the letter used to index, with $i$ used for rows and $j$ used for columns. So $\mathbf{x}_i$ is the $i$th row and $\mathbf{x}_j$ is the $j$th column. With this approach, it is important to clarify which dimension, row or column is being represented. Further confusion can arise because, as aforementioned, it is common to represent all vectors, including the rows of a matrix, as one-column matrices.
-:::
-
-## The transpose
+## The transpose {#sec-transpose}
 
 A common operation when working with matrices is the *transpose*. We use the transpose to understand several concepts described in the next several sections. This operation simply converts the rows of a matrix into columns. We use the symbols $\top$ or $'$ next to the bold upper case letter to denote the transpose:
 
@@ -309,7 +285,7 @@ dim(x)
 dim(t(x))
 ```
 
-One use of the transpose is that we can write the matrix $\mathbf{X}$ as rows of the column vectors representing the features for each individual observation in the following way:
+One use of the transpose is that we can write the matrix $\mathbf{X}$ as rows of the column vectors representing the variables for each individual observation in the following way:
 
 
 $$
@@ -323,9 +299,7 @@ $$
 $$
 
 
-
-
-## Row and column summaries
+## Row and column summaries {#sec-row-col-summaries}
 
 A common operation with matrices is to apply the same function to each row or to each column. For example, we may want to compute row averages and standard deviations. The `apply` function lets you do this. The first argument is the matrix, the second is the dimension, 1 for rows, 2 for columns, and the third is the function to be applied. 
 
@@ -349,28 +323,18 @@ Because these operations are so common, special functions are available to perfo
 avg <- rowMeans(x)
 ```
 
-and the **matrixStats** function `rowSds` computes the standard deviations for each row:
+and the  function `rowSds` from the **matrixStats** packages computes the standard deviations for each row:
 
 ```{r, message=FALSE}
 library(matrixStats)
 sds <- rowSds(x)
 ```
 
-The functions `colMeans` and `colSds` provide the version for columns. For more fast implementations consider the functions available in **matrixStats**.
+The functions `colMeans` and `colSds` provide the version for columns. 
 
-### Task 2: Do some digits require more ink to write than others? {.unnumbered}
+For other fast implementations of common operation take a look at what is availabe in the **matrixStats** package.
 
-For the second task, related to total pixel darkness, we want to see the average use of ink plotted against digit. We have already computed this average and can generate a boxplot to answer the question:
-
-```{r boxplot-of-digit-averages}
-avg <- rowMeans(x)
-boxplot(avg ~ y)
-```
-
-From this plot we see that, not surprisingly, 1s use less ink than other digits.
-
-
-## Conditional filtering 
+## Conditional filtering {#sec-conditional-filtering}
 
 One of the advantages of matrices operations over **tidyverse** operations is that we can easily select columns based on summaries of the columns. 
 
@@ -396,51 +360,7 @@ This being a common operation, we have a **matrixStats** function to do it faste
 x[!rowAnyNAs(x),]
 ```
 
-### Task 3: Are some pixels uninformative? {.unnumbered}
-
-We can use these ideas to remove columns associated with pixels that don't change much and thus do not inform digit classification. We will quantify the variation of each pixel with its standard deviation across all entries. Since each column represents a pixel, we use the `colSds` function from the **matrixStats** package:
-
-```{r}
-sds <- colSds(x)
-```
-
-A quick look at the distribution of these values shows that some pixels have very low entry to entry variability:
-
-```{r sds-histogram, echo=FALSE}
-rafalib::mypar()
-hist(sds, breaks = 30, main = "SDs")
-```
-
-```{r}
-#| eval: false
-hist(sds, breaks = 30, main = "SDs")
-```
-
-This makes sense since we don't write in some parts of the box. Here is the variance plotted by location:
-
-```{r, eval=FALSE}
-image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
-```
-
-```{r pixel-variance, fig.width = 3, fig.height = 3, echo=FALSE, out.width="50%"}
-rafalib::mypar()
-image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
-```
-
-We see that there is little variation in the corners.
-
-We could remove features that have no variation since these can't help us predict.
-
-So if we wanted to remove uninformative predictors from our matrix, we could write this one line of code:
-
-```{r}
-new_x <- x[,colSds(x) > 60]
-dim(new_x)
-```
-
-Only the columns for which the standard deviation is above 60 are kept, which removes over half the predictors.
-
-## Indexing with matrices
+## Indexing with matrices {#sec-indexing-matrices}
 
 An operation that facilitates efficient coding is that we can change entries of a matrix based on conditionals applied to that same matrix. Here is a simple example:
 
@@ -458,46 +378,7 @@ A useful application of this approach is that we can change all the `NA` entries
 x[is.na(x)] <- 0
 ```
 
-### Task 4: Can we remove smudges? 
-
-A histogram of all our predictor data:
-
-```{r histogram-all-pixels}
-#| echo: false
-rafalib::mypar()
-hist(as.vector(x), breaks = 30, main = "Pixel intensities")
-```
-
-```{r}
-#| eval: false
-hist(as.vector(x), breaks = 30, main = "Pixel intensities")
-```
-
-shows a clear dichotomy which is explained as parts of the image with ink and parts without. If we think that values below, say, 50 are smudges, we can quickly make them zero using:
-
-```{r, eval=FALSE}
-new_x <- x
-new_x[new_x < 50] <- 0
-```
-
-
-### Task 5: Binarizing the data {.unnumbered}
-
-The histogram above seems to suggest that this data is mostly binary. A pixel either has ink or does not. Applying what we have learned, we can binarize the data using just matrix operations:
-
-```{r}
-bin_x <- x
-bin_x[bin_x < 255/2] <- 0 
-bin_x[bin_x > 255/2] <- 1
-```
-
-We can also convert to a matrix of logicals and then coerce to numbers like this:
-
-```{r}
-bin_X <- (x > 255/2)*1
-```
-
-## Vectorization for matrices
+## Vectorization for matrices {#sec-vectorization-for-matrices}
 
 In R, if we subtract a vector from a matrix, the first element of the vector is subtracted from the first row, the second element from the second row, and so on. Using mathematical notation, we would write it as follows:
 
@@ -534,16 +415,165 @@ The function `sweep` facilitates this type of operation. It works similarly to `
 sweep(x, 1, rowMeans(x))
 ```
 
+In R, if you add, subtract, multiple or divide two matrices, the operation is done elementwise. For example, if two matrices are stored in `x` and `y`, then:
 
-### Task 6: Standardize the digits {.unnumbered}
+```{r, eval=FALSE}
+x*y
+```
 
-The way R vectorizes arithmetic operations implies that we can scale each row of a matrix as follows:
+does not result in matrix multiplication. Instead, the entry in row $i$ and column $j$ of this product is the product of the entry in row $i$ and column $j$ of `x` and `y`, respectively.
+
+
+## Motivating tasks {#sec-motivating-tasks}
+
+To motivate the use of matrices in R, we will pose six tasks that illustrate how matrix operations can help with data exploration of the handwritten digits dataset. Each task highlights a basic matrix operation that is commonly used in R. By seeing how these operations can be implemented with fast and simple code, you will gain hands-on experience with the kinds of computations that arise frequently in high-dimensional data analysis. The primary goal of these tasks is to help you learn how matrix operations work in practice.
+
+
+### Visualize the original image {.unnumbered}
+
+The pixel intensities are provided as rows in a matrix. Using what we learned in [@sec-creating-a-matrix], we can convert each row into a $28 \times 28$ matrix that we can visualize as an image. As an example, we will use the third observation. From the label, we know this is a:
+
+```{r}
+y[3]
+```
+
+The third row of the matrix `x[3,]` contains the 784 pixel intensities. If we assume these were entered in order, we can convert them back to a $28 \times 28$ matrix using:
+
+```{r}
+grid <- matrix(x[3,], 28, 28)
+```
+
+To visualize the data, we can use `image` in the following way:
+
+```{r, eval=FALSE}
+image(1:28, 1:28, grid)
+```
+
+However, because the y-axis in `image` goes bottom to top and `x` stores pixels top to bottom the code above shows shows a flipped image. To flip it back we can use:
+
+```{r, eval=FALSE}
+image(1:28, 1:28, grid[, 28:1])
+```
+
+```{r matrix-image, fig.width = 4, fig.height = 4, echo=FALSE}
+rafalib::mypar(1,1)
+image(1:28, 1:28, grid[, 28:1])
+```
+
+### Do some digits require more ink to write than others? {.unnumbered}
+
+Let's study the distribution of the total pixel darkness and how it varies by digits. 
+
+We can use what we learned in Section @sec-row-col-summaries}] to computed this average for each pixel and the display the values for each digit using a boxplot:
+
+```{r boxplot-of-digit-averages}
+avg <- rowMeans(x)
+boxplot(avg ~ y)
+```
+
+From this plot we see that, not surprisingly, 1s use less ink than other digits.
+
+
+
+### Are some pixels uninformative? {.unnumbered}
+
+Let's study the variation of each pixel across digits and remove columns associated with pixels that don't change much and thus can't provide much information for classification.
+
+We can  what we learned in [@sec-conditional-filtering] to efficiently remove columns associated with pixels that don't change much and thus do not inform digit classification.
+
+We will also use what we learned in  [@sec-row-col-summaries] to quantify the variation of each pixel with its standard deviation across all entries. Since each column represents a pixel, we use the `colSds` function from the **matrixStats** package:
+
+```{r}
+sds <- colSds(x)
+```
+
+A quick look at the distribution of these values shows that some pixels have very low entry to entry variability:
+
+```{r sds-histogram, echo=FALSE}
+rafalib::mypar()
+hist(sds, breaks = 30, main = "SDs")
+```
+
+```{r}
+#| eval: false
+hist(sds, breaks = 30, main = "SDs")
+```
+
+This makes sense since we don't write in some parts of the box. Here is the variance plotted by location after using what we learned in @sec-creating-a-matrix to creat a $28 \times 28$ matrix:
+
+```{r, eval=FALSE}
+image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
+```
+
+```{r pixel-variance, fig.width = 3, fig.height = 3, echo=FALSE, out.width="50%"}
+rafalib::mypar()
+image(1:28, 1:28, matrix(sds, 28, 28)[, 28:1])
+```
+
+We see that there is little variation in the corners.
+
+We could remove features that have no variation since these can't help us predict.
+
+So if we wanted to remove uninformative predictors from our matrix, we could write this one line of code:
+
+```{r}
+new_x <- x[,colSds(x) > 60]
+dim(new_x)
+```
+
+Only the columns for which the standard deviation is above 60 are kept, which removes over half the predictors.
+
+### Can we remove smudges? {.unnumbered}
+
+We will first look at the distribution of all pixel values. 
+
+```{r histogram-all-pixels}
+#| echo: false
+rafalib::mypar()
+hist(as.vector(x), breaks = 30, main = "Pixel intensities")
+```
+
+```{r}
+#| eval: false
+hist(as.vector(x), breaks = 30, main = "Pixel intensities")
+```
+
+This shows a clear dichotomy which is explained as parts of the image with ink and parts without. If we think that values below, say, 50 are smudges, we can quickly make them zero using what we learned in [@sec-indexing-matrices]
+
+```{r, eval=FALSE}
+new_x <- x
+new_x[new_x < 50] <- 0
+```
+
+
+### Binarize the data {.unnumbered}
+
+The histogram above seems to suggest that this data is mostly binary. A pixel either has ink or does not. Applying what we learned in [@sec-indexing-matrices], we can binarize the data using just matrix operations:
+
+```{r}
+bin_x <- x
+bin_x[bin_x < 255/2] <- 0 
+bin_x[bin_x > 255/2] <- 1
+```
+
+We can also convert to a matrix of logicals and then coerce to numbers using what we learned in [@sec-vectorization-for-matrices]:
+
+```{r}
+bin_X <- (x > 255/2)*1
+```
+
+
+### Standardize the digits {.unnumbered}
+
+Finally, we will scale each column to have the same average and standard deviation.
+
+Using what we learned in [@sec-vectorization-for-matrices] implies that we can scale each row of a matrix as follows:
 
 ```{r, eval=FALSE}
 (x - rowMeans(x))/rowSds(x)
 ```
 
-Yet this approach does not work for columns. For columns, we can `sweep`:
+Yet this approach does not work for columns. For columns, we can use the `sweep` function we learned in [sec-vectorization-for-matrices]:
 
 ```{r, eval=FALSE}
 x_mean_0 <- sweep(x, 2, colMeans(x))
@@ -555,13 +585,6 @@ To divide by the standard deviation, we change the default arithmetic operation 
 x_standardized <- sweep(x_mean_0, 2, colSds(x), FUN = "/")
 ```
 
-In R, if you add, subtract, multiple or divide two matrices, the operation is done elementwise. For example, if two matrices are stored in `x` and `y`, then:
-
-```{r, eval=FALSE}
-x*y
-```
-
-does not result in matrix multiplication. Instead, the entry in row $i$ and column $j$ of this product is the product of the entry in row $i$ and column $j$ of `x` and `y`, respectively.
 
 ## Exercises
 
