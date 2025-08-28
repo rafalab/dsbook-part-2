@@ -2,19 +2,21 @@
 
 The CLT tells us that the distribution function for a sum of draws is approximately normal. Additionally, we have learned that dividing a normally distributed random variable by a constant results in another normally distributed variable. This implies that the distribution of $\bar{X}$ is approximately normal.
 
-In summary, we have that $\bar{X}$ has an approximately normal distribution with expected value $p$ and standard error $\sqrt{p(1-p)/N}$.
+In summary, $\bar{X}$ has an approximately normal distribution with expected value $p$ and standard error $\sqrt{p(1-p)/N}$.
 
 Now how does this help us? Suppose we want to know what is the probability that we are within 1% from $p$. We are basically asking what is:
 
 $$
 \mbox{Pr}(| \bar{X} - p| \leq .01)
-$$ which is the same as:
+$$ 
+
+which is the same as:
 
 $$
 \mbox{Pr}(\bar{X}\leq p + .01) - \mbox{Pr}(\bar{X} \leq p - .01)
 $$
 
-Can we answer this question? We can use the mathematical trick we learned in the previous section: subtract the expected value and divide by the standard error to obtain a standard normal random variable, which we'll denote as $Z$, on the left. Since $p$ is the expected value and $\mbox{SE}(\bar{X}) = \sqrt{p(1-p)/N}$ is the standard error, we get:
+Can we answer this question? We can use the mathematical approach we learned in the previous section: subtract the expected value and divide by the standard error to obtain a standard normal random variable, which we'll denote as $Z$, on the left. Since $p$ is the expected value and $\mbox{SE}(\bar{X}) = \sqrt{p(1-p)/N}$ is the standard error, we get:
 
 $$
 \mbox{Pr}\left(Z \leq \frac{ \,.01} {\mbox{SE}(\bar{X})} \right) -
@@ -25,13 +27,15 @@ One problem we have is that since we don't know $p$, we don't know $\mbox{SE}(\b
 
 $$
 \hat{\mbox{SE}}(\bar{X})=\sqrt{\bar{X}(1-\bar{X})/N}
-$$ In statistics textbooks, we use a little hat to denote estimates. The estimate can be constructed using the observed data and $N$.
+$$
+
+In statistics textbooks, we use a little hat to denote estimates. The estimate can be constructed using the observed data and $N$.
 
 Now we continue with our calculation, but dividing by $\hat{\mbox{SE}}(\bar{X})=\sqrt{\bar{X}(1-\bar{X})/N})$ instead. In our first sample, we had 12 blue and 13 red, so $\bar{X} = 0.48$ and our estimate of standard error is:
 
 ```{r}
 x_hat <- 0.48
-se <- sqrt(x_hat*(1-x_hat)/25)
+se <- sqrt(x_hat*(1 - x_hat)/25)
 se
 ```
 
@@ -41,9 +45,9 @@ Now, we can answer the question of the probability of being close to $p$. The an
 pnorm(0.01/se) - pnorm(-0.01/se)
 ```
 
-Therefore, there is a small chance that we will be close. A poll of only $N=25$ people is not really very useful, at least not for a close election.
+Therefore, there is a small chance that we will be this close. A poll of only $N=25$ people is not really very useful, at least not for a close election.
 
-Earlier, we mentioned the *margin of error*. Now, we can define it simply as two times the standard error, which we can now estimate. In our case it is:
+Earlier, we mentioned the *margin of error*. Now, we can define it simply as 1.96 times the standard error. In our case it is:
 
 ```{r}
 1.96*se
@@ -54,7 +58,9 @@ Why do we multiply by 1.96? Because if you ask what is the probability that we a
 $$
 \mbox{Pr}\left(Z \leq \, 1.96\,\mbox{SE}(\bar{X})  / \mbox{SE}(\bar{X}) \right) -
 \mbox{Pr}\left(Z \leq - 1.96\, \mbox{SE}(\bar{X}) / \mbox{SE}(\bar{X}) \right) 
-$$ which is:
+$$ 
+
+which is:
 
 $$
 \mbox{Pr}\left(Z \leq 1.96 \right) -
@@ -71,29 +77,17 @@ Hence, there is a 95% probability that $\bar{X}$ will be within $1.96\times \hat
 
 In summary, the CLT tells us that our poll based on a sample size of $25$ is not very useful. We don't really learn much when the margin of error is this large. All we can really say is that the popular vote will not be won by a large margin. This is why pollsters tend to use larger sample sizes.
 
-From the table above, we see that typical sample sizes range from 700 to 3500. To see how this gives us a much more practical result, consider that if we had obtained a $\bar{X}$=0.48 with a sample size of 2,000, our standard error $\hat{\mbox{SE}}(\bar{X})$ would have been `r n<-2000;se<-sqrt(0.48*(1-0.48)/n);se`. So our result is an estimate of `48`% with a margin of error of `r round(2*se*100)`%. In this case, the result is much more informative and would lead us to believe that there are more red balls than blue. Keep in mind, however, that this is hypothetical. We did not take a poll of 2,000, since we don't want to ruin the competition.
+From the Real Clear Politics table in the previous chapter, we see that typical sample sizes range from 700 to 3,500. To see how this gives us a much more practical result, consider that if we had obtained a $\bar{X}=0.48$ with a sample size of 2,000, our standard error $\hat{\mbox{SE}}(\bar{X})$ would have been `r n<-2000;se<-sqrt(0.48*(1-0.48)/n);se`. So our result is an estimate of `48`% with a margin of error of `r round(2*se*100)`%. In this case, the result is much more informative and would lead us to believe that there are more red balls than blue. Keep in mind, however, that this is hypothetical. We did not take a poll of 2,000, since we don't want to ruin the competition.
 
 ## A Monte Carlo simulation
 
-Suppose we want to use a Monte Carlo simulation to corroborate the tools we have developed using probability theory. To create the simulation, we would write code like this:
+Suppose we want to use a Monte Carlo simulation to corroborate the tools we have developed using probability theory. The problem is, of course, that we don't know `p`. We could construct an urn, similar to the one pictured above, and conduct an analog simulation (without a computer). While time-consuming, we could take 10,000 samples, count the beads, and track the proportions of blue. We can use the function `take_poll(n = 1000)`, instead of drawing from an actual urn, but it would still take time to count the beads and enter the results.
 
-```{r, eval=FALSE}
-B <- 10000
-N <- 1000
-x_hat <- replicate(B, {
-  x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
-  mean(x)
-})
-```
-
-The problem is, of course, that we don't know `p`. We could construct an urn, similar to the one pictured above, and conduct an analog simulation (without a computer). While time-consuming, we could take 10,000 samples, count the beads, and track the proportions of blue. We can use the function `take_poll(n=1000)`, instead of drawing from an actual urn, but it would still take time to count the beads and enter the results.
-
-Therefore, one approach we can use to corroborate theoretical results is to pick one or several values of `p` and run simulations. Let's set `p=0.45`. We can then simulate a poll:
+Therefore, one approach we can use to corroborate theoretical results is to pick one or several values of `p` and run simulations. Let's set `p=0.45` and simulate a poll:
 
 ```{r}
 p <- 0.45
 N <- 1000
-
 x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
 x_hat <- mean(x)
 ```
@@ -134,11 +128,11 @@ grid.arrange(p1, p2, nrow = 1)
 
 Of course, in real life, we would never be able to run such an experiment because we don't know $p$. However, we can run it for various values of $p$ and $N$ and see that the theory does indeed work well for most values. You can easily do this by rerunning the code above after changing the values of `p` and `N`.
 
-## The spread
+## CLT for the spread
 
 The objective of the competition is to predict the spread, not the proportion $p$. However, since we are assuming there are only two parties, we know that the spread is $\mu = p - (1-p) = 2p - 1$. As a result, everything we have done can easily be adapted to an estimate of $\mu$. Once we have our estimate $\bar{X}$ and $\hat{\mbox{SE}}(\bar{X})$, we estimate the spread with $2\bar{X} - 1$ and, since we are multiplying by 2, the standard error is $2\hat{\mbox{SE}}(\bar{X})$. Note that subtracting 1 does not add any variability, so it does not affect the standard error.
 
-For our 25 item sample above, our estimate $p$ is `.48` with margin of error `.20, and our estimate of the spread is `0.04` with margin of error `.40`. Again, this is not a very useful sample size. Nevertheless, the point is that, once we have an estimate and standard error for $p$, we have it for the spread $\mu$.
+For our 25 item sample above, our estimate $p$ is `.48` with margin of error `.20`, and our estimate of the spread is `0.04` with margin of error `.40`. Again, this is not a very useful sample size. Nevertheless, the point is that, once we have an estimate and standard error for $p$, we have it for the spread $\mu$.
 
 :::{.callout-note}
 We use $\mu$ to denote the spread here and in the next sections because this is the typical notation used in statistical textbooks for the parameter of interest. The reason we use $\mu$ is that a population mean is often the parameter of interest, and $\mu$ is the Greek letter for _m_.
@@ -152,10 +146,10 @@ For realistic values of $p$, let's say ranging from 0.35 to 0.65, if we conduct 
 N <- 100000
 p <- seq(0.35, 0.65, length = 100)
 SE <- sapply(p, function(x) 2*sqrt(x*(1 - x)/N))
-qplot(p, SE, geom = "line")
+data.frame(p = p, SE = SE) |> ggplot(aes(p, SE)) + geom_line()
 ```
 
-One reason is that conducting such a poll is very expensive. Another, and possibly more important reason, is that theory has its limitations. Polling is much more complicated than simply picking beads from an urn. Some people might lie to pollsters, and others might not have phones. However, perhaps the most important way an actual poll differs from an urn model is that we don't actually know for sure who is in our population and who is not. How do we know who is going to vote? Are we reaching all possible voters? Hence, even if our margin of error is very small, it might not be exactly right that our expected value is $p$. We call this bias. Historically, we observe that polls are indeed biased, although not by a substantial amount. The typical bias appears to be about 2-3%. This makes election forecasting a bit more interesting, and we will explore how to model this in a later section.
+So why are sample sizes these large not seen? One reason is that conducting such a poll is very expensive. Another, and possibly more important reason, is that theory has its limitations. Polling is much more complicated than simply picking beads from an urn. Some people might lie to pollsters, and others might not have phones. However, perhaps the most important way an actual poll differs from an urn model is that we don't actually know for sure who is in our population and who is not. How do we know who is going to vote? Are we reaching all possible voters? Hence, even if our margin of error is very small, it might not be exactly right that our expected value is $p$. We call this bias. Historically, we observe that polls are indeed biased, although not by a substantial amount. The typical bias for the popular vote, for example, appears to be about 2-3%. This makes election forecasting a bit more interesting, and we will explore how to model this in a later section.
 
 ## Exercises
 
@@ -181,7 +175,7 @@ d.  The errors range from -1 to 1.
 
 6\. The theory we just learned tells us what this standard deviation is going to be because it is the standard error of $\bar{X}$. What does theory tell us is the standard error of $\bar{X}$ for a sample size of 100?
 
-7\. In practice, we don't know $p$, so we construct an estimate of the theoretical prediction based by plugging in $\bar{X}$ for $p$. Compute this estimate. Set the seed at 1 with `set.seed(1)`.
+7\. In practice, we don't know $p$, so we construct an estimate of the theoretical prediction by plugging in $\bar{X}$ for $p$. Compute this estimate. Set the seed at 1 with `set.seed(1)`.
 
 8\. Note how close the standard error estimates obtained from the Monte Carlo simulation (exercise 5), the theoretical prediction (exercise 6), and the estimate of the theoretical prediction (exercise 7) are. The theory is working and it gives us a practical approach to knowing the typical error we will make if we predict $p$ with $\bar{X}$. Another advantage that the theoretical result provides is that it gives an idea of how large a sample size is required to obtain the precision we need. Earlier, we learned that the largest standard errors occur for $p=0.5$. Create a plot of the largest standard error for $N$ ranging from 100 to 5,000. Based on this plot, how large does the sample size have to be to have a standard error of about 1%?
 

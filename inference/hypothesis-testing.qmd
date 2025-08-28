@@ -1,6 +1,6 @@
 # Hypothesis testing {#sec-hypothesis-testing}
 
-In scientific studies, you'll often see phrases like "the results are statistically significant". This points to a technique called hypothesis testing, where we use p-values, a type of probability, to test our initial assumption or hypothesis.
+In scientific studies, you'll often see phrases like "the results are statistically significant". This points to a technique called hypothesis testing, where we use _p-values_, a type of probability, to test our initial assumption or hypothesis.
 
 In hypothesis testing, rather than providing an estimate of the parameter we're studying, we provide a probability that serves as evidence supporting or contradicting a specific hypothesis. The hypothesis usually involves whether a parameter is different from a predetermined value (often 0).
 
@@ -14,10 +14,10 @@ We will see more examples of hypothesis testing in @sec-treatment-effect-models.
 
 ## p-values
 
-Suppose we take a random sample of $N=100$ and we observe $52$ blue beads, which gives us $\bar{X} = 0.52$. This seems to be pointing to the existence of more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual $p=0.5$. We call the assumption that $\theta = 0.5$ a *null hypothesis*. The null hypothesis is the skeptic's hypothesis. 
+Suppose we take a random sample of $N=100$ and we observe $52$ blue beads, which gives us $\bar{X} = 0.52$. This seems to be pointing to there being more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual $p=0.5$. We call the assumption that $\theta = 0.5$ a *null hypothesis*. The null hypothesis is the skeptic's hypothesis. 
 
 :::{.callout-note}
-We use $\theta$ (`theta` in R) to represent the probability of drawing a blue bead, instead of $p$ as in previous sections, to avoid confusion with the p-value.
+We use $\theta$ (`theta` in R) to represent the probability of drawing a blue bead, instead of $p$ as in previous sections, to avoid confusion with between the parameter $p$ and the p in p-value.
 :::
 
 We have observed a random variable $\bar{X} = 0.52$, and the p-value is the answer to the question: How likely is it to see a value this large, when the null hypothesis is true? If the p-value is small enough, we _reject the null hypothesis_ and say that the results are _statistically significant_. 
@@ -43,19 +43,15 @@ $$\mbox{Pr}\left(\sqrt{N}\frac{\mid \bar{X} - 0.5\mid}{\sqrt{0.5(1-0.5)}} > \sqr
 ```{r}
 N <- 100
 z <- sqrt(N)*0.02/0.5
-1 - (pnorm(z) - pnorm(-z))
+p <- 1 - (pnorm(z) - pnorm(-z))
+p
 ```
 
 In this case, there is actually a large chance of seeing 52 or larger under the null hypothesis. 
 
-Keep in mind that there is a close connection between p-values and confidence intervals. If a 95% confidence interval of the spread does not include 0, we know that the p-value must be smaller than 0.05.
+Keep in mind that there is a close connection between p-values and confidence intervals. If a 95% confidence interval does not include 0.5, we know that the p-value must be smaller than 0.05. In general, we can show mathematically that if a $(1-\alpha)\times 100$% confidence interval does not contain the null hypothesis value, the null hypothesis is rejected with a p-value as small or smaller than $\alpha$. So _statistical significance_ can be determined from confidence intervals.
 
-To learn more about p-values, you can consult any statistics textbook. However, in general, we prefer reporting confidence intervals over p-values because it gives us an idea of the size of the estimate. If we just report the p-value, we provide no information about the significance of the finding in the context of the problem.
-
-
-:::{callout-warning}
-We can show mathematically that if a $(1-\alpha)\times 100$% confidence interval does not contain the null hypothesis value, the null hypothesis is rejected with a p-value as smaller or smaller than $\alpha$. So _statistical significance_ can be determined from confidence intervals. However, unlike the confidence interval, the p-value does not provide an estimate of the magnitude of the effect. For this reason, we recommend avoiding p-values whenever you can compute a confidence interval.
-:::
+To learn more about p-values, you can consult any statistics textbook. However, in general, we prefer reporting confidence intervals over p-values because it gives us an idea of the size of the estimate. If we just report the p-value, we provide no information about the significance of the finding in the context of the problem. For this reason, we recommend avoiding p-values whenever you can compute a confidence interval. 
 
 ## Power
 
@@ -84,7 +80,7 @@ By increasing our sample size, we lower our standard error, and thus, have a muc
 ```{r, eval=FALSE}
 N <- 1000
 theta <- 0.5
-x <- rbinom(N, 1, 0.5)
+x <- rbinom(N, 1, theta)
 ```
 
 then, compute a p-value if $\theta=0.5$. Repeat this 10,000 times and report how often the p-value is lower than 0.05? How often is it lower than 0.01?
@@ -97,7 +93,7 @@ then, compute a p-value if $\theta=0.5$. Repeat this 10,000 times and report how
   d. The p-values are all less than 0.05.
 
 
-3. Demonstrate, mathematically, why see the histogram we see in exercise 2.  Hint: To compute the p-value, we need to calculate a test statistic, $Z$. We can approximate $Z$ using the CLT, which tells us that $Z$ approximately follows a standard normal distribution.  FThe p-value is calculated as:  $p = 2\{1 - \Phi(|z|)\}$ where:  
+3.Demonstrate, mathematically, why we see the histogram in exercise 2.  Hint: To compute the p-value, we need to calculate a test statistic, $Z$. We can approximate $Z$ using the CLT, which tells us that $Z$ approximately follows a standard normal distribution.  The p-value is calculated as:  $p = 2\{1 - \Phi(|z|)\}$ where:  
 $z$ is the observed value of $Z$ and $\Phi(z)$ is the CDF of the standard normal distribution (`pnorm(z)` in R).  To understand the distribution of the p-values, consider the probability that the p-value is less than or equal to some threshold $a$ between 0 and 1: $\mbox{Pr}(p \leq a) = \mbox{Pr}(\{2\{1 - \Phi(|z|)\} \leq a)$. Remember that $p$ follows a uniform distribution if $\mbox{Pr}(p \leq a) =a$.
 
 

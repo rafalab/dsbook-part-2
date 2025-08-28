@@ -1,17 +1,6 @@
 # Confidence intervals
 
-Confidence intervals are a very useful concept widely employed by data analysts. A version of these that are commonly seen come from the `ggplot` geometry `geom_smooth`. Below is an example using a temperature dataset available in R:
-
-```{r first-confidence-intervals-example, warning=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
-library(tidyverse)
-data.frame(year = as.numeric(time(nhtemp)), temperature = as.numeric(nhtemp)) |>
-  ggplot(aes(year, temperature)) + 
-  geom_point() + 
-  geom_smooth() + 
-  ggtitle("Average Yearly Temperatures in New Haven")
-```
-
-In the Machine Learning section, we will learn how the curve is formed, but for now consider the shaded area around the curve. This is created using the concept of confidence intervals.
+Confidence intervals are a very useful concept widely employed by data analysts. 
 
 In our earlier competition, you were asked to give an interval. If the interval you submitted includes the $p$, you receive half the money you spent on your "poll" back and proceed to the next stage of the competition. One way to pass to the second round is to report a very large interval. For example, the interval $[0,1]$ is guaranteed to include $p$. However, with an interval this big, we have no chance of winning the competition. Similarly, if you are an election forecaster and predict the spread will be between -100% and 100%, you will be ridiculed for stating the obvious. Even a smaller interval, such as saying the spread will be between -10 and 10%, will not be considered serious.
 
@@ -21,23 +10,19 @@ We can use the statistical theory we have learned to compute the probability of 
 
 When a pollster reports an estimate and a margin of error, they are, in a way, reporting a 95% confidence interval. Let's now see how this works mathematically.
 
-We want to know the probability that the interval $[\bar{X} - 2\hat{\mbox{SE}}(\bar{X}), \bar{X} + 2\hat{\mbox{SE}}(\bar{X})]$ contains the true proportion $p$. First, consider that the start and end of these intervals are random variables: every time we take a sample, they change. To illustrate this, run the Monte Carlo simulation above twice. We use the same parameters as above:
+We want to know the probability that the interval $[\bar{X} - 2\hat{\mbox{SE}}(\bar{X}), \bar{X} + 2\hat{\mbox{SE}}(\bar{X})]$ contains the true proportion $p$. First, consider that the start and end of these intervals are random variables: every time we take a sample, they change. To illustrate this, we use the same parameters as an earlier Monte Carlo simulation:
+
 
 ```{r}
 p <- 0.45
 N <- 1000
-```
-
-And notice that the interval here:
-
-```{r}
 x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
 x_hat <- mean(x)
 se_hat <- sqrt(x_hat*(1 - x_hat)/N)
 c(x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
 ```
 
-is different from this one:
+and notice it the intreval different if we run it again:
 
 ```{r}
 x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
@@ -51,7 +36,7 @@ Keep sampling and creating intervals, and you will see the random variation.
 To determine the probability that the interval includes $p$, we need to compute the following: 
 
 $$
-\mbox{Pr}\left(\bar{X} - 1.96\hat{\mbox{SE}}(\bar{X}) \leq p \leq \bar{X} + 1.96\hat{\mbox{SE}}(\bar{X})\right)
+\mbox{Pr}\left(\bar{X} - 1.96\,\hat{\mbox{SE}}(\bar{X}) \leq p \leq \bar{X} + 1.96\,\hat{\mbox{SE}}(\bar{X})\right)
 $$
 
 By subtracting and dividing the same quantities in all parts of the equation, we find that the above is equivalent to:
@@ -95,7 +80,7 @@ pnorm(z) - pnorm(-z)
 
 is `0.995 - 0.005 = 0.99`.
 
-We can use this approach for any probability, not just 0.95 and 0.99. In statistics textbooks, confidence interval formulas are given for arbitraty  probabilities written as $1-\alpha$. We can obtain the $z$ for the equation above using `z = qnorm(1 - alpha / 2)` because $1 - \alpha/2 - \alpha/2 = 1 - \alpha$.
+We can use this approach for any probability, not just 0.95 and 0.99. In statistics textbooks, confidence interval formulas are given for arbitrary  probabilities written as $1-\alpha$. We can obtain the $z$ for the equation above using `z = qnorm(1 - alpha / 2)` because $1 - \alpha/2 - \alpha/2 = 1 - \alpha$.
 So, for example, for $\alpha=0.05$, $1 - \alpha/2 = 0.975$ and we get the $z=1.96$ we used above:
 
 ```{r}
@@ -144,8 +129,8 @@ ggplot(tab, aes(poll, estimate, ymin = low, ymax = high, col = p_inside)) +
   geom_hline(yintercept = p)
 ```
 
-::: {.callout-note}
-When applying the theory we described above, it's important to remember that it's the intervals that are random, not $p$. In the plot above, we can see the random intervals moving around, while the proportion of blue beads in the urn $p$, represented with the vertical line, remains in the same place. So the 95% relates to the probability that the random interval falls on top of $p$. Stating that $p$ has a 95% chance of being between this or that is technically incorrect because $p$ is not random.
+:::{.callout-note}
+When applying the theory we described above, it's important to remember that it's the intervals that are random, not $p$. In the plot above, we can see the random intervals moving around, while the proportion of blue beads in the urn $p$, represented with the vertical line, remains in the same place. So the 95% relates to the probability that the random interval falls on top of $p$. Interpreting a confidence interval as "$p$ has a 95% chance of being between this or that" is technically incorrect because $p$ is a fixed value, not a random variable.
 :::
 
 
@@ -174,7 +159,7 @@ x_hat <- polls$rawpoll_clinton[1]/100
 
 Assume there are only two candidates and construct a 95% confidence interval for the election night proportion $p$.
 
-2\. Now use `dplyr` to add a confidence interval as two columns, call them `lower` and `upper`, to the object `poll`. Then, use `select` to show the `pollster`, `enddate`, `x_hat`,`lower`, `upper` variables. Hint: Define temporary columns `x_hat` and `se_hat`.
+2\. Now use `dplyr` to add a confidence interval as two columns, call them `lower` and `upper`, to the object `polls`. Then, use `select` to show the `pollster`, `enddate`, `x_hat`,`lower`, `upper` variables. Hint: Define temporary columns `x_hat` and `se_hat`.
 
 3\. The final tally for the popular vote was Clinton 48.2% and Trump 46.1%. Add a column, call it `hit`, to the previous table stating if the confidence interval included the true proportion $p=0.482$ or not.
 
@@ -182,7 +167,7 @@ Assume there are only two candidates and construct a 95% confidence interval for
 
 5\. If these confidence intervals are constructed correctly, and the theory holds up, what proportion should include $p$?
 
-6\. A much smaller proportion of the polls than expected produce confidence intervals containing $p$. If you look closely at the table, you will see that most polls that fail to include $p$ are underestimating. The reason for this is undecided voters, individuals polled that do not yet know who they will vote for or do not want to say. Because, historically, undecideds divide evenly between the two main candidates on election day, it is more informative to estimate the spread or the difference between the proportion of two candidates, $\mu$, which in this election was $0. 482 - 0.461 = 0.021$. Assume that there are only two parties and that $\mu = 2p - 1$. Redefine `polls` as below and re-do exercise 1, but for the difference.
+6\. A much smaller proportion of the polls than expected produce confidence intervals containing $p$. If you look closely at the table, you will see that most polls that fail to include $p$ are underestimating. The reason for this is undecided voters, individuals polled that do not yet know who they will vote for or do not want to say. Because, historically, undecideds divide evenly between the two main candidates on election day, it is more informative to estimate the spread or the difference between the proportion of two candidates, $\mu$, which in this election was $0. 482 - 0.461 = 0.021$. Assume that there are only two parties and that $\mu = 2p - 1$. Redefine `polls` as below and re-do exercise 2, but for the difference.
 
 ```{r, message=FALSE, comment=FALSE}
 polls <- polls_us_election_2016 |> 
