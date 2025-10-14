@@ -38,7 +38,6 @@ Note that the Princeton Election Consortium (PEC) gave Trump less than 1% chance
 
 So why did FiveThirtyEight's model fair so much better than others? How could PEC and Huffington Post get it so wrong if they were using the same data? In this chapter, we describe how FiveThirtyEight used a hierarchical model to correctly account for key sources of variability and outperform all other forecasters. For illustrative purposes, we will continue examining our popular vote example. In the final section, we will describe the more complex approach used to forecast the electoral college result.
 
-
 ## Systematic polling error {#sec-general-bias}
 
 In the previous chapter, we computed the posterior probability of Hillary Clinton winning the popular vote with a standard Bayesian analysis and found it to be very close to 100%. However, FiveThirtyEight gave her a 81.4% chance[^models-4]. What explains this difference?
@@ -52,31 +51,31 @@ Although we know this systematic polling error affects our polls, we have no way
 
 ## Mathematical representations of the hierarchical model
 
-Suppose we are collecting data from one pollster and we assume there is no systematic error. The pollster collects several polls with a sample size of $N$, so we observe several measurements of the spread $X_1, \dots, X_J$. Suppose the real proportion for Hillary is $p$ and the spread is $\mu$. The urn model theory tells us that these random variables are approximately normally distributed, with expected value $\mu$ and standard error $2 \sqrt{p(1-p)/N}$:
+Suppose we are collecting data from one pollster and we assume there is no systematic error. The pollster collects several polls with a sample size of $N$, so we observe several measurements of the spread $Y_1, \dots, Y_J$. Suppose the real proportion for Hillary is $p$ and the spread is $\theta$. The urn model theory tells us that these random variables are approximately normally distributed, with expected value $\theta$ and standard error $2 \sqrt{p(1-p)/N}$:
 
 $$
-X_j \sim \mbox{N}\left(\mu, 2\sqrt{p(1-p)/N}\right)
+Y_j \sim \mbox{N}\left(\theta, \, 2\sqrt{p(1-p)/N}\right)
 $$ 
 
-We use the index $j$ to index the different polls conducted by this pollster. Below is a simulation for six polls assuming the spread is 2.1 and $N$ is 2,000:
+We use $j$ as an index to label polls, so that the $j$th poll corresponds to the results reported by the $j$th poll. 
+
+Below is a simulation for six polls assuming the spread is 2.1 and $N$ is 2,000:
 
 
 ```{r}
 set.seed(3)
 J <- 6
 N <- 2000
-mu <- .021
-p <- (mu + 1)/2
-x <- rnorm(J, mu, 2*sqrt(p*(1 - p)/N))
+theta <- .021
+p <- (theta + 1)/2
+y <- rnorm(J, theta, 2*sqrt(p*(1 - p)/N))
 ```
 
 Now, suppose we have $J=6$ polls from each of $I=5$ different pollsters. For simplicity, let's say all polls had the same sample size $N$. The urn model tell us the distribution is the same for all pollsters, so to simulate data, we use the same model for each:
 
 ```{r}
 I <- 5
-J <- 6
-N <- 2000
-x <- sapply(1:I, function(i) rnorm(J, mu, 2*sqrt(p*(1 - p)/N)))
+y <- sapply(1:I, function(i) rnorm(J, theta, 2*sqrt(p*(1 - p)/N)))
 ```
 
 As expected, the simulated data does not really seem to capture the features of the actual data because it does not account for pollster-to-pollster variability: 
@@ -86,14 +85,15 @@ polls <- polls_us_election_2016 |>
   filter(state == "U.S." & enddate >= "2016-11-02" & population == "lv") |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) 
 
-polls |> group_by(pollster) |> 
+tmp <- polls |> group_by(pollster) |> 
   filter(n() >= 5) |> 
   ungroup() |>
   select(pollster, spread) |>
   mutate(type = "Observed data", pollster = as.character(pollster)) |>
-  bind_rows(tibble(spread = as.vector(x) , 
+  bind_rows(tibble(spread = as.vector(y) , 
                       pollster = rep(as.character(1:I), each = J),
-                      type = "Simulated data")) |>
+                      type = "Simulated data")) 
+tmp |>
   mutate(type = factor(type, levels = c("Simulated data", "Observed data"))) |>
   ggplot(aes(pollster, spread)) + 
   geom_point() + 
@@ -101,34 +101,29 @@ polls |> group_by(pollster) |>
   facet_wrap( ~ type, scales = "free_y")
 ```
 
-To fix this, we need to represent the two levels of variability and we need two indexes, one for pollster and one for the polls each pollster takes. We use $X_{ij}$ with $i$ representing the pollster and $j$ representing the $j$th poll from that pollster. The model is now augmented to include pollster effects $h_i$, referred to as _house effects_ by FiveThirtyEight, with standard deviation $\sigma_h$:
+To fix this, we need to represent the two levels of variability and we need two indexes, one for pollster and one for the polls each pollster takes. We use $Y_{ij}$ with $i$ representing the pollster and $j$ representing the $j$th poll from that pollster. The model is now augmented to include pollster effects $h_i$, referred to as _house effects_ by FiveThirtyEight, with standard deviation $\sigma_h$:
 
 $$
 \begin{aligned}
 h_i &\sim \mbox{N}\left(0, \sigma_h\right)\\
-X_{i,j} \mid h_i &\sim \mbox{N}\left(\mu + h_i, 2\sqrt{p(1-p)/N}\right)
+Y_{ij} \mid h_i &\sim \mbox{N}\left(\theta + h_i, \, 2\sqrt{p(1-p)/N}\right)
 \end{aligned}
 $$
 
 To simulate data from a specific pollster, we first need to draw an $h_i$, and then generate individual poll data after adding this effect. In the simulation below we assume $\sigma_h$ is 0.025 and generate the $h$ using `rnorm`:
 
 ```{r}
-I <- 5
-J <- 6
-N <- 2000
-mu <- .021
-p <- (mu + 1)/2
 h <- rnorm(I, 0, 0.025)
-x <- sapply(1:I, function(i) mu + h[i] + rnorm(J, 0, 2*sqrt(p*(1 - p)/N)))
+y <- sapply(1:I, function(i) theta + h[i] + rnorm(J, 0, 2*sqrt(p*(1 - p)/N)))
 ```
 
 The simulated data now looks more like the observed data:
 
 ```{r simulated-pollster-data, fig.height=3.78, fig.width=3, out.width="35%", echo=FALSE}
-data.frame(Spread = as.vector(x) , Pollster = as.factor(rep(1:I, each = J))) |>
+data.frame(Spread = as.vector(y) , Pollster = as.factor(rep(1:I, each = J))) |>
   ggplot(aes(Pollster, Spread)) +
   geom_point() +
-  scale_y_continuous(limits = c(-0.056, 0.092)) +
+  scale_y_continuous(limits = range(tmp$spread)) +
   coord_flip()
 ```
 
@@ -144,14 +139,16 @@ $$
 \begin{aligned}
 b &\sim \mbox{N}\left(0, \sigma_b\right)\\
 h_j \mid \, b &\sim \mbox{N}\left(b, \sigma_h\right)\\
-X_{i,j} | \, h_j, b &\sim \mbox{N}\left(\mu + h_j, 2\sqrt{p(1-p)/N}\right)
+Y_{ij} | \, h_j, b &\sim \mbox{N}\left(\theta + h_j, \, 2\sqrt{p(1-p)/N}\right)
 \end{aligned}
 $$
+This model captures three distinct sources of variability:
 
-This model accounts for three levels of variability: 1) variability in the systematic error observed from election to election, quantified by $\sigma_b$, 2) pollster-to-pollster or house effect variability, quantified by $\sigma_h$, and 3) poll sampling variability, which we can derive to be $2\sqrt{p(1-p)/N}$, with $p = (\mu+1)/2$.
+1. **Systematic error across elections**, represented by the random variable $b$, with variability quantified by $\sigma_b$.
+2. **Pollster-to-pollster variability**, often called the *house effect*, quantified by $\sigma_h$.
+3. **Sampling variability within each poll**, which arises from the random sampling of voters and is given by $2\sqrt{p(1-p)/N}$, where $p = (\theta + 1)/2$.
 
-Not including a term like $b$ in the models is what led many forecasters to be overconfident. This random variable changes from election to election, but for any given election, it is the same for all pollsters and polls within one election: note that $b$ does not have an index. This implies that we can't estimate $\sigma_b$ with data from just one election. It also implies that the random variables $X_{i,j}$ for a fixed election year share the same $b$ and are therefore correlated.
-
+Failing to include a term like $b$, the election-level bias, led many forecasters to be overly confident in their predictions. The key point is that $b$ changes from one election to another but remains constant across all pollsters and polls *within* a single election. Because $b$ has no index, we cannot estimate $\sigma_b$ using data from only one election. Furthermore, this shared $b$ implies that all random variables $Y_{ij}$ within the same election are **correlated**, since they are influenced by the same underlying election-level bias.
 
 ## Computing a posterior probability
 
@@ -166,10 +163,10 @@ one_poll_per_pollster <- polls |> group_by(pollster) |>
 Here, we have just one poll per pollster, so we will drop the $j$ index and represent the data as before with $X_1, \dots, X_I$. As a reminder, we have data from $I=$`r nrow(one_poll_per_pollster)` pollsters. Based on the model assumptions described above, we can mathematically show that the average $\bar{X}$:
 
 ```{r}
-x_bar <- mean(one_poll_per_pollster$spread)
+y_bar <- mean(one_poll_per_pollster$spread)
 ```
 
-has expected value $\mu$; thus, in the long run, it provides an unbiased estimate of the outcome of interest. But how precise is this estimate? Can we use the observed sample standard deviation to construct an estimate of the standard error of $\bar{X}$? 
+has expected value $\theta$; thus, in the long run, it provides an unbiased estimate of the outcome of interest. But how precise is this estimate? Can we use the observed sample standard deviation to construct an estimate of the standard error of $\bar{Y}$? 
 
 It turns out that, because the $X_i$ are correlated, estimating the standard error is more complex than what we have described up to now. Specifically, we can show that the standard error can be estimated with:
 
@@ -179,32 +176,31 @@ s2 <- with(one_poll_per_pollster, sd(spread)^2/length(spread))
 se <- sqrt(s2 + sigma_b^2)
 ```
 
-As mentioned earlier, estimating $\sigma_b$ requires data from past elections. However, collecting this data is a complex process and beyond the scope of this book. To provide a practical example, we set $\sigma_b$ to 2.5%. 
+As mentioned earlier, estimating $\sigma_b$ requires data from past elections. However, collecting this data is a complex process and beyond the scope of this book. To provide a practical example, we set $\sigma_b$ to 3%. 
 
 We can now redo the Bayesian calculation to account for this additional variability. This adjustment yields a result that closely aligns with FiveThirtyEight's estimates:
 
 
 ```{r}
-mu <- 0
+theta_0 <- 0
 tau <- 0.05
 B <- se^2/(se^2 + tau^2)
-posterior_mean <- B*mu + (1 - B)*x_bar
+posterior_mean <- B*theta_0 + (1 - B)*y_bar
 posterior_se <- sqrt(1/(1/se^2 + 1/tau^2))
 1 - pnorm(0, posterior_mean, posterior_se)
 ```
 
 
-
 ## Predicting the electoral college
 
-Up to now, we have focused on the popular vote. However, in the United States, elections are not decided by the popular vote but rather by what is known as the electoral college. Each state gets a number of electoral votes that depends, in a somewhat complex way, on the population size of the state. In 2016 California, the largest state, had 55 electoral votes, while the smallest seven states and the District of Columbia had 3.
+Up to now, we have focused on the popular vote. However, in the United States, elections are not decided by the popular vote but rather by what is known as the _electoral college_. Each state gets a number of electoral votes that depends, in a somewhat complex way, on the population size of the state. In 2016 California, the largest state, had 55 electoral votes, while the smallest seven states and the District of Columbia had 3.
 
-With the exception of Maine and Nebraska, electoral votes in U.S. presidential elections are awarded on a winner-takes-all basis. This means that if a candidate wins the popular vote in a state by even a single vote, they receive all of that state's electoral votes. For example, winning California by just one vote would secure all 55 of its electoral votes.
+With the exception of two states, Maine and Nebraska, electoral votes in U.S. presidential elections are awarded on a winner-takes-all basis. This means that if a candidate wins the popular vote in a state by even a single vote, they receive all of that state's electoral votes. For example, winning California by just one vote would secure all 55 of its electoral votes.
 
-This system can lead to scenarios where a candidate wins the national popular vote but loses the Electoral College, as was the case in 1876, 1888, 2000, and 2016.
+This system can lead to scenarios where a candidate wins the national popular vote but loses the electoral college, as was the case in 1876, 1888, 2000, and 2016.
 
 :::{.callout-note}
-The Electoral College was designed to balance the influence of populous states and protect the interests of smaller ones in presidential elections. As a federation, the U.S. included states wary of losing power to larger states. During the Constitutional Convention of 1787, smaller states negotiated this system to ensure their voices remained significant, receiving electors based on their senators and representatives. This compromise helped secure their place in the union.
+The electoral college was designed to balance the influence of populous states and protect the interests of smaller ones in presidential elections. As a federation, the U.S. included states wary of losing power to larger states. During the Constitutional Convention of 1787, smaller states negotiated this system to ensure their voices remained significant, receiving electors based on their senators and representatives. This compromise helped secure their place in the union.
 :::
 
 We are now ready to predict the electoral college result for 2016. We start by creating a data frame with the electoral votes for each state:
@@ -243,10 +239,10 @@ weights <- data.frame(grade = grades, weight = seq(0.3, 1, length = length(grade
 Higher-graded pollsters are assigned more weight in the model, giving their results greater influence, while lower-graded or less reliable pollsters contribute less. This is achieved mathematically through a weighted average:
 
 $$
-\bar{X}_w = \frac{\sum_{i=1}^N w_i X_i}{\sum_{i=1}^N w_i}
+\bar{Y}_w = \frac{\sum_{i=1}^N w_i Y_i}{\sum_{i=1}^N w_i}
 $$
 
-where $X_i$ represents the result from pollster $i$,  $w_i$ is the weight assigned to pollster $i$,  
+where $Y_i$ represents the result from pollster $i$,  $w_i$ is the weight assigned to pollster $i$,  
 and $N$ is the total number of pollsters.  
 
 To understand this intuitively, think of the weights as fractions of a full data point. For example, if the maximum weight is 1, a pollster with a weight of $0.5$ contributes half as much as a fully trusted pollster, while a weight of $0.25$ can be interpreted as contributing a quarter of a poll.  
@@ -254,17 +250,17 @@ To understand this intuitively, think of the weights as fractions of a full data
 We use a similar equation to estimate the standard deviation:
 
 $$
-s_w = \sqrt{\frac{\sum_{i=1}^N w_i (X_i - \bar{X}_w)}{\frac{N-1}{N}\sum_{i=1}^N w_i}}
+s_w = \sqrt{\frac{\sum_{i=1}^N w_i (Y_i - \bar{Y}_w)}{\frac{N-1}{N}\sum_{i=1}^N w_i}}
 $$
 
-:::{.call-note}
+:::{.callout-note}
 FiveThirtyEight considers various factors when determining the weight of each poll, including the proximity to election day. However, for simplicity, this analysis focuses solely on pollster grades.
 :::
 
 We can use the formula learned in @sec-mean-var-eqs to derive the standard error for our weighted estimate:
 
 $$
-\mbox{SE}(\bar{X}_w) = \frac{\sigma_h}{\sqrt{N_{\mbox{eff}}}} \mbox{ with } N_{\mbox{eff}} = \frac{\left(\sum_{i=1}^N w_i\right)^2}{\sum_{i=1}^n w_i^2}
+\mathrm{SE}(\bar{X}_w) = \frac{\sigma_h}{\sqrt{N_{\mbox{eff}}}} \mbox{ with } N_{\mbox{eff}} = \frac{\left(\sum_{i=1}^N w_i\right)^2}{\sum_{i=1}^N w_i^2}
 $$
 
 Because it occupies the same position in the equation for the sample average, $N_{\mbox{eff}}$ is referred to as the _effective_ sample size. Note that it is equal to $N$ when all the weights are 1 and gets smaller the closer weights get to 0.
@@ -303,8 +299,8 @@ To make probabilistic arguments, we will use a Bayesian model. To do this we nee
 
 ```{r}
 results <- results_us_election_2012 |> 
-  mutate(theta = (obama - romney)/100) |> 
-  select(state, theta) |> 
+  mutate(theta_0 = (obama - romney)/100) |> 
+  select(state, theta_0) |> 
   right_join(results, by = "state")
 ```
 
@@ -319,20 +315,20 @@ With the prior distribution established, we can calculate the posterior distribu
 ```{r}
 results <- results |>
   mutate(B = sd^2/n_eff/((sd^2/n_eff) + tau^2),
-         posterior_mean = if_else(is.na(avg), theta, B*theta + (1 - B)*avg),
+         posterior_mean = if_else(is.na(avg), theta, B*theta_0 + (1 - B)*avg),
          posterior_se = if_else(is.na(avg), tau, sqrt(1/(n_eff/sd^2 + 1/tau^2))))
 ```
 
 
-We then use Monte Carlo to generate 50,000 election day results $\mu$ for each state. For each iteration, we examine $\mu$ for each iteration. If $mu<0$ Trump receives all the electoral votes for that state in that iteration. We assume that the poll results from each state are independent.
+We then use Monte Carlo to generate 50,000 election day results $\theta$ for each state. For each iteration, we examine $\theta$ for each iteration. If $\theta<0$ Trump receives all the electoral votes for that state in that iteration. We assume that the poll results from each state are independent.
 
 ```{r, cache=TRUE}
 set.seed(2024-12-29)
 B <- 50000
 n_states <- nrow(results)
 trump_ev <- replicate(B,{
-  mu <- with(results, rnorm(n_states, posterior_mean, posterior_se))
-  sum(results$electoral_votes[mu < 0])
+  theta <- with(results, rnorm(n_states, posterior_mean, posterior_se))
+  sum(results$electoral_votes[theta < 0])
 })
 mean(trump_ev > 269)
 ```
@@ -354,7 +350,7 @@ mean(trump_ev_2 > 269)
 
 This gives Trump almost a 25% change of winning, which turned out to be a much more sensible estimate, and  closer to the prediction made by FiveThirtyEight of 29%.
 
-Polling faced significant criticism after the 2016 election for "getting it wrong." However, the polling average actually predicted the final result with notable accuracy, as is typically the case.
+Polling faced significant criticism after the 2016 election for "getting it wrong". However, the polling average actually predicted the final result with notable accuracy, as is typically the case.
 
 ```{r poll-accuracy, echo=FALSE}
 state_map <- setNames(c("DC", "ME", "NE"), c("District of Columbia", "Maine","Nebraska"))
@@ -370,10 +366,10 @@ tmp |>
   geom_abline() +
   ggrepel::geom_text_repel(aes(label = abb), size = 2) +
   scale_size_continuous(range = c(0, 3)) +
-  labs(x = "Polling average", y = "Actual result", caption = "Includes states with three or more polls taken during the last week.", color = "Region", title = "Difference between Clinton and Trump", size = "Number of polls")
+  labs(x = "Polling average", y = "Actual result", caption = "Includes states with three or more polls taken during the last week.", title = "Difference between Clinton and Trump", size = "Number of polls")
 ```
 
-In fact, the polling average only got the sign of the difference wrong in five states out of the 50 states:
+In fact, the polling average got the sign of the difference wrong in only five out of the 50 states.
 
 ```{r, echo=TRUE}
 tmp |> filter(sign(spread) != sign(avg)) |>
@@ -382,9 +378,9 @@ tmp |> filter(sign(spread) != sign(avg)) |>
   setNames(c("State", "Polling average", "Actual result"))
 ```
 
-Notice that the errors were all in the same direction, suggesting a systematic polling error. However, the scatter plot reveals several points above the identity line, indicating deviations from the model’s assumption of uniform bias across all states. A closer inspection shows that the bias varies by geographical region, with some areas experiencing stronger effects than others. This pattern is further confirmed by plotting the differences across regions directly:
+Notice that the errors were all in the same direction, suggesting a systematic polling error. However, the scatter plot reveals several points above the identity line, indicating deviations from the assumption of uniform bias across all states. A closer inspection shows that the bias varies by geographical region, with some areas experiencing stronger effects than others. This pattern is further confirmed by plotting the differences across regions directly:
 
-```{r bias-boxplot, echo=FALSE}
+```{r region-bias-boxplot, echo=FALSE}
 regions <- select(results, state) |>
   mutate(abb = state.abb[match(state, state.name)]) |>
   mutate(region = state.division[match(state, state.name)]) |>
@@ -415,11 +411,11 @@ tmp |> left_join(regions, by = "state") |>
 
 Advanced forecasting models, like FiveThirtyEight’s, recognize that systematic polling errors often vary by region. To reflect this in a model, we can group states into regions and introduce a regional error term. Since states within the same region share this error, it creates correlation between their outcomes.  
 
-More sophisticated models also account for variability by using distributions that allow for more extreme events than a normal distribution. For example, a t-distribution with few degrees of freedom can capture these rare but impactful outcomes.  
+More sophisticated models also account for variability by using distributions that allow for more extreme events than a normal distribution. For example, a t-distribution with small number of degrees of freedom can capture these rare but impactful outcomes.  
 
 By incorporating these adjustments—regional errors and heavy-tailed distributions—our model produces a probability for Trump similar to FiveThirtyEight’s reported 29%. Simulations reveal that factoring in regional polling errors and correlations increases the overall variability in the results.
 
-```{r}
+```{r election-forecast-distributions}
 #| cache: true
 #| echo: false
 
@@ -432,9 +428,9 @@ trump_ev_3 <- replicate(B, {
   bias_g <- rnorm(1, 0, sigma_b) 
   bias_r <- data.frame(region = the_regions, error = rt(n_r, 3)*sigma_r)
   bias_r <- left_join(results, bias_r, by = "region") |> pull(error)
-  mu <- with(results, posterior_mean + rt(n_states, 3)*posterior_se)
-  mu <- mu + bias_g + bias_r
-  sum(results$electoral_votes[mu < 0])
+  theta <- with(results, posterior_mean + rt(n_states, 3)*posterior_se)
+  theta <- theta + bias_g + bias_r
+  sum(results$electoral_votes[theta < 0])
 })
 
 tibble(rows = seq_along(trump_ev), Naive = trump_ev, `538` = trump_ev_3) |> 
@@ -447,10 +443,9 @@ tibble(rows = seq_along(trump_ev), Naive = trump_ev, `538` = trump_ev_3) |>
 ```
 
 
-
 ## Forecasting
 
-Forecasters like to make predictions well before the election. The predictions are adapted as new poll results are released. However, an important question forecasters must ask is: How informative are polls taken several weeks before the election about the actual election? Here, we study the variability of poll results across time.
+Forecasters aim to predict election outcomes well before election day, updating their projections as new polls are released. However, a key question remains: How informative are polls conducted weeks before the election about the final outcome? To address this, we examine how poll results vary over time and how this variability affects forecasting accuracy.
 
 To make sure the variability we observe is not due to pollster effects, let's study data from one pollster:
 
@@ -499,29 +494,29 @@ polls_us_election_2016 |>
 
 This implies that if we are going to forecast, our model must include a term to accounts for the time effect. The standard deviation of this effect would depend on time since the closer we get to election day, the closer to 0 this term should be.
 
-Pollsters also try to estimate trends from these data and incorporate them into their predictions. We can model the time trend $b_t$ with a smooth function. There is a variety of methods for estimating trends which we discuss in the section on Machine Learning.
+Pollsters also try to estimate trends from these data and incorporate them into their predictions. We can model the time trend  with a smooth function. There is a variety of methods for estimating trends which we discuss in the section on Machine Learning.
 
-<!--
-We usually see the trend estimate not for the difference, but for the actual percentages for each candidate like this:
 
-```{r trend-estimate-for-all-pollsters, warning=FALSE, message=FALSE, echo=FALSE}
-polls_us_election_2016 |>
-  filter(state == "U.S." & enddate >= "2016-07-01") |>
-  select(enddate, pollster, rawpoll_clinton, rawpoll_trump) |>
-  rename(Clinton = rawpoll_clinton, Trump = rawpoll_trump) |>
-  gather(candidate, percentage, -enddate, -pollster) |> 
-  mutate(candidate = factor(candidate, levels = c("Trump", "Clinton"))) |>
-  group_by(pollster) |>
-  filter(n() >= 10) |>
-  ungroup() |>
-  ggplot(aes(enddate, percentage, color = candidate)) +  
-  geom_point(show.legend = FALSE, alpha = 0.4)  + 
-  geom_smooth(method = "loess", span = 0.15) +
-  scale_y_continuous(limits = c(30,50))
-```
+## Recommended reading
 
-Once a model like the one above is selected, we can use historical and present data to estimate all the necessary parameters to make predictions. 
--->
+- **Nate Silver (2016).** *How FiveThirtyEight’s Election Forecast Works.*  
+  FiveThirtyEight’s official explanation of the 2016 model, including poll weighting, correlated errors, and simulation methodology.  
+  [https://fivethirtyeight.com/features/how-fivethirtyeights-election-forecast-works/](https://fivethirtyeight.com/features/how-fivethirtyeights-election-forecast-works/)
+
+- **FiveThirtyEight (2020).** *How Our Presidential Forecast Works (2020 Edition).*  
+  Details updates to the 2020 model, including adjustments for state and national polling correlation, house effects, and uncertainty in turnout and the Electoral College.  
+  [https://fivethirtyeight.com/features/how-our-presidential-forecast-works/](https://fivethirtyeight.com/features/how-our-presidential-forecast-works/)
+
+- **Elliott Morris (2020).** *How to Build an Election Forecast Model.*  
+  A comparative explanation of different forecasting approaches, including FiveThirtyEight’s, written for *The Economist* readers.  
+  [https://projects.economist.com/us-2020-forecast/methodology](https://projects.economist.com/us-2020-forecast/methodology)
+
+- **Andrew Gelman (2020).** *Election Forecasting: Why We’re Not as Sure as We Think.*  
+  A statistical perspective on model uncertainty, correlated polling errors, and the interpretation of forecast probabilities.  
+  [https://statmodeling.stat.columbia.edu/2020/11/02/election-forecasting-why-were-not-as-sure-as-we-think/](https://statmodeling.stat.columbia.edu/2020/11/02/election-forecasting-why-were-not-as-sure-as-we-think/)
+
+Together, these readings provide both a practical and theoretical understanding of how modern election forecasting models, such as FiveThirtyEight’s, combine polling data, uncertainty modeling, and simulation to produce probabilistic predictions.
+
 
 ## Exercises
 
@@ -585,17 +580,17 @@ filter(Batting, yearID %in% 2010:2012) |>
 
 
 13\. So is José lucky or is he the best batter seen in the last 50 years? Perhaps it's a combination of both luck and talent. But how much of each? If we become convinced that he is lucky, we should trade him to a team that trusts the .450 observation and is maybe overestimating his potential. 
-The hierarchical model provides a mathematical description of how we came to see the observation of .450. First, we pick a player at random with an intrinsic ability summarized by, for example, $\mu$. Then, we see 20 random outcomes with success probability $\mu$. What model would you use for the first level of your hierarchical model?
+The hierarchical model provides a mathematical description of how we came to see the observation of .450. First, we pick a player at random with an intrinsic ability summarized by, for example, $\theta$. Then, we see 20 random outcomes with success probability $\theta$. What model would you use for the first level of your hierarchical model?
 
 14\. Describe the second level of the hierarchical model.
 
-15\. Apply the hierarchical model to José's data. Suppose we want to predict his innate ability in the form of his *true* batting average $\mu$. Write down the distributions of the hierarchical model.
+15\. Apply the hierarchical model to José's data. Suppose we want to predict his innate ability in the form of his *true* batting average $\theta$. Write down the distributions of the hierarchical model.
 
 
-16\. We now are ready to compute a the distribution of $\mu$ conditioned on the observed data $\bar{X}$. Compute the expected value of $\mu$ given the current average $\bar{X}$, and provide an intuitive explanation for the mathematical formula.
+16\. We now are ready to compute a the distribution of $\theta$ conditioned on the observed data $\bar{Y}$. Compute the expected value of $\theta$ given the current average $\bar{Y}$, and provide an intuitive explanation for the mathematical formula.
 
 
-17\. We started with a frequentist 95% confidence interval that ignored data from other players and summarized just José's data: .450 $\pm$ 0.220. Construct a credible interval for $\mu$ based on the hierarchical model.
+17\. We started with a frequentist 95% confidence interval that ignored data from other players and summarized just José's data: .450 $\pm$ 0.220. Construct a credible interval for $\theta$ based on the hierarchical model.
 
 18\. The credible interval suggests that if another team is impressed by the .450 observation, we should consider trading José, as we are predicting he will be just slightly above average. Interestingly, the Red Sox traded José to the Detroit Tigers in July. Here are José Iglesias' batting averages for the next five months:
 

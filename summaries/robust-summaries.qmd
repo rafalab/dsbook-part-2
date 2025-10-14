@@ -21,10 +21,15 @@ Our colleague uses the fact that heights are usually well approximated by a norm
 
 ```{r}
 mean(outlier_example)
+```
+
+Our colleage writes a report on the interesting fact that this group of males is much taller than usual. The average height is over six feet tall! However, using your data analysis skills you notice something else that is unexpected: the standard deviation is over 7 feet. 
+
+```{r}
 sd(outlier_example)
 ```
 
-Our colleage writes a report on the interesting fact that this group of males is much taller than usual. The average height is over six feet tall! However, using your data analysis skills you notice something else that is unexpected: the standard deviation is over 7 feet. Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r mean(outlier_example) + c(-2, 2)*sd(outlier_example)` feet, which does not make sense. A quick plot reveals the problem:
+Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r signif(mean(outlier_example) + c(-2, 2)*sd(outlier_example), 3)` feet, which does not make sense. A quick plot reveals the problem:
 
 ```{r, eval=FALSE}
 boxplot(outlier_example)
@@ -81,7 +86,7 @@ Using the `pnorm` function, we see that `r round(pnorm(r[2]) - pnorm(r[1]),3)*10
 
 Keep in mind that this is not such an extreme event: if we have 1,000 data points that are normally distributed, we expect to see about 7 outside of this range. But these would not be outliers since we expect to see them under the typical variation.
 
-If we want an outlier to be rarer, we can increase the 1.5 to a larger number. Tukey also used 3 and called these *far out* outliers. With a normal distribution, `r r <- c(q1 - 3*iqr , q3 + 3*iqr); round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of the data falls in this interval. This translates into about 2 in a million chance of being outside the range. In the `geom_boxplot` function, this can be controlled by the `outlier.size` argument, which defaults to 1.5.
+If we want an outlier to be rarer, we can increase the 1.5 to a larger number. Tukey also used 3 and called these *far out* outliers. With a normal distribution, `r r <- c(q1 - 3*iqr , q3 + 3*iqr); round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of the data falls in this interval. This translates into about 2 in a million chance of being outside the range. In the `geom_boxplot` function, this can be controlled by the `coef` argument, which defaults to 1.5.
 
 The 180 inches measurement is well beyond the range of the height data:
 
@@ -114,6 +119,20 @@ mad(outlier_example)
 ```
 
 which is about `r round(mad(outlier_example)*12)` inches.
+
+## Recommended reading
+
+* **Hoaglin, D. C., Mosteller, F., & Tukey, J. W. (1983). *Understanding Robust and Exploratory Data Analysis*. Wiley.**
+  A classic edited volume aimed at explaining robust methods in an accessible style; many chapters are practical and easy to dip into.
+
+
+* **Wilcox, R. R. (2017). *Introduction to Robust Estimation and Hypothesis Testing* (4th ed.). Academic Press.**
+  A practical, applied text with many worked examples. It starts gently, with chapters on medians, trimmed means, MAD, and robust alternatives to SD.
+
+* **Huber, P. J., & Ronchetti, E. M. (2009). *Robust Statistics* (2nd ed.). Wiley.**
+  More advanced, but the opening chapters give a rigorous yet readable account of why robustness matters. Useful for readers that want to go a bit deeper.
+
+
 
 ## Exercises
 
@@ -169,7 +188,7 @@ reported_heights <- reported_heights |>
 
 we get a warnings about NAs. Examine the rows that result in NAs and describe why this is happening.
 
-12\. Add a column to the `reported_heights` with the year the height was entered. You can use the `year` function in the __lubridate__ package to extract the year from `reported_heights$time_stamp)`. Change the `height` column from characters to numbers using `as.numeric`. Some of the heights will be converted to `NA` because they were incorrectly entered and include characters, for example `165cm`. These heights were supposed to be reported in inches, but many clearly did not. Convert any entry with highly unlikely heights, below 54 or above 72, to `NA` using the `na_if` function from __dplyr__. Once you do this, stratify by sex and year and report the percentage of incorrectly entered heights, represented by the `NA`.
+12\. Add a column to the `reported_heights` with the year the height was entered. You can use the `year` function in the __lubridate__ package to extract the year from `reported_heights$time_stamp`. Change the `height` column from characters to numbers using `as.numeric`. Some of the heights will be converted to `NA` because they were incorrectly entered and include characters, for example `165cm`. These heights were supposed to be reported in inches, but many clearly did not. Convert any entry with highly unlikely heights, below 54 or above 72, to `NA` using the `na_if` function from __dplyr__. Once you do this, stratify by sex and year and report the percentage of incorrectly entered heights, represented by the `NA`.
 
 13\. Remove the entries that result in NAs when attempting to convert heights to numbers. Compute the mean, standard deviation, median, and MAD by sex. What do you notice?
 

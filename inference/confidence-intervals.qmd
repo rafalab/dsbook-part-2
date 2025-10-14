@@ -2,15 +2,21 @@
 
 Confidence intervals are a very useful concept widely employed by data analysts. 
 
-In our earlier competition, you were asked to give an interval. If the interval you submitted includes the $p$, you receive half the money you spent on your "poll" back and proceed to the next stage of the competition. One way to pass to the second round is to report a very large interval. For example, the interval $[0,1]$ is guaranteed to include $p$. However, with an interval this big, we have no chance of winning the competition. Similarly, if you are an election forecaster and predict the spread will be between -100% and 100%, you will be ridiculed for stating the obvious. Even a smaller interval, such as saying the spread will be between -10 and 10%, will not be considered serious.
+In the competition described in @sec-poll-sampling-models, you were asked to give an interval. If the interval you submitted includes the $p$, you receive half the money you spent on your poll back and proceed to the next stage of the competition. One way to pass to the second round is to report a very large interval. For example, the interval $[0,1]$ is guaranteed to include $p$. However, with an interval this big, we have no chance of winning the competition. Similarly, if you are an election forecaster and predict the spread will be between -100% and 100%, you will be ridiculed for stating the obvious. Even a smaller interval, such as saying the spread will be between -10 and 10%, will not be considered serious.
 
 On the other hand, the smaller the interval we report, the smaller our chances are of winning the prize. Likewise, a bold pollster that reports very small intervals and misses the mark most of the time will not be considered a good pollster. We want to be somewhere in between.
 
 We can use the statistical theory we have learned to compute the probability of any given interval including $p$. If we are asked to create an interval with, say, a 95% chance of including $p$, we can do that as well; these are called 95% confidence intervals.
 
-When a pollster reports an estimate and a margin of error, they are, in a way, reporting a 95% confidence interval. Let's now see how this works mathematically.
+When a pollster reports an estimate and a margin of error, they are, indirectly, reporting a 95% confidence interval. Let's now see how this works mathematically.
 
-We want to know the probability that the interval $[\bar{X} - 2\hat{\mbox{SE}}(\bar{X}), \bar{X} + 2\hat{\mbox{SE}}(\bar{X})]$ contains the true proportion $p$. First, consider that the start and end of these intervals are random variables: every time we take a sample, they change. To illustrate this, we use the same parameters as an earlier Monte Carlo simulation:
+## Constructing confidence intervals
+
+In @sec-moe, we used the Central Limit Theorem (CLT) to derive the margin of error and showed that the interval  
+$[\bar{X} - 1.96\,\hat{\mathrm{SE}}(\bar{X}), \bar{X} + 1.96\,\hat{\mathrm{SE}}(\bar{X})]$  
+has a 95% probability of containing the true proportion $p$. This type of interval is known as a *95% confidence interval*. We now take a closer look at what this statement really means.
+
+It is important to remember that the endpoints of this interval are not fixed numbers, they are random variables that depend on the sample we happen to draw. Each time we collect a new sample, we obtain a different $\bar{X}$ and therefore a different interval. To illustrate this, we can repeat our sampling process many times using the same parameters as in an earlier Monte Carlo simulation:
 
 
 ```{r}
@@ -36,19 +42,19 @@ Keep sampling and creating intervals, and you will see the random variation.
 To determine the probability that the interval includes $p$, we need to compute the following: 
 
 $$
-\mbox{Pr}\left(\bar{X} - 1.96\,\hat{\mbox{SE}}(\bar{X}) \leq p \leq \bar{X} + 1.96\,\hat{\mbox{SE}}(\bar{X})\right)
+\mathrm{Pr}\left(\bar{X} - 1.96\,\hat{\mathrm{SE}}(\bar{X}) \leq p \leq \bar{X} + 1.96\,\hat{\mathrm{SE}}(\bar{X})\right)
 $$
 
 By subtracting and dividing the same quantities in all parts of the equation, we find that the above is equivalent to:
 
 $$
-\mbox{Pr}\left(-1.96 \leq \frac{\bar{X}- p}{\hat{\mbox{SE}}(\bar{X})} \leq  1.96\right)
+\mathrm{Pr}\left(-1.96 \leq \frac{\bar{X}- p}{\hat{\mathrm{SE}}(\bar{X})} \leq  1.96\right)
 $$
 
 The term in the middle is an approximately normal random variable with expected value 0 and standard error 1, which we have been denoting with $Z$, so we have:
 
 $$
-\mbox{Pr}\left(-1.96 \leq Z \leq  1.96\right)
+\mathrm{Pr}\left(-1.96 \leq Z \leq  1.96\right)
 $$
 
 which we can quickly compute using :
@@ -62,7 +68,7 @@ proving that we have a 95% probability.
 If we want to have a larger probability, say 99%, we need to multiply by whatever `z` satisfies the following:
 
 $$
-\mbox{Pr}\left(-z \leq Z \leq  z\right) = 0.99
+\mathrm{Pr}\left(-z \leq Z \leq  z\right) = 0.99
 $$
 
 Using:
@@ -102,7 +108,7 @@ inside <- replicate(B, {
   x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
   x_hat <- mean(x)
   se_hat <- sqrt(x_hat*(1 - x_hat)/N)
-  between(p, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
+  p >= x_hat - 1.96*se_hat & p <= x_hat + 1.96*se_hat
 })
 mean(inside)
 ```
@@ -110,18 +116,19 @@ mean(inside)
 The following plot shows the first 100 confidence intervals. In this case, we created the simulation so the black line denotes the parameter we are trying to estimate:
 
 ```{r confidence-interval-coverage, message=FALSE, echo=FALSE, fig.height=6}
+library(ggplot2)
 set.seed(1)
 tab <- replicate(100, {
   x <- sample(c(0,1), size = N, replace = TRUE, prob = c(1 - p, p))
   x_hat <- mean(x)
   se_hat <- sqrt(x_hat*(1 - x_hat)/N)
-  hit <- between(p, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat)
+  hit <-  p >= x_hat - 1.96*se_hat & p <= x_hat + 1.96*se_hat
   c(x_hat, x_hat - 1.96*se_hat, x_hat + 1.96*se_hat, hit)
 })
 
 tab <- data.frame(poll = 1:ncol(tab), t(tab))
 names(tab) <- c("poll", "estimate", "low", "high", "hit")
-tab <- mutate(tab, p_inside = ifelse(hit, "Yes", "No"))
+tab$p_inside <- ifelse(tab$hit, "Yes", "No")
 ggplot(tab, aes(poll, estimate, ymin = low, ymax = high, col = p_inside)) + 
   geom_point() +
   geom_errorbar() + 
@@ -167,19 +174,19 @@ Assume there are only two candidates and construct a 95% confidence interval for
 
 5\. If these confidence intervals are constructed correctly, and the theory holds up, what proportion should include $p$?
 
-6\. A much smaller proportion of the polls than expected produce confidence intervals containing $p$. If you look closely at the table, you will see that most polls that fail to include $p$ are underestimating. The reason for this is undecided voters, individuals polled that do not yet know who they will vote for or do not want to say. Because, historically, undecideds divide evenly between the two main candidates on election day, it is more informative to estimate the spread or the difference between the proportion of two candidates, $\mu$, which in this election was $0. 482 - 0.461 = 0.021$. Assume that there are only two parties and that $\mu = 2p - 1$. Redefine `polls` as below and re-do exercise 2, but for the difference.
+6\. A much smaller proportion of the polls than expected produce confidence intervals containing $p$. If you look closely at the table, you will see that most polls that fail to include $p$ are underestimating. The reason for this is undecided voters, individuals polled that do not yet know who they will vote for or do not want to say. Because, historically, undecideds divide evenly between the two main candidates on election day, it is more informative to estimate the spread or the difference between the proportion of two candidates, $\mu$, which in this election was $0. 482 - 0.461 = 0.021$. Assume that there are only two parties and that $\theta = 2p - 1$. Redefine `polls` as below and re-do exercise 2, but for the difference.
 
 ```{r, message=FALSE, comment=FALSE}
 polls <- polls_us_election_2016 |> 
   filter(enddate >= "2016-10-31" & state == "U.S.")  |>
-  mutate(mu_hat = rawpoll_clinton/100 - rawpoll_trump/100)
+  mutate(theta_hat = rawpoll_clinton/100 - rawpoll_trump/100)
 ```
 
 7\. Now repeat exercise 3, but for the difference.
 
 8\. Now repeat exercise 4, but for the difference.
 
-9\. Although the proportion of confidence intervals increases substantially, it is still lower than 0.95. In the next chapter, we learn the reason for this. To motivate this, make a plot of the error, the difference between each poll's estimate and the actual $mu=0.021$. Stratify by pollster.
+9\. Although the proportion of confidence intervals increases substantially, it is still lower than 0.95. In the next chapter, we learn the reason for this. To motivate this, make a plot of the error, the difference between each poll's estimate and the actual $\theta=0.021$. Stratify by pollster.
 
 10\. Redo the plot that you made for exercise 9, but only for pollsters that took five or more polls.
 

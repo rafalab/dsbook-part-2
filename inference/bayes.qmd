@@ -80,7 +80,7 @@ tmp_2 |>
   
 ```
 
-But what does this mean in the context of the theory we have previously covered, in which these percentages are considered fixed? Furthermore, election forecasters make probabilistic statements such "Obama has a 90% chance of winning the election." Note that in the context of an urn model, this would be equivalent to stating that the probability $p>0.5$ is 90%. However, in the urn model $p$ is a fixed parameter and it does not make sense to talk about probability. With Bayesian statistics, we assume $p$ is a random variable, and thus, a statement such as "90% chance of winning" is consistent with the mathematical approach. Forecasters also use models to describe variability at different levels. For example, sampling variability, pollster to pollster variability, day to day variability, and election to election variability. One of the most successful approaches used for this are hierarchical models, which can be explained in the context of Bayesian statistics.
+But what does this mean in the context of the theory we have previously covered, in which these percentages are considered fixed? Furthermore, election forecasters make probabilistic statements such "Obama has a 90% chance of winning the election." Note that in the context of an urn model, this would be equivalent to stating that the probability of $p>0.5$ is 90%. However, in the urn model $p$ is a fixed parameter and it does not make sense to talk about probability. With Bayesian statistics, we assume $p$ is a random variable, and thus, a statement such as "90% chance of winning" is consistent with the mathematical approach. Forecasters also use models to describe variability at different levels. For example, sampling variability, pollster to pollster variability, day to day variability, and election to election variability. One of the most successful approaches used for this are hierarchical models, which can be explained in the context of Bayesian statistics.
 
 ::: {.callout-note}
 The approach described in the previous chapters, where parameters are treated as fixed, is known as the _frequentist approach_. The term frequentist comes from the idea that probability is interpreted as the long-run _frequency_ of events. Parameters are considered fixed and unknown, while data is seen as random. Frequentist methods rely on how often an outcome would occur if an experiment were repeated many times, focusing on the frequency of observed results rather than assigning probabilities to the parameters themselves.
@@ -88,39 +88,37 @@ The approach described in the previous chapters, where parameters are treated as
 
 In this chapter, we will briefly describe Bayesian statistics. We use three cases studies: 1) interpreting diagnostic tests for a rare disease, and 2) estimating the probability of Hillary Clinton winning in 2016 using pre-election poll data. For an in-depth treatment of this topic, we recommend one of the following textbooks:
 
--   Berger JO (1985). Statistical Decision Theory and Bayesian Analysis, 2nd edition. Springer-Verlag.
-
--   Lee PM (1989). Bayesian Statistics: An Introduction. Oxford.
-
 ## Bayes theorem
 
-We start by describing Bayes theorem, using a hypothetical cystic fibrosis test as an example. Suppose a test for cystic fibrosis has an accuracy of 99%. We will use the following notation:
+We start by describing Bayes theorem, using a hypothetical cystic fibrosis test as an example. 
+
+Suppose a test for cystic fibrosis has an accuracy of 99%. We will use the following notation:
 
 $$
-\mbox{Pr}(+ \mid D=1)=0.99, \mbox{Pr}(- \mid D=0)=0.99 
+\mathrm{Pr}(+ \mid D=1)=0.99, \mathrm{Pr}(- \mid D=0)=0.99 
 $$
 
 with $+$ meaning a positive test and $D$ representing if you actually have the disease (1) or not (0).
 
-Imagine we select a random person and they test positive. What is the probability that they have the disease? We write this as $\mbox{Pr}(D=1 \mid +)?$ The cystic fibrosis rate is 1 in 3,900, which implies that $\mbox{Pr}(D=1)=0.00025$. To answer this question, we will use Bayes theorem, which tells us that:
+Imagine we select a random person and they test positive. What is the probability that they have the disease? We write this as $\mathrm{Pr}(D=1 \mid +)?$ The cystic fibrosis rate is 1 in 3,900, which implies that $\mathrm{Pr}(D=1)=0.00025$. To answer this question, we will use Bayes theorem, which tells us that:
 
 $$
-\mbox{Pr}(A \mid B)  =  \frac{\mbox{Pr}(B \mid A)\mbox{Pr}(A)}{\mbox{Pr}(B)} 
+\mathrm{Pr}(A \mid B)  =  \frac{\mathrm{Pr}(B \mid A)\mathrm{Pr}(A)}{\mathrm{Pr}(B)} 
 $$
 
 This equation, when applied to our problem, becomes:
 
 $$
 \begin{aligned}
-\mbox{Pr}(D=1 \mid +) & =  \frac{ \mbox{Pr}(+ \mid D=1) \, \mbox{Pr}(D=1)} {\mbox{Pr}(+)} \\
-& =  \frac{\mbox{Pr}(+ \mid D=1) \, \mbox{Pr}(D=1)} {\mbox{Pr}(+ \mid D=1) \, \mbox{Pr}(D=1) + \mbox{Pr}(+ \mid D=0) \mbox{Pr}( D=0)} 
+\mathrm{Pr}(D=1 \mid +) & =  \frac{ \mathrm{Pr}(+ \mid D=1) \, \mathrm{Pr}(D=1)} {\mathrm{Pr}(+)} \\
+& =  \frac{\mathrm{Pr}(+ \mid D=1) \, \mathrm{Pr}(D=1)} {\mathrm{Pr}(+ \mid D=1) \, \mathrm{Pr}(D=1) + \mathrm{Pr}(+ \mid D=0) \mathrm{Pr}( D=0)} 
 \end{aligned}
 $$
 
 Plugging in the numbers, we get:
 
 $$
-\frac{0.99 \cdot 0.00025}{0.99 \cdot 0.00025 + 0.01 \cdot (.99975)}  \approx  0.02 
+\mathrm{Pr}(D=1 \mid +)  = \frac{0.99 \cdot 0.00025}{0.99 \cdot 0.00025 + 0.01 \cdot (.99975)}  \approx  0.02 
 $$
 
 According to the above, despite the test having 0.99 accuracy, the probability of having the disease given a positive test is only 0.02. This might seem counter-intuitive to some, but it is because we must factor in the very rare probability that a randomly chosen person has the disease. To illustrate this, we run a Monte Carlo simulation.
@@ -141,9 +139,8 @@ Note that, as expected, there are very few people with the disease and many peop
 
 ```{r}
 N_1 <- sum(D == 1)
-N_1
 N_0 <- sum(D == 0)
-N_0
+cat(N_1, "with disease, and", N_0, "without.")
 ```
 
 This makes it more probable that we will see some false positives given that the test is not perfect. Now, each person gets the test, which is correct 99% of the time:
@@ -155,8 +152,7 @@ test[D == 1]  <- sample(c("+", "-"), N_1, replace = TRUE, prob = c(acc, 1 - acc)
 test[D == 0]  <- sample(c("-", "+"), N_0, replace = TRUE, prob = c(acc, 1 - acc))
 ```
 
-Since the number of healthy individuals is much larger than the number of individuals with the disease, even a low false positive rate results in more healthy individualstesting positive than actual cases.
-
+Since the number of healthy individuals is much larger than the number of individuals with the disease, even a low false positive rate results in more healthy individuals testing positive than actual cases.
 
 ```{r}
 table(D, test)
@@ -166,53 +162,57 @@ From this table, we see that the proportion of positive tests that have the dise
 
 ## Priors, posteriors and and credible intervals 
 
-In the previous chapter, we computed an estimate and margin of error for the difference in popular votes between Hillary Clinton and Donald Trump. We denoted the parameter, the difference in popular votes, with $\mu$. The estimate was between 2 and 3 percent, and the confidence interval did not include 0. A forecaster would use this to predict Hillary Clinton would win the popular vote. But to make a probabilistic statement about winning the election, we need to use a Bayesian approach.
+In the previous chapter, we computed an estimate and margin of error for the difference in popular votes between Hillary Clinton and Donald Trump. We denoted the parameter, the difference in popular votes, with $\theta$. The estimate was between 2 and 3 percent, and the confidence interval did not include 0. A forecaster would use this to predict Hillary Clinton would win the popular vote. But to make a probabilistic statement about winning the election, we need to use a Bayesian approach.
 
 We start the Bayesian approach by quantifying our knowledge _before_ seeing any data. This is done using a probability distribution referred to as a _prior_. For our example, we could write:
 
 
 $$
-\mu \sim N(\theta, \tau)
+\theta \sim N(\theta_0, \tau)
 $$
 
-We can think of $\theta$ as our best guess for the popular vote difference had we not seen any polling data, and we can think of $\tau$ as quantifying how certain we feel about this guess. Generally, if we have _expert knowledge_ related to $\mu$, we can try to quantify it with the prior distribution. In the case of election polls, experts use _fundamentals_, which include, for example, the state of the economy, to develop prior distributions.
+We can think of $\theta_0$ as our best guess for the popular vote difference had we not seen any polling data, and we can think of $\tau$ as quantifying how certain we feel about this guess. Generally, if we have _expert knowledge_ related to $\theta$, we can try to quantify it with the prior distribution. In the case of election polls, experts use _fundamentals_, which include, for example, the state of the economy, to develop prior distributions.
 
-The data is used to update our initial guess or _prior belief_. This can be done mathematically if we define the distribution for the observed data for any given $\mu$. In our particular example, we would write down a model for the average of our polls. If we fixed $\mu$, this model is the same we used in the previous chapter:
-
-
-$$
-\bar{X} \mid \mu \sim N(\mu, \sigma/\sqrt{N})
-$$
-
-As before, $\sigma$ describes randomness due to sampling and the pollster effects. In the Bayesian contexts, this is referred to as the sampling distribution. Note that we write the conditional $\bar{X} \mid \mu$ because $\mu$ is now considered a random variable. 
-
-We do not show the derivations here, but we can now use calculus and a version of Bayes' Theorem to derive the conditional distribution of $\mu$ given the observed data, referred to as the posterior distribution. Specifically, we can show that $\mu \mid \bar{X}$ follows a normal distribution with expected value:
+The data is used to update our initial guess or _prior belief_. This can be done mathematically if we define the distribution for the observed data for any given $\theta$. In our particular example, we would write down a model for the average of our polls. If we fixed $\theta$, this model is the same we used in the previous chapter:
 
 
 $$
-\mbox{E}(\mu \mid \bar{X}) = B \theta + (1-B) \bar{X} \mbox{ with } B = \frac{\sigma^2/N}{\sigma^2/N+\tau^2}
+\bar{Y} \mid \theta \sim N(\theta, \sigma/\sqrt{N})
+$$
+
+As before, $\sigma$ describes randomness due to sampling and the pollster effects. In the Bayesian contexts, this is referred to as the sampling distribution. Note that we write the conditional $\bar{Y} \mid \theta$ because $\theta$ is now considered a random variable. 
+
+We do not show the derivations here, but we can now use calculus and a version of Bayes' Theorem to derive the conditional distribution of $\theta$ given the observed data, referred to as the posterior distribution. Specifically, we can show that $\theta \mid \bar{Y}$ follows a normal distribution with expected value:
+
+
+$$
+\mathrm{E}[\theta \mid \bar{Y}] = B \theta_0 + (1-B) \,\bar{Y} \mbox{ with } B = \frac{\sigma^2/N}{\sigma^2/N+\tau^2}
 $$
 
 and standard error :
 
 $$
-\mbox{SE}(\mu \mid \bar{X}) = \sqrt{\frac{1}{N/\sigma^2+1/\tau^2}}.
+\mathrm{SE}[\mu \mid \bar{X}] = \sqrt{\frac{1}{N/\sigma^2+1/\tau^2}}.
 $$ 
   
 
-Note that the expected value is a weighted average of our prior guess $\theta$ and the observed data $\bar{X}$. The weight depends on how certain we are about our prior belief, quantified by $\tau^2$, and the precision  $\sigma^2/N$ of the summary of our observed data. 
+Note that the expected value is a weighted average of our prior guess $\theta_0$ and the observed data $\bar{Y}$. The weight depends on how certain we are about our prior belief, quantified by $\tau^2$, and the variance $\sigma^2/N$ of the summary of our observed data. 
 
 This weighted average is sometimes referred to as *shrinking* because it *shrinks* estimates towards a prior value.  To see this note that we can rewrite the weighted average as:
 
 $$
-B \theta + (1-B) \bar{X}= \theta + (1-B)(\bar{X}-\theta)\\
+B \theta_0 + (1-B) \bar{Y}= \theta_0 + (1-B)(\bar{Y}-\theta_0)\\
 $$
-The closer $B$ is to 1, the more we _shrink_ our estimate toward $\theta$.
+The closer $B$ is to 1, the more we _shrink_ our estimate toward $\theta_0$.
 
-These formulas are useful way quantifying how we _updating our beliefs_. We can also report intervals with high probability of ocurring given our model. Specifically, we use the posterior distribution to construct intervals centered at our estimate and with $\alpha$ chance of occurring. These are called _credible intervals_. For exampple, to compute a posterior distribution and construct a credible interval for the popular vote, we define a prior distribution with mean 0% and standard error 5%, which can be interpreted as follows: before seeing polling data, we don't think any candidate has the advantage, and a difference of up to 10% either way is possible.
+These formulas are useful way quantifying how we _update our beliefs_. 
+
+We can also report intervals with high probability of occurring given our model. Specifically, for any probability value $\alpha$ we can use the posterior distribution to construct intervals centered at our estimate and with $\alpha$ chance of occurring. These are called _credible intervals_. 
+
+As an example, we compute a posterior distribution and construct a credible interval for the popular vote, after defining a prior distribution with mean 0% and standard error 5%. This prior distribution can be interpreted as follows: before seeing polling data, we don't think any candidate has the advantage, and a difference of up to 10% either way is possible.
 
 ```{r}
-theta <- 0
+theta_0 <- 0
 tau <- 0.05
 ```
 
@@ -220,14 +220,14 @@ We can then compute the posterior distribution by applying the equations above t
 
 ```{r}
 res <- one_poll_per_pollster |> 
-  summarise(x_bar = mean(spread), sigma = sd(spread), n = n())
+  summarise(y_bar = mean(spread), sigma = sd(spread), n = n())
 B <- with(res, sigma^2/n / (sigma^2/n + tau^2))
-posterior_mean <- B*theta + (1 - B)*res$x_bar
+posterior_mean <- B*theta_0 + (1 - B)*res$y_bar
 posterior_se <- with(res, sqrt(1/(n/sigma^2 + 1/tau^2)))
 posterior_mean + c(-1, 1)*qnorm(0.975)*posterior_se
 ```
 
-Furthermore, we can now make the probabilistic statement that we could not make with the frequentists approach. Specifically, $\mbox{Pr}(\mu>0 \mid \bar{X})$ can be computed as follows:
+Furthermore, we can now make the probabilistic statement that we could not make with the frequentists approach. Specifically, $\mathrm{Pr}(\mu>0 \mid \bar{X})$ can be computed as follows:
 
 ```{r}
 #| echo: false
@@ -246,7 +246,19 @@ options(digits = 8)
 options(digits = od)
 ```
 
-According to the above, we are almost 100% sure Clinton will win the popular vote, which seems too overconfident. Additionally, it is not in agreement with FiveThirtyEight's 81.4%. What explains this difference? There is a level of uncertainty that we are not yet describing, and we will return to that in @sec-election-forecasting. 
+According to the calculation above, we would be almost 100% certain that Clinton will win the popular vote, an estimate that feels overly confident. Moreover, it does not align with FiveThirtyEight’s reported probability of 81.4%. What accounts for this difference? Our current model does not yet capture all sources of uncertainty. We will revisit this issue and address the missing variability in @sec-election-forecasting.
+
+## Recommended reading
+
+
+- **Bolstad, W. M. (2013). *Introduction to Bayesian Statistics* (3rd ed.). Wiley.**  
+  A clear, methodical introduction that bridges classical and Bayesian inference. It covers conjugate priors, credible intervals, and basic hierarchical models, with R-based examples and exercises.
+
+- **Downey, A. B. (2013). *Think Bayes: Bayesian Statistics Made Simple*. O’Reilly Media.**  
+  A modern, computation-focused introduction that emphasizes simulation and intuition over calculus. Freely available online, this text is popular in data science courses and ideal for readers learning through Python.
+
+- **Berger, J. O. (1985). *Statistical Decision Theory and Bayesian Analysis* (2nd ed.). Springer-Verlag.**  
+  A classic and comprehensive reference that develops Bayesian methods from first principles of decision theory. Recommended for readers who wish to explore the mathematical foundations in more depth.
 
 
 ## Exercises
@@ -255,22 +267,22 @@ According to the above, we are almost 100% sure Clinton will win the popular vot
 
 [^bayes-1]: https://en.wikipedia.org/wiki/Sally_Clark
 
-a.  Sir Meadow assumed that the probability of the second son being affected by SIDS was independent of the first son being affected, thereby ignoring possible genetic causes. If genetics plays a role then: $\mbox{Pr}(\mbox{second case of SIDS} \mid \mbox{first case of SIDS}) > \mbox{Pr}(\mbox{first case of SIDS})$.
-b.  Nothing. The multiplication rule always applies in this way: $\mbox{Pr}(A \mbox{ and } B) =\mbox{Pr}(A)\mbox{Pr}(B)$
+a.  Sir Meadow assumed that the probability of the second son being affected by SIDS was independent of the first son being affected, thereby ignoring possible genetic causes. If genetics plays a role then: $\mathrm{Pr}(\mbox{second case of SIDS} \mid \mbox{first case of SIDS}) > \mathrm{Pr}(\mbox{first case of SIDS})$.
+b.  Nothing. The multiplication rule always applies in this way: $\mathrm{Pr}(A \mbox{ and } B) =\mathrm{Pr}(A)\mathrm{Pr}(B)$
 c.  Sir Meadow is an expert and we should trust his calculations.
 d.  Numbers don't lie.
 
-2\. Let's assume that there is, in fact, a genetic component to SIDS and the probability of $\mbox{Pr}(\mbox{second case of SIDS} \mid \mbox{first case of SIDS}) = 1/100$, is much higher than 1 in 8,500. What is the probability of both of her sons dying of SIDS?
+2\. Let's assume that there is, in fact, a genetic component to SIDS and the probability of $\mathrm{Pr}(\mbox{second case of SIDS} \mid \mbox{first case of SIDS}) = 1/100$, is much higher than 1 in 8,500. What is the probability of both of her sons dying of SIDS?
 
 3\. Many press reports stated that the expert claimed the probability of Sally Clark being innocent was 1 in 73 million. Perhaps the jury and judge also interpreted the testimony this way. This probability can be written as the probability of *a mother is a son-murdering psychopath* given that *two of her children are found dead with no evidence of physical harm*. According to Bayes' rule, what is this?
 
 4\. Assume that the chance of a son-murdering psychopath finding a way to kill her children, without leaving evidence of physical harm, is:
 
 $$
-\mbox{Pr}(A \mid B) = 0.50
+\mathrm{Pr}(A \mid B) = 0.50
 $$
 
-with A = two of her children are found dead with no evidence of physical harm, and B = a mother is a son-murdering psychopath = 0.50. Assume that the rate of son-murdering psychopath mothers is 1 in 1,000,000. According to Bayes' Theorem, what is the probability of $\mbox{Pr}(B \mid A)$ ?
+with A = two of her children are found dead with no evidence of physical harm, and B = a mother is a son-murdering psychopath = 0.50. Assume that the rate of son-murdering psychopath mothers is 1 in 1,000,000. According to Bayes' Theorem, what is the probability of $\mathrm{Pr}(B \mid A)$ ?
 
 5\. After Sally Clark was found guilty, the Royal Statistical Society issued a statement saying that there was "no statistical basis" for the expert's claim. They expressed concern at the "misuse of statistics in the courts". Eventually, Sally Clark was acquitted in June 2003. What did the expert miss?
 
@@ -293,14 +305,14 @@ polls <- polls_us_election_2016 |>
 
 Take the average spread of these polls. The CLT tells us this average is approximately normal. Calculate an average and provide an estimate of the standard error. Save your results in an object called `results`.
 
-7\. Now assume a Bayesian model that sets the prior distribution for Florida's election night spread $\mu$ to follow a normal distribution with expected value $\theta$ and standard deviation $\tau$. What are the interpretations of $\theta$ and $\tau$?
+7\. Now assume a Bayesian model that sets the prior distribution for Florida's election night spread $\theta$ to follow a normal distribution with expected value $\theta_0$ and standard deviation $\tau$. What are the interpretations of $\theta$ and $\tau$?
 
-a.  $\theta$ and $\tau$ are arbitrary numbers that let us make probability statements about $\mu$.
-b.  $\theta$ and $\tau$ summarize what we would predict for Florida before seeing any polls. Based on past elections, we would set $\mu$ close to 0, because both Republicans and Democrats have won, and $\tau$ at about $0.02$, because these elections tend to be close.
-c.  $\theta$ and $\tau$ summarize what we want to be true. We therefore set $\theta$ at $0.10$ and $\tau$ at $0.01$.
+a.  $\theta_0$ and $\tau$ are arbitrary numbers that let us make probability statements about $\theta$.
+b.  $\theta_0$ and $\tau$ summarize what we would predict for Florida before seeing any polls. Based on past elections, we would set $\theta$ close to 0, because both Republicans and Democrats have won, and $\tau$ at about $0.02$, because these elections tend to be close.
+c.  $\theta_0$ and $\tau$ summarize what we want to be true. We therefore set $\theta_0$ at $0.10$ and $\tau$ at $0.01$.
 d.  The choice of prior has no effect on Bayesian analysis.
 
-8\. The CLT tells us that our estimate of the spread $\hat{\mu}$ has normal distribution with expected value $\mu$ and standard deviation $\sigma$ calculated in exercise 6. Use the formulas we provided for the posterior distribution to calculate the expected value of the posterior distribution if we set $\theta = 0$ and $\tau = 0.01$.
+8\. The CLT tells us that our estimate of the spread $\hat{\theta}$ has normal distribution with expected value $\theta$ and standard deviation $\sigma$ calculated in exercise 6. Use the formulas we provided for the posterior distribution to calculate the expected value of the posterior distribution if we set $\theta_0 = 0$ and $\tau = 0.01$.
 
 9\. Now compute the standard deviation of the posterior distribution.
 

@@ -16,6 +16,7 @@ To illustrate the concepts needed to understand distribution and how they relate
 
 ```{r, eval = FALSE}
 library(dslabs)
+str(heights)
 ```
 
 
@@ -40,7 +41,7 @@ In practice, discrete variables are often treated as continuous. For example, a 
 
 ## Relative frequency distribution {#sec-pmf-intro}
 
-The most basic statistical summary of a list of numbers of categories is its *distribution*. The simplest way to think of a distribution is as a compact description of values with many entries. This concept should not be new for readers of this book. For example, with categorical data, the _relative frequency distribution_ simply describes the proportion of each unique category:
+The most basic statistical summary of a list of numbers or categories is its *distribution*. The simplest way to think of a distribution is as a compact description of values with many entries. This concept should not be new for readers of this book. For example, with categorical data, the _relative frequency distribution_ simply describes the proportion of each unique category:
 
 $$
 p_k = \frac{\mbox{number of times category }k \mbox{ appears in the list}}{n}
@@ -67,12 +68,14 @@ Here is the distribution for US state populations rounded to the nearest million
 #| echo: false
 murders |> mutate(x = round(population/10^6)) |> count(x) |> mutate(f = n/sum(n)) |>
   ggplot(aes(x, f)) + geom_col() + 
-  scale_x_continuous(breaks = seq(1, 37, by = 1))
+  scale_x_continuous(breaks = seq(1, 37, by = 1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 8)) +
+  ylab("f(x)")
 ```
 
 ## Empirical cumulative distribution functions {#sec-ecdf-intro}
 
-When the data is continuous, the task of constructing a summary based on a distribution is more challenging because reporting the frequency of each entry is not an effective summary: because most entries are unique the relative frequency distribution does not summarize much.
+When the data is continuous, the task of constructing a summary based on a distribution is more challenging because reporting the frequency of each entry is not an effective summary: most entries are unique so the relative frequency distribution does not summarize much.
 
 Here are the relative frequencies of US state populations:
 
@@ -80,7 +83,7 @@ Here are the relative frequencies of US state populations:
 #| echo: false
 murders |> filter(state %in% state.name) |>
   count(population) |> mutate(f = n/sum(n)) |> ggplot(aes(population, f)) + 
-  geom_col() 
+  geom_col() + xlab("x") + ylab("f(x)")
 ```
 
 Since there are 50 states, each with a unique population value $x$, the plot shows $f(x) = \frac{1}{50} = 0.02$ for each state.
@@ -99,7 +102,7 @@ murders |> filter(state %in% state.name) |>
   labs(x = "a", y = "F(a)")
 ```
 
-Similar to what the frequency table does for categorical data, the eCDF defines the distribution for continuous data. This summary highlights key characteristics of the data. For example, about half of the states have populations over 5,000,000, most have fewer than 20,000,000, and similar insights.
+Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us quickly identify medians, ranges, and other important distributional features.
 
 In our heights case study, most students reported heights rounded to the nearest inch. However, some did not. For example, one student reported a height of `68.503937007874` inches, and another reported `68.8976377952756` inches. These values correspond to 174 cm and 175 cm converted to inches, respectively, suggesting that some students entered their heights in centimeters and relied on a conversion to inches.
 
@@ -109,10 +112,11 @@ As a result the data is continuos and the relative frequency distribution is som
 #| echo: false
 heights |> filter(sex == "Male") |> 
   count(height) |> mutate(f = n/sum(n)) |> ggplot(aes(height, f)) + 
-  geom_col(width = 0.1)
+  geom_col(width = 0.1) +
+  xlab("x = height") + ylab("f(x)")
 ```
 
-Although this approach preserves all the information from the list of values, it can give misleading impressions if extrapolating insights to a broader population. For example, it might suggest there are no people with heights between 74 and 74.5 inches or that significantly more people are exactly 72 inches tall than 71.5 inches—patterns we know aren't accurate. In contrast, the eCDF provides a more useful summary:
+Although this approach preserves all the information from the list of observations, it can give misleading impressions if extrapolating insights to a broader population. For example, it might suggest there are no people with heights between 74 and 74.5 inches or that significantly more people are exactly 72 inches tall than 71.5 inches, patterns we know aren't accurate. In contrast, the eCDF provides a more useful summary:
 
 ```{r summaries-ecdf}
 #| echo: false
@@ -122,7 +126,7 @@ heights |> filter(sex == "Male") |>
   labs(x = "a", y = "F(a)")
 ```
 
-From the plot, we can see that `r round(ecdf(heights$height[heights$sex=="Male"])(66)*100)`% of the values are below 65, since $F(66)=$ `r ecdf(heights$height[heights$sex=="Male"])(66)`, or that `r round(ecdf(heights$height[heights$sex=="Male"])(72)*100)`% of the values are below 72, since $F(72)=$ `r ecdf(heights$height[heights$sex=="Male"])(72)`, and so on. In fact, we can report the proportion of values between any two heights, say $a$ and $b$, by computing $F(b) - F(a)$. This means that if we send this plot above to ET, he will have all the information needed to reconstruct the entire list. Paraphrasing the expression "a picture is worth a thousand words", in this case, a picture is as informative as `r sum(heights$sex=="Male")` numbers.
+From the plot, we can see that `r round(ecdf(heights$height[heights$sex=="Male"])(66)*100)`% of the values are below 65, since $F(66)=$ `r round(ecdf(heights$height[heights$sex=="Male"])(66), 2)`, or that `r round(ecdf(heights$height[heights$sex=="Male"])(72)*100)`% of the values are below 72, since $F(72)=$ `r round(ecdf(heights$height[heights$sex=="Male"])(72), 2)`, and so on. In fact, we can report the proportion of values between any two heights, say $a$ and $b$, by computing $F(b) - F(a)$. This means that if we send this plot above to ET, he will have all the information needed to reconstruct the entire list. Paraphrasing the expression "a picture is worth a thousand words", in this case, a picture is as informative as `r sum(heights$sex=="Male")` numbers.
 
 
 :::{.callout-note}
@@ -131,9 +135,9 @@ The reason we add the word *empirical* is because, as we will see in @sec-cdf-in
 
 ## Histograms
 
-Although the empirical cumulative distribution function (eCDF) is a fundamental concept in statistics, the eCDF plot is not commonly used in practice. The main reason is that it does not easily highlight key distribution characteristics, such as the central tendency, symmetry, or the range that contains 95% of the values. In contrast, histograms are widely preferred because they make these features much more interpretable. While histograms sacrifice a small amount of information, they provide a much clearer summary of the data.
+Although the empirical cumulative distribution function (eCDF) is a fundamental concept in statistics, it is not commonly used in practice. The main reason is that it does not easily highlight key distribution characteristics, such as the central tendency, symmetry, or the range that contains 95% of the values. In contrast, histograms are widely preferred because they make these features much more interpretable. While histograms sacrifice a small amount of information, they provide a much clearer summary of the data.
 
-To construct a histogram, we first divide the range of the data into non-overlapping bins. Each bin acts as a category, and its height is chosen so that the area of the bar—calculated as the height multiplied by the bin width—represents the relative frequency of observations within that bin. Although a histogram resembles a bar plot, it differs in that the x-axis represents numerical values rather than categorical ones.
+To construct a histogram, we first divide the range of the data into non-overlapping bins. Each bin acts as a category, and its height is chosen so that the area of the bar, calculated as the height multiplied by the bin width, represents the relative frequency of observations within that bin. Although a histogram resembles a bar plot, it differs in that the x-axis represents numerical values rather than categorical ones.
 
 If we round the reported heights to the nearest inch and create a relative frequency distribution, we obtain a histogram with bins defined in one-inch intervals:
 
@@ -146,9 +150,9 @@ heights |> filter(sex == "Male") |>
   ggplot(aes(height, f)) + geom_col()
 ```
 
-The `hist` function allows us quickly contstuct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
+The `hist` function allows us quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
 
-```{r}
+```{r hist-custom-bin-example}
 with(heights, hist(height[sex == "Male"], breaks = c(50, 55, 60:80, 85)))
 ```
 
@@ -174,7 +178,7 @@ heights |> filter(sex == "Male") |>
 ```
 
 We use `fill` and `color` to mimic the behavior or `hist`.
-
+:::
 
 ## Smoothed density
 
@@ -245,7 +249,7 @@ hist5 <- hist4 + geom_line(data = ggplot_build(hist2)$data[[2]], aes(x,y))
 hist6 <- heights |> 
   filter(sex == "Male") |> 
   ggplot(aes(height)) +
-  geom_density(alpha = 0.2, fill="#00BFC4", col = 0) +
+  geom_density(alpha = 0.2, fill = "#00BFC4", col = 0) +
   geom_line(stat = 'density') +
   scale_y_continuous(limits = layer_scales(hist2)$y$range$range)
   
@@ -302,7 +306,7 @@ The normal distribution, also known as the bell curve and as the Gaussian distri
 
 Rather than using data, the normal distribution is defined with a mathematical formula. For any interval $(a,b)$, the proportion of values in that interval can be computed using this formula:
 
-$$\mbox{Pr}(a < x \leq b) = \int_a^b \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{1}{2}\left( \frac{x-\mu}{\sigma} \right)^2} \, dx$$
+$$\mathrm{Pr}(a < x \leq b) = \int_a^b \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{1}{2}\left( \frac{x-\mu}{\sigma} \right)^2} \, dx$$
 
 You don't need to memorize the formula to use the normal distribution in practics. The most important characterstics is that it is completely defined by just two parameters: $\mu$ and $\sigma$. The rest of the symbols in the formula represent the interval ends, $a$ and $b$, and known mathematical constants $\pi$ and $e$. These two parameters, $\mu$ and $\sigma$, are referred to as the *mean* and the *standard deviation* (SD) of the distribution, respectively (\mu and \sigma are the Greek letters for $m$ and $s$).
 
@@ -318,7 +322,7 @@ The fact that the distribution is defined by just two parameters implies that if
 
 ## The average and standard deviation
 
-Discrete distributions also have means and standard deviations. We will discuss these in more detail @sec-XXX. For a list of values $x_1, \dots, x_n$ the mean, call it $\mu_x$ is defined by 
+Discrete distributions also have means and standard deviations. We will discuss these in more detail in [@sec-random-variables]. For a list of values $x_1, \dots, x_n$ the mean, call it $\mu_x$ is defined by 
 
 $$
 \mu_x = \frac{1}{n}\sum_{i=1}^n x_i
@@ -387,106 +391,119 @@ The proportion is about 95%, which is what the normal distribution predicts! To 
 
 ## Quantile-quantile plots
 
-A systematic way to assess how well the normal distribution fits the data is to check if the observed and predicted proportions match. In general, this is the approach of the quantile-quantile plot (qqplot).
+A systematic way to check whether one distribution is well approximated by another is to compare their cumulative distribution functions (CDFs). A practical way to do this is through their _quantiles_.
 
-First, let's define the theoretical quantiles for the normal distribution. In statistics books, we use the symbol $\Phi(x)$ to define the function that gives us the proportion of a standard normal distributed data that are smaller than $x$. So, for example, $\Phi(-1.96) = 0.025$ and $\Phi(1.96) = 0.975$. In R, we can evaluate $\Phi$ using the `pnorm` function:
+For a proportion $0 \leq p \leq 1$, the $p$-th quantile of a distribution $F(x)$ is the value $q$ such that $F(q) = p$, or $q = F^{-1}(p)$. For example:
+
+* $p = 0$ gives the minimum,
+* $p = 0.5$ gives the median,
+* $p = 1$ gives the maximum.
+
+If two distributions $F_1(x)$ and $F_2(x)$ are similar, then their quantiles at any $p$ should also be similar.
+
+A *quantile-quantile plot (qqplot)* lets us visually check this by plotting the quantiles of one distribution against the quantiles of another. Specifically, we plot $F_1^{-1}(p_1), \dots, F_1^{-1}(p_m)$ versus $F_2^{-1}(p_1), \dots, F_2^{-1}(p_m)$ for a set of proportions $p_1, \dots, p_m$.
+
+A common choice for these proportions is
+
+$$
+p_i = \frac{i - 0.5}{n}, \quad i=1,\dots,n
+$$
+
+with $n$ the sample size. This avoids exactly $p=0$ or $p=1$, which would correspond to $-\infty$ or $+\infty$ in distributions like the normal.
+
+A common use of qqplots is to compare data to a theoretical normal distribution.
+
+The CDF of the standard normal is usually written as $\Phi(x)$, which gives the probability that a normal random variable is less than $x$. For example, $\Phi(-1.96) = 0.025$ and $\Phi(1.96) = 0.975$. In R we compute these with `pnorm`:
 
 ```{r}
 pnorm(-1.96)
 ```
 
-The inverse function $\Phi^{-1}(x)$ gives us the *theoretical quantiles* for the normal distribution. Thus, for instance, $\Phi^{-1}(0.975) = 1.96$. In R, we can evaluate the inverse of $\Phi$ using the `qnorm` function.
+The inverse of $\Phi$, denoted $\Phi^{-1}(p)$, gives the theoretical quantiles. For example, $\Phi^{-1}(0.975) = 1.96$. In R this is `qnorm`:
 
 ```{r}
 qnorm(0.975)
 ```
 
-Note that these calculations are for the standard normal distribution by default (mean = 0, standard deviation = 1), but we can also define these for any normal distribution. We can do this using the `mean` and `sd` arguments in the `pnorm` and `qnorm` function. For example, we can use `qnorm` to determine quantiles of a distribution with a specific average and standard deviation
+By default `pnorm` and `qnorm` use the standard normal (mean 0, sd 1). You can change this with the `mean` and `sd` arguments:
 
 ```{r}
 qnorm(0.975, mean = 5, sd = 2)
 ```
 
-For the normal distribution, all the calculations related to quantiles are done without data, hence the name *theoretical quantiles*. But quantiles can be defined for any distribution, including an empirical one. If we therefore have data in a vector $x$, we can define the quantile associated with any proportion $p$ as the $q_p$ for which the proportion of values below $q_p$ is $p$.  In R you can compute the `q_p` associated with any `p` using the quantile function:
+We can compute quantiles for a list of observations too. If we have a vector `x`, the quantile $q_p$ is the value such that $p$ proportion of the data is below it:
 
 ```{r}
 p <- 0.5
 q_p <- quantile(x, p)
 ```
 
-Notice that not all $p$ have a $q_p$ for which the proportion is exactly $p$. For these cases, there are several ways of defining the best $q_p$, as discussed in the help for the `quantile` function.
-
-To give a quick example, for the male heights data, we have that:
+For example, in the heights dataset:
 
 ```{r}
 mean(x <= 69.5)
 ```
 
-Therefore about 50% are shorter or equal to 69 inches. This implies that if $p = 0.50$, then $q = 69.5$.
+About 50% of men are shorter than 69.5 inches, so this is the median ($p=0.5$).
 
-The idea of a qqplot is that if your data is well approximated by a normal distribution, then the quantiles of your data should be similar to the quantiles of a normal distribution. To construct a qqplot, we do the following:
 
-1.  Define a vector of $m$ proportions $p_1, p_2, \dots, p_m$.
-2.  Define a vector of quantiles $q_1, \dots, q_m$ for your data for the proportions $p_1, \dots, p_m$. We refer to these as the *sample quantiles*.
-3.  Define a vector of theoretical quantiles for the proportions $p_1, \dots, p_m$ for a normal distribution with the same average and standard deviation as the data.
-4.  Plot the sample quantiles versus the theoretical quantiles.
+To compare make a qqplot to assess if our observations follow a normal distribution:
 
-Let's construct a qqplot using R code. Start by defining the vector of proportions.
+1. Define a vector of proportions $p_1, \dots, p_m$.
+2. Compute sample quantiles from the data.
+3. Compute theoretical quantiles from a normal distribution with the same mean and SD as the data.
+4. Plot them against each other.
 
-```{r}
+Example:
+
+```{r qqplot-example}
 p <- seq(0.05, 0.95, 0.05)
-```
-
-To obtain the quantiles from the data, we can use the `quantile` function like this:
-
-```{r}
 sample_quantiles <- quantile(x, p)
-```
-
-To obtain the theoretical normal distribution quantiles with the corresponding average and SD, we use the `qnorm` function:
-
-```{r}
 theoretical_quantiles <- qnorm(p, mean = mean(x), sd = sd(x))
+plot(theoretical_quantiles, sample_quantiles)
+abline(0,1)
 ```
 
-To see if they match or not, we plot them against each other and draw the identity line:
+If the data are normally distributed, the points should fall along the 45° line.
 
-```{r summaries-qqplot-original}
-plot(theoretical_quantiles, sample_quantiles); abline(0,1)
-```
-
-Notice that this code becomes much cleaner if we use standard units:
+It is even simpler if we first **standardize** the data:
 
 ```{r summaries-qqplot-standardized, eval = FALSE}
 sample_quantiles <- quantile(z, p)
 theoretical_quantiles <- qnorm(p) 
-plot(theoretical_quantiles, sample_quantiles); abline(0,1)
+plot(theoretical_quantiles, sample_quantiles)
+abline(0,1)
 ```
 
-The above code is included to help describe qqplots. However, in practice it is easier to use the `qqnorm` function:
+
+Instead of writing this by hand, R provides convenient functions:
 
 ```{r}
 #| eval: false
-qqnorm(x); qqline(x)
+qqnorm(x)
+qqline(x)
 ```
 
-In **ggplot** we use:
+Or with **ggplot2**:
 
-```{r, eval = FALSE}
+```{r geom_qq-example, eval = FALSE}
 heights |> filter(sex == "Male") |>
   ggplot(aes(sample = scale(height))) + 
   geom_qq() +
   geom_abline()
 ```
 
-In the illustration above we used 20 quantiles; however, the default for the `qqnorm` and `geom_qq` function is to use as many quantiles as data points.
+By default, `qqnorm` and `geom_qq` use all $n$ quantiles, $p_i = (i-0.5)/n$.
 
-Although here we used qqplots to compare an observed distribution to the mathematically defined normal distribution, qqplots can be used to compare any two distributions. For example, here is qqplot comparing the distributions on males and females:
 
-```{r}
+qqplots can also compare **two empirical distributions**, not just data to a theoretical model. For example, to compare male and female heights:
+
+```{r male-vs-female-qqplot}
 with(heights, qqplot(height[sex == "Female"], height[sex == "Male"]))
 abline(0,1)
 ```
+
+In summary: qqplots give a simple but powerful way to check whether two distributions match, most often by comparing data to a theoretical distribution such as the normal.
 
 
 ## Percentiles
@@ -494,9 +511,6 @@ abline(0,1)
 Before we move on, let's define some terms that are commonly used in exploratory data analysis.
 
 *Percentiles* are special cases of *quantiles* that are commonly used. The percentiles are the quantiles you obtain when setting the $p$ at $0.01, 0.02, ..., 0.99$. For example, we refer to the case of $p = 0.25$ as the 25th percentile, representing a value below which 25% of the data falls. The most famous percentile is the 50th, also known as the *median*.
-
-For that that follows a normal distribution, the *median* and  mean are the same, but this is generally not the case.
-
 Another special case that receives a name are the *quartiles*, which are obtained when setting $p = 0.25,0.50$, and $0.75$.
 
 ## Boxplots
@@ -524,9 +538,7 @@ murders |> ggplot(aes("",rate)) + geom_boxplot() +
   coord_cartesian(xlim = c(0, 2)) + xlab("")
 ```
 
-with the box defined by the 25% and 75% percentile and the whiskers showing the range. The distance between these two is called the *interquartile* range. The two points are considered outliers by the default R function we used. The median represented by a horizontal line. Today, we call these *boxplots*.
-
-From just this simple plot, we know that the median is about 2.5, that the distribution is not symmetric, and that the range is 0 to 5 for the great majority of states with two exceptions.
+The box spans from the first quartile to the third quartile. The horizontal line inside the box marks the median (the 50th percentile). The whiskers extend to the smallest and largest values that are not considered outliers. Outliers are shown as individual points beyond the whiskers. Note that the height of the box is the difference between the third and first quartile. This difference is called the interquartile range (IQR), and it measures the spread of the middle 50% of the data.
 
 ## Stratification {#sec-stratification}
 
@@ -536,7 +548,7 @@ Stratification is common in data visualization because we are often interested i
 
 Using the histogram, density plots, and qqplots, we have become convinced that the male height data is well approximated with a normal distribution. In this case, we report back to ET a very succinct summary: male heights follow a normal distribution with an average of `r round(m, 1)` inches and a SD of `r round(s,1)` inches. With this information, ET will have a good idea of what to expect when he meets our male students. However, to provide a complete picture we need to also provide a summary of the female heights.
 
-We learned that boxplots are useful when we want to quickly compare two or more distributions. Here are the heights for men and women:
+We learned that boxplots are useful when we want to quickly compare two or more distributions. Here are the heights for females and males:
 
 ```{r summaries-female-male-boxplots}
 heights |> ggplot(aes(sex, height, fill = sex)) + geom_boxplot()
@@ -567,6 +579,21 @@ heights |> filter(sex == "Female") |>
 ```
 
 Because these are reported heights, a possibility is that the student meant to enter `5'1"`, `5'2"`, `5'3"` or `5'5"`.
+
+## Recommended reading
+
+* **Freedman, D., Pisani, R., & Purves, R. (2007). *Statistics* (4th ed.).**
+  A clear, concept-first introduction to distributions, variability, and summaries—excellent for intuition and real-data thinking.
+
+* **Tukey, J. W. (1977). *Exploratory Data Analysis*.**
+  The classic source for boxplots, robust summaries, and EDA philosophy—foundational for this chapter’s emphasis on describing data.
+
+* **Cleveland, W. S. (1993). *Visualizing Data*.**
+  A practical, graphics-first treatment of distributions and patterns; pairs well with histograms, density plots, and eCDFs.
+
+* **Spiegelhalter, D. (2019). *The Art of Statistics*.**
+  Gentle, story-driven coverage of describing data, uncertainty, and what summaries (like means, SDs, and percentiles) really tell us.
+
 
 
 ## Exercises

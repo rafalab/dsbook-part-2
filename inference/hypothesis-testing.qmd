@@ -8,16 +8,16 @@ Hypothesis testing is used when you can phrase your research question in terms o
 
 Take, for instance, the previously used example with colored beads. We might not be concerned about the exact proportion of blue beads, but instead ask: Are there more blue beads than red ones? This could be rephrased as asking if the proportion of blue beads is more than 0.5.
 
-The initial hypothesis that the parameter equals the predetermined value is called the "null hypothesis". It's popular because it allows us to focus on the data's properties under this null scenario. Once data is collected, we estimate the parameter and calculate the p-value, which is the probability of the estimate being as extreme as observed if the null hypothesis is true. If the p-value is small, it indicates the null hypothesis is unlikely, providing evidence against it.
+The initial hypothesis that the parameter equals the predetermined value is called the _null hypothesis_. It's popular because it allows us to focus on the data's properties under this null scenario. Once data is collected, we estimate the parameter and calculate the p-value, which is the probability of the estimate being as extreme as observed if the null hypothesis is true. If the p-value is small, it indicates the null hypothesis is unlikely, providing evidence against it.
 
 We will see more examples of hypothesis testing in @sec-treatment-effect-models.
 
 ## p-values
 
-Suppose we take a random sample of $N=100$ and we observe $52$ blue beads, which gives us $\bar{X} = 0.52$. This seems to be pointing to there being more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual $p=0.5$. We call the assumption that $\theta = 0.5$ a *null hypothesis*. The null hypothesis is the skeptic's hypothesis. 
+Suppose we take a random sample of $N=100$ and we observe $52$ blue beads, which gives us $\bar{X} = 0.52$. This seems to be pointing to there being more blue than red beads since 0.52 is larger than 0.5. However, we know there is chance involved in this process and we could get a 52 even when the actual proability is 0.5. We call the assumption that the probability is 0.5, $\pi = 0.5$, a *null hypothesis*. The null hypothesis is the skeptic's hypothesis. 
 
 :::{.callout-note}
-We use $\theta$ (`theta` in R) to represent the probability of drawing a blue bead, instead of $p$ as in previous sections, to avoid confusion with between the parameter $p$ and the p in p-value.
+We use $\pi$ to represent the probability of drawing a blue bead, instead of $p$ as in previous sections, to avoid confusion with between the parameter $p$ and the p in p-value.
 :::
 
 We have observed a random variable $\bar{X} = 0.52$, and the p-value is the answer to the question: How likely is it to see a value this large, when the null hypothesis is true? If the p-value is small enough, we _reject the null hypothesis_ and say that the results are _statistically significant_. 
@@ -28,9 +28,9 @@ The p-value of 0.05 as a threshold for statistical significance is conventionall
 
 To obtain a p-value for our example, we write:
 
-$$\mbox{Pr}(\mid \bar{X} - 0.5 \mid > 0.02 ) $$
+$$\mathrm{Pr}(\mid \bar{X} - 0.5 \mid > 0.02 ) $$
 
-assuming the $\theta=0.5$. Under the null hypothesis we know that:
+assuming the $\pi=0.5$. Under the null hypothesis we know that:
 
 $$
 \sqrt{N}\frac{\bar{X} - 0.5}{\sqrt{0.5(1-0.5)}}
@@ -38,18 +38,17 @@ $$
 
 is standard normal. We, therefore, can compute the probability above, which is the p-value.
 
-$$\mbox{Pr}\left(\sqrt{N}\frac{\mid \bar{X} - 0.5\mid}{\sqrt{0.5(1-0.5)}} > \sqrt{N} \frac{0.02}{ \sqrt{0.5(1-0.5)}}\right)$$
+$$\mathrm{Pr}\left(\sqrt{N}\frac{\mid \bar{X} - 0.5\mid}{\sqrt{0.5(1-0.5)}} > \sqrt{N} \frac{0.02}{ \sqrt{0.5(1-0.5)}}\right)$$
 
 ```{r}
 N <- 100
 z <- sqrt(N)*0.02/0.5
-p <- 1 - (pnorm(z) - pnorm(-z))
-p
+1 - (pnorm(z) - pnorm(-z))
 ```
 
 In this case, there is actually a large chance of seeing 52 or larger under the null hypothesis. 
 
-Keep in mind that there is a close connection between p-values and confidence intervals. If a 95% confidence interval does not include 0.5, we know that the p-value must be smaller than 0.05. In general, we can show mathematically that if a $(1-\alpha)\times 100$% confidence interval does not contain the null hypothesis value, the null hypothesis is rejected with a p-value as small or smaller than $\alpha$. So _statistical significance_ can be determined from confidence intervals.
+Keep in mind that there is a close connection between p-values and confidence intervals. In our example, if a 95% confidence interval does not include 0.5, we know that the p-value must be smaller than 0.05. In general, we can show mathematically that if a $(1-\alpha)\times 100$% confidence interval does not contain the null hypothesis value, the null hypothesis is rejected with a p-value as small or smaller than $\alpha$. So _statistical significance_ can be determined from confidence intervals.
 
 To learn more about p-values, you can consult any statistics textbook. However, in general, we prefer reporting confidence intervals over p-values because it gives us an idea of the size of the estimate. If we just report the p-value, we provide no information about the significance of the finding in the context of the problem. For this reason, we recommend avoiding p-values whenever you can compute a confidence interval. 
 
@@ -65,7 +64,7 @@ x_hat <- 0.48
 
 included 0. If this were a poll and we were forced to make a declaration, we would have to say it was a "toss-up".
 
-One problem with our poll results is that, given the sample size and the value of $\theta$, we would have to sacrifice the probability of an incorrect call to create an interval that does not include 0.
+One problem with our poll results is that, given the sample size and the value of $\pi$, we would have to sacrifice the probability of an incorrect call to create an interval that does not include 0.
 
 This does not mean that the election is close. It only means that we have a small sample size. In statistical textbooks, this is called lack of *power*. In the context of polls, *power* is the probability of detecting spreads different from 0.
 
@@ -79,11 +78,11 @@ By increasing our sample size, we lower our standard error, and thus, have a muc
 
 ```{r, eval=FALSE}
 N <- 1000
-theta <- 0.5
-x <- rbinom(N, 1, theta)
+pi0 <- 0.5 #we use pi0 to avoid the reserved constant pi
+x <- rbinom(N, 1, pi0)
 ```
 
-then, compute a p-value if $\theta=0.5$. Repeat this 10,000 times and report how often the p-value is lower than 0.05? How often is it lower than 0.01?
+then, compute a p-value if $\pi=0.5$. Repeat this 10,000 times and report how often the p-value is lower than 0.05? How often is it lower than 0.01?
 
 2. Make a histogram of the p-values you generated in exercise 1.
 
@@ -94,25 +93,25 @@ then, compute a p-value if $\theta=0.5$. Repeat this 10,000 times and report how
 
 
 3.Demonstrate, mathematically, why we see the histogram in exercise 2.  Hint: To compute the p-value, we need to calculate a test statistic, $Z$. We can approximate $Z$ using the CLT, which tells us that $Z$ approximately follows a standard normal distribution.  The p-value is calculated as:  $p = 2\{1 - \Phi(|z|)\}$ where:  
-$z$ is the observed value of $Z$ and $\Phi(z)$ is the CDF of the standard normal distribution (`pnorm(z)` in R).  To understand the distribution of the p-values, consider the probability that the p-value is less than or equal to some threshold $a$ between 0 and 1: $\mbox{Pr}(p \leq a) = \mbox{Pr}(\{2\{1 - \Phi(|z|)\} \leq a)$. Remember that $p$ follows a uniform distribution if $\mbox{Pr}(p \leq a) =a$.
+$z$ is the observed value of $Z$ and $\Phi(z)$ is the CDF of the standard normal distribution (`pnorm(z)` in R).  To understand the distribution of the p-values, consider the probability that the p-value is less than or equal to some threshold $a$ between 0 and 1: $\mathrm{Pr}(p \leq a) = \mathrm{Pr}(\{2\{1 - \Phi(|z|)\} \leq a)$. Remember that $p$ follows a uniform distribution if $\mathrm{Pr}(p \leq a) =a$.
 
 
 4.  Generate a sample of size $N=1000$ from an urn model with 52% blue beads:
 
 ```{r, eval=FALSE}
 N <- 1000 
-theta <- 0.52
-x <- rbinom(N, 1, theta)
+pi0 <- 0.52
+x <- rbinom(N, 1, pi0)
 ```
 
-Compute a p-value to test if $\theta=0.5$. Repeat this 10,000 times and report how often the p-value is larger than 0.05? Note that you are computing 1 - power. 
+Compute a p-value to test if $\pi=0.5$. Repeat this 10,000 times and report how often the p-value is larger than 0.05? Note that you are computing 1 - power. 
 
 5. Repeat exercise for but for the following values:
 
 ```{r}
-values <- expand.grid(N = c(25, 50, 100, 500, 1000), theta = seq(0.51 ,0.75, 0.01))
+values <- expand.grid(N = c(25, 50, 100, 500, 1000), pi = seq(0.51 ,0.75, 0.01))
 ```
 
-Plot power as a function of $N$ with a different color curve for each value of `theta`.
+Plot power as a function of $N$ with a different color curve for each value of `pi`.
 
 

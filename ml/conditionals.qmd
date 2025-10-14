@@ -11,40 +11,40 @@ However, none of this means that we can't build useful algorithms that are much 
 We use the notation $(X_1 = x_1,\dots,X_p=x_p)$ to represent the fact that we have observed values $x_1,\dots,x_p$ for covariates $X_1, \dots, X_p$. This does not imply that the outcome $Y$ will take a specific value. Instead, it implies a specific probability. In particular, we denote the _conditional probabilities_ for each class $k$ with:
 
 $$
-\mbox{Pr}(Y=k \mid X_1 = x_1,\dots,X_p=x_p), \, \mbox{for}\,k=1,\dots,K
+\mathrm{Pr}(Y=k \mid X_1 = x_1,\dots,X_p=x_p), \, \mbox{for}\,k=1,\dots,K.
 $$
 
-To avoid writing out all the predictors, we will use the bold letters like this: $\mathbf{X} \equiv (X_1,\dots,X_p)^\top$ and $\mathbf{x} \equiv (x_1,\dots,x_p)^\top$. We will also use the following notation for the conditional probability of being class $k$:
+To avoid writing out all the predictors, we will use bold letters like this: $\mathbf{X} \equiv (X_1,\dots,X_p)^\top$ and $\mathbf{x} \equiv (x_1,\dots,x_p)^\top$. We will also use the following notation for the conditional probability of being class $k$:
 
 $$
-p_k(\mathbf{x}) = \mbox{Pr}(Y=k \mid \mathbf{X}=\mathbf{x}), \, \mbox{for}\, k=1,\dots,K
+p_k(\mathbf{x}) = \mathrm{Pr}(Y=k \mid \mathbf{X}=\mathbf{x}), \, \mbox{for}\, k=1,\dots,K.
 $$
-Notice that the $p_k(\mathbf{x})$ have to add up to 1 for each $\mathbf{x}$, so once we know $K-1$, we know all. When the outcome is binary, we only need to know 1, so we drop the $k$ and use the notation $p(\mathbf{x}) = \mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x})$.
+Notice that the $p_k(\mathbf{x})$ have to add up to 1 for each $\mathbf{x}$, so once we know $K-1$, we know all. When the outcome is binary, we only need to know 1, so we drop the $k$ and use the notation $p(\mathbf{x}) = \mathrm{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x})$.
 
 :::{.callout-note}
 Do not be confused by the fact that we use $p$ for two different things: the conditional probability $p(\mathbf{x})$ and the number of predictors $p$.
 :::
 
-These probabilities guide the construction of an algorithm that makes the best prediction: for any given $\mathbf{x}$, we will predict the class $k$ with the largest probability among $p_1(x), p_2(x), \dots p_K(x)$. In mathematical notation, we write it like this: 
+These probabilities guide the construction of an algorithm that makes the best prediction: for any given $\mathbf{x}$, we will predict the class $k$ with the largest probability among $p_1(\mathbf{x}), p_2(\mathbf{x}), \dots p_K(\mathbf{x})$. In mathematical notation, we write it like this: 
 
-$$\hat{Y} = \max_k p_k(\mathbf{x})$$
+$$\hat{y} = \max_k p_k(\mathbf{x})$$
 
-In machine learning, we refer to this as _Bayes' Rule_. But this is a theoretical rule since, in practice, we don't know $p_k(\mathbf{x}), k=1,\dots,K$. In fact, estimating these conditional probabilities can be thought of as the main challenge of machine learning. The better our probability estimates $\hat{p}_k(\mathbf{x})$, the better our predictor $\hat{Y}$.
+In machine learning, we refer to this as _Bayes' Rule_. But this is a theoretical rule since, in practice, we don't know $p_k(\mathbf{x}), k=1,\dots,K$. In fact, estimating these conditional probabilities can be thought of as the main challenge of machine learning. The better our probability estimates $\hat{p}_k(\mathbf{x})$, the better our predictor.
 
 So how well we predict depends on two things: 1) how close are the $\max_k p_k(\mathbf{x})$ to 1 or 0 (perfect certainty) and 2) how close our estimates $\hat{p}_k(\mathbf{x})$ are to $p_k(\mathbf{x})$. We can't do anything about the first restriction as it is determined by the nature of the problem, so our energy goes into finding ways to best estimate conditional probabilities. 
 
-The first restriction does imply that we have limits as to how well even the best possible algorithm can perform. You should get used to the idea that while in some challenges we will be able to achieve almost perfect accuracy, with digit readers for example, in others, our success is restricted by the randomness of the process, such as with movie recommendations. 
+The first restriction does imply that we have limits as to how well even the best possible algorithm can perform. You should get used to the idea that while in some challenges we will be able to achieve almost perfect accuracy, with digit readers for example, in others, our success is restricted by the randomness of the process, such as medical diagnosis from biometric data.
 
-Keep in mind that defining our prediction by maximizing the probability is not always optimal in practice and depends on the context. As discussed in @sec-evaluation-metrics, sensitivity and specificity may differ in importance. But even in these cases, having a good estimate of the $p_k(x), k=1,\dots,K$ will suffice for us to build optimal prediction models, since we can control the balance between specificity and sensitivity however we wish. For instance, we can simply change the cutoffs used to predict one outcome or the other. In the plane example, we may ground the plane anytime the probability of malfunction is higher than 1 in a million as opposed to the default 1/2 used when error types are equally undesired. 
+Keep in mind that defining our prediction by maximizing the probability is not always optimal in practice and depends on the context. As discussed in [@sec-evaluation-metrics], sensitivity and specificity may differ in importance. But even in these cases, having a good estimate of the $p_k(x), k=1,\dots,K$ will suffice for us to build optimal prediction models, since we can control the balance between specificity and sensitivity however we wish. For instance, we can simply change the cutoffs used to predict one outcome or the other. In the plane example, we may ground the plane anytime the probability of malfunction is lower than 1 in a million as opposed to the default 1/2 used when error types are equally undesired. 
 
 ## Conditional expectations
 
-For binary data, you can think of the probability $\mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x})$ as the proportion of 1s in the stratum of the population for which $\mathbf{X}=\mathbf{x}$. Many of the algorithms we will learn can be applied to both categorical and continuous data due to the connection between _conditional probabilities_ and _conditional expectations_. 
+For binary data, you can think of the probability $\mathrm{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x})$ as the proportion of 1s in the stratum of the population for which $\mathbf{X}=\mathbf{x}$. Many of the algorithms we will learn can be applied to both categorical and continuous data due to the connection between _conditional probabilities_ and _conditional expectations_. 
 
 Because the expectation is the average of values $y_1,\dots,y_n$ in the population, in the case in which the $y$s are 0 or 1, the expectation is equivalent to the probability of randomly picking a one since the average is simply the proportion of ones: 
 
 $$
-\mbox{E}(Y \mid \mathbf{X}=\mathbf{x})=\mbox{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x}).
+\mathrm{E}(Y \mid \mathbf{X}=\mathbf{x})=\mathrm{Pr}(Y=1 \mid \mathbf{X}=\mathbf{x}).
 $$
 
 As a result, we often only use the expectation to denote both the conditional probability and conditional expectation.
@@ -52,30 +52,30 @@ As a result, we often only use the expectation to denote both the conditional pr
 Just like with categorical outcomes, in most applications the same observed predictors do not guarantee the same continuous outcomes. Instead, we assume that the outcome follows the same conditional distribution. We will now explain why we use the conditional expectation to define our predictors. 
 
 
-## Conditional expectations minimizes squared loss function
+## Conditional expectations minimize squared loss function
 
 Why do we care about the conditional expectation in machine learning? This is because the expected value has an attractive mathematical property: it minimizes the MSE. Specifically, of all possible predictions $\hat{Y}$,
 
 $$
-\hat{Y} = \mbox{E}(Y \mid \mathbf{X}=\mathbf{x}) \, \mbox{ minimizes } \, \mbox{E}\{ (\hat{Y} - Y)^2  \mid  \mathbf{X}=\mathbf{x} \}
+\hat{Y} = \mathrm{E}(Y \mid \mathbf{X}=\mathbf{x}) \, \mbox{ minimizes } \, \mathrm{E}\{ (\hat{Y} - Y)^2  \mid  \mathbf{X}=\mathbf{x} \}
 $$ 
 
 Due to this property, a succinct description of the main task of machine learning is that we use data to estimate:
 
 $$
-f(\mathbf{x}) \equiv \mbox{E}( Y  \mid  \mathbf{X}=\mathbf{x} )
+f(\mathbf{x}) \equiv \mathrm{E}( Y  \mid  \mathbf{X}=\mathbf{x} )
 $$
 
 for any set of features $\mathbf{x} = (x_1, \dots, x_p)^\top$. 
 
-This is easier said than done, since this function can take any shape and $p$ can be very large. Consider a case in which we only have one predictor $x$. The expectation $\mbox{E}\{ Y  \mid  X=x \}$ can be any function of $x$: a line, a parabola, a sine wave, a step function, anything. It gets even more complicated when we consider instances with large $p$, in which case $f(\mathbf{x})$ is a function of a multidimensional vector $\mathbf{x}$. For example, in our digit reader example $p = 784$! 
+This is easier said than done, since this function can take any shape and $p$ can be very large. Consider a case in which we only have one predictor $x$. The expectation $\mathrm{E}(Y  \mid  X=x )$ can be any function of $x$: a line, a parabola, a sine wave, a step function, anything. It gets even more complicated when we consider instances with large $p$, in which case $f(\mathbf{x})$ is a function of a multidimensional vector $\mathbf{x}$. For example, in our digit reader example $p = 784$! 
 
 The main way in which competing machine learning algorithms differ is in their approach to estimating this conditional expectation.
 
 
 ## Exercises
 
-1\. Compute conditional probabilities for being Male for the `heights` dataset.  Round the heights to the closest inch. Plot the estimated conditional probability $P(x) = \mbox{Pr}(\mbox{Male} | \mbox{height}=x)$ for each $x$. 
+1\. Compute conditional probabilities for being Male for the `heights` dataset.  Round the heights to the closest inch. Plot the estimated conditional probability $P(x) = \mathrm{Pr}(\mbox{Male} | \mbox{height}=x)$ for each $x$. 
 
  
 2\. In the plot we just made, we see high variability for low values of height. This is because we have few data points in these strata. This time use the `quantile` function for quantiles $0.1,0.2,\dots,0.9$ and the `cut` function to assure each group has the same number of points. Hint: For any numeric vector `x`, you can create groups based on quantiles as we demonstrate below.  

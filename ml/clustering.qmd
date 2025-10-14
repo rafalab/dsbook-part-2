@@ -1,36 +1,48 @@
 # Clustering {#sec-clustering}
 
-The algorithms we have described up to now are examples of a general approach referred to as _supervised_ machine learning. The name comes from the fact that we use the outcomes in a training set to _supervise_ the creation of our prediction algorithm. There is another subset of machine learning referred to as _unsupervised_. In this subset, we do not necessarily know the outcomes and instead are interested in discovering groups. These algorithms are also referred to as _clustering_ algorithms since predictors are used to define _clusters_. 
+The algorithms we have described so far are examples of a general approach referred to as *supervised* machine learning. The term *supervised* comes from the fact that the outcomes in the training set are used to *supervise* the construction of a prediction algorithm. 
 
-In the two examples we have shown here, clustering would not be very useful. In the first example, if we are simply given the heights, we will not be able to discover two groups, males and females, because the intersection is large. In the second example, we can see from plotting the predictors that discovering the two digits, two and seven, will be challenging.
+In contrast, there is another branch of machine learning known as *unsupervised* learning. In this setting, the outcomes are not provided, and the goal is instead to uncover structure in the data, often in the form of groups. These methods are also referred to as *clustering* algorithms because they group observations into *clusters* based on similarities in their predictors.
 
-However, there are applications in which unsupervised learning can be a powerful technique, in particular as an exploratory tool. 
+In the two examples we have considered so far, clustering would not be very effective. For example, given only heights, we would not expect an algorithm to cleanly discover two groups (male and female) because the overlap is substantial. Similarly, in the digit classification example, the distributions of twos and sevens overlap enough to make clustering challenging.
+
+However, there are many applications in which unsupervised learning is a powerful tool, particularly for exploratory data analysis. For example, clustering can reveal hidden subgroups in biological, social, or market data that may not be obvious at first glance.
+
+A first step in any clustering algorithm is defining a distance (or similarity) between observations or groups of observations. Once a distance is defined, the next step is to decide how to join observations into clusters. There are many algorithms for doing this. In this chapter, we introduce two common approaches: hierarchical clustering and *k*-means clustering.
 
 A first step in any clustering algorithm is defining a distance between observations or groups of observations. Then we need to decide how to join observations into clusters. There are many algorithms for doing this. Here we introduce two as examples: hierarchical and k-means.
 
-We will construct a simple example based on movie ratings. Here we quickly construct a matrix `x` that has ratings for the 50 movies with the most ratings.
+We startin by  constructing a simple example based on movie ratings. Here we quickly construct a matrix `y` that has ratings for the 50 movies with the most ratings among users with at least 100 ratings: 
+
 
 ```{r, cache=FALSE, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(janitor)
 library(dslabs)
-top_movies <- movielens |> count(movieId) |> top_n(50, n) |> pull(movieId)
-x <- movielens |> filter(movieId %in% top_movies) 
-top_users <- x |> count(userId) |> top_n(50, n) |> pull(userId)
-x <- x |> filter(userId %in% top_users) |>
-  select(title, userId, rating) |>
-  pivot_wider(names_from = userId, values_from = rating) |>
-  column_to_rownames("title") |>
-  as.matrix()
-rownames(x) <- str_remove(rownames(x), ": Episode") |> str_trunc(20)
-x <- x - rowMeans(x, na.rm = TRUE)
+library(data.table)
+library(stringr)
+dt <- as.data.table(movielens)
+dt <- dt[, if (.N >= 100) .SD, by = userId]
+top_movies <- dt[, .N, by = .(movieId, title)]
+dt <- dt[movieId %in% top_movies[order(-N)][1:50, movieId]]
+dt <- dcast(dt, title ~ userId, value.var = "rating") 
+y <- as.matrix(dt[,-1])
+rownames(y) <- str_remove(dt$title, ": Episode") |> str_trunc(20)
 ```
 
-We want to use these data to find out if there are clusters of movies based on the ratings from  `r ncol(x)` movie raters. A first step is to find the distance between each pair of movies using the `dist` function: 
+Notice that if we compute distances directly from the original ratings, movies with generally high ratings will tend to be close to each other, as will movies with generally low ratings. However, this is not what we are actually interested in. Instead, we want to capture how ratings correlate *across users* for the `r ncol(y)` different users. To achieve this, we center the ratings for each movie by removing the movie effect:
 
 ```{r}
-d <- dist(x)
+y <- y - rowMeans(y, na.rm = TRUE)
 ```
+
+As described in [@sec-regularization], many of the entries are missing because not every user rates every movie, so we use the argument `na.rm = TRUE`.
+
+With the centered data, we can now cluster movies based on their rating patterns. The first step is to compute distances between each pair of movies using the `dist` function:
+
+```{r}
+d <- dist(y)
+```
+
+The `dist` function automatically accounts for missing values and standardizes the distance measurements, ensuring that the computed distance between two movies does not depend on the number of ratings available.
 
 ## Hierarchical clustering
 
@@ -40,13 +52,13 @@ With the distance between each pair of movies computed, we need an algorithm to 
 h <- hclust(d)
 ```
 
-We can see the resulting groups using a _dendrogram_. The funciton `plot` applied to an `hclust` object creates a dendrogram:
+We can see the resulting groups using a _dendrogram_. The function `plot` applied to an `hclust` object creates a dendrogram:
 
 ```{r, eval=FALSE}
 plot(h, cex = 0.65, main = "", xlab = "")
 ```
 
-```{r dendrogram, out.width="100%", fig.width = 8, fig.height = 3, echo=FALSE}
+```{r dendrogram, out.width="100%", fig.width = 8, fig.height = 4, echo=FALSE}
 rafalib::mypar()
 plot(h, cex = 0.65, main = "", xlab = "")
 ```
@@ -59,81 +71,50 @@ To generate actual groups, we can do one of two things: 1) decide on a minimum d
 groups <- cutree(h, k = 10)
 ```
 
-Note that the clustering provides some insights into types of movies. Group 4 appears to be 
-blockbusters:
+Note that the clustering provides some insights into types of movies. Group 2 appears to be 
+critically aclaimed movies:
 
 ```{r}
-names(groups)[groups == 4]
+names(groups)[groups == 2]
 ```
 
 And Group 9 appears to be nerd movies:
 
 ```{r}
-names(groups)[groups == 6]
+names(groups)[groups == 9]
 ```
 
 We can change the size of the group by either making `k` larger or `h` smaller. 
 
-We can also explore the data to see if there are clusters of movie raters:
-
-```{r}
-h_2 <- hclust(dist(t(x)))
-```
-
-
-## k-means
-
-To use the k-means clustering algorithm we have to pre-define $k$, the number of clusters we want to define. The k-means algorithm is iterative.
-
-The first step is to define $k$ centers. Then each observation is assigned to the cluster with the closest center to that observation. In a second step, the centers are redefined using the observation in each cluster: the column means are used to define a _centroid_. We repeat these two steps until the centers converge.
-
-The `kmeans` function included in R-base does not handle NAs. For illustrative purposes, we will fill out the NAs with 0s. In general, the choice of how to fill in missing data, or if one should do it at all, should be made with care.
-
-```{r}
-x_0 <- x
-x_0[is.na(x_0)] <- 0
-k <- kmeans(x_0, centers = 10)
-```
-
-The cluster assignments are in the `cluster` component:
-
-```{r}
-groups <- k$cluster
-```
-
-Note that because the first center is chosen at random, the final clusters are random. We impose some stability by repeating the entire function several times and averaging the results. The number of random starting values to use can be assigned through the `nstart` argument.
-
-```{r}
-k <- kmeans(x_0, centers = 10, nstart = 25)
-```
 
 ## Heatmaps
 
-A powerful visualization tool for discovering clusters or patterns in your data is the heatmap. The idea is simple: plot an image of your data matrix with colors used as the visual cue and both the columns and rows ordered according to the results of a clustering algorithm. We will demonstrate this with the `tissue_gene_expression` dataset. 
+A powerful visualization tool for discovering clusters or patterns in your data is the heatmap. The idea is simple: plot an image of your data matrix with colors used as the visual cue and both the columns and rows ordered according to the results of a clustering algorithm. We will demonstrate this with the `tissue_gene_expression` dataset in **dslabs**.
 
-We start by scaling the columns of the gene expression matrix because we only care about relative differences in gene expression. After scaling, we compute perform clustering on both the observations and the predictors:
+We start by scaling the columns of the gene expression matrix because we care about relative differences in gene expression. After scaling, we compute perform clustering on both the observations and the predictors:
 
 ```{r}
-x <- sweep(tissue_gene_expression$x, 2, colMeans(tissue_gene_expression$x))
-h_1 <- hclust(dist(x))
-h_2 <- hclust(dist(t(x)))
+library(dslabs)
+y <- sweep(tissue_gene_expression$x, 2, colMeans(tissue_gene_expression$x))
+h_1 <- hclust(dist(y))
+h_2 <- hclust(dist(t(y)))
 ```
+
+Note that we have performed two clusterings: we clustered samples (`h_1`) and genes (`h_2`).
 
 Now we can use the results of this clustering to order the rows and columns:
 
 ```{r heatmap, out.width="100%", fig.height=7, eval=FALSE}
-image(x[h_1$order, h_2$order])
+image(y[h_1$order, h_2$order])
 ```
 
 The `heatmap` function that does all this for us:
 
 ```{r heatmap-2, out.width="100%", fig.height=7, eval=FALSE}
-heatmap(x, col = RColorBrewer::brewer.pal(11, "Spectral"))
+heatmap(y, col = RColorBrewer::brewer.pal(11, "Spectral"))
 ```
 
 Note we do not show the results of the heatmap function because there are too many features for the plot to be useful. We will therefore filter some columns and remake the plots.
-
-### Filtering features
 
 If only a few features are different between clusters, including all the features can add enough noise that making cluster detection challenging. A simple approach to avoid this is to assume low variability features are not informative and include only high variance features. For example, in the movie example, users with low variance in their ratings are not really distinguishing movies: all the movies seem about the same to them. 
 
@@ -141,12 +122,69 @@ Here is an example code showing how we can include only the features with high v
 
 ```{r heatmap-3, out.width="100%", fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
 library(matrixStats)
-sds <- colSds(x, na.rm = TRUE)
+sds <- colSds(y, na.rm = TRUE)
 o <- order(sds, decreasing = TRUE)[1:25]
-heatmap(x[,o], col = RColorBrewer::brewer.pal(11, "Spectral"))
+heatmap(y[,o], col = RColorBrewer::brewer.pal(11, "Spectral"))
 ```
 
 Note there are several other heatmap functions in R. A popular example is the `heatmap.2` in the **gplots** package.
+
+## k-means
+
+We have so far described just one clustering algorithm: hierarchical clustering. However, there are many others that take quite different approaches. To demonstrate another, we now introduce the *k-means* clustering algorithm.
+
+The k-means algorithm requires us to predefine \$k\$, the number of clusters we want to create. Once \$k\$ is set, the algorithm proceeds iteratively:
+
+1. *Initialization:* Define $k$ centers (chosen at random).
+2. *Assignment step:* Each observation is assigned to the cluster with the closest center.
+3. *Update step:* The centers are redefined by taking the mean of the observations in each cluster. These new centers are called *centroids*.
+4. *Iteration:* Steps 2 and 3 are repeated until the centers stabilize (converge).
+
+We can run k-means to see if it can discover the different tissues:
+
+```{r}
+set.seed(2001)
+k <- kmeans(y, centers = 7)
+```
+
+The cluster assignments are stored in the `cluster` component:
+
+```{r}
+k$cluster[1:5]
+```
+
+Because the initial centers are chosen at random (hence the use of `set.seed`), the resulting clusters can vary. To improve stability, we can repeat the process multiple times with different random starting points and keep the best result. The number of random starts is set with the `nstart` argument:
+
+```{r}
+k <- kmeans(y, centers = 7, nstart = 100)
+```
+
+
+We can evaluate how well the clusters match the known tissue labels:
+
+```{r}
+table(tissue_gene_expression$y, k$cluster)
+```
+
+The results show that k-means did a reasonably good job at recovering the tissue groups. For example, clusters 1, 3, 4, 5, and 7 correspond to cerebellum, liver, endometrium, kidney, and placenta, respectively. All hippocampus samples are grouped in cluster 6, though five cerebellum samples are incorrectly included there. Cluster 2 captures almost all colon samples, with just one kidney misclassified.
+
+
+## Recommended Reading
+
+- Kaufman, L. & Rousseeuw, P. J. (2005).  
+  *Finding Groups in Data: An Introduction to Cluster Analysis.*  
+  Wiley.  
+  — A foundational text on clustering, introducing key methods such as partitioning, hierarchical clustering, and density-based approaches, with practical insights and examples.
+
+- Maechler, M., Rousseeuw, P., Struyf, A., Hubert, M., & Hornik, K. (2025).  
+  *cluster: Cluster Analysis Basics and Extensions.*  
+  R package version 2.1.8. Available at: [https://cran.r-project.org/package=cluster](https://cran.r-project.org/package=cluster)  
+  — The main R package for clustering, providing implementations of many of the methods described in Kaufman & Rousseeuw (2005), along with practical extensions and tools for applied work.
+
+- Hastie, T., Tibshirani, R., & Friedman, J. (2009).  
+  *The Elements of Statistical Learning: Data Mining, Inference, and Prediction* (2nd ed.).  
+  Springer.  
+  — A comprehensive reference covering supervised and unsupervised learning, including clustering, dimension reduction, and th
 
 ## Exercises 
 
@@ -159,5 +197,5 @@ Note there are several other heatmap functions in R. A popular example is the `h
 3\. Run a k-means clustering on the data with $K=7$. Make a table comparing the identified clusters to the actual tissue types. Run the algorithm several times to see how the answer changes.
 
 
-4\. Select the 50 most variable genes. Make sure the observations show up in the columns, that the predictors are centered, and add a color bar to show the different tissue types. Hint: use the `ColSideColors` argument to assign colors. Also, use `col = RColorBrewer::brewer.pal(11, "RdBu")` for a better use of colors.
+4\. Make a heatmap of the 50 most variable genes. Make sure the observations show up in the columns, that the predictors are centered, and add a color bar to show the different tissue types. Hint: use the `ColSideColors` argument to assign colors. Also, use `col = RColorBrewer::brewer.pal(11, "RdBu")` for a better use of colors.
 

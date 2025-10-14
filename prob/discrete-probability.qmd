@@ -10,25 +10,26 @@ For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-prob
 
 [^discrete-probability-1]: https://en.wikipedia.org/wiki/Urn_problem
 
-A more tangible way to think about the probability of an event is as the proportion of times the event occurs when we repeat the experiment an infinite number of times, independently, and under the same conditions.
-
+A more intuitive way to think about the probability of an event is as the long-run proportion of times the event occurs when an experiment is repeated independently and under identical conditions, an infinite number of times. This interpretation naturally leads to one of the most powerful techniques in data science—Monte Carlo simulations, which we will explore later in this chapter.
 
 ## Probability distributions
 
+Probability distributions are the foundation of most statistical models. They describe how likely different outcomes are, providing a mathematical summary of uncertainty. Every model we use in data analysis, from simple polling examples to complex multivariate models, is built on assumptions about underlying probability distributions. As we move to continuous and multidimensional settings, these distributions become more complex and abstract. For discrete cases, however, the idea is quite intuitive: each possible outcome, or category, is assigned a probability based on its relative frequency.
+
 If we know the relative frequency of the different categories, defining a distribution for categorical outcomes is relatively straightforward. We simply assign a probability to each category. In cases analogous to beads in an urn, for each bead type, their proportion defines the distribution.
 
-If we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% undecided, and 2% Green Party, these proportions define the probability for each group. The probability distribution is:
+For example, if we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% Undecided, and 2% Green Party, these proportions define the probability for each group in any given call. The probability distribution is:
 
-|                          |     |      |
-|--------------------------|-----|------|
-| Pr(picking a Republican) | =   | 0.44 |
-| Pr(picking a Democrat)   | =   | 0.44 |
-| Pr(picking an undecided) | =   | 0.10 |
-| Pr(picking a Green)      | =   | 0.02 |
+|                          |   |      |
+| ------------------------ | - | ---- |
+| Pr(picking a Republican) | = | 0.44 |
+| Pr(picking a Democrat)   | = | 0.44 |
+| Pr(picking an Undecided) | = | 0.10 |
+| Pr(picking a Green)      | = | 0.02 |
 
 ## Monte Carlo 
 
-Computers provide a way to actually perform the simple random experiment described above: pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
+Computers provide a way to actually perform the simple random long-run experiment described above: pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
 
 An example is the `sample` function in R. We demonstrate its use in the code below. First, we use the function `rep` to generate the urn:
 
@@ -42,30 +43,41 @@ and then use `sample` to pick a bead at random:
 sample(beads, 1)
 ```
 
-This line of code produces a single random outcome. We want to repeat this experiment an infinite number of times, but it is impossible to repeat indefinitely. Instead, we repeat the experiment a large enough number of times to make the results practically equivalent to repeating indefinitely. **This is an example of a *Monte Carlo* simulation**.
+This line of code produces a single random outcome. We want to repeat this experiment an infinite number of times, but it is impossible to repeat indefinitely. Instead, we repeat the experiment a large enough number of times to make the results _practically equivalent_ to repeating indefinitely. This is an example of a *Monte Carlo* simulation.
 
 Much of what mathematical and theoretical statisticians study, topics that we do not cover in this book, relates to providing rigorous definitions of "practically equivalent". Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this section, we provide a practical approach to determining what is "large enough".
 
 To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event 10,000 times:
 
 ```{r}
+set.seed(1986) 
 events <- replicate(10000, sample(beads, 1))
 ```
 
+:::{.callout-note}
+Here we use the `replicate` function for educational purposes, but there is a faster way to generate this simulation using:
+
+```{r}
+#| eval: false
+sample(beads, 10000, replace = TRUE)
+```
+
+which we explain in the following section.
+:::
+  
 We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to see the distribution:
 
 ```{r}
-tab <- table(events)
-tab
+table(events)
 ```
 
 and `prop.table` gives us the proportions:
 
 ```{r}
-prop.table(tab)
+prop.table(table(events))
 ```
 
-The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory, not covered here, tells us that as $B$ gets larger, the estimates get closer to 3/5=.6 and 2/5=.4.
+The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory tells us that as $B$ gets larger, the estimates get closer to 3/5=.6 and 2/5=.4.
 
 This is a simple and not very useful example, since we can easily compute the probabilities mathematically. Monte Carlo simulations are useful when it is hard, or impossible, to compute the exact probabilities mathematically. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
 
@@ -77,7 +89,7 @@ Before we continue, we will briefly explain the following important line of code
 set.seed(1986) 
 ```
 
-Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when following the code as presented. This is actually fine, given that the results are random and change over time. However, if you want to ensure that results are consistent with each run, you can set R's random number generation seed to a specific number. Above we set it to 1986. We want to avoid using the same seed every time. A popular way to pick the seed is the year - month - day. For example, we chose 1986 on December 20, 2018: $2018 - 12 - 20 = 1986$.
+Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when following the code as presented. This is actually fine, given that the results are random and change by chance. However, if you want to ensure that results are consistent with each run, you can set R's random number generation seed to a specific number. Above we set it to 1986. We want to avoid using the same seed every time and we used a popular way to pick the seed which is year - month - day. For example, we chose 1986 on December 20, 2018: $2018 - 12 - 20 = 1986$.
 
 You can learn more about setting the seed by looking at the documentation:
 
@@ -98,105 +110,53 @@ sample(beads, 5)
 
 This results in rearrangements that consistently comprise three blue and two red beads. If we ask that six beads be selected, we get an error.
 
-However, the `sample` function can be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
+However, the `sample` function can therefore be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
 
 ```{r}
+#| eval: false
 events <- sample(beads, 10000, replace = TRUE)
-prop.table(table(events))
 ```
-
-Not surprisingly, we get results very similar to those previously obtained with `replicate`.
-
 
 ## Combinations and permutations
 
-In our very first example, we imagined an urn with five beads. As a reminder, to compute the probability distribution of a single draw, we simply listed out all the possibilities, which amounted to 5. Subsequently, for each event, we counted how many of these possibilities were associated with the event. The resulting probability of choosing a blue bead is 3/5, as three of the five possible outcomes were blue.
+Most university-level statistics courses begin with combinatorics, which provides the foundation for many probability calculations. These techniques let us count the number of outcomes that satisfy a condition, typically by computing the number of *permutations* (when order matters) or *combinations* (when order does not matter).  
 
-For more complicated cases, the computations are not as straightforward. For instance, what is the probability that, if I draw five cards without replacement, I get all cards of the same suit, which is known as a _flush_ in poker? In a discrete probability course, you learn theory on how to make these computations. Here, we focus on how to use R code to compute the answers.
+To make these ideas concrete, let’s return to a familiar setting: cards. Suppose we want to understand the probability of drawing specific hands from a deck. This example helps demonstrate how combinatorics works and how we can use R to perform these calculations.
 
-First, let's construct a deck of cards. For this, we will use the `expand.grid` and `paste` functions:
+First, let’s build a deck of cards:
 
 ```{r}
 suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
-numbers <- c("Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven", 
+numbers <- c("Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven",
              "Eight", "Nine", "Ten", "Jack", "Queen", "King")
 deck <- expand.grid(number = numbers, suit = suits)
 deck <- paste(deck$number, deck$suit)
 ```
 
-With the deck constructed, we can double-check that the probability of a King as the first card is 1/13 by computing the proportion of possible outcomes that satisfy our condition:
+If we draw one card at random, the probability of getting a King is 1/13:
 
 ```{r}
 mean(deck %in% paste("King", suits))
 ```
 
-Now, what about the conditional probability of the second card being a King, given that the first card was a King? Earlier, we deduced that if one King is already drawn from the deck, leaving 51 cards, then this probability is 3/51. Let's confirm by listing out all possible outcomes.
+Now let’s introduce the two key functions: `permutations()` and `combinations()` from the **gtools** package. These let us enumerate all possible selections from a list, depending on whether order matters.
 
-To do this, we can use the `permutations` function from the **gtools** package. For any list of size `n`, this function computes all the different combinations we can obtain when we select `r` items. Here are all the ways we can choose two numbers from a list consisting of `1,2,3`:
+For example:
 
 ```{r, message=FALSE, warning=FALSE}
 library(gtools)
 permutations(3, 2)
 ```
 
-Observe that the order matters here: 3,1 is different than 1,3. Also, note that (1,1), (2,2), and (3,3) do not appear because once we pick a number, it can't appear again.
-
-Optionally, we can add a vector. If you want to see five random seven digit phone numbers out of all possible phone numbers (without repeats), you can type:
+This lists all ordered pairs from the numbers 1, 2, and 3. Notice that (1,2) and (2,1) are treated as distinct. If order does not matter, we use `combinations()`:
 
 ```{r}
-all_phone_numbers <- permutations(10, 7, v = 0:9)
-all_phone_numbers[sample(nrow(all_phone_numbers), 5),]
+combinations(3, 2)
 ```
 
-Instead of using the numbers 1 through 10, the default, it uses what we provided through `v`: the digits 0 through 9.
+Now (1,2) and (2,1) are treated as the same outcome.
 
-To compute all possible ways we can choose two cards when the order matters, we type:
-
-```{r}
-hands <- permutations(52, 2, v = deck)
-```
-
-This is a matrix with two columns and `r nrow(hands)` rows. With a matrix, we can obtain the first and second cards like this:
-
-```{r}
-first_card <- hands[,1]
-second_card <- hands[,2]
-```
-
-Now, the cases for which the first hand was a King can be computed as follows:
-
-```{r}
-kings <- paste("King", suits)
-sum(first_card %in% kings)
-```
-
-To get the conditional probability, we compute what fraction of these have a King as the second card:
-
-```{r}
-sum(first_card %in% kings & second_card %in% kings)/sum(first_card %in% kings)
-```
-
-which is exactly 3/51, as we had already deduced. Notice that the code above is equivalent to:
-
-```{r}
-mean(first_card %in% kings & second_card %in% kings)/mean(first_card %in% kings)
-```
-
-which uses `mean` instead of `sum` and is an R version of:
-
-$$
-\frac{\mbox{Pr}(A \mbox{ and } B)}{ \mbox{Pr}(A)}
-$$
-
-What about if the order does not matter? For example, in Blackjack, if you obtain an Ace and a face card in the first draw, it is called a *Natural 21*, and you win automatically. If we wanted to compute the probability of this happening, we would enumerate the *combinations*, not the permutations, since the order does not matter.
-
-```{r}
-combinations(3,2)
-```
-
-In the second line, the outcome does not include (2,1) because (1,2) already was enumerated. The same applies to (3,1) and (3,2).
-
-So to compute the probability of a *Natural 21* in Blackjack, we can do this:
+Let’s use these tools to compute the probability of a *Natural 21* in Blackjack, which occurs when a player’s first two cards are an Ace and a face card (Jack, Queen, King, or Ten). Since order does not matter, we use `combinations()`:
 
 ```{r}
 aces <- paste("Ace", suits)
@@ -204,53 +164,26 @@ facecard <- c("King", "Queen", "Jack", "Ten")
 facecard <- expand.grid(number = facecard, suit = suits)
 facecard <- paste(facecard$number, facecard$suit)
 hands <- combinations(52, 2, v = deck)
-mean(hands[,1] %in% aces & hands[,2] %in% facecard)
-```
-
-In the last line, we assume the Ace comes first. This assumption is made based on our knowledge of how `combination` enumerates possibilities, and it will list this case first. However, to be safe, we could have written this and produced the same answer:
-
-```{r}
 mean((hands[,1] %in% aces & hands[,2] %in% facecard) |
        (hands[,2] %in% aces & hands[,1] %in% facecard))
 ```
 
-### Monte Carlo example
+### Monte Carlo approach
 
-Instead of using `combinations` to deduce the exact probability of a Natural 21, we can use a Monte Carlo to estimate this probability. In this case, we draw two cards over and over and keep track of how many 21s we obtain. We can use the function sample to draw two cards without replacement:
-
-```{r}
-x <- sample(deck, 2)
-```
-
-and then check if one card is an Ace and the other is a face card or a 10. Going forward, we include 10 when we refer to a *face card*. Now, we need to check both possibilities:
-
-```{r}
-(x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
-```
-
-If we repeat this 10,000 times, we get a very good approximation of the probability of a Natural 21.
-
-Let's start by writing a function that draws a hand and returns TRUE if we get a 21. The function does not need any arguments because it uses objects defined in the global environment.
+We can obtain the same result through simulation. Instead of enumerating all combinations, we repeatedly draw two cards from the deck and check whether we have a Natural 21. This is a Monte Carlo approximation to the same probability.
 
 ```{r}
 blackjack <- function(){
    x <- sample(deck, 2)
-  (x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
+   (x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
 }
-```
 
-Here. we do have to check both possibilities: Ace first or Ace second, because we are not using the `combinations` function. The function returns `TRUE` if we get a 21 and `FALSE` otherwise:
-
-```{r}
-blackjack()
-```
-
-Now we can play this game, say, 10,000 times:
-
-```{r}
 results <- replicate(10000, blackjack())
 mean(results)
 ```
+
+Both approaches yield nearly the same result. The combinatoric functions give the exact probability, while the Monte Carlo simulation provides an approximation that converges to the same value as the number of repetitions increases.
+
 
 ## Examples
 
@@ -269,23 +202,19 @@ We can use probability to demonstrate that if you stick with the original door c
 Let's start with the stick strategy:
 
 ```{r}
-monty_hall <- function(strategy){
-  doors <- as.character(1:3)
-  prize <- sample(c("car", "goat", "goat"))
-  prize_door <- doors[prize == "car"]
-  my_pick  <- sample(doors, 1)
-  show <- sample(doors[!doors %in% c(my_pick, prize_door)],1)
-  stick <- my_pick
-  stick == prize_door
-  switch <- doors[!doors %in% c(my_pick, show)]
-  choice <- ifelse(strategy == "stick", stick, switch)
-  choice == prize_door
+monty_hall <- function(strategy = c("stick", "switch")) {
+  strategy <- match.arg(strategy)
+  doors <- c("1", "2", "3")
+  prize_door <- sample(doors, 1)
+  my_pick <- sample(doors, 1)
+  show <- sample(setdiff(doors, c(my_pick, prize_door)), 1)
+  final_pick <- if (strategy == "stick") my_pick else 
+    setdiff(doors, c(my_pick, show))
+  final_pick == prize_door
 }
 B <- 10000
-stick <- replicate(B, monty_hall("stick"))
-mean(stick)
-switch <- replicate(B, monty_hall("switch"))
-mean(switch)
+mean(replicate(B, monty_hall("stick")))
+mean(replicate(B, monty_hall("switch")))
 ```
 
 As we write the code, we see that the lines starting with `my_pick` and `show` have no influence on the last logical operation, when we stick to our original choice. From this, we should realize that the chance is 1 in 3, as we initially considered. When we switch, the Monte Carlo estimate confirms the 2/3 calculation. This helps us gain some insight by demonstrating that we are removing a door, `show`, that is definitely not a winner from our choices. We also see that unless we get it right when we first pick, we win 1 - 1/3 = 2/3 of the times.
@@ -316,27 +245,17 @@ In this case, we see that it did happen; there were at least two people who had 
 To estimate the probability of a shared birthday in the group, we repeat this experiment by repeatedly sampling sets of 50 birthdays:
 
 ```{r birthday-problem}
-same_birthday <- function(n){
-  bdays <- sample(1:365, n, replace = TRUE)
-  any(duplicated(bdays))
-}
+same_birthday <- function(n) any(duplicated(sample(1:365, n, replace = TRUE)))
 results <- replicate(10000, same_birthday(50))
 mean(results)
 ```
 
-Were you expecting the probability to be this high?
-
-People tend to underestimate these probabilities. To get an intuition as to why it is so high, think about what happens when the group size is close to 365. At this stage, we run out of days and the probability is one.
-
-Let's say we want to use this knowledge to make bet with friends about the likelihood of two people sharing the same birthday in a group. At what group size do the chances become greater than 50%? Greater than 75%?
+People tend to underestimate these probabilities so let's say we want to use this knowledge to make bet with friends about the likelihood of two people sharing the same birthday in a group. At what group size do the chances become greater than 50%? Greater than 75%? 
 
 Let's create a look-up table. We can quickly create a function to compute this for any group size:
 
 ```{r}
-compute_prob <- function(n, B = 10000){
-  results <- replicate(B, same_birthday(n))
-  mean(results)
-}
+compute_prob <- function(n, B = 10000) mean(replicate(B, same_birthday(n)))
 ```
 
 Using the function `sapply`, we can perform element-wise operations on any function:
@@ -349,15 +268,13 @@ prob <- sapply(n, compute_prob)
 We can now make a plot of the estimated probabilities of two people having the same birthday in a group of size $n$:
 
 ```{r birthday-problem-mc-probabilities, warning=FALSE, message=FALSE}
-prob <- sapply(n, compute_prob)
 plot(n, prob)
 ```
 
 Now, let's compute the exact probabilities instead of relying on Monte Carlo approximations. Not only do we obtain the exact answer using math, but the computations are much faster since we did not have to generate experiments.
 
-To make the math simpler, instead of computing the probability of it happening, we will compute the probability of it not happening. For this, we use the multiplication rule.
-
-Let's start with the first person. The probability that person 1 has a unique birthday is 1. The probability that person 2 has a unique birthday, given that person 1 already took one day, is 364/365. Subsequently, given that the first two people have unique birthdays, person 3 is left with 363 days to choose from. This pattern continues, and we find that the chances of all 50 people having a unique birthday is:
+To make the math simpler, instead of computing the probability of it happening, we will compute the probability of it not happening. For this, we use the multiplication rule:
+The probability that person 1 has a unique birthday is 1. The probability that person 2 has a unique birthday, given that person 1 already took one day, is 364/365, and so on. The chances of all $n$ people having a unique birthday is therefore:
 
 $$
 1 \times \frac{364}{365}\times\frac{363}{365} \dots \frac{365-n + 1}{365}
@@ -366,10 +283,7 @@ $$
 We can write a function that does this for any number:
 
 ```{r birthday-problem-exact-probabilities}
-exact_prob <- function(n){
-  prob_unique <- seq(365, 365 - n + 1)/365 
-  1 - prod( prob_unique)
-}
+exact_prob <- function(n) 1 - prod(seq(365, 365 - n + 1)/365)
 eprob <- sapply(n, exact_prob)
 plot(n, prob)
 lines(n, eprob, col = "red")
@@ -387,15 +301,24 @@ One practical approach is to check for the stability of the estimate. The follow
 
 ```{r monte-carlo-convergence}
 B <- 10^seq(1, 5, len = 100)
-compute_prob <- function(B, n = 25){
-  same_day <- replicate(B, same_birthday(n))
-  mean(same_day)
-}
+compute_prob <- function(B, n = 25) mean(replicate(B, same_birthday(n)))
 prob <- sapply(B, compute_prob)
 plot(log10(B), prob)
 ```
 
 In this plot, we can see that the values start to stabilize at around 1000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
+
+## Recommended reading
+
+### Recommended reading
+
+For readers who want to explore discrete probability in more depth, here are a few classic and accessible resources:
+
+1. **Introduction to Probability** by Joseph K. Blitzstein and Jessica Hwang - an engaging, example-driven introduction that emphasizes problem solving and intuition. 
+
+2. **A First Course in Probability** by Sheldon Ross — a widely used undergraduate text that builds a solid foundation through clear explanations and a broad range of exercises.  
+
+3. **An Introduction to Probability Theory and Its Applications, Volume 1** by William Feller — a rigorous classic that provides a deeper and more formal treatment of the subject.
 
 ## Exercises
 
@@ -433,7 +356,7 @@ prob_win <- function(p){
   B <- 10000
   result <- replicate(B, {
     b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1 - p, p))
-    sum(b_win)>=4
+    sum(b_win) >= 4
   })
   mean(result)
 }

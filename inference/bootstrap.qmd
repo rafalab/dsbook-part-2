@@ -16,17 +16,21 @@ hist(income/10^3, nclass = 1000)
 The population median is:
 
 ```{r}
-m <- median(income)
-m
+median(income)
 ```
 
-Suppose we don't have access to the entire population, but want to estimate the median $m$. We take a sample of 100 and estimate the population median $m$ with the sample median $M$:
+Suppose we don’t have access to the entire population but want to estimate the population median, denoted by $m$. We take a random sample of 100 observations and use the sample median, $M$, as our estimate of $m$:
 
 ```{r}
 N <- 100
 x <- sample(income, N)
 median(x)
 ```
+
+The question now becomes: how can we assess the uncertainty in this estimate? In other words, how do we compute a standard error and construct a confidence interval for $m$ based on our sample?
+
+In the following sections, we introduce the *bootstrap*, a powerful resampling method that allows us to estimate variability and construct confidence intervals without relying on strong distributional assumptions.
+
 
 ## Confidence intervals for the median
 
@@ -55,7 +59,7 @@ hist(m, nclass = 30)
 qqnorm(scale(m)); abline(0,1)
 ```
 
-If we know this distribution, we can construct a confidence interval. The problem here is that, as we have already described, in practice we do not have access to the distribution. In the past, we have used the Central Limit Theorem, but the CLT we studied applies to averages and here we are interested in the median. We can see that the 95% confidence interval based on CLT
+If we know this distribution, we can construct a confidence interval. The problem here is that, as we have already described, in practice we do not have access to the distribution. In previous sections we have used CLT, but what we learned applies to averages and here we are interested in the median. We can see that the 95% confidence interval based on CLT
 
 ```{r}
 median(x) + 1.96*sd(x)/sqrt(N)*c(-1, 1)
@@ -67,9 +71,11 @@ is quite different from the confidence interval we would generate if we know the
 quantile(m, c(0.025, 0.975))
 ```
 
-The bootstrap permits us to approximate a Monte Carlo simulation without access to the entire distribution. The general idea is relatively simple. We act as if the observed sample is the population. We then sample, with replacement, datasets of the same sample size as the original dataset. Then we compute the summary statistic, in this case the median, on these *bootstrap samples*.
+The bootstrap allows us to approximate a Monte Carlo simulation even when we do not have access to the full population distribution. The idea is straightforward: we treat the observed sample as if it were the population. From this sample, we draw new datasets of the same size, with replacement, and compute the statistic of interest, in this case, the median, for each resampled dataset. These resampled datasets are called bootstrap samples.
 
-Theory tells us that, in many situations, the distribution of the statistics obtained with bootstrap samples approximate the distribution of our actual statistic. This is how we construct bootstrap samples and an approximate distribution:
+In many practical situations, the distribution of the statistics computed from bootstrap samples provides a good approximation to the sampling distribution of the original statistic. This approximation allows us to estimate variability, compute standard errors, and construct confidence intervals without knowing the true underlying distribution.
+
+The following code demonstrates how to generate bootstrap samples and approximate the sampling distribution of the median:
 
 ```{r}
 B <- 10^4
@@ -85,7 +91,15 @@ Note a confidence interval constructed with the bootstrap is much closer to one 
 quantile(m_star, c(0.025, 0.975))
 ```
 
-For more on the Bootstrap, including corrections one can apply to improve these confidence intervals, please consult the book *An introduction to the bootstrap* by Efron, B., & Tibshirani, R. J.
+## Recomended reading
+
+
+- **James, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). _An Introduction to Statistical Learning_ (2nd ed.). Springer.**  
+  Undergraduate friendly. See the chapter on resampling methods for a clear, concise introduction to the bootstrap with intuitive examples and code.
+
+- **Efron, B., & Tibshirani, R. J. (1993). _An Introduction to the Bootstrap_. Chapman & Hall/CRC.**  
+  The classic, authoritative treatment. Develops the bootstrap from first principles, with theory, practical guidance, and many examples.
+
 
 ## Exercises
 
