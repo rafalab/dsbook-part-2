@@ -124,7 +124,7 @@ c(coefficients(summary(fit))[2,3], t_stat)
 
 Intuitively, it makes sense, as both $\hat{\beta_1}$ and the numerator of the t-test are estimates of the treatment effect. 
 
-The one minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mbox{SD}[\varepsilon]$ as a standard deviation. Note that, although we don't demonstrate it with R here, we can redefine the linear model to have different standard errors for each group.
+The one minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mathrm{SD}[\varepsilon]$ as a standard deviation. Note that, although we don't demonstrate it with R here, we can redefine the linear model to have different standard errors for each group.
 
 :::{.callout-note}
 In the linear model description provided here, we assumed $\varepsilon$ follows a normal distribution. This assumption permits us to show that the statistics formed by dividing estimates by their estimated standard errors follow t-distribution, which in turn allows us to estimate p-values or confidence intervals. However, note that we do not need this assumption to compute the expected value and standard error of the least squared estimates. Furthermore, if the number of observations is large enough, then the central limit theorem applies and we can obtain p-values and confidence intervals even without the normal distribution assumption for the errors.
@@ -151,18 +151,18 @@ we see that the diet effect is observed for both sexes and that males are heavie
 A linear model that permits a different expected value for the following four groups, 1) female on chow diet, 2) females on high-fat diet, 3) male on chow diet, and 4) males on high-fat diet, can be written like this: 
 
 $$
-Y_i = \beta_1 x_{i,1} + \beta_2 x_{i,2}  + \beta_3 x_{i,3}  + \beta_4 x_{i,4}  + \varepsilon_i
+Y_i = \beta_1 x_{i1} + \beta_2 x_{i2}  + \beta_3 x_{i3}  + \beta_4 x_{i4}  + \varepsilon_i
 $$
 
-with $x_{i,1},\dots,x_{i,4}$ indicator variables for each of the four groups. Note that with this representation we allow the diet effect to be different for males and females. 
+with $x_{i1},\dots,x_{i4}$ indicator variables for each of the four groups. Note that with this representation we allow the diet effect to be different for males and females. 
 
 However, with this representation, none of the $\beta$s represent the effect of interest: the diet effect. A powerful feature of linear models is that we can rewrite the model so that the expected value for each group remains the same, but the parameters represent the effects we are interested in. So, for example, in the representation
 
 $$
-Y_i = \beta_0 + \beta_1 x_{i,1}  + \beta_2 x_{i,2}  + \beta_3 x_{i,1} x_{i,2}  + \varepsilon_i
+Y_i = \beta_0 + \beta_1 x_{i1}  + \beta_2 x_{i2}  + \beta_3 x_{i1} x_{i2}  + \varepsilon_i
 $$
 
-with $x_{i,1}$ an indicator that is 1 if individual $i$ is on the high-fat diet $x_{i,2}$ an indicator that is 1 if you are male, the $\beta_1$ is interpreted as the diet effect for females, $\beta_2$ as the average difference between males and females, and $\beta_3$ the difference in the diet effect between males and females. In statistics, $\beta_3$ is referred to as an _interaction effect_. The $\beta_0$ is considered the baseline value, which represents the population average weight of females on the chow diet. 
+with $x_{i1}$ an indicator that is 1 if individual $i$ is on the high-fat diet $x_{i2}$ an indicator that is 1 if you are male, the $\beta_1$ is interpreted as the diet effect for females, $\beta_2$ as the average difference between males and females, and $\beta_3$ the difference in the diet effect between males and females. In statistics, $\beta_3$ is referred to as an _interaction effect_. The $\beta_0$ is considered the baseline value, which represents the population average weight of females on the chow diet. 
 
 Statistical textbooks describe several other ways in which the model can be rewritten to obtain other types of interpretations. For example, we might want $\beta_2$ to represent the overall diet effect (the average between female and male effect) rather than the diet effect on females. This is achieved by defining what _contrasts_ we are interested in.
 
@@ -183,7 +183,7 @@ Note that the male effect is larger that the diet effect, and the diet effect is
 A common approach applied when more than one factor is thought to affect the measurement is to simply include an additive effect for each factor, like this:
 
 $$
-Y_i = \beta_0 + \beta_1 x_{i,1}  + \beta_2 x_{i,2}   + \varepsilon_i
+Y_i = \beta_0 + \beta_1 x_{i1}  + \beta_2 x_{i2}   + \varepsilon_i
 $$
 
 In this model, the $\beta_1$ is a general diet effect that applies regardless of sex. In R, we use the following code, employing a `+` instead of `*`:
@@ -235,9 +235,9 @@ Now, what if we really didn't want to define a reference level? What if we wante
 
 
 $$
-Y_i = \beta_0 + \beta_1 x_{i,1} + \beta_2 x_{i,2} + \varepsilon_i
+Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \varepsilon_i
 $$
-with $x_{i,1} = 1$, if observation $i$ is female and 0 otherwise, and $x_{i,2}=1$, if observation $i$ is male and 0 otherwise? 
+with $x_{i1} = 1$, if observation $i$ is female and 0 otherwise, and $x_{i2}=1$, if observation $i$ is male and 0 otherwise? 
 
 Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimate. In statistics, we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
 
@@ -270,10 +270,10 @@ table(mice_weights$gen)
 To estimate the variability due to the different generations, a convenient model is:
 
 $$
-Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \varepsilon_i
+Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{ij} + \varepsilon_i
 $$
 
-with $x_{i,j}$ indicator variables: $x_{i,j}=1$ if mouse $i$ is in level $j$ and 0 otherwise, $J$ representing the number of levels, in our example `r length(unique(mice_weights$gen))` generations, and the level effects constrained with 
+with $x_{ij}$ indicator variables: $x_{ij}=1$ if mouse $i$ is in level $j$ and 0 otherwise, $J$ representing the number of levels, in our example `r length(unique(mice_weights$gen))` generations, and the level effects constrained with 
 
 $$
 \frac{1}{J} \sum_{j=1}^J \beta_j = 0 \implies \sum_{j=1}^J \beta_j = 0. 
@@ -346,15 +346,15 @@ When the model includes more than one factor, writing down linear models can bec
 
 
 $$
-Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i \mbox{ with }\sum_{j=1}^J \beta_j=0 \mbox{ and } \sum_{k=1}^K \beta_{J+k} = 0,
+Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{ij} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i \mbox{ with }\sum_{j=1}^J \beta_j=0 \mbox{ and } \sum_{k=1}^K \beta_{J+k} = 0,
 $$
 
-the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor.
+the $x_{i1},\dots,x_{ij}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor.
 
 An alternative approach widely used in ANOVA to avoid indicator variables, is to save the data in an array, using different Greek letters to denote factors and indices to denote levels:
 
 $$
-Y_{i,j,k} = \mu + \alpha_j + \beta_k + \varepsilon_{i,j,k}
+Y_{ijk} = \mu + \alpha_j + \beta_k + \varepsilon_{ijk}
 $$
 
 with $\mu$ the overall mean, $\alpha_j$ the effect of level $j$ in the first factor, and $\beta_k$ the effect of level $k$ in the second factor. The constraint can now be written as: 
@@ -415,22 +415,22 @@ We want to answer the question: is there a pollster bias? Make a plot showing th
 
 The urn model theory says nothing about pollster effect. Under the urn model, both pollsters have the same expected value: the election day difference, that we call $\mu$.
 
-To answer the question "is there an urn model?" we will model the observed data $Y_{i,j}$ in the following way:
+To answer the question "is there an urn model?" we will model the observed data $Y_{ij}$ in the following way:
 
 $$
-Y_{i,j} = \mu + b_i + \varepsilon_{i,j}
+Y_{ij} = \mu + b_i + \varepsilon_{ij}
 $$
 
 with $i=1,2$ indexing the two pollsters, $b_i$ the bias for pollster $i$, and $\varepsilon_ij$ poll to poll chance variability. We assume the $\varepsilon$ are independent from each other, have expected value $0$, and standard deviation $\sigma_i$ regardless of $j$.
 
 Which of the following best represents our question?
 
-a.  Is $\varepsilon_{i,j}$ = 0?
-b.  How close are the $Y_{i,j}$ to $\mu$?
+a.  Is $\varepsilon_{ij}$ = 0?
+b.  How close are the $Y_{ij}$ to $\mu$?
 c.  Is $b_1 \neq b_2$?
 d.  Are $b_1 = 0$ and $b_2 = 0$ ?
 
-9\. On the right side of this model, only $\varepsilon_{i,j}$ is a random variable; the other two are constants. What is the expected value of $Y_{1,j}$?
+9\. On the right side of this model, only $\varepsilon_{ij}$ is a random variable; the other two are constants. What is the expected value of $Y_{1,j}$?
 
 10\. Suppose we define $\bar{Y}_1$ as the average of poll results from the first poll, $Y_{1,1},\dots,Y_{1,N_1}$, where $N_1$ is the number of polls conducted by the first pollster:
 

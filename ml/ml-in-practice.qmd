@@ -74,6 +74,8 @@ The __caret__ `train` function lets us train different algorithms using similar 
 
 ```{r}
 #| cache: false
+#| message: false
+#| warning: false
 library(caret)
 train_glm <- train(y ~ ., method = "glm", data = mnist_27$train)
 train_qda <- train(y ~ ., method = "qda", data = mnist_27$train)
@@ -84,7 +86,7 @@ As we explain in more detail in @sec-caret-cv, the `train` function selects para
 
 ### The `predict` function
 
-The `predict` function is very useful for machine learning applications. This function takes an object from a fitting function and a data frame with features $\mathbf{x}$ for which to predict, and returns predictions for these features. 
+The predict function is one of the most useful tools in R for machine learning and statistical modeling. It takes a fitted model object and a data frame containing the features $\mathbf{x}$ for which we want to make predictions, then returns the corresponding predicted values.
 
 Here is an example with logistic regression:
 
@@ -131,7 +133,7 @@ This permits us to quickly compare the algorithms. For example, we can compare t
 
 ```{r}
 fits <- list(glm = y_hat_glm, qda = y_hat_qda, knn = y_hat_knn)
-sapply(fits, function(fit) confusionMatrix(fit, mnist_27$test$y)$overall[["Accuracy"]])
+sapply(fits, function(f) confusionMatrix(f, mnist_27$test$y)$overal[["Accuracy"]])
 ```
 
 
@@ -158,12 +160,13 @@ train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
 you can quickly see the results of the cross validation using the `ggplot` function. The argument `highlight` highlights the max:
 
 ```{r caret-highlight}
+#| warning: false
 ggplot(train_knn, highlight = TRUE)
 ```
 
 By default, the resampling is performed by taking 25 bootstrap samples, each comprised of 25% of the observations. 
 
-For the `kNN` method, the default is to try $k=5,7,9$. We change this using the `tuneGrid` argument. The grid of values must be supplied by a data frame with the parameter names as specified in the `modelLookup` output. 
+For the `knn` method, the default is to try $k=5,7,9$. We change this using the `tuneGrid` argument. The grid of values must be supplied by a data frame with the parameter names as specified in the `modelLookup` output. 
 
 Here we present an example where we try out 38 values between 1 and 75. To do this with __caret__, we need to define a column named `k`, so we use this:  `data.frame(k = seq(1, 75, 2))`. Note that when running this code, we are fitting 38 versions of kNN to 25 bootstrapped samples. Since we are fitting $38 \times 25 = 950$ kNN models, running this code will take several seconds.
 
@@ -189,6 +192,7 @@ train_knn$bestTune
 and the best performing model like this:
 
 ```{r}
+#| echo: false
 train_knn$finalModel
 ```
 
@@ -199,7 +203,7 @@ confusionMatrix(predict(train_knn, mnist_27$test, type = "raw"),
                 mnist_27$test$y)$overall["Accuracy"]
 ```
 
-Bootstrapping is not always the best approach to resampling (see [@sec-knn-in-practice], for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
+Bootstrapping is not always the best approach to resampling (see @sec-knn-in-practice, for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
 
 ```{r cv-10-fold-accuracy-estimate}
 control <- trainControl(method = "cv", number = 10, p = .9)
@@ -247,18 +251,12 @@ We can see the columns recommended for removal are the near the edges:
 image(matrix(1:784 %in% nzv, 28, 28))
 ```
 
-```{r near-zero-image, fig.width = 4, fig.height = 4, out.width="50%"}
+```{r near-zero-image, fig.width = 4, fig.height = 4, out.width="50%", echo=FALSE}
 rafalib::mypar()
 image(matrix(1:784 %in% nzv, 28, 28))
 ```
 
-So we end up removing 
-
-```{r}
-length(nzv)
-```
-
-predictors.
+So we end up removing `length(nzv)` = `r length(nzv)` redictors.
 
 The **caret** package features the `preProcess` function, which allows users to establish a predefined set of preprocessing operations based on a training set. This function is designed to apply these operations to new datasets without recalculating anything on the test set, ensuring that all preprocessing steps are consistent and derived solely from the training data.
 
@@ -270,15 +268,15 @@ centered_subsetted_x_test <- predict(pp, newdata = x_test)
 dim(centered_subsetted_x_test)
 ```
 
-Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. We will explore this functionality further in the context of a k-Nearest Neighbors model in [@knn-in-practice].
+Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. We will explore this functionality further in the context of a k-Nearest Neighbors model in @sec-knn-in-practice.
 
 ## Parallelization 
 
 During cross-validation or bootstrapping, the process of fitting models to different samples or using varying parameters can be performed independently. Imagine you are fitting 100 models; if you had access to 100 computers, you could theoretically speed up the process by a factor of 100 by fitting each model on a separate computer and then aggregating the results. In reality, most modern computers, including many personal computers, are equipped with multiple processors that allow for such parallel execution. This method, known as parallelization, leverages these multiple processors to conduct several computational tasks simultaneously, significantly accelerating the model training process. By distributing the workload across different processors, parallelization makes it feasible to manage large datasets and complex modeling procedures efficiently.
 
 
-The **caret** package is set up to run in parallel but you have to let R know that you are want to parallelize your work. To do this we can use the **doParallel** package:
- 
+The **caret** package is designed to take advantage of parallel processing, but you need to explicitly tell R to run tasks in parallel. To do this, we use the **doParallel** package:
+
 ```{r}
 library(doParallel)
 nc <- detectCores() - 1   # it is convention to leave 1 core for the OS
@@ -300,9 +298,13 @@ When parallelizing tasks across multiple processors, it's important to consider 
 
 ## k-nearest neighbors {#sec-knn-in-practice}
 
+In Section @sec-knn-cv-intro, we introduced the k-nearest neighbors (kNN) algorithm and described its intuition and mathematical formulation. Here, we focus on the practical aspects of applying kNN to real data. We will explore how to train and test kNN models in R, select an appropriate value of k, and evaluate performance using cross-validation and tuning techniques.
+
 :::{.callout-warning}
 Before starting this section, note that the first two calls to the `train` function in the code below can take several hours to run. This is a common challenge when training machine learning algorithms since we have to run the algorithm for each cross validation split and each set of tuning parameters being considered. In the next section, we will provide some suggestions on how to predict the duration of the process and ways to reduce. 
 :::
+
+### Limitations of Bootstrapping for kNN
 
 As we will see soon, the optimal $k$ for the MNIST data is between 1 and 7. For small values of $k$, bootstrapping can be problematic for estimating MSE for a k-Nearest Neighbors (kNN). This is because bootstrapping involves sampling with replacement from the original dataset which implies the closest neighbor will often appear twice but considered two independent observations by kNN. This is a unrealistic scenario that can distort the estimate MSE when, for example, $k=3$. We therefore use cross-validation to estimate our MSE.
 
@@ -413,7 +415,8 @@ confusionMatrix(y_hat_rf, y_test)$overall["Accuracy"]
 
 By optimizing some of the other algorithm parameters, we can achieve even higher accuracy.
 
-## Testing and improving computation time
+
+### Testing and improving computation time
 
 The default method for estimating accuracy used by the `train` function is to test prediction on 25 bootstrap samples. This can result in long compute times. For example, if we are considering several values, say 10, of the tuning parameters, we will fit the algorithm 250 times. We can use the `system.time` function to estimate how long it takes to run the algorithm once:
 
@@ -426,7 +429,7 @@ and use this to estimate the total time for the 250 iterations. In this case it 
 
 One way to reduce run time is to use k-fold cross validation with a smaller number of test sets. A popular choice is leaving out 5 test sets with 20% of the data. To use this we set the `trControl` argument in train to `trainControl(method = "cv", number = 5, p = .8)`.
 
-For random forest, we can also speed up the training step by running less trees per fit. After running the algorithm once, we can use the plot function to see how the error rate changes as the number of trees grows. 
+For random forest, we can also speed up the training step by running less trees per fit. After running the algorithm once, we can use the `plot` function to see how the error rate changes as the number of trees grows. 
 
 Here we can see that error rate stabilizes after about 200 trees:
 
@@ -436,9 +439,9 @@ plot(fit_rf)
 
 We can use this finding to speed up the cross validation procedure. Specifically, because the default is 500, by adding the argument `ntree = 200` to the call to `train` above, the procedure will finish 2.5 times faster.
 
-## Variable importance
+### Variable importance
 
-The following function computes the importance of each feature:
+We described variable importance in @sec-variable-importance. The following function computes the importance of each feature:
 
 ```{r}
 imp <- importance(fit_rf)
@@ -458,6 +461,7 @@ mat <- rep(0, ncol(x))
 mat[-nzv] <- imp
 image(matrix(mat, 28, 28))
 ```
+
 
 ## Diagnostics
 

@@ -88,21 +88,21 @@ train_set <- dt[-test_ind, ..cols]
 test_set <- test_set[movieId %in% train_set$movieId]
 ```
 
-We will use the array representation described in [@sec-anova], for the training data. Specifically, we denote ranking for movie $j$ by user $i$ as $y_{i,j}$. 
+We will use the array representation described in [@sec-anova], for the training data. Specifically, we denote ranking for movie $j$ by user $i$ as $y_{ij}$. 
 
 Note that two different movies can have the same title. For example, our dataset has three movies titled "King Kong". Titles are therefore not unique and we can't use them as IDs.
 
 :::{.callout-important}
-Although it is convenient to use the notation $y_{i,j}$, it is important to remember that we do **not** observe a value for every pair $(i,j)$. While the total number of users $i = 1, \dots, I$ and movies $j = 1, \dots, J$ defines a theoretical space of $I \times J$ possible ratings, the actual number of observed ratings,denoted by $N$, is typically **much smaller**. In our example, $N$ is far less than $I \times J$, reflecting the fact that most users rate only a small fraction of all available movies. We will use the mathematical notation  $\sum_{i,j}$ to represent a summation over all $N$ observed pairs.
+Although it is convenient to use the notation $y_{ij}$, it is important to remember that we do **not** observe a value for every pair $(i,j)$. While the total number of users $i = 1, \dots, I$ and movies $j = 1, \dots, J$ defines a theoretical space of $I \times J$ possible ratings, the actual number of observed ratings,denoted by $N$, is typically **much smaller**. In our example, $N$ is far less than $I \times J$, reflecting the fact that most users rate only a small fraction of all available movies. We will use the mathematical notation  $\sum_{i,j}$ to represent a summation over all $N$ observed pairs.
 :::
 
 
 ### Loss function {#sec-netflix-loss-function}
 
-The Netflix challenge decided on a winner based on the root mean squared error (RMSE) computed on the test set. Specifically, if $y_{i,j}$ is the rating for movie $j$ by user $i$ **in the test set** and $\hat{y}_{i,j}$ is our prediction based on the training set, RMSE was defined as:
+The Netflix challenge decided on a winner based on the root mean squared error (RMSE) computed on the test set. Specifically, if $y_{ij}$ is the rating for movie $j$ by user $i$ **in the test set** and $\hat{y}_{ij}$ is our prediction based on the training set, RMSE was defined as:
 
 $$
-\mbox{RMSE} = \sqrt{\frac{1}{N} \sum_{i,j} (y_{i,j} - \hat{y}_{i,j})^2}
+\mbox{RMSE} = \sqrt{\frac{1}{N} \sum_{ij} (y_{ij} - \hat{y}_{ij})^2}
 $$
 
 with $N$ being the number of user/movie combinations for which we made predictions and the sum occurring over all these combinations.
@@ -125,10 +125,10 @@ Let's start by building the simplest possible recommendation system: we predict 
 
 
 $$
-Y_{i,j} = \mu + \varepsilon_{i,j}
+Y_{ij} = \mu + \varepsilon_{ij}
 $$
 
-with $\varepsilon_{i,j}$ independent errors sampled from the same distribution centered at 0 and $\mu$ the _true_ rating for all movies. We know that the estimate that minimizes the RMSE is the least squares estimate of $\mu$ and, in this case, is the average of all ratings:
+with $\varepsilon_{ij}$ independent errors sampled from the same distribution centered at 0 and $\mu$ the _true_ rating for all movies. We know that the estimate that minimizes the RMSE is the least squares estimate of $\mu$ and, in this case, is the average of all ratings:
 
 ```{r}
 mu <- mean(train_set$rating)
@@ -160,7 +160,7 @@ we notice that there is substantial variability across users: some users are ver
 
 
 $$
-Y_{i,j} = \mu + \alpha_i + \varepsilon_{i,j}
+Y_{ij} = \mu + \alpha_i + \varepsilon_{ij}
 $$
 
 Statistics textbooks refer to the $\alpha$s as treatment effects. In the Netflix challenge papers, they refer to them as _bias_. 
@@ -173,7 +173,7 @@ We can again use least squares to estimate the $\alpha_i$ in the following way:
 fit <- lm(rating ~ userId, data = train_set)
 ```
 
-Note that because there are hundreds of $\alpha_i$, as each movie gets one, the `lm()` function will be slow here. In this case, we can show that the least squares estimate $\hat{\alpha}_i$ is just the average of $y_{i,j} - \hat{\mu}$ for each user $i$. So we can compute them this way:
+Note that because there are hundreds of $\alpha_i$, as each movie gets one, the `lm()` function will be slow here. In this case, we can show that the least squares estimate $\hat{\alpha}_i$ is just the average of $y_{ij} - \hat{\mu}$ for each user $i$. So we can compute them this way:
 
 ```{r}
 mu <- mean(train_set$rating)
@@ -183,7 +183,7 @@ a <- with(train_set[, .(a = mean(rating - mu)), by = userId],
 
 Note that going forward, in the code, we use `a` to represent $\alpha$, `b` to represent $\beta$,  and we drop the `hat` notation to represent estimates.
 
-Let's see how much our prediction improves once we use $\hat{y}_{i,j} = \hat{\mu} + \hat{\alpha}_i$. Because we know ratings can't be below 0.5 or above 5, we define the function `clamp`:
+Let's see how much our prediction improves once we use $\hat{y}_{ij} = \hat{\mu} + \hat{\alpha}_i$. Because we know ratings can't be below 0.5 or above 5, we define the function `clamp`:
 
 ```{r}
 clamp <- function(x, min = 0.5, max = 5) pmax(pmin(x, max), min)
@@ -203,7 +203,7 @@ The RMSE is reduced so we already see an improvement. But can we make it better?
 We know from experience that some movies are just generally rated higher than others. We can use a linear model with a _treatment effect_ $\beta_j$ for each movie, which can be interpreted as movie effect or the difference between the average ranking for movie $j$ and the overall average $\mu$: 
 
 $$
-Y_{i,j} = \mu + \alpha_i + \beta_j +\varepsilon_{i,j}
+Y_{ij} = \mu + \alpha_i + \beta_j +\varepsilon_{ij}
 $$
 
 We can again use least squares to estimate the $b_i$ in the following way:
@@ -212,7 +212,7 @@ We can again use least squares to estimate the $b_i$ in the following way:
 fit <- lm(rating ~ userId + movieId, data = train_set)
 ```
 
-However, this code generates a very large matrix with all the indicator variables needed to represent all `r uniqueN(train_set$userId)` users and `r uniqueN(train_set$movieId)` movies and the code will take time to run. So instead, for illustrative purposes, we use   an approximation used by the wining team: first computing the least square estimate $\hat{\mu}$ and $\hat{\alpha}_i$, and then estimating $\hat{\beta}_j$ as the average of the residuals $y_{i,j} - \hat{\mu} - \hat{\alpha}_i$:
+However, this code generates a very large matrix with all the indicator variables needed to represent all `r uniqueN(train_set$userId)` users and `r uniqueN(train_set$movieId)` movies and the code will take time to run. So instead, for illustrative purposes, we use   an approximation used by the wining team: first computing the least square estimate $\hat{\mu}$ and $\hat{\alpha}_i$, and then estimating $\hat{\beta}_j$ as the average of the residuals $y_{ij} - \hat{\mu} - \hat{\alpha}_i$:
 
 ```{r}
 mu <- mean(train_set$rating)
@@ -268,14 +268,14 @@ In fact, for Movies 2–5, it might be safer to ignore the single rating and sim
 The most common way to regularize predictions is through penalized regression, which controls how much the movie effects $\beta_j$ are allowed to vary. Instead of minimizing only the sum of squared errors, we modify the objective function by adding a penalty term that discourages large values of $\beta_j$, especially when these estimates are based on limited data. Specifically, we redefine the quantity we minimize by adding a penalty to the residual sum of squares:
 
 $$ 
-\sum_{i,j} \left(y_{i,j} - (\mu + \alpha_i + \beta_j) \right)^2 + \lambda \sum_{j} \beta_j^2
+\sum_{i,j} \left(y_{ij} - (\mu + \alpha_i + \beta_j) \right)^2 + \lambda \sum_{j} \beta_j^2
 $$
 The first term is just the sum of squares and the second is a penalty that gets larger when many $\beta_j$s are large. 
 
 In this particular model, using calculus, we can actually show that, if we know $\mu$ and the $\alpha_i$s, the values of $\beta_j$ that minimize this equation are:
 
 $$
-\hat{\beta}_j(\lambda) = \frac{1}{n_j + \lambda} \sum_{i=1}^{n_i} \left(y_{i,j} - \mu - \alpha_i\right)
+\hat{\beta}_j(\lambda) = \frac{1}{n_j + \lambda} \sum_{i=1}^{n_i} \left(y_{ij} - \mu - \alpha_i\right)
 $$
 
 where $n_j$ is the number of ratings made for movie $j$. 
@@ -330,12 +330,12 @@ rmse(resid)
 In the previous section, we motivated penalizing the size of the movie effect estimates  to reduce overfitting. This idea generalizes to a very popular approach for fitting linear models called _penalized least squares_. If you have a multivariate linear model 
 
 $$
-Y_i = \beta_0 + \sum_{j=1}^p x_{i,j}\beta_j + \varepsilon_i, \quad i = 1, \dots, N
+Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, N
 $$
 with a large number of parameters $p$, fitting a least squares model can lead to overfitting. As discussed in the previous section, one way to address this issue is to penalize the size of the parameter estimates by using a penalized least squares approach:
 
 $$
-\frac{1}{N}\sum_{i=1}^N \left( y_i - \left(\beta_0 + \sum_{j=1}^p x_{i,j}\beta_j\right)\right)^2 + \lambda \sum_{j=1}^p \beta_j^2
+\frac{1}{N}\sum_{i=1}^N \left( y_i - \left(\beta_0 + \sum_{j=1}^p x_{ij}\beta_j\right)\right)^2 + \lambda \sum_{j=1}^p \beta_j^2
 $$
 
 The first term is the normalized residual sum of squares, minimized by the `lm` function in R. We normalize, divide by $N$, so that the interpretation of $\lambda$ does not depend on data size. The second term is a penalty that increases with the size of the coefficients. The mean level $\beta_0$ is not penalized.
@@ -368,7 +368,7 @@ Similar to the reason we didn't run `lm`, we don't run this because it's computa
 In the next section, we present an approximation that allows fast estimation of the model parameters.
 
 :::{.callout-note}
-The linear model variables $x_{i,1},\dots,x_{i,p}$ needed to build a movie recommendation system would include hundreds of indicator variables, one for each movie and one for each user. Although we don't cover the mathematical or computational details in this book, it is important to note that much more efficient algorithms exist than those used by general-purpose functions like `lm` and `lm.ridge`. These functions are not optimized for scenarios where most of the variables in each row are zeros, as is the case here. Therefore, we do not recommend using them for problems of this scale and sparsity. 
+The linear model variables $x_{i1},\dots,x_{ip}$ needed to build a movie recommendation system would include hundreds of indicator variables, one for each movie and one for each user. Although we don't cover the mathematical or computational details in this book, it is important to note that much more efficient algorithms exist than those used by general-purpose functions like `lm` and `lm.ridge`. These functions are not optimized for scenarios where most of the variables in each row are zeros, as is the case here. Therefore, we do not recommend using them for problems of this scale and sparsity. 
 :::
 
 
@@ -465,16 +465,6 @@ if (knitr::is_html_output()) {
     kableExtra::kable_styling(font_size = 8)
 }
 ```
-
-
-
-## Recommended reading
-
-- **James, G., Witten, D., Hastie, T., & Tibshirani, R. (2021). *An Introduction to Statistical Learning* (2nd ed.).**  
-  A highly accessible introduction to statistical learning, including clear explanations and examples of regularization techniques such as ridge regression and the lasso. Available [online for free](https://www.statlearning.com/).
-
-- **Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning: Data Mining, Inference, and Prediction* (2nd ed.).**  
-  The authoritative reference on regularization and other machine learning techniques. More theoretical and in-depth, suited for readers looking for a deeper mathematical understanding.
 
 
 ## Exercises 

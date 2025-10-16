@@ -40,7 +40,7 @@ movie_map <- unique(train_set[,.(movieId, title)])
 In the previous chapter, we described how the model:
 
 $$ 
-Y_{i,j} = \mu + \alpha_i + \beta_j + \varepsilon_{i,j}
+Y_{ij} = \mu + \alpha_i + \beta_j + \varepsilon_{ij}
 $$
 
 can be used to model movie ratings and help make useful predictions. This model accounts for user differences through $\alpha_i$ and movie effects through $\beta_j$. However, the model ignores an important source of information related to the fact that groups of movies have similar rating patterns and groups of users have similar rating patterns as well.  
@@ -48,7 +48,7 @@ can be used to model movie ratings and help make useful predictions. This model 
 To see an example of this, we compute residuals:
 
 $$
-r_{i,j} = y_{i,j} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
+r_{ij} = y_{ij} - (\hat{\mu} + \hat{\alpha}_i + \hat{\beta}_j)
 $$
 
 using the `mu`, `a` and `b` computed in the previous chapter,
@@ -105,7 +105,7 @@ rownames(q) <- c(short_names)
 y <- p %*% t(q) + matrix(rnorm(nrow(p)*nrow(q), 0, 0.5), nrow(p), nrow(q))
 ```
 
-We start with a simple simulated example. Specifically, we simulate ratings $Y_{i,j}$ for six movies and 120 users. For simplicity we assume that these ratings have been adjusted for the movie and user effects described in [@sec-regularization]. We stored the results for 120 user and 6 movie effects in the object `y`:
+We start with a simple simulated example. Specifically, we simulate ratings $Y_{ij}$ for six movies and 120 users. For simplicity we assume that these ratings have been adjusted for the movie and user effects described in [@sec-regularization]. We stored the results for 120 user and 6 movie effects in the object `y`:
 
 ```{r}
 dim(y)
@@ -157,7 +157,7 @@ The resulting vector `p` represents, for each user, the difference in average ra
 hist(p, breaks = seq(-2, 2, 0.1))
 ```
 
-To see that we can approximate $Y_{i,j}$ with $p_iq_j$ we convert the vectors to matrices and use linear algebra:
+To see that we can approximate $Y_{ij}$ with $p_iq_j$ we convert the vectors to matrices and use linear algebra:
 
 ```{r e-vs-pq}
 p <- matrix(p); q <- matrix(q)
@@ -194,7 +194,7 @@ plot(p %*% t(q), y)
 This approximation with two factors can be written as:
 
 $$
-Y_{i,j} \approx p_{i,1}q_{j,1} + p_{i,2}q_{j,2}, i = 1 \dots, I \mbox{ and } j = 1, \dots, J
+Y_{ij} \approx p_{i1}q_{j1} + p_{i2}q_{j2}, i = 1 \dots, I \mbox{ and } j = 1, \dots, J
 $$
 with $I$ the number of users and $J$ the number of movies.
 
@@ -203,7 +203,7 @@ Using matrix representation we can rewrite the above question like this:
 $$
 \mathbf{Y} \approx \mathbf{P}\mathbf{Q}^\top
 $$
-with $\mathbf{Y}$ an $I\times J$ matrix with entries $Y_{i,j}$, $\mathbf{P}$ a $I\times K$ matrix with entries $p_{i,k}$, and $\mathbf{Q}$ a $J\times K$ matrix with entries $q_{j,k}$.
+with $\mathbf{Y}$ an $I\times J$ matrix with entries $Y_{ij}$, $\mathbf{P}$ a $I\times K$ matrix with entries $p_{ik}$, and $\mathbf{Q}$ a $J\times K$ matrix with entries $q_{jk}$.
 
 This analysis provides insights into the process generating our data since $\mathbf{P}$ contains user-specific parameters and $\mathbf{Q}$ contains movie-specific parameters. The approach is often referred to as *matrix factorization* because the rating matrix has been *factorized* into two lower-dimensional, interpretable matrices. 
 
@@ -256,7 +256,7 @@ PCA is automatically discovering the structure we inferred using our knowledge o
 To see this assume that data $\mathbf{Y}$ follows the model:
 
 $$
-Y_{i,j} = \sum_{k=1}^K p_{i,k}q_{j,k} + \varepsilon_{i,j}, i=1,\dots,I, \, j = 1,\dots J \mbox{ or }
+Y_{ij} = \sum_{k=1}^K p_{ik}q_{jk} + \varepsilon_{ij}, i=1,\dots,I, \, j = 1,\dots J \mbox{ or }
 \mathbf{Y} =  \mathbf{P}\mathbf{Q} ^\top + \boldsymbol{\varepsilon}
 $$
 with the constraint 
@@ -301,18 +301,18 @@ This suggests that we can improve the predictions from [@sec-regularization] by 
 To account for interaction such as these we use a latent factor model. Specifically, we extend the model from [@sec-regularization] to include factors that capture similarities between movies:
 
 $$
-Y_{i,j} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k} + \varepsilon_{i,j}
+Y_{ij} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{ik}q_{jk} + \varepsilon_{ij}
 $$
 
 Recall that, as explained in the previous chapter, we do not observe all $(i,j)$ combinations. Writing the data as an $I \times J$ matrix $\mathbf{Y}$, with $I$ users and $J$ movies, would produce many missing values.
 
-However, the sum $\sum_{k=1}^K p_{i,k}q_{j,k}$ can be expressed as the matrix product $\mathbf{P}\mathbf{Q}^\top$, where $\mathbf{P}$ is an $I \times K$ matrix and $\mathbf{Q}$ is a $J \times K$ matrix. Estimating all parameters fills in every cell of the $I \times J$ matrix, giving predictions for all $(i,j)$ pairs.
+However, the sum $\sum_{k=1}^K p_{ik}q_{jk}$ can be expressed as the matrix product $\mathbf{P}\mathbf{Q}^\top$, where $\mathbf{P}$ is an $I \times K$ matrix and $\mathbf{Q}$ is a $J \times K$ matrix. Estimating all parameters fills in every cell of the $I \times J$ matrix, giving predictions for all $(i,j)$ pairs.
 
 Given the large number of parameters and the sparsity of the data, especially for movies with few ratings, it is appropriate to use penalized least squares. We minimize:
 
 $$
 \frac{1}{N}
-\sum_{i,j} \left[Y_{i,j} - \left(\mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{i,k}q_{j,k}\right)\right]^2 + 
+\sum_{i,j} \left[Y_{ij} - \left(\mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{ik}q_{jk}\right)\right]^2 + 
 \lambda_1 \left( 
 \|\boldsymbol{\alpha}\|^2 +
 \|\boldsymbol{\beta}\|^2
@@ -323,7 +323,7 @@ $$
 \right)
 $$
 
-Here, $N$ is the number of observed ratings, $I$ the number of users, and $J$ the number of movies. The vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ are the user and movie effects, $\boldsymbol{\alpha} = (\alpha_1,\dots,\alpha_I)^\top$ and $\boldsymbol{\beta} = (\beta_1,\dots,\beta_J)^\top$. The vectors $\mathbf{p}_k = (p_{1,k}, \dots, p_{I,k})^\top$ and $\mathbf{q}_k = (q_{1,k}, \dots, q_{J,k})^\top$ are the $k$-th latent factor components. Recall that $|\boldsymbol{\alpha}|^2$ denotes the sum of squares, $\sum_{i=1}^I \alpha_i^2$.
+Here, $N$ is the number of observed ratings, $I$ the number of users, and $J$ the number of movies. The vectors $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$ are the user and movie effects, $\boldsymbol{\alpha} = (\alpha_1,\dots,\alpha_I)^\top$ and $\boldsymbol{\beta} = (\beta_1,\dots,\beta_J)^\top$. The vectors $\mathbf{p}_k = (p_{1,k}, \dots, p_{ik})^\top$ and $\mathbf{q}_k = (q_{1,k}, \dots, q_{jk})^\top$ are the $k$-th latent factor components. Recall that $|\boldsymbol{\alpha}|^2$ denotes the sum of squares, $\sum_{i=1}^I \alpha_i^2$.
 
 We use two penalties: $\lambda_1$ for the linear effects ($\alpha$s and  $\beta$s), and $\lambda_2$ for the latent factors. This lets us regularize the two components differently, reflecting their distinct roles in the model.
 
