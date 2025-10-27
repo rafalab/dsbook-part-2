@@ -10,7 +10,7 @@ library(tidyverse)
 library(dslabs)
 ```
 
-Before we begin, we clarify that this chapter will not cover distributions in the context of probability, which is the mathematical framework used to model uncertainty. We postpone that discussion until the next part of the book, where we will use it throughout. Here, we focus on _distributions_ as a way to describe and summarize data we’ve already collected. Our goal is to understand the variation and patterns present in a dataset, without yet making probabilistic claims or predictions. The concepts introduced in this chapter, such as histograms, averages, and standard deviations, will later serve as the foundation for understanding probability distributions, where similar tools are used to describe the likely outcomes of random processes.
+Before we begin, we clarify that this chapter will not cover distributions in the context of probability, which is the mathematical framework used to model uncertainty. We postpone that discussion until the next part of the book, where we will use it throughout. Here, we focus on _distributions_ as a way to describe and summarize data we've already collected. Our goal is to understand the variation and patterns present in a dataset, without yet making probabilistic claims or predictions. The concepts introduced in this chapter will later serve as the foundation for understanding probability distributions, where similar tools are used to describe the likely outcomes of random processes.
 
 To illustrate the concepts needed to understand distribution and how they relate to summary statistics, we will pretend that we have to describe the heights of our classmates to ET, an extraterrestrial that has never seen humans. As a first step, we need to collect data. To do this, we ask students to report their heights in inches. We ask them to provide sex information because we know there are two different distributions by sex. We collect the data and save it in the `heights` data frame included in the **dslabs** package.
 
@@ -24,7 +24,7 @@ One way to convey the heights to ET is to simply send him a list with all the he
 
 At this stage, we are thinking of distributions purely as tools for summarizing and describing data. In the next part of the book, we will connect these same ideas to probability, where distributions help us model uncertainty. For now, our goal is simply to explore the patterns and variation present in the data we do have.
 
-It turns out that, in some cases, the two summary statistics, the average and the standard deviation are all we need to understand the data. We will learn data visualization techniques that will help us determine when this two-number summary is appropriate. These same techniques will serve as an alternative for when two numbers are not enough.
+It turns out that, in some cases, the two summary statistics introduced in the next chapter, the average and the standard deviation, are all we need to understand the data. We will learn data visualization techniques that will help us determine when this two-number summary is appropriate. These same techniques will serve as an alternative for when two numbers are not enough.
 
 ## Variable types 
 
@@ -70,7 +70,7 @@ murders |> mutate(x = round(population/10^6)) |> count(x) |> mutate(f = n/sum(n)
   ggplot(aes(x, f)) + geom_col() + 
   scale_x_continuous(breaks = seq(1, 37, by = 1)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 8)) +
-  ylab("f(x)")
+  ylab("f(x)") + theme(panel.grid = element_blank())
 ```
 
 ## Empirical cumulative distribution functions {#sec-ecdf-intro}
@@ -83,7 +83,7 @@ Here are the relative frequencies of US state populations:
 #| echo: false
 murders |> filter(state %in% state.name) |>
   count(population) |> mutate(f = n/sum(n)) |> ggplot(aes(population, f)) + 
-  geom_col() + xlab("x") + ylab("f(x)")
+  geom_col() + xlab("x") + ylab("f(x)") + theme(panel.grid = element_blank())
 ```
 
 Since there are 50 states, each with a unique population value $x$, the plot shows $f(x) = \frac{1}{50} = 0.02$ for each state.
@@ -106,7 +106,7 @@ Similar to how a frequency table summarizes categorical data, the empirical cumu
 
 In our heights case study, most students reported heights rounded to the nearest inch. However, some did not. For example, one student reported a height of `68.503937007874` inches, and another reported `68.8976377952756` inches. These values correspond to 174 cm and 175 cm converted to inches, respectively, suggesting that some students knew their heights to the closest centimeter and reported this number divided by 2.54.
 
-As a result the data is continuos and the relative frequency distribution is somewhat confusing:
+As a result the data is continuous and the relative frequency distribution is somewhat confusing:
 
 ```{r frequency-of-continuous-data-not-good}
 #| echo: false
@@ -128,7 +128,7 @@ heights |> filter(sex == "Male") |>
 
 From a quick glance at the figure, we can already infer some general characteristics of the data. For example, about half of the males are shorter than 69 inches, since $F(69) \approx 0.5$, and being shorter than 60 inches or taller than 80 inches is very rare. Moreover, because we can compute the proportion of individuals with heights between any two values $a$ and $b$ as $F(b) - F(a)$, the plot above contains all the information needed to reconstruct the entire dataset.
 
-Paraphrasing the saying “a picture is worth a thousand words,” in this case, a picture is as informative as r sum(heights$sex == "Male") numbers.
+Paraphrasing the saying “a picture is worth a thousand words,” in this case, a picture is as informative as `r sum(heights$sex == "Male")` numbers.
 
 :::{.callout-note}
 The reason we add the word *empirical* is because, as we will see in @sec-cdf-intro, the cumulative distribution function (CDF) can be defined mathematically, meaning without any data.
@@ -140,9 +140,11 @@ Although the eCDF is a fundamental concept in statistics, it is not commonly use
 
 To construct a histogram, we first divide the range of the data into non-overlapping bins. Each bin acts as a category, and its height is chosen so that the area of the bar, calculated as the height multiplied by the bin width, represents the relative frequency of observations within that bin. Although a histogram resembles a bar plot, it differs in that the x-axis represents numerical values rather than categorical ones.
 
-If we round the reported heights to the nearest inch and create a relative frequency distribution, we obtain a histogram with bins defined in one-inch intervals with the following **ggplot2** code:
+If we round the reported heights to the nearest inch and create a relative frequency distribution, we obtain a histogram with bins defined in one-inch intervals: 
 
 $$(49.5, 50.5], (50.5, 51.5], (51.5, 52.5], (52.5, 53.5], \dots, (82.5, 83.5]$$
+
+We can do this with the following **ggplot2** code:
 
 ```{r frequency-distribution-rounded-heights}
 library(tidyverse)
@@ -152,7 +154,7 @@ heights |> filter(sex == "Male") |>
   ggplot(aes(height, f)) + geom_col()
 ```
 
-The R base `hist` function allows us quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
+The R base `hist` function also allows us quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
 
 ```{r hist-custom-bin-example}
 with(heights, hist(height[sex == "Male"], breaks = c(50, 55, 60:80, 85)))
@@ -181,7 +183,12 @@ heights |> filter(sex == "Male") |>
 ```
 :::
 
-## Smoothed densitiy plots
+
+### Choosing bin widths
+
+The appearance and interpretation of a histogram depend on the choice of bins, and in the case of equally sized bins, their width. Different bin widths can make the same data look quite different, too narrow, and the histogram may appear noisy or fragmented; too wide, and important features of the distribution may be hidden. The choice of bin width should be guided by the context of the data. For example, in the case of height, most people report values rounded to the nearest half inch, so using bins smaller than that does not make sense. At the same time, because height differences of more than an inch are noticeable in real life, bins larger than about two inches would obscure meaningful variation. For the extreme regions of the distribution, such as below 60 inches or above 80 inches, where there are few observations, it is reasonable to use wider bins to keep the summary clear. Every dataset requires a context-specific decision: the goal is to choose bins that reveal structure without introducing noise, maximizing the information conveyed by a single figure.
+
+## Smoothed density plots
 
 Smooth density plots are similar to histograms, but the data is not divided into bins. Here is what a smooth density plot looks like for our heights data:
 
@@ -227,19 +234,24 @@ Therefore, we make a histogram using bin sizes appropriate for our data, computi
 hist1 <- heights |> 
   filter(sex == "Male") |> 
   ggplot(aes(height)) +
-  geom_histogram(aes(y = after_stat(density)), binwidth = 1, color = "black") 
+  geom_histogram(aes(y = after_stat(density)), binwidth = 1, fill = "grey", color = "black") 
+
 hist2 <- hist1 +
-  geom_line(stat = 'density')
+  geom_line(stat = 'density', lwd = 0.75)
+
 hist3 <- hist1 + 
   geom_point(data = ggplot_build(hist2)$data[[1]], aes(x,y), col = "blue")
+
 hist4 <- ggplot() + geom_point(data = ggplot_build(hist2)$data[[1]], aes(x,y), col = "blue") + 
   xlab("height") + ylab("density")
-hist5 <- hist4 + geom_line(data = ggplot_build(hist2)$data[[2]], aes(x,y))
+
+hist5 <- hist4 + geom_line(data = ggplot_build(hist2)$data[[2]], aes(x,y), lwd = 0.75)
+
 hist6 <- heights |> 
   filter(sex == "Male") |> 
   ggplot(aes(height)) +
   geom_density(alpha = 0.2, fill = "#00BFC4", col = 0) +
-  geom_line(stat = 'density') +
+  geom_line(stat = 'density', lwd = 0.75) +
   scale_y_continuous(limits = layer_scales(hist2)$y$range$range)
   
 grid.arrange(hist1, hist3, hist4, hist5, hist2, hist6, nrow = 2)
@@ -261,9 +273,7 @@ library(gridExtra)
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-
-While the histogram is an assumption-free summary, the smoothed density relies on modeling assumptions. We must therefore choose the degree of smoothness with care, as it can meaningfully affect our interpretation of the data. The goal is to select a level of smoothing that we can justify as representative of the underlying distribution. In the case of height, for instance, we have good reason to expect that people with similar heights occur with similar frequencies: the proportion of individuals who are 72 inches tall should be closer to that of those at 71 inches than to those at 65 or 78 inches. This justifies a relatively smooth curve—one that resembles the example on the right more than the one on the left.
-
+Just as a histogram's appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it's reasonable to expect nearby values, within an inch, to occur with similar frequency, the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.
 
 ### Interpreting the y-axis
 
@@ -291,282 +301,53 @@ heights |>
 With the material covered up to this point, you can complete exercises 1 through 10.
 :::
 
-## The normal distribution {#sec-normal-distribution}
+## Describing distributions
 
-Histograms and density plots provide excellent summaries of a distribution. But can we summarize even further? We often see the average and standard deviation used as summary statistics: a two-number summary! To understand what these summaries are and why they are so widely used, we need to understand the normal distribution.
+When visualizing data with a histogram or density plot, we often describe the shape of a distribution using a few key terms and concepts. In this section, our goal is simply to familiarize you with this vocabulary, terms that you'll encounter in most discussions of data analysis.
 
-The normal distribution, also known as the bell curve and as the Gaussian distribution, is one of the most famous mathematical concepts in history. One reason for this is that approximately normal distributions occur in many situations, including gambling winnings, heights, weights, blood pressure, standardized test scores, and experimental measurement errors. There are explanations for these occurrences, which we will describe later. Here we focus on how the normal distribution helps us summarize data.
+A _mode_ is a value or region where the data are most concentrated, the peak of the distribution. Some distributions have one peak (unimodal), while others have two or more (bimodal or multimodal), which can indicate distinct subgroups within the data.
 
-Rather than using data, the normal distribution is defined with a mathematical formula. For any interval $(a,b)$, the proportion of values in that interval can be computed using this formula:
+A symmetric distribution has as many data points to both sides of the mode. A distribution is skewed if it is asymmetric.
 
-$$\mathrm{Pr}(a < x \leq b) = \int_a^b \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{1}{2}\left( \frac{x-\mu}{\sigma} \right)^2} \, dx$$
+The _tails_ of a distribution are the regions that extend toward the smallest and largest values.
 
-But you don't need to memorize the formula to use the normal distribution in practics. The most important characterstics is that it is completely defined by just two parameters: $\mu$ and $\sigma$. The rest of the symbols in the formula represent the interval ends, $a$ and $b$, and known mathematical constants $\pi$ and $e$. These two parameters, $\mu$ and $\sigma$, are referred to as the *mean* and the *standard deviation* (SD) of the distribution, respectively (\mu and \sigma are the Greek letters for $m$ and $s$).
+A _right-skewed_ (positively skewed) distribution has a long tail toward larger values, for example, income, where most people earn modest amounts but a few earn much more.
 
-The distribution is symmetric, centered at $\mu$, and most values (about 95%) are within $2\sigma$ from $\mu$. Here is what the normal distribution looks like when the $\mu = 0$ and $\sigma = 1$:
+A _left-skewed_ (negatively skewed) distribution has a longer tail toward smaller values, such as test scores on an easy exam where most students score high but a few perform poorly.
 
-```{r summaries-normal-distribution-density, echo = FALSE}
-m <- 0; s <- 1
-norm_dist <- data.frame(x = seq(-4, 4,len = 50)*s + m) |> mutate(density = dnorm(x, m, s))
-norm_dist |> ggplot(aes(x,density)) + geom_line()
+In the next chapter, we introduce the normal distribution, a symmetric, bell-shaped distribution that serves as a useful reference point. Distributions with heavy tails contain more extreme observations than the normal distribution, while light-tailed distributions contain fewer.
+
+Here are some simulated examples illustrating the terms described above:
+
+```{r distribution-shapes, echo=FALSE, fig.height=5, out.width="100%"}
+library(ggplot2)
+library(dplyr)
+set.seed(42)
+
+df <- data.frame(
+  value = c(rnorm(10000, 0, 0.75),
+            rexp(10000, 1) - 2.5,
+            -rexp(10000, 1) + 2.5,
+            c(rnorm(9000, -1, 0.5), rnorm(1000, 2, 0.5))),
+  type = rep(c("Bell shaped", "Right-skewed", "Left-skewed", "Bimodal"), each = 10000)) |>
+  mutate(type = factor(type, levels = c("Bell shaped","Bimodal","Right-skewed","Left-skewed")))
+
+
+ggplot(df, aes(value, fill = type)) +
+  geom_density(alpha = 0.6, color = "black", adjust = 2, show.legend = FALSE) +
+  facet_wrap(~type, ncol = 2, scales = "free_y") +
+  theme_minimal() +
+  coord_cartesian(xlim = c(-3.5, 3.5)) +
+   theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  labs(y = "", x = "")
 ```
 
-The fact that the distribution is defined by just two parameters implies that if a dataset's distribution is approximated by the normal distribution, all the information needed to describe the distribution can be encoded in just two numbers: the mean and the standard deviation. 
+## From visual to numerical summaries
 
-## The average and standard deviation {#sec-average-and-sd-def}
-
-Discrete distributions also have means and standard deviations. We will discuss these terms in more detail in [@sec-random-variables]. For a list of values $x_1, \dots, x_n$ the mean, call it $\mu_x$ is defined by 
-
-$$
-\mu_x = \frac{1}{n}\sum_{i=1}^n x_i
-$$
-Note that this equivalent to the average of the $x$s. 
-
-The standard deviation is defined with 
-
-$$
-\sigma_x = \sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2}
-$$
-which can be thought of as the average distance of the points $x_i$ to the mean $\mu_x$. 
-
-
-Let's compute the mean and stardard deviations for the height for males:
-
-```{r}
-x <- with(heights, height[sex == "Male"])
-```
-
-The pre-built functions `mean` and `sd` can be used here:
-
-```{r}
-m <- mean(x)
-s <- sd(x)
-```
-
-:::{.callout-warning}
-For reasons explained in @sec-population-sd, `sd(x)` divides by `length(x)-1` rather than `length(x)`. But note that when `length(x)` is large, `sd(x)` and `sqrt(sum((x-mu)^2) / length(x))` are practically equal.
-:::
-
-If the distribution of the values stored in `x` is approximated with a normal distribution, it make sense that it is a normal distribution with mean `m <- mean(x)` and stadnard deviation `s <- sd(x)`. This implies that the distribution of `x` can be summarized with just these two numbers!
-
-Here is a plot of the smooth density and the normal distribution approximation with mean = `r round(m,1)` and SD = `r round(s,1)` plotted as a black line with our student height smooth density in blue:
-
-```{r summaries-data-and-normal-densities, echo = FALSE}
-norm_dist <- data.frame(x = seq(-4, 4, len = 50)*s + m) |> 
-  mutate(density = dnorm(x, m, s))
-
-heights |> filter(sex == "Male") |> ggplot(aes(height)) +
-  geom_density(fill = "#00BFC4") +
-  geom_line(aes(x, density),  data = norm_dist) 
-```
-
-The normal distribution does appear to be quite a good approximation here. Later, in @sec-qqplots will see how well this approximation works at predicting the proportion of values within intervals.
-
-## Standard units
-
-For data that is approximately normally distributed, it is convenient to think in terms of *standard units*. The standard unit of a value tells us how many standard deviations away from the average it is. Specifically, for a value `x` from a vector `x`, we define the value of `x` in standard units as `z = (x - m)/s` with `m` and `s` the average and standard deviation of `x`, respectively. Why is this convenient?
-
-First, revisit the formula for the normal distribution and observe that what is being exponentiated is $-z^2/2$ with $z$ equivalent to $x$ in standard units. Because the maximum of $e^{-z^2/2}$ is at $z = 0$, this explains why the maximum of the distribution occurs at the mean. It also explains the symmetry since $- z^2/2$ is symmetric around 0. Second, note that by converting the normally distributed data to standard units, we can quickly ascertain whether, for example, a person is about average ($z = 0$), one of the tallest ($z \approx 2$), one of the shortest ($z \approx -2$), or an extremely rare occurrence ($z > 3$ or $z < -3$). Remember that it does not matter what the original units are, these rules apply to any data that is approximately normal.
-
-In R, we can obtain standard units using the function `scale`:
-
-```{r}
-z <- scale(x)
-```
-
-To see how many males are within 2 SDs from the average, we simply type:
-
-```{r}
-mean(abs(z) < 2)
-```
-
-The proportion is about 95%, which is what the normal distribution predicts! To further validate this approximation, we can use quantile-quantile plots.
-
-## Quantile-quantile plots {#sec-qqplots}
-
-A systematic way to check whether one distribution is well approximated by another is to compare their cumulative distribution functions (CDFs). A practical way to do this is through their _quantiles_.
-
-For a proportion $0 \leq p \leq 1$, the $p$-th quantile of a distribution $F(x)$ is the value $q$ such that $F(q) = p$, or $q = F^{-1}(p)$. For example:
-
-* $p = 0$ gives the minimum,
-* $p = 0.5$ gives the median,
-* $p = 1$ gives the maximum.
-
-If two distributions $F_1(x)$ and $F_2(x)$ are similar, then their quantiles at any $p$ should also be similar.
-
-A *quantile-quantile plot (qqplot)* lets us visually check this by plotting the quantiles of one distribution against the quantiles of another. Specifically, we plot $F_1^{-1}(p_1), \dots, F_1^{-1}(p_m)$ versus $F_2^{-1}(p_1), \dots, F_2^{-1}(p_m)$ for a set of proportions $p_1, \dots, p_m$.
-
-A common choice for these proportions is
-
-$$
-p_i = \frac{i - 0.5}{n}, \quad i=1,\dots,n
-$$
-
-with $n$ the sample size. This avoids exactly $p=0$ or $p=1$, which would correspond to $-\infty$ or $+\infty$ in distributions like the normal.
-
-A common use of qqplots is to compare data to a theoretical normal distribution.
-
-The CDF of the standard normal is usually written as $\Phi(x)$, which gives the probability that a normal random variable is less than $x$. For example, $\Phi(-1.96) = 0.025$ and $\Phi(1.96) = 0.975$. In R we compute these with `pnorm`:
-
-```{r}
-pnorm(-1.96)
-```
-
-The inverse of $\Phi$, denoted $\Phi^{-1}(p)$, gives the theoretical quantiles. For example, $\Phi^{-1}(0.975) = 1.96$. In R this is `qnorm`:
-
-```{r}
-qnorm(0.975)
-```
-
-By default `pnorm` and `qnorm` use the standard normal (mean 0, sd 1). You can change this with the `mean` and `sd` arguments:
-
-```{r}
-qnorm(0.975, mean = 69, sd = 3)
-```
-
-We can compute quantiles for a list of observations too. If we have a vector `x`, the quantile $q_p$ is the value such that $p$ proportion of the data is below it:
-
-```{r}
-p <- 0.5
-q_p <- quantile(x, p)
-```
-
-For example, in the heights dataset, about 50% of men are shorter than 69.5 inches, so this is the median ($p=0.5$).
-
-To compare, we make a qqplot to assess if our observations follow a normal distribution:
-
-1. Define a vector of proportions $p_1, \dots, p_m$.
-2. Compute sample quantiles from the data.
-3. Compute theoretical quantiles from a normal distribution with the same mean and SD as the data.
-4. Plot them against each other.
-
-Example:
-
-```{r qqplot-example}
-#| out-width: "50%"
-#| fig-asp: 1
-p <- seq(0.05, 0.95, 0.05)
-sample_quantiles <- quantile(x, p)
-theoretical_quantiles <- qnorm(p, mean = mean(x), sd = sd(x))
-plot(theoretical_quantiles, sample_quantiles)
-abline(0,1)
-```
-
-If the data are normally distributed, the points should fall along the 45° line.
-
-It is even simpler if we first **standardize** the data:
-
-```{r summaries-qqplot-standardized, eval = FALSE}
-plot(quantile(scale(x), p), qnorm(p))
-```
-
-But instead of writing this by hand, R provides convenient functions:
-
-```{r}
-#| eval: false
-qqnorm(x)
-qqline(x)
-```
-
-Or with **ggplot2**:
-
-```{r geom_qq-example, eval = FALSE}
-heights |> filter(sex == "Male") |>
-  ggplot(aes(sample = scale(height))) + 
-  geom_qq() +
-  geom_abline()
-```
-
-By default, `qqnorm` and `geom_qq` use all $n$ quantiles, $p_i = (i-0.5)/n$.
-
-:::{.callout-warning}
-Because of this default behavior, large datasets can produce many plotted points that lie close to a line, resulting in heavy overplotting. In such cases, we recommend computing and plotting your own quantiles rather than relying on the default `qqplot` or `qqnorm` functions.
-:::
-
-qqplots can also compare **two empirical distributions**, not just data to a theoretical model. For example, to compare male and female heights:
-
-```{r male-vs-female-qqplot}
-#| out-width: "50%"
-#| fig-asp: 1
-
-with(heights, qqplot(height[sex == "Female"], height[sex == "Male"]))
-abline(0,1)
-```
-
-In summary: qqplots give a simple but powerful way to check whether two distributions match, most often by comparing data to a theoretical distribution such as the normal.
-
-
-### Percentiles
-
-*Percentiles* are special cases of *quantiles* that are commonly used. The percentiles are the quantiles you obtain when setting the $p$ at $0.01, 0.02, ..., 0.99$. For example, we refer to the case of $p = 0.25$ as the 25th percentile, representing a value below which 25% of the data falls. The most famous percentile is the 50th, also known as the *median*.
-Another special case that receives a name are the *quartiles*, which are obtained when setting $p = 0.25,0.50$, and $0.75$.
-
-## Boxplots
-
-To introduce boxplots, we will use a dataset of US murders by state. Suppose we want to summarize the murder rate distribution. Using the techniques we have learned, we can quickly see that the normal approximation does not apply in this case:
-
-```{r summaries-hist-qqplot-non-normal-data, echo = FALSE}
-murders <- murders |> mutate(rate = total/population*100000)
-library(gridExtra)
-p1 <- murders |> ggplot(aes(x = rate)) + geom_histogram(binwidth = 0.5, color = "black") + ggtitle("Histogram")
-p2 <- murders |> ggplot(aes(sample = rate)) + 
-  geom_qq(dparams = summarize(murders, mean = mean(rate), sd = sd(rate))) +
-  geom_abline() + ggtitle("QQ-plot")
-grid.arrange(p1, p2, ncol = 2)
-```
-
-In this instance, the histogram above or a smooth density plot would serve as a relatively succinct summary.
-
-Now suppose those used to receiving just two numbers as summaries ask us for a more compact numerical summary.
-
-The boxplot provides a five-number summary composed of the range along with the quartiles (the 25th, 50th, and 75th percentiles). The boxplot often ignores *outliers* when computing the range and instead plots these as independent points. We will provide a detailed explanation of outliers in @sec-robust-summaries.  Finally, we plot these numbers as a "box" with "whiskers" like this:
-
-```{r summaries-first-boxplot, echo = FALSE}
-murders |> ggplot(aes("",rate)) + geom_boxplot() +
-  coord_cartesian(xlim = c(0, 2)) + xlab("")
-```
-
-The box spans from the first quartile to the third quartile. The horizontal line inside the box marks the median (the 50th percentile). The whiskers extend to the smallest and largest values that are not considered outliers. Outliers are shown as individual points beyond the whiskers. Note that the height of the box is the difference between the third and first quartile. This difference is called the interquartile range (IQR), and it measures the spread of the middle 50% of the data.
-
-## Stratification {#sec-stratification}
-
-In data analysis, we often divide observations into groups based on the values of one or more variables associated with those observations. For example, we can divide the height values into groups based on a sex variable: females and males. We call this procedure *stratification* and refer to the resulting groups as *strata*.
-
-Stratification is common in data visualization because we are often interested in how the distribution of variables differs across different subgroups. 
-
-Using the histogram, density plots, and qqplots, we have become convinced that the male height data is well approximated with a normal distribution. In this case, we report back to ET a very succinct summary: male heights follow a normal distribution with an average of `r round(m, 1)` inches and a SD of `r round(s,1)` inches. With this information, ET will have a good idea of what to expect when he meets our male students. However, to provide a complete picture we need to also provide a summary of the female heights.
-
-We learned that boxplots are useful when we want to quickly compare two or more distributions. Here are the heights for females and males:
-
-```{r summaries-female-male-boxplots}
-heights |> ggplot(aes(sex, height, fill = sex)) + geom_boxplot()
-```
-
-The plot immediately reveals that males are, on average, taller than females. The standard deviations appear to be similar. But does the normal approximation also work for the female height data collected by the survey? We expect that they will follow a normal distribution, just like males. However, exploratory plots reveal that the approximation is not as useful:
-
-```{r summaries-histogram-qqplot-female-heights, echo=FALSE, out.width="100%",  fig.width = 6, fig.height = 3}
-p1 <- heights |> filter(sex == "Female") |>
-  ggplot(aes(height)) +
-  geom_density(fill = "#F8766D") 
-p2 <- heights |> filter(sex == "Female") |> 
-  ggplot(aes(sample = scale(height))) +
-  geom_qq() + geom_abline() + ylab("Standard Units")
-grid.arrange(p1, p2, ncol = 2)
-```
-
-We see something we did not see for the males: the density plot has a second *bump*. Also, the qqplot shows that the highest points tend to be taller than expected by the normal distribution. Finally, we also see five points in the qqplot that suggest shorter than expected heights for a normal distribution. When reporting back to ET, we might need to provide a histogram rather than just the average and standard deviation for the female heights.
-
-We have noticed what we didn't expect to see. If we look at other female height distributions, we do find that they are well approximated with a normal distribution. So why are our female students different? Is our class a requirement for the female basketball team? Are small proportions of females claiming to be taller than they are? Another, perhaps more likely, explanation is that in the form students used to enter their heights, `Female` was the default sex and some males entered their heights, but forgot to change the sex variable. In any case, data visualization has helped discover a potential flaw in our data.
-
-Regarding the five smallest values, note that these are:
-
-```{r}
-heights |> filter(sex == "Female") |> 
-  top_n(5, desc(height)) |>
-  pull(height)
-```
-
-Because these are reported heights, a possibility is that the student meant to enter `5'1"`, `5'2"`, `5'3"` or `5'5"`.
+As we've seen, visual tools such as histograms, density plots, and qqplots help us understand the shape of a distribution, its center, spread, symmetry, and tails. However, graphical summaries are often complemented by numerical summaries, which distill much of this information into just a few key numbers. In the next chapter, we introduce two of the most useful numerical summaries, the average and the standard deviation, which provide all the information you need when the data are approximately normal. We will also explore alternative measures that are more appropriate when distributions deviate from normality. The visualization techniques introduced here will guide us in deciding when simple numerical summaries are sufficient and when more detailed descriptions are needed.
 
 ## Exercises
 
@@ -692,72 +473,7 @@ Which of the following statements is true:
 
 a.  It is impossible that they are from the same dataset.
 b.  They are from the same dataset, but the plots are different due to coding errors.
-c.  They are the same dataset, but the first and second plot undersmooth and the third oversmooths.
-d.  They are the same dataset, but the first is not in the log scale, the second undersmooths, and the third oversmooths.
+c.  They are the same dataset, but the first and second plot under smooth and the third over smooths.
+d.  They are the same dataset, but the first is not in the log scale, the second under smooths, and the third over smooths.
 
-11\. Define variables containing the heights of males and females as follows:
 
-```{r, eval = FALSE}
-library(dslabs)
-male <- heights$height[heights$sex == "Male"]
-female <- heights$height[heights$sex == "Female"]
-```
-
-How many measurements do we have for each?
-
-12\. Suppose we can't make a plot and want to compare the distributions side by side. We can't just list all the numbers. Instead, we will look at the percentiles. Create a five row table showing `female_percentiles` and `male_percentiles` with the 10th, 30th, 50th, 70th, & 90th percentiles for each sex. Then create a data frame with these two as columns.
-
-13\. Study the following boxplots showing population sizes by country:
-
-```{r summaries-boxplot-exercise, echo = FALSE, message = FALSE}
-library(tidyverse)
-library(dslabs)
-ds_theme_set()
-tab <- gapminder |> filter(year == 2010) |> group_by(continent) |> select(continent, population)  
-tab |> ggplot(aes(x = continent, y = population/10^6)) + 
-  geom_boxplot() + 
-  scale_y_continuous(trans = "log10", breaks = c(1,10,100,1000)) + ylab("Population in millions")
-```
-
-Which continent has the country with the biggest population size?
-
-14\. Which continent has the largest median population size?
-
-15\. What is median population size for Africa to the nearest million?
-
-16\. What proportion of countries in Europe have populations below 14 million?
-
-a.  0.99
-b.  0.75
-c.  0.50
-d.  0.25
-
-17\. If we use a log transformation, which continent shown above has the largest interquartile range?
-
-18\. Load the height dataset and create a vector `x` with just the male heights:
-
-```{r, eval = FALSE}
-library(dslabs)
-x <- heights$height[heights$sex=="Male"]
-```
-
-What proportion of the data is between 69 and 72 inches (taller than 69, but shorter or equal to 72)? Hint: use a logical operator and `mean`.
-
-19\. Suppose all you know about the data is the average and the standard deviation. Use the normal approximation to estimate the proportion you just calculated. Hint: start by computing the average and standard deviation. Then use the `pnorm` function to predict the proportions.
-
-20\. Notice that the approximation calculated in question 19 is very close to the exact calculation in question 18. Now perform the same task for more extreme values. Compare the exact calculation and the normal approximation for the interval (79,81\]. How many times larger is the actual proportion than the approximation?
-
-21\. Approximate the distribution of adult men in the world as normally distributed with an average of 69 inches and a standard deviation of 3 inches. Using this approximation, estimate the proportion of adult men that are 7 feet tall or taller, referred to as *seven-footers*. Hint: use the `pnorm` function.
-
-22\. There are about 1 billion men between the ages of 18 and 40 in the world. Use your answer to the previous question to estimate how many of these men (18-40 year olds) are seven feet tall or taller in the world?
-
-23\. There are about 10 National Basketball Association (NBA) players that are 7 feet tall or higher. Using the answer to the previous two questions, what proportion of the world's 18-to-40-year-old *seven-footers* are in the NBA?
-
-24\. Repeat the calculations performed in the previous question for Lebron James' height: 6 feet 8 inches. There are about 150 players that are at least that tall.
-
-25\. In answering the previous questions, we found that it is not uncommon for a seven-footer to become an NBA player. What would be a fair critique of our calculations:
-
-a.  Practice and talent are what make a great basketball player, not height.
-b.  The normal approximation is not appropriate for heights.
-c.  The normal approximation tends to underestimate the extreme values. It's possible that there are more seven-footers than we predicted.
-d.  The normal approximation tends to overestimate the extreme values. It's possible that there are fewer seven-footers than we predicted.

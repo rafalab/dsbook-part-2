@@ -18,16 +18,9 @@ Probability distributions are the foundation of most statistical models. They de
 
 If we know the relative frequency of the different categories, defining a distribution for categorical outcomes is relatively straightforward. We simply assign a probability to each category. In cases analogous to beads in an urn, for each bead type, their proportion defines the distribution.
 
-For example, if we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% Undecided, and 2% Green Party, these proportions define the probability for each group in any given call. The probability distribution is:
+For example, if we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% Undecided, and 2% Green Party, these proportions define the probability for each group in any given call. The probability distribution for each call is defined by four numbers: Pr(calling a Republican) =  0.44, Pr(calling a Democrat) = 0.44, Pr(callin an Undecided) = 10%, and  Pr(calling a Green) = 0.02.
 
-|                          |   |      |
-| ------------------------ | - | ---- |
-| Pr(picking a Republican) | = | 0.44 |
-| Pr(picking a Democrat)   | = | 0.44 |
-| Pr(picking an Undecided) | = | 0.10 |
-| Pr(picking a Green)      | = | 0.02 |
-
-## Monte Carlo 
+## Monte Carlo {#sec-monte-carlo}
 
 Computers provide a way to actually perform the simple random long-run experiment described above: pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
 
@@ -45,7 +38,7 @@ sample(beads, 1)
 
 This line of code produces a single random outcome. We want to repeat this experiment an infinite number of times, but it is impossible to repeat indefinitely. Instead, we repeat the experiment a large enough number of times to make the results _practically equivalent_ to repeating indefinitely. This is an example of a *Monte Carlo* simulation.
 
-Much of what mathematical and theoretical statisticians study, topics that we do not cover in this book, relates to providing rigorous definitions of "practically equivalent". Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this section, we provide a practical approach to determining what is "large enough".
+Much of what mathematical and theoretical statisticians study, topics that we do not cover in this book, relates to providing rigorous definitions of "practically equivalent". Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this chapter, we provide a practical approach to determining what is "large enough".
 
 To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event 10,000 times:
 
@@ -65,13 +58,7 @@ sample(beads, 10000, replace = TRUE)
 which we explain in the following section.
 :::
   
-We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to see the distribution:
-
-```{r}
-table(events)
-```
-
-and `prop.table` gives us the proportions:
+We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to count the outcomes and and `prop.table` gives us the proportions:
 
 ```{r}
 prop.table(table(events))
@@ -121,14 +108,14 @@ events <- sample(beads, 10000, replace = TRUE)
 
 Most university-level statistics courses begin with combinatorics, which provides the foundation for many probability calculations. These techniques let us count the number of outcomes that satisfy a condition, typically by computing the number of *permutations* (when order matters) or *combinations* (when order does not matter).  
 
-To make these ideas concrete, let’s return to a familiar setting: cards. Suppose we want to understand the probability of drawing specific hands from a deck. This example helps demonstrate how combinatorics works and how we can use R to perform these calculations.
+To make these ideas concrete, let's consider a familiar setting: card games. Suppose we want to understand the probability of drawing specific hands from a deck. This example helps demonstrate how combinatorics works and how we can use R to perform these calculations.
 
-First, let’s build a deck of cards:
+First, let's build a deck of cards:
 
 ```{r}
-suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
 numbers <- c("Ace", "Deuce", "Three", "Four", "Five", "Six", "Seven",
              "Eight", "Nine", "Ten", "Jack", "Queen", "King")
+suits <- c("Diamonds", "Clubs", "Hearts", "Spades")
 deck <- expand.grid(number = numbers, suit = suits)
 deck <- paste(deck$number, deck$suit)
 ```
@@ -139,7 +126,7 @@ If we draw one card at random, the probability of getting a King is 1/13:
 mean(deck %in% paste("King", suits))
 ```
 
-Now let’s introduce the two key functions: `permutations()` and `combinations()` from the **gtools** package. These let us enumerate all possible selections from a list, depending on whether order matters.
+Now let's introduce two key functions: `permutations()` and `combinations()` from the **gtools** package. These let us enumerate all possible selections from a list, depending on whether order matters.
 
 For example:
 
@@ -156,12 +143,11 @@ combinations(3, 2)
 
 Now (1,2) and (2,1) are treated as the same outcome.
 
-Let’s use these tools to compute the probability of a *Natural 21* in Blackjack, which occurs when a player’s first two cards are an Ace and a face card (Jack, Queen, King, or Ten). Since order does not matter, we use `combinations()`:
+Let's use these tools to compute the probability of a *Natural 21* in Blackjack, which occurs when a player's first two cards are an Ace and a face card (Jack, Queen, King, or Ten). Since order does not matter, we use `combinations()`:
 
 ```{r}
 aces <- paste("Ace", suits)
-facecard <- c("King", "Queen", "Jack", "Ten")
-facecard <- expand.grid(number = facecard, suit = suits)
+facecard <- expand.grid(number = c("King", "Queen", "Jack", "Ten"), suit = suits)
 facecard <- paste(facecard$number, facecard$suit)
 hands <- combinations(52, 2, v = deck)
 mean((hands[,1] %in% aces & hands[,2] %in% facecard) |
@@ -199,8 +185,6 @@ We can use probability to demonstrate that if you stick with the original door c
 
 [^discrete-probability-3]: https://en.wikipedia.org/wiki/Monty_Hall_problem
 
-Let's start with the stick strategy:
-
 ```{r}
 monty_hall <- function(strategy = c("stick", "switch")) {
   strategy <- match.arg(strategy)
@@ -217,11 +201,11 @@ mean(replicate(B, monty_hall("stick")))
 mean(replicate(B, monty_hall("switch")))
 ```
 
-As we write the code, we see that the lines starting with `my_pick` and `show` have no influence on the last logical operation, when we stick to our original choice. From this, we should realize that the chance is 1 in 3, as we initially considered. When we switch, the Monte Carlo estimate confirms the 2/3 calculation. This helps us gain some insight by demonstrating that we are removing a door, `show`, that is definitely not a winner from our choices. We also see that unless we get it right when we first pick, we win 1 - 1/3 = 2/3 of the times.
+As we examine the code, we notice that the lines starting with `my_pick` and `show` do not affect the final outcome when we stick with our original choice. This confirms that our winning probability in that case is 1 in 3, as expected. When we switch, the Monte Carlo simulation verifies the 2/3 probability. This illustrates why switching improves our odds: the `show` line removes a door that is guaranteed not to be the winner, effectively transferring its probability to the remaining unopened door. Thus, unless our initial choice was correct, which happens only one-third of the time, we win by switching, which occurs two-thirds of the time.
 
 ### Birthday problem
 
-Suppose you are in a classroom with 50 people. If we assume this is a randomly selected group of 50 people, what is the chance that at least two people have the same birthday? Although it is somewhat advanced, we can deduce this mathematically. We will do that later. Here, we use a Monte Carlo simulation. For simplicity, we assume nobody was born on February 29, which doesn't significantly change the answer. 
+Suppose you are in a classroom with 50 people. If we assume this is a randomly selected group, what is the chance that at least two people have the same birthday? Although it is somewhat advanced, we can deduce this mathematically. We will do that later. Here, we use a Monte Carlo simulation. For simplicity, we assume nobody was born on February 29, which doesn't significantly change the answer. 
 
 First, note that birthdays can be represented as numbers between 1 and 365, so a sample of 50 birthdays can be obtained as follows:
 
@@ -267,14 +251,13 @@ prob <- sapply(n, compute_prob)
 
 We can now make a plot of the estimated probabilities of two people having the same birthday in a group of size $n$:
 
-```{r birthday-problem-mc-probabilities, warning=FALSE, message=FALSE}
+
+```{r birthday-problem-mc-probabilities, echo=-1}
+rafalib::mypar(1,1)
 plot(n, prob)
 ```
 
-Now, let's compute the exact probabilities instead of relying on Monte Carlo approximations. Not only do we obtain the exact answer using math, but the computations are much faster since we did not have to generate experiments.
-
-To make the math simpler, instead of computing the probability of it happening, we will compute the probability of it not happening. For this, we use the multiplication rule:
-The probability that person 1 has a unique birthday is 1. The probability that person 2 has a unique birthday, given that person 1 already took one day, is 364/365, and so on. The chances of all $n$ people having a unique birthday is therefore:
+Now let's compute the exact probabilities rather than relying on Monte Carlo approximations. Using math gives the precise answer and is much faster since we don't need to simulate experiments. We apply a common probability trick: instead of finding the probability that at least two people share a birthday, we compute the probability that no one does. By the multiplication rule, person 1 can have any birthday, person 2 must choose from the remaining 364 out of 365 days, and so on, giving the probability that all $n$ birthdays are unique as:
 
 $$
 1 \times \frac{364}{365}\times\frac{363}{365} \dots \frac{365-n + 1}{365}
@@ -282,7 +265,8 @@ $$
 
 We can write a function that does this for any number:
 
-```{r birthday-problem-exact-probabilities}
+```{r birthday-problem-exact-probabilities, echo=-1}
+rafalib::mypar()
 exact_prob <- function(n) 1 - prod(seq(365, 365 - n + 1)/365)
 eprob <- sapply(n, exact_prob)
 plot(n, prob)
@@ -299,32 +283,32 @@ In practical scenarios, we won't know what the answer is beforehand, so we won't
 
 One practical approach is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
 
-```{r monte-carlo-convergence}
+```{r monte-carlo-convergence, echo=-1}
+rafalib::mypar()
 B <- 10^seq(1, 5, len = 100)
 compute_prob <- function(B, n = 25) mean(replicate(B, same_birthday(n)))
 prob <- sapply(B, compute_prob)
 plot(log10(B), prob)
 ```
 
-In this plot, we can see that the values start to stabilize at around 1000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
+In this plot, we can see that the values start to stabilize at around 1,000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
 
 
 ## Exercises
 
-1\. One ball will be drawn at random from a box containing: 3 cyan balls, 5 magenta balls, and 7 yellow balls. What is the probability that the ball will be cyan?
+1\. A box contains 3 cyan balls, 5 magenta balls, and 7 yellow balls. One ball is drawn at random. Write a Monte Carlo simulation to estimate and confirm the probability that the ball drawn is cyan.
 
-2\. What is the probability that the ball will not be cyan?
+2\. Do the same for the probability that the ball will not be cyan?
 
-3\. Instead of taking just one draw, consider taking two draws. You take the second draw without returning the first draw to the box. We call this sampling **without** replacement. What is the probability of the first draw being cyan and the second draw not being cyan?
+3\. Instead of taking just one draw, consider taking two draws. You take the second draw without returning the first draw to the box. We call this sampling **without** replacement. Write a Monte Carlo simulation to estimate and confirm the probability of the first draw being cyan and the second draw not being cyan?
 
-4\. Now repeat the experiment, but this time, after taking the first draw and recording the color, return it to the box and shake the box. We call this sampling **with** replacement. What is the probability of the first draw being cyan and the second draw not being cyan?
-
+4\. Now repeat the experiment, but this time, after taking the first draw and recording the color, return it to the box and shake the box. We call this sampling **with** replacement. Write a Monte Carlo simulation to estimate and confirm the probability of the first draw being cyan and the second draw not being cyan?
 
 5\. Let's say you've drawn 5 balls from the box, with replacement, and all have been yellow. What is the probability that the next one will be yellow?
 
-6\. If you roll a 6-sided die six times, what is the probability of not seeing a 6?
+6\. If you roll a 6-sided die six times, write a Monte Carlo simulation to estimate and confirm the probability  of not seeing a 6?
 
-7\. Two teams, let's say the Celtics and the Cavs, are playing a seven game series. The Cavs are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game?
+7\. Two teams, let's say the Celtics and the Cavaliers, are playing a seven game series. The Cavaliers are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game? 
 
 8\. Create a Monte Carlo simulation to confirm your answer to the previous problem. Use `B <- 10000` simulations. Hint: use the following code to generate the results of the first four games:
 
@@ -334,15 +318,14 @@ celtic_wins <- sample(c(0,1), 4, replace = TRUE, prob = c(0.6, 0.4))
 
 The Celtics must win one of these 4 games.
 
-9\. Two teams, say the Cavs and the Warriors, are playing a seven game championship series. The first to win four games, therefore, wins the series. The teams are equally good so they each have a 50-50 chance of winning each game. If the Cavs lose the first game, what is the probability that they win the series?
+9\. Two teams, say the Cavaliers and the Warriors, are playing a seven game championship series. The first to win four games, therefore, wins the series. The teams are equally good so they each have a 50-50 chance of winning each game. If the Cavaliers lose the first game, what is the probability that they win the series?
 
 10\. Confirm the results of the previous question with a Monte Carlo simulation.
 
 11\. Two teams, $A$ and $B$, are playing a seven game series. Team $A$ is better than team $B$ and has a $p>0.5$ chance of winning each game. Given a value $p$, the probability of winning the series for the underdog team $B$ can be computed with the following function based on a Monte Carlo simulation:
 
 ```{r, eval=FALSE}
-prob_win <- function(p){
-  B <- 10000
+prob_win <- function(p, B =10000){
   result <- replicate(B, {
     b_win <- sample(c(1,0), 7, replace = TRUE, prob = c(1 - p, p))
     sum(b_win) >= 4
@@ -351,13 +334,12 @@ prob_win <- function(p){
 }
 ```
 
-Use the function `sapply` to compute the probability, call it `Pr`, of winning for `p <- seq(0.5, 0.95, 0.025)`. Then plot the result.
+Use the function `sapply` to compute the probability, call it `ws`, of winning for `p <- seq(0.5, 0.95, 0.025)`. Then plot the result.
 
-12\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games,... Specifically, `N <- seq(1, 25, 2)`. Hint: use the function below.
+12\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games, and so on. Specifically, `ns <- seq(1, 25, 2)`. Hint: use the function below.
 
 ```{r, eval = FALSE}
-prob_win <- function(n, p = 0.75){
-  B <- 10000
+prob_win <- function(n, p = 0.75, B = 10000){
   result <- replicate(B, {
     b_win <- sample(c(1,0), n, replace = TRUE, prob = c(1 - p, p))
     sum(b_win) >= (n + 1)/2

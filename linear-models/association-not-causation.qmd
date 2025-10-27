@@ -128,6 +128,10 @@ Spearman correlation can also be calculated like this:
 cor(x, y, method = "spearman")
 ```
 
+:::{.callout-note}
+While the Spearman correlation is much less affected by outliers, this robustness comes at a cost. Because it relies on the ranks rather than the actual values, it is less sensitive to subtle linear relationships between variables. As a result, when a true correlation exists but is modest, the Spearman estimate may be closer to zero than the Pearson correlation. In practice, Pearson correlation is more efficient for detecting real linear associations in data with no outliers, while Spearman correlation is preferred when outliers or non-linear monotonic relationships are a concern.
+:::
+
 In the recommended reading section, we include references on estimation techniques that are robust to outliers and applicable to a wide range of situations.
 
 ## Reversing cause and effect
@@ -149,7 +153,7 @@ $$
 X = \beta_0 + \beta_1 y + \varepsilon
 $$
 
-to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backwards, as it would imply that sons’ heights determine fathers’ heights. Using the previously defined `galton_heights` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
+to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backwards, as it would imply that sons' heights determine fathers' heights. Using the previously defined `galton_heights` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
 
 ```{r, echo=FALSE, cache=FALSE}
 library(HistData)
@@ -168,7 +172,7 @@ galton_heights <- GaltonFamilies |>
 lm(father ~ son, data = galton_heights) |> tidy() |> filter(term == "son")
 ```
 
-The model fits the data very well. However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son’s height causes his father’s height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault, and the estimates and p-values are calculated correctly. What is misleading here is the interpretation, not the model or computation.
+The model fits the data very well. However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son's height causes his father's height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault, and the estimates and p-values are calculated correctly. What is misleading here is the interpretation, not the model or computation.
 
 ## Confounders
 
@@ -198,7 +202,7 @@ admissions |> select(major, gender, admitted) |>
   mutate(women_minus_men = women - men)
 ```
 
-Four out of the six majors favor women. More importantly, all the differences are much smaller than the 14.2 difference that we see when examining the totals.
+For five of the six majors, the differences are small, with major A favoring women. More importantly, these differences are all much smaller than the 14.2-point difference in favor of men observed when looking at the overall totals.
 
 The paradox is that analyzing the totals suggests a dependence between admission and gender, but when the data is grouped by major, this dependence seems to disappear. What's going on? This actually can happen if an uncounted confounder is driving most of the variability.
 
@@ -277,6 +281,15 @@ dat |> ggplot(aes(x, y, color = z)) +
 
 It is really $Z$ that is negatively correlated with $X$. If we stratify by $Z$, the $X$ and $Y$ are actually positively correlated, as seen in the plot above.
 
+## Other Sources of Bias
+
+We discussed confounding and reverse causation, but there are many other mechanisms that can create associations that are not causal. For example, **Collider bias** occurs when we condition on a variable influenced by two or more other variables, inadvertently inducing a false relationship between them. A classic example is the negative association sometimes observed between academic ability and athletic skill among students at elite colleges. In the general population, these traits may be independent, but both increase the likelihood of admission. Conditioning on admission, our collider, can create a spurious negative correlation: among admitted students, those who are less athletic may have higher academic ability, and vice versa. A similar effect can occur in hospitals, where two unrelated health conditions, such as diabetes and heart disease, may appear negatively associated among patients simply because both increase the likelihood of hospitalization.
+
+**Selection bias** is another common source of spurious association. It arises when the process determining who or what enters a dataset depends on factors related to both the exposure/treatement and the outcome. For example, comparing mortality rates between two hospitals might suggest that Hospital A provides worse care than Hospital B. However, if Hospital A is a major trauma center treating more severely ill patients, while Hospital B handles mostly routine cases, the comparison is misleading. The difference reflects who is admitted, not differences in quality of care.
+
+**Measurement bias** (or *misclassification*) occurs when variables are measured with error, especially when those errors differ across groups. Consider a study on smoking and lung cancer: if some participants underreport smoking due to stigma, smokers may be misclassified as nonsmokers. If this underreporting occurs equally across groups, the bias is *nondifferential* and tends to weaken the observed association. If it differs between groups, say, lung cancer patients are more likely to admit to smoking, the bias is *differential* and may exaggerate or even reverse the association.
+
+Readers interested in exploring these sources of bias in greater depth—including how they are represented in causal diagrams, will find recommended references in the *Recommended Reading* section. These works provide clear explanations and practical guidance for recognizing and avoiding such biases in real data.
 
 ## Exercises
 

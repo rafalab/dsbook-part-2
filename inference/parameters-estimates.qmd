@@ -1,10 +1,10 @@
-# Parameters and Estimates
+# Parameters and Estimates {#sec-parameters-and-estimates}
 
 Opinion polling has been conducted since the 19th century. The general aim is to describe the opinions held by a specific population on a given set of topics. In recent times, these polls have been pervasive in the US during presidential elections. Polls are useful when interviewing every member of a specific population is logistically impossible. The general strategy involves interviewing a smaller, randomly chosen group and then inferring the opinions of the entire population from those of this subset. Statistical theory, known as *inference*, is used to justify the process and is the primary focus of this part of the book.
 
 Perhaps the best known opinion polls are those conducted to determine which candidate is preferred by voters in a given election. Political strategists extensively use polls to decide, among other things, where to allocate resources, such as determining the geographical locations to focus their "get out the vote" efforts.
 
-Elections are a particularly interesting instances of opinion polls because the actual opinion of the entire population is revealed on election day. Of course, it costs millions of dollars to run an real election, which makes polling a cost-effective strategy for those seeking to forecast the results. In addition to strategist, news organizations are also interested in forecasting elections due to the apparent demand for what they reveal.
+Elections are a particularly interesting instances of opinion polls because the actual opinion of the entire population is revealed on election day. Of course, it costs millions of dollars to run a real election, which makes polling a cost-effective strategy for those seeking to forecast the results. In addition to strategist, news organizations are also interested in forecasting elections due to the apparent demand for what they reveal.
 
 
 ## The sampling model for polls {#sec-poll-sampling-models}
@@ -57,13 +57,8 @@ Before making a prediction, you can take a sample (with replacement) from the ur
 
 The **dslabs** package includes a function that shows a random draw from this urn:
 
-```{r, eval=FALSE}
-library(tidyverse)
-library(dslabs)
-take_poll(25)
-```
 
-```{r first-simulated-poll, message=FALSE, warning=FALSE, echo=FALSE, cache=FALSE}
+```{r first-simulated-poll, message=FALSE, warning=FALSE, echo=c(-1,-4), cache=FALSE}
 set.seed(1)
 library(tidyverse)
 library(dslabs)
@@ -96,7 +91,9 @@ Observe that in the four random samples shown above, the sample proportions rang
 
 Conducting an opinion poll is being modeled as taking a random sample from an urn. We propose using the proportion of blue beads in our sample as an *estimate* of the parameter $p$. Once we have this estimate, we can easily report an estimate for the spread $2p-1$. However, for simplicity, we will illustrate the concepts for estimating $p$. We will use our knowledge of probability to justify our use of the sample proportion and to quantify its proximity to the population proportion $p$.
 
-We start by defining the random variable $X$ as $X=1$, if we pick a blue bead at random, and $X=0$ if it is red. This implies that the population is a list of 0s and 1s. If we sample $N$ beads, then the average of the draws $X_1, \dots, X_N$ is equivalent to the proportion of blue beads in our sample. This is because adding the $X$s is equivalent to counting the blue beads, and dividing this count by the total $N$ is equivalent to computing a proportion. We use the symbol $\bar{X}$ to represent this average. In statistics textbooks, a bar on top of a symbol typically denotes the average. The theory we just covered about the sum of draws becomes useful because the average is a sum of draws multiplied by the constant $1/N$:
+We start by defining the random variable $X$ as $X=1$, if we pick a blue bead at random, and $X=0$ if it is red. This implies that the population is a list of 0s and 1s. If we sample $N$ beads, then the average of the draws $X_1, \dots, X_N$ is equivalent to the proportion of blue beads in our sample. This is because adding the $X$s is equivalent to counting the blue beads, and dividing this count by the total $N$ is equivalent to computing a proportion. We use the symbol $\bar{X}$ to represent this average. In statistics textbooks, a bar on top of a symbol typically denotes the average. 
+
+The theory we just covered about the sum of draws becomes useful because the average is a sum of draws multiplied by the constant $1/N$:
 
 $$
 \bar{X} = \frac{1}{N} \sum_{i=1}^N X_i
@@ -119,20 +116,19 @@ This means that our parameter $p$ can be interpreted as a **population average**
 The concepts presented here on how we estimate parameters, and provide insights into how good these estimates are, extend to many data analysis tasks. For example, we may want to determine the difference in health improvement between patients receiving treatment and a control group, investigate the health effects of smoking on a population, analyze the differences in racial groups of fatal shootings by police, or assess the rate of change in life expectancy in the US during the last 10 years. All these questions can be framed as a task of estimating a parameter from a sample.
 
 
-## Estimate properties: expected value and standard error
+## Estimate properties: expected value and standard error 
 
-To understand how good our estimate is, we will describe the statistical properties of the random variable defined above: the sample proportion $\bar{X}$. Remember that $\bar{X}$ is the sum of independent draws so the rules we covered @sec-mean-var-eqs apply.
+To understand how good our estimate is, we will describe the statistical properties of the random variable defined above: the sample proportion $\bar{X}$. Remember that $\bar{X}$ is the sum of independent draws divided by a non-random constant so the rules we covered @sec-mean-var-eqs apply.
 
-Applying the concepts we have learned, the expected value of the sum $N\bar{X}$ is $N \times$ the average of the urn, denoted as $p$. Dividing by the non-random constant $N$ yields the expected value of the average $\bar{X}$ as $p$. We can write it using our mathematical notation:
-
-$$
-\mathrm{E}(\bar{X}) = p
-$$
-
-We can also use what we learned to determine the standard error: the standard error of the sum is $\sqrt{N} \times$ the standard deviation of the urn. Can we compute the standard error of the urn? We learned a formula that tells us it is $(1-0) \sqrt{p (1-p)}$ = $\sqrt{p (1-p)}$. Because we are dividing the sum by $N$, we arrive at the following formula for the standard error of the average:
+Applying the concepts we have learned we can show that:
 
 $$
-\mathrm{SE}(\bar{X}) = \sqrt{p(1-p)/N}
+\mathrm{E}[\bar{X}] = p
+$$
+
+We can also use what we learned to determine the standard error: 
+$$
+\mathrm{SE}[\bar{X}] = \sqrt{p(1-p)/N}
 $$
 
 
@@ -140,7 +136,7 @@ This result reveals the power of polls. The expected value of the sample proport
 
 If we take a large enough sample to make our standard error about 1%, we will be quite certain about who will win. But how large does the poll have to be for the standard error to be this small?
 
-One problem is that we do not know $p$, so we can't compute the standard error. However, for illustrative purposes, let's assume that $p=0.51$ and make a plot of the standard error versus the sample size $N$:
+One problem is that we do not know $p$, so we can't actually compute the standard error. However, for illustrative purposes, let's assume that $p=0.51$ and make a plot of the standard error versus the sample size $N$:
 
 ```{r standard-error-versus-sample-size, echo=FALSE, message=FALSE, warning=FALSE}
 p <- 0.51
@@ -154,12 +150,13 @@ The plot shows that we would need a poll of over 10,000 people to achieve a stan
 sqrt(p*(1 - p))/sqrt(1000)
 ```
 
-or 1.5 percentage points. So even with large polls, for close elections, $\bar{X}$ can lead us astray if we don't realize it is a random variable. Nonetheless, we can actually say more about how close we get the $p$ and we do that in @sec-clt.
+or 1.5 percentage points. So even with large polls, for close elections, $\bar{X}$ can lead us astray if we don't realize it is a random variable. Nonetheless, we can actually say more about how close we get to $p$ and we do that in @sec-clt.
 
+:::{.callout-note}
 ## Polling versus forecasting
 
-Before we continue, it's important to clarify a practical issue related to forecasting an election. If a poll is conducted four months before the election, it is estimating the $p$ for that moment, and not for election day. The $p$ for election night might be different, as people's opinions tend to fluctuate through time. Generally, the polls conducted the night before the election tend to be the most accurate, since opinions do not change significantly in a day. However, forecasters try to develop tools that model how opinions vary over time and aim to predict the election night results by taking into consideration these fluctuations. We will explore some approaches for doing this in a later section.
-
+Before we continue, it's important to clarify a practical issue related to forecasting an election. If a poll is conducted four months before the election, it is estimating the $p$ for that moment, and not for election day. The $p$ for election night might be different, as people's opinions tend to fluctuate through time. Generally, the polls conducted the night before the election tend to be the most accurate, since opinions do not change significantly in a day. However, forecasters try to develop tools that model how opinions vary over time and aim to predict the election night results by taking into consideration these fluctuations. We will explore some approaches for doing this in @sec-election-forecasting.
+:::
 
 ## Exercises
 
@@ -171,19 +168,19 @@ Before we continue, it's important to clarify a practical issue related to forec
 
 4\. What is the standard error of $\bar{X}$? Hint: It's a function of $p$.
 
-5\. Write a line of code that gives you the standard error `se` for the problem above for several values of $p$, specifically for `p <- seq(0, 1, length = 100)`. Make a plot of `se` versus `p`.
+5\. Write a line of code that gives you the standard error $\mathrm{SE}[\bar{X}]$ for the problem 4 for several values of $p$, specifically for `p <- seq(0, 1, length = 100)`. Make a plot of $\mathrm{SE}[\bar{X}]$ versus `p`.
 
-6\. Copy the code above and put it inside a for-loop to make the plot for $N=25$, $N=100$, and $N=1000$.
+6\. Copy the code from your solution to 5 and put it inside a for-loop to make the plot for $N=25$, $N=100$, and $N=1,000$.
 
-7\. If we are interested in the difference in proportions, $\mu = p - (1-p)$, our estimate is $\hat{\mu} = \bar{X} - (1-\bar{X})$. Use the rules we learned about sums of random variables and scaled random variables to derive the expected value of $\hat{\mu}$.
+7\. If we are interested in the difference in proportions, $\theta = p - (1-p)$, our estimate is $\hat{\theta} = \bar{X} - (1-\bar{X})$. Use the rules we learned about scaled random variables to derive the expected value of $\hat{\theta}$.
 
-8\. What is the standard error of $\hat{\mu}$?
+8\. What is the standard error of $\hat{\theta}$?
 
-9\. If the actual $p=.45$, it means the Republicans are winning by a relatively large margin, since $\mu = -.1$, which is a 10% margin of victory. In this case, what is the standard error of $2\hat{X}-1$ if we take a sample of $N=25$?
+9\. If $p=.45$, it means the Republicans are winning by a relatively large margin, since $\theta = -.1$, which is a 10% margin of victory. In this case, what is the standard error of $\hat{\theta} = 2\bar{X}-1$ if we take a sample of $N=25$?
 
 10\. Given the answer to exercise 9, which of the following best describes your strategy of using a sample size of $N=25$?
 
-a.  The expected value of our estimate $2\bar{X}-1$ is $\mu$, so our prediction will be accurate.
-b.  Our standard error is larger than the difference, so the chances of $2\bar{X}-1$ representing a large margin are not small. We should pick a larger sample size.
-c.  The difference is 10% and the standard error is about 0.2, therefore much smaller than the difference.
+a.  The expected value of our estimate $2\bar{X}-1$ is $\theta$, so our prediction will be accurate.
+b.  Our standard error is almost as large as the observed difference, so the chances of $2\bar{X}-1$ representing a large margin are not small even when $p=0.5$. We should use a larger sample size.
+c.  The difference is 10% and the standard error is about 0.1, therefore much smaller than the difference.
 d.  Because we don't know $p$, we have no way of knowing that making $N$ larger would actually improve our standard error.
