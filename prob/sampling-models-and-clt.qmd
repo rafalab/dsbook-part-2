@@ -1,102 +1,55 @@
-# Foundations of Statistical Inference
+# Sampling Models and the Central Limit Theorem
 
-Most of the datasets we work with are subject to chance, whether they come from a random sample, include measurement error, or reflect inherently random outcomes. Quantifying the uncertainty introduced by this randomness is one of the most important responsibilities of a data analyst. *Statistical inference* (the topic of the next part of this book) offers both the framework and the tools to do just that. The first step is learning how to describe _random variables_ mathematically. In this chapter, we introduce random variables and their key properties using simple examples from games of chance.
-
-## Random variables {#sec-random-variables}
-
-Statistical inference begins with the concept of a **random variable**, a numeric quantity whose value depends on the outcome of a random process. Random variables connect probability theory to data analysis by giving us a way to describe uncertainty mathematically. Once we define a random variable, we can study its distribution, compute its expected value and variability, and use it to make probability-based statements about future or unseen outcomes.
-
-In this chapter, we focus on cases in which the probability distribution of the random variable is completely known. These are idealized settings, such as games of chance, where the probabilities are determined by the rules of the game rather than by data. Working with these simple, controlled examples allows us to understand the mathematical foundations of probability, expected values, standard errors, and sampling distributions.  
-
-In later chapters, we will turn to real-world data problems, where the underlying distributions are not known. In those cases, we use **statistical inference** to estimate or approximate these distributions from data. The probability concepts introduced here provide the theoretical foundation for those inferential methods.
-
-To start, consider a simple discrete example. Suppose we draw one bead at random from an urn containing red and blue beads. Define the random variable as:
-
-$$
-X =
-\begin{cases}
-1 & \text{if the bead is blue},\\
-0 & \text{if the bead is red.}
-\end{cases}
-$$
-
-In R, we can simulate this process:
-
-```{r}
-beads <- rep(c("red", "blue"), times = c(2, 3))
-x <- ifelse(sample(beads, 1) == "blue", 1, 0)
-```
-
-Each time we draw a bead, the value of $X$ may change because the outcome is random. A variable like this, which takes only the values 0 and 1, are called a *Bernoulli random variable* in statistical textbooks. Bernoulli trials are the building blocks for many statistical models, since many outcomes, such as success/failure, yes/no, or heads/tails, can be represented in this way.
-
-Note that not all random variables are discrete. Some can take on a continuum of values. For example, the height of a randomly selected person or the result of a physical measurement can be viewed as a *continuous random variable*. We can simulate such a variable using the normal distribution:
-
-```{r}
-x <- rnorm(10, mean = 70, sd = 3)
-```
-
-Here each value of `x` represents one realization of a random variable drawn from a normal distribution with mean 70 and standard deviation 3. If we were to repeat the simulation, we would obtain slightly different numbers each time, reflecting the inherent randomness of the process.
-
-These two examples, a discrete Bernoulli variable and a continuous normal variable, illustrate the main types of random variables we will study in this chapter. Understanding their behavior and summarizing their distributions are the key steps that lead us toward the ideas of expected value, variability, and, ultimately, statistical inference.
-
-### Notation for random variables
-
-In statistical notation, uppercase letters denote random variables, while lowercase letters represent observed values. Sometimes both appear together, as in $X \leq x$, where $X$ is random and $x$ is a fixed value. For example, $X$ might represent the number shown on a die roll, and $x$ an observed outcome—1, 2, 3, 4, 5, or 6. In this case,
-$$
-\mathrm{Pr}(X = x) = 1/6 \text{ for } x = 1, \dots, 6.
-$$
-This notation is convenient because it lets us express probability statements compactly, as above. It may seem a bit odd at first, since $X$ represents an outcome not yet observed, we can discuss the likelihood of its possible values, but not its realized value. Once data are collected, we observe one realization of $X$, and data analysts often reflect on what could have occurred, given what actually did.
+In the previous chapter, we defined random variables and saw how their distributions, expected values, and standard errors describe uncertainty. In this chapter, we connect those ideas to **sampling models**—mathematical abstractions of how data are generated—and use the **Central Limit Theorem (CLT)** to approximate the distribution of sums (and averages) of independent draws. We'll work through a concrete example (roulette) and show how the CLT helps answer practical questions such as “What is the chance of losing money?”
 
 ## Sampling models {#sec-sampling-models}
 
-Many data generation procedures can be effectively modeled as draws from an urn. For instance, we can model the process of polling likely voters as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the 0 and 1 codes for all likely voters. In epidemiological studies, we often assume that the subjects in our study are a random sample from the population of interest. The data related to a specific outcome can be modeled as a random sample from an urn containing the outcomes for the entire population of interest. Similarly, in experimental research, we often assume that the individual organisms we are studying, for example worms, flies, or mice, are a random sample from a larger population. Randomized experiments can be modeled by draws from an urn, reflecting the way individuals are assigned into group; when getting assigned, individuals draw their group at random. Sampling models are therefore ubiquitous in data analysis. Casino games offer a plethora of real-world cases in which sampling models are used to answer specific questions. We will therefore start with these examples.
+Many data-generating processes can be effectively modeled as **draws from an urn**. For example, polling likely voters can be viewed as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the preferences of the entire population. In epidemiology, we often assume that individuals in a study are random draws from a larger population, where each draw corresponds to an individual's outcome. Similarly, in experimental research, we treat subjects—worms, flies, mice, or humans—as random draws from a broader population. Randomized experiments follow the same logic: each participant's assignment to treatment or control can be seen as a random draw from an urn.
 
-Suppose a very small casino hires you to consult on whether they should set up roulette wheels. To keep the example simple, we will assume that 1,000 people will play, and that the only game available on the roulette wheel is to bet on red or black. The casino wants you to predict how much money they will make or lose. They want a range of values and, in particular, they want to know what's the chance of losing money. If this probability is too high, they will decide against installing roulette wheels.
+Because random sampling and random assignment are fundamental to data analysis, *sampling models* appear everywhere in statistics. To build intuition, we start with **games of chance**, where randomness is explicit and the link between probability and real outcomes is perfectly clear.
 
-We are going to define a random variable $S_n$ that will represent the casino's total winnings after $n$ games. Let's start by constructing the urn. A roulette wheel has 18 red pockets, 18 black pockets and 2 green ones. So playing a color in one game of roulette is equivalent to drawing from this urn:
+Suppose a small casino hires you to decide whether it should install roulette wheels. To keep things simple, imagine 1,000 people each place a single bet on red or black. The casino wants you to estimate how much money it can expect to make—or lose—and, most importantly, the probability of losing money. If that probability is too high, they'll skip installing the wheels.
+
+We define a random variable $S_n$ to represent the casino's total winnings after $n$ games. A roulette wheel has 18 red pockets, 18 black pockets, and 2 green ones. Betting on color is equivalent to drawing from this urn:
 
 ```{r}
 color <- rep(c("Black", "Red", "Green"), times = c(18, 18, 2))
 ```
 
-The 1,000 outcomes from people playing are independent draws from this urn. If red comes up, the gambler wins, and the casino loses a dollar, resulting in the observed random variable being -\$1. Otherwise, the casino wins a dollar, and the random variable is \$1. 
-
-To construct 1,000 outcomes of the random variable $X$ we can use this code:
+Each of the 1,000 outcomes is an independent draw from this urn. If black comes up, the gambler wins and the casino loses $1 (recorded as −1). Otherwise, the casino wins $1.
 
 ```{r}
 n <- 1000
-x <- sample(ifelse(color == "Red", -1, 1),  n, replace = TRUE)
+x <- sample(ifelse(color == "Black", -1, 1), n, replace = TRUE)
 ```
 
-Note that the code above is shown for educational purposes only. Since we already know the proportions of 1s and −1s, we can generate the draws in a single line of code without first defining color:
+Since we already know the proportions of 1s and −1s, we can simplify:
 
 ```{r}
 x <- sample(c(-1, 1), n, replace = TRUE, prob = c(9/19, 10/19))
 ```
 
-We call this a *sampling model*, as it involves modeling the random behavior through the sampling of draws from an urn. The total winnings $S_n$ is simply the sum of these 1,000 independent draws:
+We call this a *sampling model* because it represents random behavior through repeated sampling from an urn. The casino's total winnings are simply the sum of these independent draws:
 
 ```{r}
 s <- sum(x)
 ```
 
-In the next section, we will derive the distribution of the total winnings, $S_n$, and answer the casino's question about the probability of losing money. Before doing so, it’s helpful to pause and reflect on *why* we study problems like roulette in the first place.
+Before deriving the distribution of total winnings $S_n$, it's worth pausing to ask *why* we study problems like roulette in the first place.
 
-Thinking in terms of a **sampling model** is a powerful way to approach data analysis when uncertainty is involved. It bridges the gap between the random variables we study in probability and the datasets we analyze in practice. By imagining data as random draws from a well-defined process, an urn, a population, or randomization, we gain clarity about what our models represent and the assumptions they rely on.
+Thinking in terms of a **sampling model** is central to data analysis under uncertainty. It connects the random variables we study in probability to the datasets we analyze in practice. By imagining data as random draws—from an urn, a population, or a randomization procedure—we clarify what our models represent and what assumptions they rely on.
 
-This perspective also helps us interpret statistical procedures more thoughtfully. Many standard tools, such as confidence intervals, hypothesis tests, and regression models, are built on assumptions that arise from a sampling model. Understanding these assumptions allows us to apply these methods in a principled way, recognize their limitations, and build models that better capture the uncertainty inherent in real data.
+This perspective also underpins much of modern statistics. Tools like confidence intervals, hypothesis tests, and regression all depend on assumptions derived from sampling models. Understanding these assumptions helps us apply these methods thoughtfully and recognize their limits.
 
-Casino games are useful teaching examples because their sampling models are completely known. The probabilities are determined by clear characteristics, such as the number of red, black, and green pockets on a roulette wheel, which can be represented precisely as draws from an urn. In real-world data analysis, we can think of the *urn* as representing more complex entities, such as a *population*, with each bead corresponding to an individual and each value representing a variable of interest, such as height, income, or health outcome. When we collect data, we are effectively drawing a random sample from this population urn.
+Casino games make these ideas tangible because their sampling models are fully known. The probabilities—such as the number of red, black, and green pockets—are explicit and easy to simulate. In contrast, real-world data come from more complex “urns,” such as populations of individuals with varying heights, incomes, or health outcomes. When we collect data, we are effectively drawing a random sample from such a population.
 
-Thinking this way helps develop statistical intuition. It reminds us that every dataset represents a sample from some underlying process, and that the assumptions behind our models, such as independence and random sampling, are rooted in this conceptual framework.
+This way of thinking builds statistical intuition: every dataset represents a sample from some underlying process, and the validity of our conclusions depends on how well our assumptions about that process hold.
 
-## The probability distribution of a random variable
+## A Monte Carlo Simulation
 
-If you rerun the code above, you see that `s` changes every time. This is because $S_n$ is a **random variable**. The probability distribution of a random variable informs us about the probability of the observed value falling in any given interval. For example, if we want to know the probability that we lose money, we are asking the probability that $S_n$ is in the interval $(-\infty,0)$.
+To find the probability that the casino loses money, we need to estimate the distribution of total winnings, $S_n$. In the language of probability, this is $\Pr(S_n < 0)$. If we define the distribution function $F(a) = \Pr(S_n \leq a)$, we can answer any question about probabilities involving $S_n$.
 
-Keep in mind that if we can define a cumulative distribution function $F(a) = \mathrm{Pr}(S_n\leq a)$, then we will be able to answer any question related to the probability of events defined by our random variable $S_n$, including the event $S_n<0$. We call this $F$ the random variable's *distribution function*.
-
-We can estimate the distribution function for the random variable $S$ by using a Monte Carlo simulation to generate many realizations of the random variable. With the following code, we use `sample` to simulate the experiment of having 1,000 people play roulette, and we use `replicate` to run the experiment over and over indefinitely, her approximated with $B = 100,000$ times:
+We can estimate $F(a)$ with a **Monte Carlo simulation**, generating many realizations of $S_n$. The following code simulates 1,000 people playing roulette and repeats the process $B = 100{,}000$ times:
 
 ```{r}
 n <- 1000
@@ -108,336 +61,135 @@ roulette_winnings <- function(n){
 s <- replicate(B, roulette_winnings(n))
 ```
 
-Now, we can ask the following: in our simulation, how often did we get sums less than or equal to `a`?
+The fraction of simulations in which $S_n \leq a$ approximates $F(a)$:
 
 ```{r, eval=FALSE}
 mean(s <= a)
 ```
 
-This will be a very good approximation of $F(a)$, allowing us to easily answer the casino's question "how likely is it that we will lose money?".  We can see it is quite low:
+For instance, the probability of losing money is:
 
 ```{r}
 mean(s < 0)
 ```
 
-We can visualize the distribution of $S_n$ by creating a histogram showing the probability $F(b)-F(a)$ for several intervals $(a,b]$:
+A histogram of $S_n$ shows that the distribution is approximately normal:
 
 ```{r normal-approximates-distribution, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
 normal_density <- data.frame(x = seq(min(s), max(s), length = 100)) |> 
   mutate(f = dnorm(x, mean(s), sd(s)))
 data.frame(S_n = s) |> ggplot(aes(S_n, after_stat(density))) +
-  geom_histogram(color = "black", binwidth = 10)  +
-  ylab("Probability") + 
+  geom_histogram(color = "black", binwidth = 10) +
+  ylab("Probability") +
   geom_line(data = normal_density, mapping = aes(x, f), color = "blue")
 ```
 
-We see that the distribution appears to be approximately normal. A qqplot will confirm that the normal approximation is close to a perfect approximation for this distribution. 
+A qqplot confirms that the normal approximation is excellent—an observation that the **Central Limit Theorem** will soon explain.
 
-As we have learned, if the distribution is normal, all we need to define it are the average and the standard deviation. Since we have the original values from which the distribution is generated, we can easily compute these with `mean(s)` and `sd(s)`. The blue curve added to the histogram above is a normal density with this average and standard deviation.
+## The Central Limit Theorem {#sec-clt-prob}
 
-This average and this standard deviation have special names; they are referred to as the *expected value* and *standard error* of the random variable $S_n$. More details on these concepts will be provided in  next two sections where we use CLT to approximate to answer the casino's question.
+The **Central Limit Theorem (CLT)** states that when the number of draws (the *sample size*) is large, the distribution of the sum of independent draws is approximately normal. Because sampling models describe so many data-generating processes, the CLT is one of the most important results in statistics.
 
-
-:::{.callout-note}
-Statistical theory lets us derive the exact distribution of random variables defined as sums of independent draws from an urn. In our roulette example, the number of successes, $(S_n + n)/2$, follows a **binomial distribution**. Thus, Monte Carlo simulations were used only for illustration.
-
-We can compute probabilities directly with `dbinom` or `pbinom`. For example, to find $\mathrm{Pr}(S_n < 0)$:
-
-```{r}
-pbinom(n/2 - 1, size = n, prob = 10/19)
-```
-
-However, the binomial result applies specifically to sums of Bernoulli trials. In many real-world situations, the data do not follow a binomial model, yet we still want to approximate the distribution of sums or averages. For these broader cases, we rely on the CLT, which provides a general framework that extends far beyond Bernoulli trials.
-:::
-
-## The expected value and standard error {#sec-mean-var-eqs}
-
-We have described sampling models for draws. We will now review the mathematical theory that allows us to approximate the probability distributions for the sum of draws. Once we do this, we will be able to help the casino predict how much money they will make. The same approach we use for the sum of draws will be useful for describing the distribution of averages and proportion, which we will need to understand how polls work.
-
-The first key concept to understand is the **expected value**. This quantity represents the long-run average outcome of a random variable after many repetitions of the underlying random process. In other words, if we could observe the random variable $X$ over and over again, its average value would approach the expected value.
-
-In statistics textbooks, the expected value is commonly denoted as $\mu_X$ or as $\mathrm{E}[X]$, both meaning “the expected value of the random variable $X$.”
-
-A random variable will vary around its expected value in a manner that if you take the average of many, many draws, the average will approximate the expected value. This approximation improves as you take more draws, making the expected value a useful quantity to compute.
-
-For discrete random variable with possible outcomes $x_1,\dots,x_n$, the expected value is defined as:
-
+In the roulette example, the urn contains 20 $1 bills and 18 −$1 bills, giving an expected value:
 
 $$
-\mathrm{E}[X] = \sum_{i=1}^n x_i \,\mathrm{Pr}(X = x_i)
-$$
-If $X$ is a continuous random variable with a range of values $a$ to $b$ and a probability density function $f(x)$, this sum becomes an integral:
-
-$$
-\mathrm{E}[X] = \int_a^b x f(x)\, dx
+\mathrm{E}[X] = (20 + (-18))/38 = 1/19 \approx 0.05.
 $$
 
-Note that in the case that we are picking values from an urn, and each value $x_i$ has an equal chance $1/n$ of being selected, the above equation is simply the average of the $x_i$s.
+In general, for two possible outcomes $a$ and $b$ with probabilities $p$ and $(1-p)$,
 
 $$
-\mathrm{E}[X] = \frac{1}{n}\sum_{i=1}^n x_i 
+\mathrm{E}[X] = ap + b(1-p).
 $$
 
-In the urn used to model betting on red in roulette, we have 20 one-dollar bills and 18 negative one-dollar bills, so the expected value is:
+By the properties introduced in @sec-key-properties, the expected total winnings are:
 
 $$
-\mathrm{E}[X] = (20 + -18)/38 = 1/19
+\mathrm{E}[S_n] = n,\mathrm{E}[X].
 $$
 
-which is about 5 cents. You might consider it a bit counterintuitive to say that $X$ varies around 0.05 when it only takes the values 1 and -1. One way to make sense of the expected value in this context is by realizing that, if we play the game over and over, the casino wins, on average, 5 cents per game. A Monte Carlo simulation confirms this:
+So if 1,000 people play, the casino expects to win about $50 on average.
 
-```{r}
-B <- 10^6
-x <- sample(c(-1, 1), B, replace = TRUE, prob = c(9/19, 10/19))
-mean(x)
-```
-
-In general, if the urn has two possible outcomes, say $a$ and $b$, with proportions $p$ and $1-p$ respectively, the average is:
-
-$$\mathrm{E}[X] = ap + b(1-p)$$
-
-To confirm this, observe that if there are a total of $n$ beads in the urn, then we have $np$ $a$s and $n(1-p)$ $b$s, and because the average is the sum of these two divided by the total $n$, we get that the average is $ap + b(1-p)$.
-
-Now, the reason we define the expected value is because this mathematical definition turns out to be useful for approximating the probability distributions of sums. This, in turn, is useful for describing the distribution of averages and proportions. The first useful fact is that the *expected value of the sum of the draws* is the number of draws $\times$ the average of the numbers in the urn.
-
-Therefore, if 1,000 people play roulette, the casino expects to win, on average, about 1,000 $\times$ \$0.05 = \$50. 
-
-However, this is an expected value. How different can one observation be from the expected value? The casino really needs to know this. What is the range of possibilities? If negative numbers are too likely, they will not install roulette wheels. Statistical theory once again answers this question. 
-
-The *standard error* (SE) gives us an idea of the size of the variation around the expected value. In statistics books, it's common to use $\sigma_X$ or $\mathrm{SE}[X]$ to denote the standard error of a random variable.
-
-:::{.callout-note}
-Statistical textbooks often use the Greek letters $\mu$ and $\sigma$ as shorthand for the expected value and the standard error, respectively. The notation comes from the fact that $\mu$ is the Greek equivalent of the letter *m*, the first letter of *mean*, which is another term for expected value. Likewise, $\sigma$ corresponds to the letter *s*, the first letter of *standard deviation* (and by extension, standard error). This convention helps keep mathematical expressions concise and consistent across statistical formulas.  
-
-In this book, however, we prefer the $\mathrm{E}[X]$ and $\mathrm{SE}[X]$ notation because it makes it clearer when we express expectations and standard errors of sums or other mathematical transformations of random variables. 
-:::
-
-For discrete random variable with possible outcomes $x_1,\dots,x_n$, the standard error is defined as: 
+To quantify uncertainty, we compute the **standard error**, which measures how much $S_n$ varies around its expected value. For an urn with two outcomes $a$ and $b$, the standard deviation is:
 
 $$
-\mathrm{SE}[X] = \sqrt{\sum_{i=1}^n \left(x_i - E[X]\right)^2 \,\mathrm{Pr}(X = x_i)},
-$$
-which you can think of as the expected _average_ distance of $X$ from the expected value.
-
-If $X$ is a continuous random variable, with range of values $a$ to $b$ and probability density function $f(x)$, this sum becomes integral:
-
-$$
-\mathrm{SE}[X] = \sqrt{\int_a^b \left(x-\mathrm{E}[X]\right)^2 f(x)\,\mathrm{d}x}
+|b - a|\sqrt{p(1-p)}.
 $$
 
-:::{.callout-note}
-In many statistics textbooks, define the *variance* of a random variable before the standard error. The variance is simply the square of the standard error:
-
-$$
-\mathrm{SE}[X] = \sqrt{\mathrm{Var}[X]}.
-$$
-
-The variance is often used in mathematical derivations because it simplifies algebra by avoiding square roots. However, the *standard error* is more useful in practice, since it measures variability in the same units as the random variable itself, making it easier to interpret.
-:::
-
-Note that in the case that we are picking values from an un urn where each value $x_i$ has an equal chance $1/n$ of being selected, the above equation is simply the standard deviation of of the $x_i$s.
-
-$$
-\mathrm{SE}[X] = \sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mathrm{E}[X])^2} \mbox{ with }  \mathrm{E}[X] =  \frac{1}{n}\sum_{i=1}^n x_i 
-$$
-Using the definition of standard deviation, we can derive, with a bit of math, that if an urn contains two values $a$ and $b$ with proportions $p$ and $(1-p)$, respectively, the standard deviation is:
-
-$$| b - a | \sqrt{p(1-p)}.$$
-
-
-So in our roulette example, the standard deviation of the values inside the urn is $\mid 1 - (-1) \mid \sqrt{10/19 \times 9/19}$ or:
+In the roulette example:
 
 ```{r}
 2*sqrt(90)/19
 ```
 
-The standard error tells us the typical difference between a random variable and its expectation. So one draw has an expected value of 0.05 and a standard error of about 1. This makes sense since we obtain either 1 or -1, with 1 slightly favored over -1.
-
-A widely used mathematical result is that *if our draws are independent*, then the *standard error of the sum* is given by the equation:
+Thus, the standard error of the sum is:
 
 $$
-\sqrt{\mbox{number of draws}} \times \mbox{ standard deviation of the numbers in the urn}
+\mathrm{SE}[S_n] = \sqrt{n},\mathrm{SD}[X],
 $$
 
-
-Using this formula, the sum of 1,000 people playing has standard error of about \$32:
-
-```{r}
-sqrt(1000)*2*sqrt(90)/19
-```
-
-As a result, when 1,000 people bet on red, the casino is expected to win \$50 with a standard error of \$32. It therefore seems like a safe bet to install more roulette wheels. But we still haven't answered the question: How likely is the casino to lose money? The CLT will help in this regard.
-
-
-## Central Limit Theorem {#sec-clt-prob}
-
-The Central Limit Theorem (CLT) tells us that when the number of draws, also called the *sample size*, is large, the probability distribution of the sum of the independent draws is approximately normal. Given that sampling models are used for so many data generation processes, the CLT is considered one of the most important mathematical insights in history.
-
-Previously, we discussed that if we know that the distribution of a list of numbers is approximated by the normal distribution, all we need to describe the list are the average and standard deviation. We also know that the same applies to probability distributions. If a random variable has a probability distribution that is approximated with the normal distribution, then all we need to describe the probability distribution are the expected value and standard error.
-
-In @sec-sampling-models we ran a Monte Carlo simulation for $S_n$ and generated `s`. The Central Limit Theorem (CLT) tells us that the sum $S_n$ is approximated by a normal distribution. Using the formulas above, we know that the expected value and standard error are:
+which in this case is:
 
 ```{r}
-n*(20 - 18)/38 
-sqrt(n)*2*sqrt(90)/19 
+sqrt(n)*2*sqrt(90)/19
 ```
 
-The theoretical values above match those obtained with the Monte Carlo simulation:
+These theoretical values agree closely with the Monte Carlo results:
 
 ```{r}
 mean(s)
 sd(s)
 ```
 
-Using the CLT, we can skip the Monte Carlo simulation and instead compute the probability of the casino losing money using this approximation:
+Using the CLT, we can now compute the probability that the casino loses money without simulation:
 
 ```{r}
-pnorm(0, n*(20 - 18)/38, sqrt(n)*2*sqrt(90)/19 )
+pnorm(0, n*(20 - 18)/38, sqrt(n)*2*sqrt(90)/19)
 ```
 
-which is also in very good agreement with our Monte Carlo result:
+which matches our earlier estimate:
 
 ```{r}
 mean(s < 0)
 ```
 
-### How large is large in the Central Limit Theorem?
+:::{.callout-note}
+The quantity $(S_n + n)/2$ represents the number of “wins” for the casino and follows a **binomial distribution**. Thus, the probability $\Pr(S_n < 0)$ can also be computed directly:
 
-The Central Limit Theorem (CLT) applies when the number of draws is large—but *large* is relative. In many situations, about 30 draws are enough for the normal approximation to work well, and sometimes even 10 suffice. These, however, are only guidelines. When the probability of success is very small, much larger samples are needed.
-
-To illustrate a limitation of the CLT, consider a lottery. The chance of winning the grand prize is often less than one in a million, so even if millions of people buy tickets, the number of winners is typically between 0 and a few individuals. In such cases, the sum of draws is highly skewed, and the normal approximation fails. Here, the **Poisson distribution** provides a better model for the total number of successes.
-
-You can explore the Poisson distribution in R with `dpois`, `ppois`, and `rpois`. While we do not cover its theory here, it is discussed in any standard probability text or [Wikipedia](https://en.wikipedia.org/wiki/Poisson_distribution).
-
-In summary, the CLT is one of the most powerful results in statistics, it explains why the normal distribution appears so often and why many methods work well in practice. But it has limits: when probabilities are extremely small or distributions are highly skewed, other models, such as the Poisson or binomial, may be more appropriate. Developing intuition for when the CLT applies is essential for thoughtful, principled data analysis.
-
-## Statistical properties of averages
-
-There are several useful mathematical results that we used above and often employ when working with data. We list them below.
-
-1\. The expected value of the sum of random variables is the sum of each random variable's expected value. We can write it like this:
-
-$$ 
-\mathrm{E}[X_1+X_2+\dots+X_n] =  \mathrm{E}[X_1] + \mathrm{E}[X_2]+\dots+\mathrm{E}[X_n]
-$$
-
-If $X$ represents independent draws from the urn, then they all have the same expected value. Let's denote the expected value with $\mu_X$ and rewrite the equation as:
-
-$$ 
-\mathrm{E}[X_1+X_2+\dots+X_n]=  n\mu_X
-$$
-
-which is another way of writing the result we show above for the sum of draws.
-
-2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. This is easier to explain with symbols:
-
-$$
-\mathrm{E}[aX] =  a\times\mathrm{E}[X]
-$$
-
-To understand why this is intuitive, consider changing units. If we change the units of a random variable, such as from dollars to cents, the expectation should change in the same way. A consequence of the above two facts is that the expected value of the average of independent draws from the same urn is the expected value of the urn, denoted as $\mu_X$ again:
-
-$$
-\mathrm{E}[(X_1+X_2+\dots+X_n) / n]=   \mathrm{E}[X_1+X_2+\dots+X_n] / n = n\mu_X/n = \mu_X 
-$$
-
-3\. The variance of the sum of **independent** random variables is the sum of variances of each random variable: 
-
-$$ 
-\mathrm{Var}[X_1+X_2+\dots+X_n] =\mathrm{Var}[X_1] + \mathrm{Var}[X_2]+\dots+\mathrm{Var}[X_n]  
-$$
-This implies that the following property for the standard error of the sum of **independent** random variables:
-
-$$ 
-\mathrm{SE}[X_1+X_2+\dots+X_n] = \sqrt{\mathrm{SE}[X_1]^2 + \mathrm{SE}[X_2]^2+\dots+\mathrm{SE}[X_n]^2  }
-$$
-
-Note that this particular property is not as intuitive as the previous three and more in depth explanations can be found in statistics textbooks.
-
-4\. The standard error of a non-random constant times a random variable is the non-random constant times the random variable's standard error. As with the expectation: 
-
-$$
-\mathrm{SE}[aX] =  a \times \mathrm{SE}[X]
-$$
-
-To see why this is intuitive, again think of units.
-
-A consequence of 3 and 4 is that the standard error of the average of independent draws from the same urn is the standard deviation of the urn divided by the square root of $n$ (the number of draws), call it $\sigma_X$:
-
-$$
-\begin{aligned}
-\mathrm{SE}[\bar{X}] = \mathrm{SE}[(X_1+X_2+\dots+X_n) / n] &=   \mathrm{SE}[X_1+X_2+\dots+X_n]/n \\
-&= \sqrt{\mathrm{SE}[X_1]^2+\mathrm{SE}[X_2]^2+\dots+\mathrm{SE}[X_n]^2}/n \\
-&= \sqrt{\sigma_X^2+\sigma_X^2+\dots+\sigma_X^2}/n\\
-&= \sqrt{n\sigma_X^2}/n\\
-&= \sigma_X / \sqrt{n}    
-\end{aligned}
-$$
-
-:::{.callout-warning title="The assumption of independence is important"}
-The given equation reveals crucial insights for practical scenarios. Specifically, it suggests that the standard error can be minimized by increasing the sample size, $n$, and we can quantify this reduction. However, this principle holds true only when the variables $X_1, X_2, ... X_n$ are independent. If they are not, the estimated standard error can be significantly off.
-
-In @sec-corr-coef, we introduce the concept of correlation, which quantifies the degree to which variables are interdependent. If the correlation coefficient among the $X$ variables is $\rho$, the standard error of their average is:
-
-$$
-\mathrm{SE}\left[\bar{X}\right] = \sigma_X \sqrt{\frac{1 + (n-1) \rho}{n}}
-$$
-
-The key observation here is that as $\rho$ approaches its upper limit of 1, the standard error increases. Notably, in the situation where $\rho = 1$, the standard error, $\mathrm{SE}[\bar{X}]$, equals $\sigma_X$, and it becomes unaffected by the sample size $n$.
-:::
-
-5\. If $X$ is a normally distributed random variable, then if $a$ and $b$ are non-random constants, $aX + b$ is also a normally distributed random variable. All we are doing is changing the units of the random variable by multiplying by $a$, then shifting the center by $b$.
-
-### Law of large numbers
-
-An important implication of result 4 above is that the standard error of the average becomes smaller and smaller as $n$ grows larger. When $n$ is very large, then the standard error is practically 0 and the average of the draws converges to the average of the urn. This is known in statistical textbooks as the law of large numbers or the law of averages.
-
-:::{.callout-warning title="Misinterpretation of the law of averages"}
-The law of averages is sometimes misinterpreted. For example, if you toss a coin 5 times and see a head each time, you might hear someone argue that the next toss is probably a tail because of the law of averages: on average we should see 50% heads and 50% tails. A similar argument would be to say that red "is due" on the roulette wheel after seeing black come up five times in a row. Yet these events are independent so the chance of a coin landing heads is 50%, regardless of the previous 5. The same principle applies to the roulette outcome. The law of averages applies only when the number of draws is very large and not in small samples. After a million tosses, you will definitely see about 50% heads regardless of the outcome of the first five tosses. Another funny misuse of the law of averages is in sports when TV sportscasters predict a player is about to succeed because they have failed a few times in a row.
-:::
-
-## Data Distributions and Probability Distributions
-
-Before moving on, it is important to distinguish between the **distribution of a dataset** and a **probability distribution**.  
-
-Any list of numbers $x_1, \dots, x_n$, or any dataset, has a distribution that describes how the observed values are spread out. We can summarize it with simple statistics such as the mean and standard deviation:
-
-```{r, eval=FALSE}
-m <- mean(x)
-s <- sd(x)
+```{r}
+pbinom(n/2 - 1, size = n, prob = 10/19)
 ```
 
-A **probability distribution**, on the other hand, is a theoretical construct that describes the possible values of a random variable and their likelihoods. It does not depend on data. 
+However, the binomial result applies only to Bernoulli trials. In many real-world settings, data are not binomial, yet we still want to approximate the distribution of sums or averages. For those cases, the CLT provides a general framework that extends far beyond Bernoulli trials.
+:::
 
-When $X$ represents drawing a number at random from an urn, the list of numbers in the urn defines the possible outcomes, and their relative frequencies define the probability distribution of $X$. The average and standard deviation of the numbers in the urn correspond to the **expected value** and **standard error** of the random variable.
+## How large is large?
 
-This connection can cause confusion: every list of numbers has a standard deviation, and every random variable has a standard error, but the standard error of a random variable is the *standard deviation of its probability distribution*, not of a particular dataset. 
+The CLT applies when the number of draws is “large,” but *large* depends on context. In many cases, 30 draws are enough for a good approximation, sometimes even fewer. When probabilities are very small, much larger samples may be required.
+
+For example, in a lottery where the chance of winning is less than one in a million, even millions of tickets result in only a few winners. In such highly skewed cases, the **Poisson distribution** offers a better approximation than the normal.
+
+You can explore it in R with `dpois`, `ppois`, and `rpois`. While we do not cover its theory here, it is discussed in most probability textbooks and on [Wikipedia](https://en.wikipedia.org/wiki/Poisson_distribution).
+
+In summary, the CLT explains why the normal distribution appears so often in statistics and why many methods work well in practice. But it has limits: when probabilities are extremely small or distributions are highly skewed, other models—such as the Poisson or binomial—are more appropriate. Developing intuition for when the CLT applies is essential for principled, thoughtful data analysis.
 
 
 ## Exercises
 
-1\. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks, and 2 greens (0 and 00). What are the chances the green comes out?
+1\. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks, and 2 greens (0 and 00). Create a random variable $S_n$ that is the sum of your winnings after betting on green 1000 times. 
 
-2\. The payout for winning on green is \$17 dollars. This means that if you bet a dollar and it lands on green, you get \$17, otherwise you lose \$1. Create a sampling model using `sample` to simulate the random variable $X$ for your winnings.
+2\. Compute the expected value of $S_n$?
 
-3\. Compute the expected value of $X$.
+3\. Compute the standard error of $S_n$?
 
-4\. Compute the standard error of $X$.
+4\. Use the CLT to estimate the probability that you end up winning money? Hint: Use the CLT.
 
-5\. Now create a random variable $S_n$ that is the sum of your winnings after betting on green 1000 times. Hint: change the argument `size` and `replace` in your answer to exercise 2. Start your code by setting the seed to 1 with `set.seed(1)`.
+5\. Create a Monte Carlo simulation that generates 10,000 outcomes of $S_n$. Compute the average and standard deviation of the resulting list to confirm the results of 2 and 3. Start your code by setting the seed to 1 with `set.seed(1)`.
 
-6\. What is the expected value of $S_n$?
+6\. Now check your answer to 4 using the Monte Carlo result.
 
-7\. What is the standard error of $S_n$?
-
-8\. What is the probability that you end up winning money? Hint: Use the CLT.
-
-9\. Create a Monte Carlo simulation that generates 10,000 outcomes of $S_n$. Compute the average and standard deviation of the resulting list to confirm the results of 6 and 7. Start your code by setting the seed to 1 with `set.seed(1)`.
-
-10\. Now check your answer to 8 using the Monte Carlo result.
-
-11\. The Monte Carlo result and the CLT approximation are close, but not that close. What could account for this?
+7\. The Monte Carlo result and the CLT approximation are close, but not that close. What could account for this?
 
 a.  10,000 simulations is not enough. If we do more, they match.
 b.  The CLT does not work as well when the probability of success is small. In this case, it was 1/19. If we make the number of roulette plays bigger, they will match better.
@@ -446,15 +198,15 @@ d.  The CLT only works for averages.
 
 Now create a random variable $\bar{X}_n$ that is your average winnings per bet defined as $X_n = S_n/n$. Keep $n$ = 10,000.
 
-12\. What is the expected value of $\bar{X}_n$?
+8\. What is the expected value of $\bar{X}_n$?
 
-13\. What is the standard error of $\bar{X}_n$?
+9\. What is the standard error of $\bar{X}_n$?
 
-14\. What is the probability that you end up with winnings per game that are positive? Hint: Use the CLT.
+10\. What is the probability that you end up with winnings per game that are positive? Hint: Use the CLT.
 
-15\. Create a Monte Carlo simulation that generates 25,000 outcomes of $\bar{X}_n$, instead of $1,000$. Compute the average and standard deviation of the resulting list to confirm the results of 13 and 14. Start your code by setting the seed to 1 with `set.seed(1)`.
+11\. Create a Monte Carlo simulation that generates 25,000 outcomes of $\bar{X}_n$, instead of $1,000$. Compute the average and standard deviation of the resulting list to confirm the results of 13 and 14. Start your code by setting the seed to 1 with `set.seed(1)`.
 
-16\. Now compare your answer to 14 using the Monte Carlo result. What can you say about the CLT approximation for $\mathrm{Pr}(\bar{X}_n>0)$ compared for $\mathrm{Pr}(S_n>0)$.
+12\. Now compare your answer to 14 using the Monte Carlo result. What can you say about the CLT approximation for $\mathrm{Pr}(\bar{X}_n>0)$ compared for $\mathrm{Pr}(S_n>0)$.
 
 a.  We are now computing averages instead of sums so they are very different.
 b.  25,000 Monte Carlo simulations is not better than 10,000 and provides a much closer estimate.
@@ -468,42 +220,42 @@ The following exercises are inspired by the events surrounding the financial cri
 [^random-variables-sampling-models-clt-2]: https://en.wikipedia.org/w/index.php?title=Security\_(finance)
 
 
-17\. More complex versions of the sampling models we have discussed are also used by banks to determine interest rates and insurance companies to determine premiums. To understand this, suppose you run a small bank that has a history of identifying potential homeowners that can be trusted to make payments. In fact, historically, only 2% of your customers default in a given year, meaning that they don't pay back the money that you lent them. Suppose your bank will give out $n$ = 1,000 loans for \$180,000 this year. Also, after adding up all costs, suppose your bank loses $l$= \$200,000 per foreclosure. For simplicity, we assume this includes all operational costs. What is the expected profit $S_n$ for you bank under this scenario?
+13\. More complex versions of the sampling models we have discussed are also used by banks to determine interest rates and insurance companies to determine premiums. To understand this, suppose you run a small bank that has a history of identifying potential homeowners that can be trusted to make payments. In fact, historically, only 2% of your customers default in a given year, meaning that they don't pay back the money that you lent them. Suppose your bank will give out $n$ = 1,000 loans for \$180,000 this year. Also, after adding up all costs, suppose your bank loses $l$= \$200,000 per foreclosure. For simplicity, we assume this includes all operational costs. What is the expected profit $S_n$ for you bank under this scenario?
 
-18\. Note that the total loss defined by the final sum in the previous exercise is a random variable. Every time you run the sampling model code, you obtain a different number of people defaulting which results in a different loss. Code a sampling model for the random variable representing your banks profit $S_n$ under scenario described in 17.
+14\. Note that the total loss defined by the final sum in the previous exercise is a random variable. Every time you run the sampling model code, you obtain a different number of people defaulting which results in a different loss. Code a sampling model for the random variable representing your banks profit $S_n$ under scenario described in 17.
 
-19\. The previous exercise demonstrates that if you simply loan money to everybody without interest, you will end up losing money due to the 2% that defaults. Although you know 2% of your clients will probably default, you don't know which ones, so you can't remove them. Yet by charging everybody just a bit extra in interest, you can make up the losses incurred due to that 2%, and also cover your operating costs. What quantity $x$ would you have to charge each borrower so that your bank's expected profit is 0? Assume that you don't get $x$ from the borrowers that default. Also, note $x$ is not the interest rate, but the total you add meaning $x/180000$ is the _interest rate_.
+15\. The previous exercise demonstrates that if you simply loan money to everybody without interest, you will end up losing money due to the 2% that defaults. Although you know 2% of your clients will probably default, you don't know which ones, so you can't remove them. Yet by charging everybody just a bit extra in interest, you can make up the losses incurred due to that 2%, and also cover your operating costs. What quantity $x$ would you have to charge each borrower so that your bank's expected profit is 0? Assume that you don't get $x$ from the borrowers that default. Also, note $x$ is not the interest rate, but the total you add meaning $x/180000$ is the _interest rate_.
 
-20\. Rewrite the sample model from exercise 19 and run a Monte Carlo simulation to get an idea of the distribution of your profit when you charge interest rates.
-
-
-
-21\. We don't actually need a Monte Carlo simulation. Based on what we have learned, the CLT informs us that, since our losses are a sum of independent draws, its distribution is approximately normal. What are the expected value and standard errors of the profit $S_n$? Write these as functions of the probability of foreclosure $p$, the number of loans $n$, the loss per foreclosure $l$, and the quantity you charge each borrower $x$.
-
-
-22\. If you set $x$ to assure your bank breaks even (expected profit is 0), what is the probability that your bank loses money?
+16\. Rewrite the sample model from exercise 19 and run a Monte Carlo simulation to get an idea of the distribution of your profit when you charge interest rates.
 
 
 
-23\. Suppose that if your bank has negative profit, it has to close. Therefore, you need to increase $x$ to minimize this risk. However, setting the interest rates too high may lead your clients to choose another bank. So, let's say that we want our chances of losing money to be 1 in 100. What does the $x$ quantity need to be now?  Hint: We want $\mathrm{Pr}(S_n<0) = 0.01$. Note that you can add subtract constants to both side of an inequality, and the probability does not change: $\mathrm{Pr}(S_n<0) = \mathrm{Pr}(S_n+k<0+k)$, Similarly, with division of positive constants: $\mathrm{Pr}(S_n+k<0+k) = \mathrm{Pr}((S_n+k)/m <k/m)$. Use this fact and the CLT to transform the left side of the inequality in $\mathrm{Pr}(S_n<0)$ into a standard normal. 
+17\. We don't actually need a Monte Carlo simulation. Based on what we have learned, the CLT informs us that, since our losses are a sum of independent draws, its distribution is approximately normal. What are the expected value and standard errors of the profit $S_n$? Write these as functions of the probability of foreclosure $p$, the number of loans $n$, the loss per foreclosure $l$, and the quantity you charge each borrower $x$.
 
-24\. Our interest rate now increases. But it is still a very competitive interest rate. For the $x$ you obtained in 21, what is expected profit per loan and the expected total profit?
 
-25\. Run run a Monte Carlo simulation to double check the theoretical approximation used in 23 and 24.
+18\. If you set $x$ to assure your bank breaks even (expected profit is 0), what is the probability that your bank loses money?
 
-26\. One of your employees points out that, since the bank is making a profit per loan, the bank should give out more loans! Why limit it to just $n$? You explain that finding those $n$ clients was work. You need a group that is predictable and that keeps the chances of defaults low. The employee then points out that even if the probability of default is higher, as long as our expected value is positive, you can minimize your chances of losses by increasing $n$ and relying on the law of large numbers. Suppose the default probability is twice as high, or 4%, and you set the interest rate to 5\%, or $x$ = \$9,000, what is your expected profit per loan?
 
-27\. How much do we have to increase $n$ by to assure the probability of losing money is still less than 0.01?
 
-28\. Confirm the result in exercise 27 with a Monte Carlo simulation.
+19\. Suppose that if your bank has negative profit, it has to close. Therefore, you need to increase $x$ to minimize this risk. However, setting the interest rates too high may lead your clients to choose another bank. So, let's say that we want our chances of losing money to be 1 in 100. What does the $x$ quantity need to be now?  Hint: We want $\mathrm{Pr}(S_n<0) = 0.01$. Note that you can add subtract constants to both side of an inequality, and the probability does not change: $\mathrm{Pr}(S_n<0) = \mathrm{Pr}(S_n+k<0+k)$, Similarly, with division of positive constants: $\mathrm{Pr}(S_n+k<0+k) = \mathrm{Pr}((S_n+k)/m <k/m)$. Use this fact and the CLT to transform the left side of the inequality in $\mathrm{Pr}(S_n<0)$ into a standard normal. 
 
-29\. According to this equation, giving out more loans increases your expected profit and lowers the chances of losing money! Giving out more loans seems like a no-brainier. As a result, your colleague decides to leave your bank and start his own high-risk mortgage company. A few months later, your colleague's bank has gone bankrupt. A book is written, and eventually, the movies "The Big Short" and "Margin Call" are made, recounting the mistake your friend, and many others, made. What happened?
+20\. Our interest rate now increases. But it is still a very competitive interest rate. For the $x$ you obtained in 21, what is expected profit per loan and the expected total profit?
+
+21\. Run run a Monte Carlo simulation to double check the theoretical approximation used in 23 and 24.
+
+22\. One of your employees points out that, since the bank is making a profit per loan, the bank should give out more loans! Why limit it to just $n$? You explain that finding those $n$ clients was work. You need a group that is predictable and that keeps the chances of defaults low. The employee then points out that even if the probability of default is higher, as long as our expected value is positive, you can minimize your chances of losses by increasing $n$ and relying on the law of large numbers. Suppose the default probability is twice as high, or 4%, and you set the interest rate to 5\%, or $x$ = \$9,000, what is your expected profit per loan?
+
+23\. How much do we have to increase $n$ by to assure the probability of losing money is still less than 0.01?
+
+24\. Confirm the result in exercise 27 with a Monte Carlo simulation.
+
+25\. According to this equation, giving out more loans increases your expected profit and lowers the chances of losing money! Giving out more loans seems like a no-brainier. As a result, your colleague decides to leave your bank and start his own high-risk mortgage company. A few months later, your colleague's bank has gone bankrupt. A book is written, and eventually, the movies "The Big Short" and "Margin Call" are made, recounting the mistake your friend, and many others, made. What happened?
 
 Your colleague's scheme was mainly based on this mathematical formula $\mathrm{SE}[\bar{X}]= \sigma_X / \sqrt{n}$. By making $n$ large, we minimize the standard error of our per-loan profit. However, for this rule to hold, the $X$s must be independent draws: one person defaulting must be independent of others defaulting. 
 
 To construct a more realistic simulation than the original one your colleague ran, let's assume there is a global event affecting everybody with high-risk mortgages and altering their probability simultaneously. We will assume that with a 50-50 chance all the default probabilities slightly increase or decrease to somewhere between 0.03 and 0.05. However, this change occurs universally, impacting everybody at once, not just one person. As these draws are no longer independent, our equation for the standard error of the sum of random variables does not apply. Write a Monte Carlo simulation for your total profit with this model.
 
-30\. Use the simulation results to report the expected profit, the probability of losing money, and the probability of losing more than $10,000,000. Study the distribution of profit and discuss how making the wrong assumption lead to a catastrophic result.
+26\. Use the simulation results to report the expected profit, the probability of losing money, and the probability of losing more than $10,000,000. Study the distribution of profit and discuss how making the wrong assumption lead to a catastrophic result.
 
 
 

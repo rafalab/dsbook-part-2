@@ -1,51 +1,53 @@
-# Central Limit Theorem {#sec-clt}
+# Margin of Error {#sec-moe}
 
-In @sec-clt-prob of the *Probability* part of the book, we introduced the Central Limit Theorem (CLT) as one of the most powerful results in statistics. We learned that, when the sample size is large, the sum or average of independent draws from a population has a distribution that is approximately normal, regardless of the shape of the original population distribution.
+Pollsters summarize uncertainty using a single, easy-to-interpret number called the *margin of error*. The margin of error, together with the estimate of the parameter, allows them to report an interval that they are _very confident_ contains the true value. But what does "very confident" actually mean? 
 
-In this chapter, we revisit the CLT from an inferential perspective. In probability, we used it to describe the behavior of random variables such as the total winnings in a roulette game. Now, our goal is to use it to quantify the uncertainty in estimates computed from data. In our poll example, the CLT tells us that the sample average $\bar{X}$ follows an approximately normal distribution centered at the true population parameter, with a standard error that depends on the sample size.
 
-This approximation allows us to answer practical questions such as:  
+Using the CLT, we can quantify this statement and connect it directly to probability.
 
-> What is the probability that our sample proportion $\bar{X}$ is within 2% of the true value $p$?
+Pollsters often report results such as "Candidate A leads by 3 points with a margin of error of $\pm 2$\%." The *margin of error* provides a simple way to summarize uncertainty. It reflects how confident pollsters are that their reported estimate is close to the true population value. But what exactly does "confident" mean, and how do we quantify it?
 
-In the remainder of this chapter, we will see how the CLT helps answer this question and provides the foundation for confidence intervals, hypothesis testing, and many of the inferential tools used throughout statistics.
+To discuss *confidence*, we turn to **probability**. In a poll, we can ask questions such as:
 
-## Margin of Error {#sec-moe}
+> How likely is it that our sample estimate $\bar{X}$ is within 2% of the true population proportion $p$?
 
-In practice, pollsters summarize uncertainty using a single, easy-to-interpret number called the *margin of error*. The margin of error, together with the estimate of the parameter, allows them to report an interval that they are _very confident_ contains the true value. But what does "very confident" actually mean? Using the CLT, we can quantify this statement and connect it directly to probability.
+To answer this, we need to know the **probability distribution** of our estimate. Each time we repeat the poll, we get a slightly different result, so $\bar{X}$ is a random variable with its own distribution, often called the *sampling distribution*. If we can describe this distribution mathematically, we can compute the probability that our estimate is close to $p$.
 
-To understand how the margin of error arises, let’s return to the question above and compute:
+## The Central Limit Theorem {#sec-clt}
+
+This is where the **Central Limit Theorem (CLT)** comes in. In the *Probability* part of the book @sec-clt-prob, we saw that when the sample size is large, the average of independent draws from a population is approximately normally distributed, regardless of the population's shape. Here, we apply the CLT to inference. 
+
+Our poll estimate $\bar{X}$ is an average of independent draws, so it follows an approximately normal distribution centered at the true parameter $p$, with standard error $\sqrt{p(1-p)/N}$.
+We can use this fact to answer the question. The probability that $\bar{X}$ is within 2% of the true population proportion $p$ is:
+
 
 $$
-\Pr(| \bar{X} - p| \leq 0.02) =
-\Pr(\bar{X} \leq p + 0.02) - \Pr(\bar{X} \leq p - 0.02).
+\Pr(|\bar{X} - p| \leq 0.02)
+= \Pr(\bar{X} \leq p + 0.02) - \Pr(\bar{X} \leq p - 0.02).
 $$
 
-We start by standardizing $\bar{X}$, subtracting its expected value and dividing by its standard error, to obtain a standard normal random variable, denoted by $Z$:
+We standardize $\bar{X}$ using the expected value and standard error to obtain a standard normal random variable $Z$:
 
 $$
 Z = \frac{\bar{X} - \mathrm{E}[\bar{X}]}{\mathrm{SE}[\bar{X}]}.
 $$
 
-Since $p$ is the expected value and $\mathrm{SE}(\bar{X}) = \sqrt{p(1 - p)/N}$ is the standard error, we can rewrite the probability above as:
+Since $p$ is the expected value and $\mathrm{SE}(\bar{X}) = \sqrt{p(1-p)/N}$, we can rewrite the probability as
 
 $$
-\Pr(\bar{X}\leq p + 0.02) - \Pr(\bar{X} \leq p - 0.02)
-=
-\Pr\left(Z \leq \frac{0.02}{\mathrm{SE}(\bar{X})} \right)
--
-\Pr\left(Z \leq -\frac{0.02}{\mathrm{SE}(\bar{X})} \right).
+\Pr\!\left(Z \leq \frac{0.02}{\mathrm{SE}(\bar{X})}\right)
+- \Pr\!\left(Z \leq -\frac{0.02}{\mathrm{SE}(\bar{X})}\right).
 $$
 
-The challenge is that we do not know $p$, and therefore we do not know $\mathrm{SE}(\bar{X})$. However, the CLT still works if we estimate the standard error by substituting $\bar{X}$ for $p$. We call this a *plug-in estimate*:
+The challenge, of course, is that we don't know $p$, so we can't compute $\mathrm{SE}(\bar{X})$ exactly. Instead, we estimate it using the observed $\bar{X}$, a *plug-in estimate*:
 
 $$
 \hat{\mathrm{SE}}(\bar{X}) = \sqrt{\bar{X}(1 - \bar{X})/N}.
 $$
 
-In statistics, a *hat* symbol indicates an estimate obtained from data. Using the observed sample and $N$, we can compute this estimated standard error.
+In statistics, a hat indicates an estimate obtained from data.
 
-Let’s continue our calculation using $\hat{\mathrm{SE}}(\bar{X})$. In our first sample, we had 12 blue and 13 red balls, giving $\bar{X} = 0.48$. The estimated standard error is:
+Using our estimate $\bar{X} = 0.48$ from our earlier poll of $N = 25$ people we obtain:
 
 ```{r}
 x_hat <- 0.48
@@ -53,55 +55,56 @@ se <- sqrt(x_hat*(1 - x_hat)/25)
 se
 ```
 
-Now, we can compute the probability that our estimate is within 2% of the true value:
+Now we can compute the probability that our estimate is within 2% of the truth:
 
 ```{r}
 pnorm(0.02/se) - pnorm(-0.02/se)
 ```
 
-There is only a small chance of being this close to $p$. A poll of just $N = 25$ people is therefore not very informative, especially in a close election.
+There's only a small chance of being this close when $N = 25$. Small polls lead to large uncertainty.
 
-This reasoning naturally leads to the concept of the *margin of error*. Conventionally, pollsters report an interval that they are 95% confident contains the true parameter. Under the CLT, this 95% probability corresponds to approximately 1.96 standard errors on each side of the estimate. Hence, the margin of error is defined as:
+## Computing the 95% Margin of Error
+
+Pollsters typically report an interval that they are *95% confident* contains the true parameter.
+Under the CLT, 95% of a normal distribution lies within about **1.96 standard errors** of the mean.
+Thus, the *margin of error* is
 
 ```{r}
 1.96*se
 ```
 
-Why 1.96? Because if we ask for the probability of being within 1.96 standard errors of $p$, we get:
-
-$$
-\Pr(Z \leq 1.96) - \Pr(Z \leq -1.96),
-$$
-
-which equals about 95%:
+Why 1.96? Because
 
 ```{r}
 pnorm(1.96) - pnorm(-1.96)
 ```
 
-Thus, there is a 95% probability that $\bar{X}$ will fall within $1.96 \times \hat{\mathrm{SE}}(\bar{X})$ of $p$. In our case, this corresponds to roughly `r round(1.96 * se, 2)`. The choice of 95% is somewhat arbitrary, other levels are used in practice, but it is the most common convention. For simplicity, the factor 1.96 is often rounded to 2.
+equals roughly 95%. In other words, there is about a 95% probability that $\bar{X}$ falls within $1.96 \times \hat{\mathrm{SE}}(\bar{X})$ of $p$.
+For our small poll, this corresponds to approximately `r round(1.96 * se, 2)`.
+Larger polls reduce the standard error, and therefore the margin of error.
 
-In summary, the CLT tells us that our poll based on $N = 25$ is not particularly useful: the margin of error is too large to draw meaningful conclusions. We can only say that the race is unlikely to be a landslide. This is why pollsters rely on much larger sample sizes.
+From the Real Clear Politics data in the previous chapter, we saw that typical polls sample between 700 and 3,500 respondents.
+If $\bar{X} = 0.48$ were based on $N = 2,000$, then:
 
-From the Real Clear Politics table in the previous chapter, we saw that typical sample sizes range from 700 to 3,500. To see why this matters, consider that if we had obtained $\bar{X} = 0.48$ with a sample size of 2,000, our estimated standard error would have been `r n <- 2000; se <- sqrt(0.48 * (1 - 0.48) / n); se`. The result would be an estimate of 48% with a margin of error of `r round(2 * se * 100)`%. This much smaller margin of error would yield a far more informative result—suggesting that red slightly outnumbers blue. Of course, this is hypothetical; we did not conduct a poll of 2,000 to avoid spoiling the competition.
+```{r}
+n <- 2000
+se <- sqrt(0.48*(1 - 0.48)/n)
+round(1.96*se*100)
+```
+
+The margin of error would be about 2%, producing a much more informative result.
 
 
-## A Monte Carlo simulation
+The CLT provides the mathematical foundation for understanding uncertainty in estimates and for computing the margin of error.
+In the next section, we extend these ideas to construct **confidence intervals**, which formalize how we express uncertainty about unknown parameters.
 
-Suppose we want to use a Monte Carlo simulation to corroborate the tools we have developed using probability theory. The problem is, of course, that we don't know `p`. We could construct an urn, similar to the one pictured above, and conduct an analog simulation (without a computer). While time-consuming, we could take 10,000 samples, count the beads, and track the proportions of blue. We can use the function `take_poll(n = 1000)`, instead of drawing from an actual urn, but it would still take time to count the beads and enter the results.
+## A Monte Carlo check
 
-Therefore, one approach we can use to corroborate theoretical results is to pick one or several values of `p` and run simulations. Let's set `p=0.45` and simulate a poll:
+We can confirm this reasoning with a Monte Carlo simulation. Suppose the true proportion is $p = 0.45$ and we run $B = 10,000$ simulated polls, each with $N = 1000$ respondents:
 
 ```{r}
 p <- 0.45
 N <- 1000
-x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
-x_hat <- mean(x)
-```
-
-In this particular sample, our estimate is `x_hat`. We can use that code to do a Monte Carlo simulation:
-
-```{r}
 B <- 10000
 x_hat <- replicate(B, {
   x <- sample(c(0, 1), size = N, replace = TRUE, prob = c(1 - p, p))
@@ -109,14 +112,15 @@ x_hat <- replicate(B, {
 })
 ```
 
-To review, the theory tells us that $\bar{X}$ is approximately normally distributed, has expected value $p=$ `r p`, and standard error $\sqrt{p(1-p)/N}$ = `r sqrt(p*(1-p)/N)`. The simulation confirms this:
+The CLT predicts that $\bar{X}$ has expected value $p = 0.45$ and standard error $\sqrt{p(1-p)/N}$.
+The simulation confirms this:
 
 ```{r}
 mean(x_hat)
 sd(x_hat)
 ```
 
-A histogram and qqplot confirm that the normal approximation is also accurate:
+and the histogram and QQ plot verify the normal approximation.
 
 ```{r normal-approximation-for-polls, echo=FALSE, warning=FALSE, message=FALSE, out.width="100%", fig.height=3, cache=FALSE}
 library(tidyverse)
@@ -133,21 +137,22 @@ p2 <-  data.frame(x_hat = x_hat) |>
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-Of course, in real life, we would never be able to run such an experiment because we don't know $p$. However, we can run it for various values of $p$ and $N$ and see that the theory does indeed work well for most values. You can easily do this by rerunning the code above after changing the values of `p` and `N`.
+The results show that the theoretical margin of error accurately describes the variation we observe across many polls.
 
+## Why not just run a huge poll?
 
-## Bias: Why not run a very large poll?
-
-For realistic values of $p$, let's say ranging from 0.35 to 0.65, if we conduct a very large poll with 100,000 people, theory tells us that we would predict the election perfectly, as the largest possible margin of error is around 0.3%:
+If we polled 100,000 people, the margin of error would shrink below 0.3%:
 
 ```{r standard-error-versus-p, echo=FALSE}
 N <- 100000
 p <- seq(0.35, 0.65, length = 100)
-se <- sapply(p, function(x) 2*sqrt(x*(1 - x)/N))
+se <- sapply(p, function(x) 1.96*sqrt(x*(1 - x)/N))
 data.frame(p = p, SE = se) |> ggplot(aes(p, SE)) + geom_line()
 ```
 
-So why are sample sizes these large not seen? One reason is that conducting such a poll is very expensive. Another, and possibly more important reason, is that theory has its limitations. Polling is much more complicated than simply picking beads from an urn. Some people might lie to pollsters, and others might not have phones. However, perhaps the most important way an actual poll differs from an urn model is that we don't actually know for sure who is in our population and who is not. How do we know who is going to vote? Are we reaching all possible voters? Hence, even if our margin of error is very small, it might not be exactly right that our expected value is $p$. We call this bias. Historically, we observe that polls are indeed biased, although not by a substantial amount. The typical bias for the popular vote, for example, appears to be about 2-3%. This makes election forecasting a bit more interesting, and we will explore how to model this in a later section.
+So why don't pollsters do this?
+Cost is one reason, but another is **bias**. Real polls are not simple random samples: people might decline to respond, lie, or be unreachable. Moreover, we can't perfectly define the population—only eligible voters, registered voters, or likely voters. These imperfections introduce systematic errors that the margin of error does not capture. Historically, U.S. popular-vote polls have shown biases of about 2–3%, which is why modeling bias is an important part of election forecasting (a topic we revisit later).
+
 
 ## Exercises
 
