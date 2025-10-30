@@ -53,24 +53,82 @@ $$
 
 This function $f(x)$ is called the *probability density function* (PDF).  
 
-The PDF plays a role similar to the relative frequency distribution for discrete data. However, instead of assigning probabilities to individual outcomes, which would all be zero for a continuous variable, the PDF describes how probability is distributed across values of $x$. We can think of it as defining the shape of the distribution: wider regions under the curve correspond to more likely ranges of values.  
+The PDF plays a role similar to the relative frequency distribution for discrete data. The key difference is that for a continuous variable, individual values have probability zero, so instead of assigning probability to specific outcomes, the PDF shows how probability is spread across the range of possible values of $x$. The probability that the variable falls within an interval, say $[a,b]$, is given by the area under the curve between $a$ and $b$. Thus, the shape of the PDF shows where values are more or less likely to occur, with wider or higher regions corresponding to ranges that contain more probability mass.
 
-To build intuition, imagine dividing the range of possible outcomes into many tiny intervals. The width of each interval forms the base of a rectangle, and $f(x)$ determines its height. The total area of all rectangles approximates the probability of observing a value between $a$ and $b$. In the limit, this approximation becomes an integral:
+To build intuition for why we use a continuous function and an integral to describe probabilities, consider a situation where an outcome can be measured with very high precision. In this case, we can think of the relative frequency as being proportional to the height of the bars in the plot below:
 
 ```{r probability-density-explanation, echo=FALSE}
-cont <- data.frame(x = seq(0, 5, len = 300), y = dgamma(seq(0, 5, len = 300), 2, 2))
-disc <- data.frame(x = seq(0, 5, 0.075), y = dgamma(seq(0, 5, 0.075), 2, 2))
+cont <- data.frame(x = seq(0, 5, len = 300))
+cont$y <- dgamma(cont$x, 2, 2)
+disc <- data.frame(x = seq(0, 5, 0.075))
+disc$y <-  dgamma(disc$x, 2, 2)
+disc$ab <- disc$x > 0.5 & disc$x < 1.5
 ggplot(mapping = aes(x, y)) +
-  geom_col(data = disc, fill = "grey") +
+  geom_col(aes(fill = ab), data = disc, show.legend = FALSE) +
   geom_line(data = cont) +
-  ylab("f(x)")
+  ylab("f(x)") + 
+  scale_fill_manual(values = c("grey70", "grey40"))
 ```
 
-An important example is the normal distribution, introduced in @sec-normal-distribution. Its  probability density function is
+The probability of the outcome falling within an interval, for example, $x \in [0.5, 1.5]$, can be approximated by adding the heights of the bars within that range and dividing by the total height of all bars. As the measurement becomes more precise and the bar widths become narrower, this sum approaches the area under the curve of the continuous function $f(x)$.
+
+In the limit where the bar widths shrink to zero, the sum and the integral are identical:
+the probability of $x$ falling in an interval is exactly the area under $f(x)$** over that interval. To make this work, we define $f(x)$ so that the total area under the curve equals 1:
 
 $$
-f(x) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\left(-\frac{1}{2}\left(\frac{x - m}{s}\right)^2\right)
+\int_{-\infty}^{\infty} f(x) , dx = 1
 $$
+
+This ensures that $f(x)$ represents a valid PDF.
+
+An important example of a PDF is the normal distribution, introduced in @sec-normal-distribution. Its  probability density function is
+
+$$
+f(x) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\left(-\frac{1}{2}\left(\frac{x - \mu}{\sigma}\right)^2\right)
+$$
+
+and as we previous saw has a bell shaped centered at $m$ and 95% of the area with $2\sigma$ from $\mu$:
+
+```{r normal-pdf}
+#| echo: false
+
+m <- 0
+s <- 1
+
+# Generate normal density
+x <- seq(m - 4*s, m + 4*s, length.out = 400)
+df <- data.frame(x = x, f = dnorm(x, mean = m, sd = s))
+
+# Points of interest
+marks <- c(m - 3*s, m - 2*s, m - s, m, m + s, m + 2*s, m + 3*s)
+labels <- c(
+  expression(mu - 3*sigma),
+  expression(mu - 2*sigma),
+  expression(mu - sigma),
+  expression(mu),
+  expression(mu + sigma),
+  expression(mu + 2*sigma),
+  expression(mu + 3*sigma)
+)
+
+# Plot
+ggplot(df, aes(x, f)) +
+  geom_line() +
+  geom_vline(xintercept = marks, linetype = "dashed", color = "grey40") +
+  scale_x_continuous(
+    name = "x",
+    breaks = marks,
+    labels = labels
+  ) +
+  ylab("f(x)") +
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_line(color = "grey85"),
+    panel.grid.major.x = element_blank()
+  )
+
+```
 
 Integrating this function gives the CDF of the normal distribution. In R, the corresponding function is `pnorm`. A random outcome is said to be *normally distributed* with mean `m` and standard deviation `s` if its CDF is defined by
 
@@ -185,7 +243,7 @@ For example, the Student's *t* distribution uses `dt`, `pt`, `qt`, and `rt`. Bas
 
 5\. Notice that the answer to the question does not change when you change units. This makes sense since the standard deviations from the average for an entry in a list are not affected by what units we use. In fact, if you look closely, you notice that 61 and 67 are both 1 SD away from the average. Compute the probability that a randomly picked, normally distributed random variable is within 1 SD from the average.
 
-6\. To understand the mathematical rationale that explains why the answers to exercises 3, 4, and 5, suppose we have a random variable $X$ with average $m$ and standard error $s$. Suppose we ask the probability o$X$ being smaller or equal to $a$. Remember that, by definition, $a$ is $(a - m)/s$ standard deviations $s$ away from the average $m$. The probability is:
+6\. To understand the mathematical rationale that explains why the answers to exercises 3, 4, and 5, suppose we have a random variable $X$ with average $\mu$ and standard error $\sigma$. Suppose we ask the probability o$X$ being smaller or equal to $a$. Remember that, by definition, $a$ is $(a - \mu)/\sigma$ standard deviations $s$ away from the average $m$. The probability is:
 
 $$
 \mathrm{Pr}(X \leq a)
@@ -194,7 +252,7 @@ $$
 Now we subtract $\mu$ to both sides and then divide both sides by $\sigma$:
 
 $$
-\mathrm{Pr}\left(\frac{X-m}{s} \leq \frac{a-m}{s} \right)
+\mathrm{Pr}\left(\frac{X-\mu}{\sigma} \leq \frac{a-\mu}{\sigma} \right)
 $$
 
 The quantity on the left is a standard normal random variable. It has an average of 0 and a standard error of 1. We will call it $Z$:
@@ -203,7 +261,7 @@ $$
 \mathrm{Pr}\left(Z \leq \frac{a-\mu}{\sigma} \right)
 $$
 
-So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - m)/s$. If `m` is the average and `s` the standard error, which of the following R code would give us the right answer in every situation?
+So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - \mu)/s$. If `m` is the average and `s` the standard error, which of the following R code would give us the right answer in every situation?
 
 a.  `mean(X <= a)`
 b.  `pnorm((a - m)/s)`

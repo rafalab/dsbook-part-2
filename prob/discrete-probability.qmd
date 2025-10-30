@@ -10,7 +10,7 @@ For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-prob
 
 [^discrete-probability-1]: https://en.wikipedia.org/wiki/Urn_problem
 
-A more intuitive way to think about the probability of an event is as the long-run proportion of times the event occurs when an experiment is repeated independently and under identical conditions, an infinite number of times. This interpretation naturally leads to one of the most powerful techniques in data science—Monte Carlo simulations, which we will explore later in this chapter.
+A more intuitive way to think about the probability of an event is as the long-run proportion of times the event occurs when an experiment is repeated independently and under identical conditions, an infinite number of times. This interpretation naturally leads to one of the most powerful techniques in data science, Monte Carlo simulations, which we will explore later in this chapter.
 
 ## Probability distributions
 
@@ -97,7 +97,7 @@ sample(beads, 5)
 
 This results in rearrangements that consistently comprise three blue and two red beads. If we ask that six beads be selected, we get an error.
 
-However, the `sample` function can therefore be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
+However, the `sample` function can be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
 
 ```{r}
 #| eval: false
@@ -126,9 +126,11 @@ If we draw one card at random, the probability of getting a King is 1/13:
 mean(deck %in% paste("King", suits))
 ```
 
-Now let's introduce two key functions: `permutations()` and `combinations()` from the **gtools** package. These let us enumerate all possible selections from a list, depending on whether order matters.
+Because the deck includes all possible outcomes, this calculation gives the exact probability. Since `mean` converts logical values to 0s and 1s, the result represents the fraction of Kings in the deck, four out of fifty-two cards, which corresponds exactly to the theoretical probability of $1/13$.
 
-For example:
+Now let's introduce two key functions: `permutations()` and `combinations()` from the **gtools** package. These functions let us enumerate all possible ways to select items from a list, depending on whether order matters (`permutations`) or not (`combinations`). Such calculations are fundamental in probability because they allow us to count the number of possible outcomes in complex settings, like determining the odds of drawing a particular poker hand or arranging cards in a specific order. Card games, lotteries, and many other probability problems rely on these principles to compute exact probabilities. For readers interested in the mathematical foundations, the Recommended Reading section lists probability textbooks that explore permutations and combinations in greater detail.
+
+Here is a simple example enumerating all the permutations of three items taken two at a time:
 
 ```{r, message=FALSE, warning=FALSE}
 library(gtools)
@@ -279,7 +281,7 @@ This plot shows that the Monte Carlo simulation provided a very good estimate of
 
 The theory described here requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. 
 
-In practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
+Althought in this case we know the exact probability is `r eprob[25]`, in practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
 
 One practical approach is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
 
@@ -289,10 +291,10 @@ B <- 10^seq(1, 5, len = 100)
 compute_prob <- function(B, n = 25) mean(replicate(B, same_birthday(n)))
 prob <- sapply(B, compute_prob)
 plot(log10(B), prob)
+abline(h = eprob[25], lty = 2)
 ```
 
-In this plot, we can see that the values start to stabilize at around 1,000. Note that the exact probability, which is known in this case, is `r eprob[25]`.
-
+In this plot, we can see that the values start to stabilize at around 1,000. 
 
 ## Exercises
 

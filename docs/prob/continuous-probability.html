@@ -557,8 +557,8 @@ F(a) = \Pr(X \leq a)
 F(b) - F(a) = \int_a^b f(x)\,dx
 \]</span></p>
 <p>This function <span class="math inline">\(f(x)\)</span> is called the <em>probability density function</em> (PDF).</p>
-<p>The PDF plays a role similar to the relative frequency distribution for discrete data. However, instead of assigning probabilities to individual outcomes, which would all be zero for a continuous variable, the PDF describes how probability is distributed across values of <span class="math inline">\(x\)</span>. We can think of it as defining the shape of the distribution: wider regions under the curve correspond to more likely ranges of values.</p>
-<p>To build intuition, imagine dividing the range of possible outcomes into many tiny intervals. The width of each interval forms the base of a rectangle, and <span class="math inline">\(f(x)\)</span> determines its height. The total area of all rectangles approximates the probability of observing a value between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>. In the limit, this approximation becomes an integral:</p>
+<p>The PDF plays a role similar to the relative frequency distribution for discrete data. The key difference is that for a continuous variable, individual values have probability zero, so instead of assigning probability to specific outcomes, the PDF shows how probability is spread across the range of possible values of <span class="math inline">\(x\)</span>. The probability that the variable falls within an interval, say <span class="math inline">\([a,b]\)</span>, is given by the area under the curve between <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>. Thus, the shape of the PDF shows where values are more or less likely to occur, with wider or higher regions corresponding to ranges that contain more probability mass.</p>
+<p>To build intuition for why we use a continuous function and an integral to describe probabilities, consider a situation where an outcome can be measured with very high precision. In this case, we can think of the relative frequency as being proportional to the height of the bars in the plot below:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -567,10 +567,25 @@ F(b) - F(a) = \int_a^b f(x)\,dx
 </div>
 </div>
 </div>
-<p>An important example is the normal distribution, introduced in <a href="../summaries/numerical-summaries.html#sec-normal-distribution" class="quarto-xref"><span>Section 2.1</span></a>. Its probability density function is</p>
+<p>The probability of the outcome falling within an interval, for example, <span class="math inline">\(x \in [0.5, 1.5]\)</span>, can be approximated by adding the heights of the bars within that range and dividing by the total height of all bars. As the measurement becomes more precise and the bar widths become narrower, this sum approaches the area under the curve of the continuous function <span class="math inline">\(f(x)\)</span>.</p>
+<p>In the limit where the bar widths shrink to zero, the sum and the integral are identical: the probability of <span class="math inline">\(x\)</span> falling in an interval is exactly the area under <span class="math inline">\(f(x)\)</span>** over that interval. To make this work, we define <span class="math inline">\(f(x)\)</span> so that the total area under the curve equals 1:</p>
+<p><span class="math display">\[
+\int_{-\infty}^{\infty} f(x) , dx = 1
+\]</span></p>
+<p>This ensures that <span class="math inline">\(f(x)\)</span> represents a valid PDF.</p>
+<p>An important example of a PDF is the normal distribution, introduced in <a href="../summaries/numerical-summaries.html#sec-normal-distribution" class="quarto-xref"><span>Section 2.1</span></a>. Its probability density function is</p>
 <p><span class="math display">\[
 f(x) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\left(-\frac{1}{2}\left(\frac{x - m}{s}\right)^2\right)
 \]</span></p>
+<p>and as we previous saw has a bell shaped centered at <span class="math inline">\(m\)</span> and 95% of the area with <span class="math inline">\(2s\)</span> from <span class="math inline">\(m\)</span>:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="continuous-probability_files/figure-html/normal-pdf-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
 <p>Integrating this function gives the CDF of the normal distribution. In R, the corresponding function is <code>pnorm</code>. A random outcome is said to be <em>normally distributed</em> with mean <code>m</code> and standard deviation <code>s</code> if its CDF is defined by</p>
 <div class="cell" data-layout-align="center">
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/logical.html">F</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="va">a</span>, mean <span class="op">=</span> <span class="va">m</span>, sd <span class="op">=</span> <span class="va">s</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -670,7 +685,7 @@ f(x) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\left(-\frac{1}{2}\left(\frac{x - m}{s}
 \]</span></p>
 <p>The quantity on the left is a standard normal random variable. It has an average of 0 and a standard error of 1. We will call it <span class="math inline">\(Z\)</span>:</p>
 <p><span class="math display">\[
-\mathrm{Pr}\left(Z \leq \frac{a-\mu}{\sigma} \right)
+\mathrm{Pr}\left(Z \leq \frac{a-m}{s} \right)
 \]</span></p>
 <p>So, no matter the units, the probability of <span class="math inline">\(X\leq a\)</span> is the same as the probability of a standard normal variable being less than <span class="math inline">\((a - m)/s\)</span>. If <code>m</code> is the average and <code>s</code> the standard error, which of the following R code would give us the right answer in every situation?</p>
 <ol type="a">
