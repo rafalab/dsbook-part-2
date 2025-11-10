@@ -9,12 +9,13 @@ library(tidyverse)
 library(broom)
 library(dslabs)
 ```
+Up to now, we have worked with linear models to describe relationships between continuous variables. We motivated these models using the assumption of multivariate normality and showed how the conditional expectation takes a linear form. This covers many common applications of regression.
 
-Up to now, all our linear models have been applied to two or more continuous random variables. We assume the random variables are multivariate normal and use this to motivate a linear model. This approach covers many real-life examples of linear regression. However, linear models have many other applications. One of the most popular is to quantify treatment effects in randomized and controlled experiments. One of the first applications was in agriculture, where different plots of lands were treated with different combinations of fertilizers to try to determine if they were effective. In fact, the use of $Y$ for the outcome in statistics is due to the mathematical theory being developed for crop _yield_ as the outcome.  
+However, linear models are not limited to describing natural variation among continuous measurements. One of the most important uses of linear models is to quantify the effect of an intervention or treatment. This framework originated in agriculture, where researchers compared crop yields across fields that received different fertilizers or planting strategies. The outcome variable was yield, and the treatment was the fertilizer. The same mathematical ideas now form the basis for analyzing randomized controlled trials in medicine, economics, public health, education, and the social sciences. Modern A/B tests used by internet companies to evaluate website changes or product features also follow this treatment effect framework.
 
-Since then, the same ideas have been applied in other areas, such as randomized trials developed to determine if drugs cure or prevent diseases or if policies have an effect on social or educational outcomes. In the latter example, we think of the policy intervention as a _treatment_ and follow the same mathematical procedure. The analyses used in _A/B testing_, widely used today by internet companies, are based on treatment effects models. 
+The key idea is that a treatment defines groups, and we use linear models to estimate the difference in outcomes across these groups. In randomized experiments, the comparison is straightforward because randomization helps ensure that the groups are comparable. In observational studies, the goal is the same, but analysts must account for differences between groups that are not due to the treatment itself. For example, if we want to estimate the effect of a diet high in fruits and vegetables on blood pressure, we must adjust for factors such as age, sex, or smoking status.
 
-Moreover, these models have been applied in observational studies where analysts attempt to use linear models to estimate effects of interest while accounting for potential confounders. For example, to estimate the effect of a diet high in fruits and vegetables on blood pressure, we would have to adjust for _factors_ such as age, sex, and smoking status. 
+## Case study: high-fat diet and mouse weight
 
 In this chapter, we consider an experiment designed to test for the effects of a high-fat diet on mouse physiology. Mice were randomly selected and divided into two groups: one group receiving a high-fat diet, considered the _treatment_, while the other group served as the control and received the usual _chow_ diet. The data is included in the **dslabs** package:
 
@@ -29,7 +30,9 @@ A boxplot shows that the high fat diet mice are, on average, heavier.
 with(mice_weights, boxplot(body_weight ~ diet))
 ```
 
-However, given that we divided the mice randomly, is it possible that the observed difference is simply due to chance? Here, we can compute the sample average and standard deviation of each group and perform statistical inference on the difference of these means, similar to our approach for election forecasting in Chapters  [@sec-models] and [@sec-hypothesis-testing].
+However, given that we divided the mice randomly, is it possible that the observed difference is simply due to chance? 
+
+Before making the connection to linear models, in the next section we perform statistical inference on the difference of these means, using the approach described in @sec-hypothesis-testing.
 
 ## Comparing group means
 
@@ -72,15 +75,23 @@ t_stat <- with(stats, (xbar[2] - xbar[1])/sqrt(s[2]^2/n[2] + s[1]^2/n[1]))
 t_stat
 ```
 
+We can also used the R function to perform the calculation in one line:
+
+```{r}
+#| eval: false
+
+with(mice_weights, t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]))
+```
+
 Here $t$ is well over 3, so we don't really need to compute the p-value `1-pnorm(t_stat)` as we know it will be very small.
 
-Note that when $N$ is not large enough, then the CLT does not apply. However, if the outcome data, in this case weight, follows a normal distribution, then $t$ follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`. Specifically, we use `1-pt(t_stat, with(stats, n[2]+n[1]-2))`. 
+Note that when $N_0$ and $N_1$ are not large enough, the CLT does not apply. However, if the outcome data, in this case weight, follows a normal distribution, then $t$ follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`. Specifically, we use `1-pt(t_stat, with(stats, n[2]+n[1]-2))`. 
 
 Differences in means are commonly examined in the scientific studies. As a result this _t-statistic_ is one of the most widely reported summaries. When used to determine if an observed difference is _statistically significant_, we refer to the procedure as "performing a _t test_". 
 
 
 :::{.callout-warning}
-In the computation above, we calculated the probability of observing a $t$ value as large as the one obtained. However, when our interest includes deviations in both directions—for example, either an increase or a decrease in weight—we must consider the probability of obtaining a value of $t$ as extreme as the one observed, regardless of sign. In that case, we use the absolute value of $t$ and double the one-sided probability: `2*(1 - pnorm(abs(t-test)))` or `2*(1-pt(abs(t_stat), with(stats, n[2]+n[1]-2)))`. 
+In the computation above, we calculated the probability of observing a $t$ value as large as the one obtained. However, when our interest includes deviations in both directions, for example, either an increase or a decrease in weight—we must consider the probability of obtaining a value of $t$ as extreme as the one observed, regardless of sign. In that case, we use the absolute value of $t$ and double the one-sided probability: `2*(1 - pnorm(abs(t-test)))` or `2*(1-pt(abs(t_stat), with(stats, n[2]+n[1]-2)))`. 
 :::
 
 ## One factor design
@@ -93,11 +104,14 @@ $$
 Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
 $$
 
-with $X_i$ 1, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average weight of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
+with $x_i = 1$, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. 
 
-A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. To perform hypothesis testing on the effect of the high fat diet we can estimate $\beta_1$ and compute the probability of an estimate being as large as the observed when the null hypothesis is true. So how do we estimate $\beta_1$ and compute this probability?
+Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average weight of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
 
-A powerful characteristic of linear models is that we can estimate the  $\beta$s and their standard errors with the same LSE machinery:
+A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. To perform hypothesis testing on the effect of the high fat diet we can estimate $\beta_1$ and compute the probability of an estimate being as large as the observed when the null hypothesis is true. 
+
+
+So how do we estimate $\beta_1$ and compute this probability? A powerful characteristic of linear models is that we can estimate the  $\beta$s and their standard errors with the same LSE machinery:
 
 ```{r}
 fit <- lm(body_weight ~ diet, data = mice_weights)
@@ -107,13 +121,6 @@ Because `diet` is a factor with two entries, the `lm` function knows to fit the 
 
 ```{r}
 coefficients(summary(fit))
-```
-
-Using `broom`, we can write:
-
-```{r}
-library(broom)
-tidy(fit, conf.int = TRUE) |> filter(term == "diethf")
 ```
 
 The `statistic` computed here is the estimate divided by its standard error: $\hat{\beta}_1 / \widehat{\mathrm{SE}}[\hat{\beta}_1]$. In the case of the simple one-factor model, we can show that this statistic is almost equivalent to the t-statistics computed in the previous section: 
@@ -132,9 +139,12 @@ In the linear model description provided here, we assumed $\varepsilon$ follows 
 
 ## Two factor designs
 
+We are now ready to describe a major advantage of the linear model approach over directly comparing averages.
+
 Note that this experiment included male and female mice, and male mice are known to be heavier. This explains why the residuals depend on the sex variable:
 
-```{r lm-residual-boxplots}
+```{r lm-residual-boxplots, echo=-1}
+rafalib::mypar(1,1)
 boxplot(fit$residuals ~ mice_weights$sex)
 ```
 
@@ -154,15 +164,30 @@ $$
 Y_i = \beta_1 x_{i1} + \beta_2 x_{i2}  + \beta_3 x_{i3}  + \beta_4 x_{i4}  + \varepsilon_i
 $$
 
-with $x_{i1},\dots,x_{i4}$ indicator variables for each of the four groups. Note that with this representation we allow the diet effect to be different for males and females. 
+with $x_{i1},\dots,x_{i4}$ indicator variables for each of the four groups. With this representation we allow the diet effect to be different for males and females. 
 
-However, with this representation, none of the $\beta$s represent the effect of interest: the diet effect. A powerful feature of linear models is that we can rewrite the model so that the expected value for each group remains the same, but the parameters represent the effects we are interested in. So, for example, in the representation
+However, in the original representation, none of the $\beta$ parameters directly correspond to the treatment effect of interest (the effect of the high-fat diet). A useful feature of linear models is that we can reparameterize the model so that the fitted means remain the same, but the coefficients have interpretations aligned with the scientific question.
+
+For example, consider the model
 
 $$
-Y_i = \beta_0 + \beta_1 x_{i1}  + \beta_2 x_{i2}  + \beta_3 x_{i1} x_{i2}  + \varepsilon_i
+Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \beta_3, x_{i1} x_{i2} + \varepsilon_i,
 $$
 
-with $x_{i1}$ an indicator that is 1 if individual $i$ is on the high-fat diet $x_{i2}$ an indicator that is 1 if you are male, the $\beta_1$ is interpreted as the diet effect for females, $\beta_2$ as the average difference between males and females, and $\beta_3$ the difference in the diet effect between males and females. In statistics, $\beta_3$ is referred to as an _interaction effect_. The $\beta_0$ is considered the baseline value, which represents the population average weight of females on the chow diet. 
+where
+
+* $x_{i1} = 1$ if mouse $i$ received the high-fat diet and $0$ otherwise
+* $x_{i2} = 1$ if mouse $i$ is male and $0$ if female
+
+Then we interpret the parameters as follows:
+
+* $\beta_0$ is the baseline average weight of females on the chow diet
+* $\beta_1$ is the diet effect for females
+* $\beta_2$ is the average difference between males and females under the chow diet
+* $\beta_3$ is the difference in the diet effect between males and females, often called an _interaction_ effect
+
+This parameterization does not change the predicted values. It simply changes how we interpret the coefficients so that each corresponds to a meaningful comparison.
+
 
 Statistical textbooks describe several other ways in which the model can be rewritten to obtain other types of interpretations. For example, we might want $\beta_2$ to represent the overall diet effect (the average between female and male effect) rather than the diet effect on females. This is achieved by defining what _contrasts_ we are interested in.
 
@@ -175,7 +200,7 @@ fit <- lm(body_weight ~ diet*sex, data = mice_weights)
 Here, the `*` denotes _factor crossing_, not multiplication: `diet*sex` is shorthand for `diet+sex+diet:sex`,  to calculate diet; sex; and diet combined with sex.
 
 ```{r}
-tidy(fit, conf.int = TRUE) |> filter(!str_detect(term, "Intercept"))
+summary(fit)$coef
 ```
 
 Note that the male effect is larger that the diet effect, and the diet effect is statistically significant for both sexes, with diet affecting males more by between 1 and 4.5 grams.
@@ -194,7 +219,8 @@ fit <- lm(body_weight ~ diet + sex, data = mice_weights)
 
 Note that this model does not account for the difference in diet effect between males and females. Diagnostic plots would reveal this deficiency by showing that the residuals are biased: they are, on average, negative for females on the diet and positive for males on the diet, rather than being centered around 0.
 
-```{r lm-diagnostic-plot}
+```{r lm-diagnostic-plot, echo=-1}
+rafalib::mypar()
 plot(fit, which = 1)
 ```
 
@@ -239,14 +265,13 @@ Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \varepsilon_i
 $$
 with $x_{i1} = 1$, if observation $i$ is female and 0 otherwise, and $x_{i2}=1$, if observation $i$ is male and 0 otherwise? 
 
-Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimate. In statistics, we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
+Unfortunately, this representation has a problem. Note that the mean for females and males are represented by $\beta_0 + \beta_1$ and $\beta_0 + \beta_2$, respectively. This is a problem because the expected value for each group is just one number, say $\mu_f$ and $\mu_m$, and there is an infinite number of ways $\beta_0 + \beta_1 = \mu_f$ and $\beta_0 +\beta_2 = \mu_m$ (three unknowns with two equations). This implies that we can't obtain a unique least squares estimate. When this happens we say the model, or parameters, are _unidentifiable_. The default behavior in R solves this problem by requiring $\beta_1 = 0$, forcing $\beta_0 = \mu_m$, which permits us to solve the system of equations. 
 
 Keep in mind that this is not the only constraint that permits estimation of the parameters. Any linear constraint will do as it adds a third equation to our system. A widely used constraint is to require $\beta_1 + \beta_2 = 0$. To achieve this in R, we can use the argument `contrasts` in the following way:
 
 
 ```{r}
-fit <- lm(body_weight ~ sex, data = mice_weights, 
-          contrasts = list(sex = contr.sum))
+fit <- lm(body_weight ~ sex, data = mice_weights, contrasts = list(sex=contr.sum))
 coefficients(fit)
 ```
 
@@ -288,8 +313,7 @@ $$
 We can see the estimated coefficients using the following:
 
 ```{r}
-fit <- lm(body_weight ~ gen,  data = mice_weights, 
-          contrasts = list(gen = contr.sum))
+fit <- lm(body_weight ~ gen,  data = mice_weights, contrasts = list(gen=contr.sum))
 contrast(emmeans(fit, ~gen)) 
 ```
 
@@ -297,7 +321,7 @@ In the next section, we briefly describe a technique useful to study the variabi
 
 ## Analysis of variance (ANOVA) {#sec-anova}
 
-When a factor has more than one level, it is common to want to determine if there is significant variability across the levels rather than specific difference between any given pair of levels. Analysis of variances (ANOVA) provides tools to do this.
+When a factor has more than one level, it is common to want to determine if there is significant variability across the levels rather than specific difference between any given pair of levels. Analysis of variance (ANOVA) provides tools to do this.
 
 
 ANOVA provides an estimate of $\sigma^2_{\text{gen}}$ and a statistical test for the null hypothesis that the factor contributes no variability:  $\sigma^2_{\text{gen}} =0$.
@@ -317,10 +341,10 @@ summary(aov(body_weight ~ gen, data = mice_weights))
 
 We do not need to specify the constraint because ANOVA needs to constrain the sum to be 0 for the results to be interpretable.
 
-This analysis indicates that generation is not statistically significant.
+This analysis indicates that the effect of generation is not statistically significant.
 
 :::{.callout-note}
-We do not include many details, for example, on how the summary statistics and p-values shown by `aov` are defined and motivated. There are several books dedicated to the analysis of variance, and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult one of these textbooks.
+We do not include many details, for example, on how the summary statistics and p-values shown by `aov` are defined and motivated. There are several books dedicated to the analysis of variance, and textbooks on linear models often include chapters on this topic. Those interested in learning more about these topics can consult one of the textbooks listed in the Recommended Reading section.
 :::
 
 
@@ -337,7 +361,7 @@ summary(aov(body_weight ~ sex + diet + gen,  data = mice_weights))
 This analysis suggests that sex is the biggest source of variability, which is consistent with previously made exploratory plots.
 
 :::{.callout-warning}
-One of the key aspects of ANOVA (Analysis of Variance) is its ability to decompose the total variance in the data, represented by $\sum_{i=1}^n Y_i^2$, into individual contributions attributable to each factor in the study. However, for the mathematical underpinnings of ANOVA to be valid, the experimental design must be balanced. This means that for every level of any given factor, there must be an equal representation of the levels of all other factors. In our study involving mice, the design is unbalanced, requiring a cautious approach in the interpretation of the ANOVA results.
+One of the key aspects of ANOVA (Analysis of Variance) is its ability to decompose the total variance in the data, represented by $\sum_{i=1}^N y_i^2$, into individual contributions attributable to each factor in the study. However, for the mathematical underpinnings of ANOVA to be valid, the experimental design must be balanced. This means that for every level of any given factor, there must be an equal representation of the levels of all other factors. In our study involving mice, the design is unbalanced, requiring a cautious approach in the interpretation of the ANOVA results.
 :::
 
 ### Array representation 
@@ -346,15 +370,15 @@ When the model includes more than one factor, writing down linear models can bec
 
 
 $$
-Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{ij} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i \mbox{ with }\sum_{j=1}^J \beta_j=0 \mbox{ and } \sum_{k=1}^K \beta_{J+k} = 0,
+Y_i = \beta_0 + \sum_{j=1}^J \beta_j x_{i,j} + \sum_{k=1}^K \beta_{J+k} x_{i,J+k} + \varepsilon_i \mbox{ with }\sum_{j=1}^J \beta_j=0 \mbox{ and } \sum_{k=1}^K \beta_{J+k} = 0,
 $$
 
-the $x_{i1},\dots,x_{ij}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor.
+the $x_{i,1},\dots,x_{i,J}$ indicator functions for the $J$ levels in the first factor and $x_{i,J+1},\dots,x_{i,J+K}$ indicator functions for the $K$ levels in the second factor.
 
 An alternative approach widely used in ANOVA to avoid indicator variables, is to save the data in an array, using different Greek letters to denote factors and indices to denote levels:
 
 $$
-Y_{ijk} = \mu + \alpha_j + \beta_k + \varepsilon_{ijk}
+Y_{ijk} = \mu + \alpha_j + \beta_k + \varepsilon_{ijk}, \mbox{ with } i = 1,\dots,I, \, j = 1,\dots,J, \mbox{ and } k= 1,\dots,K
 $$
 
 with $\mu$ the overall mean, $\alpha_j$ the effect of level $j$ in the first factor, and $\beta_k$ the effect of level $k$ in the second factor. The constraint can now be written as: 
@@ -363,7 +387,12 @@ $$
 \sum_{j=1}^J \alpha_j = 0 \text{ and } \sum_{k=1}^K \beta_k = 0
 $$
 
-This notation lends itself to estimating the effects by computing means across dimensions of the array.
+
+This array notation naturally leads to estimating effects by computing means across dimensions of the array.
+
+Note that, here, we are implicitly assuming a *balanced design*, meaning that for every combination of factor levels $j$ and $k$ we observe the same number of replicates indexed by $i$. For example, if the factors are sex and diet, a balanced design would include the same number of mice in each sex–diet combination. In this setting, there is a value $Y_{ijk}$ for each triplet $(i,j,k)$, and each cell of the design has the same sample size. This ensures that the group means are well defined and that the model parameters can be estimated directly using simple averages.
+
+If the design is *unbalanced*, meaning that some level combinations have more observations than others, we can still write the model in the same form but the number of replicates becomes $I_{jk}$, varying across level pairs. In that case, some of the convenient interpretations of ANOVA summaries no longer hold directly, because the cell means contribute unequally to the estimates.
 
 
 ## Exercises
@@ -384,7 +413,7 @@ Compute the estimate of $\sigma$ using both the model that includes only diet an
 
 ```{r}
 breaks <- with(mice_weights, seq(min(body_weight), max(body_weight), 1))
-dat <- mutate(mice_weights, group = cut(body_weight, breaks, include_lowest = TRUE))
+dat <- mutate(mice_weights, group = cut(body_weight, breaks, include_lowest=TRUE))
 ```
 
 Compute the average and standard deviation of `body_weight` for groups with more than 10 observations and use data exploration to verify if this assumption holds.
@@ -401,6 +430,7 @@ Compute the average and standard deviation of `body_weight` for groups with more
 7\. In @sec-models, we talked about pollster bias and used visualization to motivate the presence of such bias. Here we will give it a more rigorous treatment. We will consider two pollsters that conducted daily polls. We will look at national polls for the month before the election:
 
 ```{r, eval=FALSE}
+library(dslabs)
 polls <- polls_us_election_2016 |> 
   filter(pollster %in% c("Rasmussen Reports/Pulse Opinion Research",
                          "The Times-Picayune/Lucid") &
@@ -421,7 +451,7 @@ $$
 Y_{ij} = \mu + b_i + \varepsilon_{ij}
 $$
 
-with $i=1,2$ indexing the two pollsters, $b_i$ the bias for pollster $i$, and $\varepsilon_ij$ poll to poll chance variability. We assume the $\varepsilon$ are independent from each other, have expected value $0$, and standard deviation $\sigma_i$ regardless of $j$.
+with $i=1,2$ indexing the two pollsters, $b_i$ the bias for pollster $i$, and $\varepsilon_{ij}$ poll to poll chance variability. We assume the $\varepsilon$ are independent from each other, have expected value $0$, and standard deviation $\sigma_i$ regardless of $j$.
 
 Which of the following best represents our question?
 
@@ -465,13 +495,13 @@ d.  The data are not 0 or 1, so CLT does not apply.
 
 19\. The confidence interval tells us there is relatively strong pollster effect resulting in a difference of about 5%. Random variability does not seem to explain it. We can compute a p-value to relay the fact that chance does not explain it. What is the p-value?
 
-20\. The statistic formed by dividing our estimate of $b_2-b_1$ by its estimated standard error:
+20\. The statistic formed by dividing our estimate of $b_2-b_1$ by its estimated standard error is the t-statistic:
 
 $$
 \frac{\bar{Y}_2 - \bar{Y}_1}{\sqrt{s_2^2/N_2 + s_1^2/N_1}}
 $$
 
-is the t-statistic. Now notice that we have more than two pollsters. We can also test for pollster effect using all pollsters, not just two. The idea is to compare the variability across polls to variability within polls.
+Now notice that we have more than two pollsters. We can also test for pollster effect using all pollsters, not just two. The idea is to compare the variability across polls to variability within polls.
 
 For this exercise, create a new table:
 

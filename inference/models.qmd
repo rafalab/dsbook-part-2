@@ -2,15 +2,20 @@
 
 > > "All models are wrong, but some are useful." --George E. P. Box
 
-So far, our analysis of poll-related results has been based on a simple sampling model. This model assumes that each voter has an equal chance of being selected for the poll, similar to picking beads from an urn with two colors. However, in this section, we explore real-world data and discover that this model is incorrect. Instead, we propose a more effective approach in which we directly model the outcomes of pollsters rather than the individual polls.
+So far, our analysis of poll-related results has been based on a simple sampling model. This model assumes that each voter has an equal chance of being selected for the poll, similar to picking beads from an urn with two colors. However, in this section, we explore real-world data and discover that this model is oversimplified. Instead, we propose a more effective approach in which we directly model the outcomes of pollsters rather than the individual polls.
 
-A more recent development since the original invention of opinion polls, is the use of computers to aggregate publicly available data from different sources and develop data-driven forecasting models. Here, we explore how poll aggregators collected and combined data reported by different experts to produce improved predictions. We will introduce ideas behind the statistical models used to improve election forecasts beyond the power of individual polls. Specifically, we introduce a useful model for constructing a confidence interval for the difference in popular vote. 
+A more recent development since the original invention of opinion polls, is the use of computers to aggregate publicly available data from different sources and develop data-driven forecasting models. Here, we explore how poll aggregators collected and combined data reported by different experts to produce improved predictions. We will introduce ideas behind the statistical models used to improve election forecasts beyond the power of individual polls. Specifically, we introduce a useful model for constructing a confidence interval for the  popular vote difference.  
 
-It is important to emphasize that this chapter offers only a brief introduction to the vast field of statistical modeling. The model presented here, for example, does not allow us to assign probabilities to outcomes such as a particular candidate winning the popular vote, as is done by poll aggregators like FiveThirtyEight. In the next chapter, we introduce Bayesian models, which provide the mathematical framework for such probabilistic statements. Later, in the Linear Models part of the book, we explore widely used approaches for analyzing data in practice. Still, this introduction only scratches the surface. Readers interested in statistical modeling are encouraged to consult additional references to gain a deeper and broader perspective.
+It is important to emphasize that this chapter offers only a brief introduction to the vast field of statistical modeling. The model presented here, for example, does not allow us to assign probabilities to outcomes such as a particular candidate winning the popular vote, as is done by poll aggregators like FiveThirtyEight. In the next chapter, we introduce Bayesian models, which provide the mathematical framework for such probabilistic statements. Later, in the Linear Models part of the book, we explore widely used approaches for analyzing data in practice. Still, this introduction only scratches the surface. Readers interested in statistical modeling are encouraged to consult the Recommended Reading section for additional references that provide a deeper and broader perspective.
 
 ## Case study: poll aggregators
 
-A few weeks before the 2012 election, Nate Silver was giving Obama a 90% chance of winning. How was Mr. Silver so confident? We will use a Monte Carlo simulation to illustrate the insight Mr. Silver had, and which others missed. To do this, we simulate results for 12 polls taken the week before the election. 
+A few weeks before the 2012 election, Nate Silver was giving Obama a 90% chance of winning. How was Mr. Silver so confident? We will use a Monte Carlo simulation to illustrate the insight Mr. Silver had, and which others missed. 
+
+
+### A Monte Carlo simulation
+
+To do this, we simulate results for 12 polls taken the week before the election. 
 We mimic sample sizes from actual polls, construct, and report 95% confidence intervals for the spread for each of the 12 polls:
 
 ```{r simulated-polls, message=FALSE, warning=FALSE, cache=FALSE, echo=FALSE}
@@ -40,7 +45,7 @@ ggplot(polls, aes(poll, estimate, ymin = low, ymax = high)) +
   geom_hline(yintercept = 2*p - 1, lty = 2) 
 ```
 
-Not surprisingly, all 12 polls report confidence intervals that include the result we eventually saw on election night (dashed line). However, all 12 polls also include 0 (solid black line). Therefore, if asked individually for a prediction, the pollsters would have to say: it's a toss-up.
+Not surprisingly, all 12 polls report confidence intervals that include the result we eventually saw on election night (vertical dashed line). However, all 12 polls also include 0 (vertical solid line). Therefore, if asked individually for a prediction, the pollsters would have to say: it's a toss-up.
 
 
 ```{r}
@@ -52,9 +57,9 @@ theta_hat <- polls |> summarize(avg = sum(estimate*sample_size)/sum(sample_size)
 
 Poll aggregators recognized that combining results from multiple polls can greatly improve precision. One straightforward approach is to *reverse engineer* the original data from each poll using the reported estimates and sample sizes. From these, we can reconstruct the total number of _successes_ and _failures_ across all polls, effectively combining them into a single, larger dataset. We then compute a new overall estimate and its corresponding standard error using the combined sample size, which is much larger than that of any individual poll.
 
-When we do this, the resulting margin of error is `r p_hat <- (1+theta_hat)/2; moe <- 2*1.96*sqrt(p_hat*(1-p_hat)/sum(polls$sample_size)); moe`.
+When we do this, the resulting margin of error is `r p_hat <- (1+theta_hat)/2; moe <- 2*1.96*sqrt(p_hat*(1-p_hat)/sum(polls$sample_size)); round(moe, 3)`.
 
-Our combined estimate predicts a spread of `r round(theta_hat*100,1)` percentage points, plus or minus `r round(moe*100,1)`. This interval not only includes the actual result observed on election night but is also far from including zero. By aggregating the twelve polls—assuming no systematic bias—we obtain a much more precise estimate and can be quite confident that Obama will win the popular vote.
+Our combined estimate predicts a spread of `r round(theta_hat*100,1)` percentage points, plus or minus `r round(moe*100,1)`. This interval not only includes the actual result observed on election night but is also far from including zero. By aggregating the twelve polls, assuming no systematic bias, we obtain a much more precise estimate and can be quite confident that Obama will win the popular vote.
 
 ```{r confidence-coverage-2008-election, echo=FALSE}
 theta_hat <- polls |> summarize(avg = sum(estimate*sample_size)/sum(sample_size)) |> pull(avg)
@@ -80,9 +85,10 @@ polls2 |>
 
 However, this example was just a simplified simulation to illustrate the basic idea. In real-world settings, combining data from multiple polls is more complicated than treating them as one large random sample. Differences in methodology, timing, question wording, and even sampling biases can all affect the results. We will later explore how these factors make real poll aggregation more challenging and how statistical models can account for them.
 
-Let's look at real data from the 2016 presidential election. 
 
-Specifically, the following subset of the `polls_us_election_2016` data in **dslabs** includes results for national polls as well as state polls taken during the year prior to the election and organized by FiveThirtyEight. In this first example, we will filter the data to include national polls conducted on likely voters (lv) within the last week leading up to the election and consider their estimate of the spread:
+### Real data from the 2016 presidential election
+
+The following subset of the `polls_us_election_2016` data in **dslabs** includes results for national polls as well as state polls taken during the year prior to the election and organized by FiveThirtyEight. In this first example, we will filter the data to include national polls conducted on likely voters (lv) within the last week leading up to the election and consider their estimate of the spread:
 
 ```{r, cache=FALSE}
 library(dslabs)
@@ -91,10 +97,10 @@ polls <- polls_us_election_2016 |>
   mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) 
 ```
 
-Note we will focus on predicting the spread, not the proportion $p$. Since we are assuming there are only two parties, we know that the spread is $\theta = p - (1-p) = 2p - 1$. As a result, everything we have done can easily be adapted to an estimate of $\theta$. Once we have our estimate $\bar{X}$ and $\widehat{\mathrm{SE}}[\bar{X}]$, we estimate the spread with $2\bar{X} - 1$ and, since we are multiplying by 2, the standard error is $2\widehat{\mathrm{SE}}[\bar{X}]$. Note that subtracting 1 does not add any variability, so it does not affect the standard error. Also, the CLT applies here because our estimate is a linear combination of a sample average, which itself follows approximately normal distributions.
+Note we will focus on predicting the spread, not the proportion $p$. Since we are assuming there are only two parties, we know that the spread is $\theta = p - (1-p) = 2p - 1$. As a result, everything we have done can easily be adapted to an estimate of $\theta$. Once we have our estimate $\bar{X}$ and $\widehat{\mathrm{SE}}[\bar{X}]$, we estimate the spread with $2\bar{X} - 1$ and, since we are multiplying by 2, the standard error is $2\widehat{\mathrm{SE}}[\bar{X}]$. Remember that subtracting 1 does not add any variability, so it does not affect the standard error. Also, the CLT applies here because our estimate is a linear combination of a sample average, which itself follows approximately normal distributions.
 
 :::{.callout-note}
-We use $\theta$ to denote the spread here  because this is a common notation used in statistical textbooks for the parameter of interest. 
+We use $\theta$ to denote the spread here  because this is a common notation used in statistical textbooks for the *parameter of interest*. 
 :::
 
 We have `r nrow(polls)` estimates of the spread. The theory we learned from sampling models tells us that these estimates are a random variable with a probability distribution that is approximately normal. The expected value is the election night spread $\theta$ and the standard error is $2\sqrt{p (1 - p) / N}$. 
@@ -109,10 +115,10 @@ and the standard error is:
 
 ```{r}
 p_hat <- (theta_hat + 1)/2 
-moe <- 1.96*2*sqrt(p_hat*(1 - p_hat)/sum(polls$samplesize))
+moe <- 2*1.96*sqrt(p_hat*(1 - p_hat)/sum(polls$samplesize))
 ```
 
-So we report a spread of `r round(theta_hat*100,2)`% with a margin of error of `r round(moe*100,2)`%. On election night, we discover that the actual percentage was 2.1%, which is outside a 95% confidence interval. What happened?
+So we report a spread of `r round(theta_hat*100,2)`% with a margin of error of `r round(moe*100,1)`%. On election night, we discover that the actual percentage was 2.1%, which is outside a 95% confidence interval. What happened?
 
 A histogram of the reported spreads reveals a problem:
 
@@ -120,7 +126,7 @@ A histogram of the reported spreads reveals a problem:
 polls |> ggplot(aes(spread)) + geom_histogram(color = "black", binwidth = .01)
 ```
 
-The estimates do not appear to be normally distributed, and the standard error appears to be larger than `r moe`. The theory is not working here.
+The estimates do not appear to be normally distributed, and the standard error appears to be larger than `r signif(moe, 2)`. The theory is not working here.
 
 ## Beyond the simple sampling model {#sample-avg-model}
 
@@ -143,8 +149,7 @@ polls |> group_by(pollster) |>
 This plot reveals an unexpected result. First, consider that the standard error predicted by theory for each poll is between 0.018 and 0.033:
 
 ```{r}
-polls |> group_by(pollster) |> 
-  filter(n() >= 5) |>
+polls |> group_by(pollster) |> filter(n() >= 5) |>
   summarize(se = 2*sqrt(p_hat*(1 - p_hat)/median(samplesize)))
 ```
 
@@ -154,7 +159,7 @@ This model misspecification led to an overconfident interval that ended up not i
 
 ```{r}
 one_poll_per_pollster <- polls |> group_by(pollster) |> 
-  filter(enddate == max(enddate)) |>ungroup()
+  filter(enddate == max(enddate)) |> ungroup()
 ```
 
 Here is a histogram of the calculated spread for these `r nrow(one_poll_per_pollster)` pollsters' final polls:
@@ -163,10 +168,11 @@ Here is a histogram of the calculated spread for these `r nrow(one_poll_per_poll
 hist(one_poll_per_pollster$spread, breaks = 10)
 ```
 
-Although we are no longer using a model with red (Republicans) and blue (Democrats) beads in an urn, our new model can also be thought of as an urn model, but containing poll results from all possible pollsters. Think of our $N=$`r nrow(one_poll_per_pollster)` data points $Y_1,\dots Y_N$ as a random sample from this urn. To develop a useful model, we *assume* that the expected value of our urn is the actual spread $\theta = 2p - 1$, which implies that the sample average has expected value $\theta$. 
+Although we are no longer using a model with red (Republicans) and blue (Democrats) beads in an urn, our new model can also be thought of as an urn model, but containing poll results from all possible pollsters. Think of our $N=$ `r nrow(one_poll_per_pollster)` data points $Y_1,\dots Y_N$ as a random sample from this urn. To develop a useful model, we *assume* that the expected value of our urn is the actual spread $\theta = 2p - 1$, which implies that the sample average has expected value $\theta$. 
 
 
-Now, because instead of 0s and 1s, our urn contains continuous numbers, the standard deviation of the urn is no longer $\sqrt{p(1-p)}$. Rather than voter sampling variability, the standard error now includes the pollster-to-pollster variability. Our new urn also includes the sampling variability from the polling. Regardless, this standard deviation is now an unknown parameter which we will denote with $\sigma$.
+
+Now, instead of 0s and 1s, our urn contains continuous numbers representing poll results. The standard deviation of this urn is therefore no longer $2\sqrt{p(1-p)}$. In this setting, the variability we observe arises not only from random sampling of voters but also from differences across pollsters. Our new urn captures both sources of variation. The overall standard deviation of this distribution is unknown, and we denote it by $\sigma$.
 
 So our new statistical model is that $Y_1, \dots, Y_N$ are a random sample with expected $\theta$ and standard deviation $\sigma$. The distribution, for now, is unspecified. But we consider $N$ to be large enough to assume that the sample average $\bar{Y} = \sum_{i=1}^N Y_i$ follows a normal distribution with expected value $\theta$ and standard error $\sigma / \sqrt{N}$. We write:
 
@@ -186,7 +192,7 @@ This model for the sample average will be used again the next chapter.
 The model we have specified has two unknown parameters: the expected value $\theta$ and the standard deviation $\sigma$. We know that the sample average $\bar{Y}$ will be our estimate of $\theta$. But what about $\sigma$? 
 
 
-Our task is to estimate $\theta$. Given that we model the observed values $Y_1,\dots Y_N$ as a random sample from the urn, for a large enough sample size $N$, the probability distribution of the sample average $\bar{Y}$ is approximately normal with expected value $\theta$ and standard error $\sigma/\sqrt{N}$.  If we are willing to consider $N=$`r nrow(one_poll_per_pollster)` large enough, we can use this to construct confidence intervals.
+Our task is to estimate $\theta$. Given that we model the observed values $Y_1,\dots Y_N$ as a random sample from the urn, for a large enough sample size $N$, the probability distribution of the sample average $\bar{Y}$ is approximately normal with expected value $\theta$ and standard error $\sigma/\sqrt{N}$.  If we are willing to consider $N=$ `r nrow(one_poll_per_pollster)` large enough, we can use this to construct confidence intervals.
 
 Theory tells us that we can estimate the urn model $\sigma$ with the _sample standard deviation_ defined as:
 
@@ -220,11 +226,11 @@ Our confidence interval is wider now since it incorporates the pollster variabil
 
 Above, we made use of the CLT with a sample size of `r nrow(one_poll_per_pollster)`. Because we are estimating a second parameter $\sigma$, further variability is introduced into our confidence interval, which results in intervals that are too small. For very large sample sizes, this extra variability is negligible, but in general, especially for $N$ smaller than 30, we need to be cautious about using the CLT. 
 
-However, if the data in the urn is known to follow a normal distribution, then we actually have mathematical theory that tells us how much bigger we need to make the intervals to account for the estimation of $\sigma$. Applying this theory, we can construct confidence intervals for any $N$. But again, this works only if **the data in the urn is known to follow a normal distribution**. So for the 0, 1 data of our previous urn model, this theory definitely does not apply.
-
 ::: {.callout-warning}
 Note that 30 is a very general rule of thumb based on the case when the data come from a normal distribution. There are cases when a large sample size is needed as well as cases when smaller sample sizes are good enough.
 :::
+
+However, if the data in the urn is known to follow a normal distribution, then we actually have mathematical theory that tells us how much bigger we need to make the intervals to account for the estimation of $\sigma$. Applying this theory, we can construct confidence intervals for any $N$. But again, this **works only if the data in the urn is known to follow a normal distribution**. So for the 0, 1 data of our previous urn model, this theory definitely does not apply.
 
 
 The statistic on which confidence intervals for $\theta$ are based is:
@@ -240,7 +246,7 @@ $$
 t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
 $$ 
 
-This is referred to as a *t-statistic*. By substituting $\sigma$ with $s$, we introduce some variability. The theory tells us that $t$ follows a *student t-distribution* with $N-1$ *degrees of freedom*. The degrees of freedom is a parameter that controls the variability via fatter tails:
+This is referred to as a *t-statistic*. By substituting $\sigma$ with $s$, we introduce some variability. The theory tells us that $t$ follows a *student t-distribution* with $N-1$ *degrees of freedom*. The degrees of freedom is a parameter that controls the variability via fatter tails. Here are three examples of t-distributions with three different degrees of freedom:
 
 ```{r t-distribution-examples, echo=FALSE}
 x <- seq(-5, 5, len = 100)
@@ -265,7 +271,7 @@ ttest_ci <- one_poll_per_pollster |>
 round(ttest_ci*100, 2)
 ```
 
-This interval is a bit larger than the one using normal because the t-distribution has large tails, as seen in the densities.  Specifically, the quantile value for the t distribution
+This interval is a bit larger than the one using normal because the t-distribution has large tails, as seen in the densities.  Specifically, the 97.5-th quantile value for the t distribution
 
 ```{r}
 qt(0.975, n - 1)
@@ -282,7 +288,7 @@ qnorm(0.975)
 Using the t-distribution and the t-statistic is the basis for *t-tests*, a widely used approach for computing p-values. To learn more about t-tests, you can consult any statistics textbook.
 :::
 
-The t-distribution can also be used to model errors in bigger deviations that are more likely than with the normal distribution. FiveThirtyEight uses the t-distribution to generate errors that better model the deviations we see in election data. For example, in Wisconsin, the average of six high quality polls was 7% in favor of Clinton with a standard deviation of 3%, but Trump won by 0.8%. Even after taking into account the overall bias, this 7.7% residual is more in line with t-distributed data than the normal distribution.
+The t-distribution can also be used to model errors in bigger deviations that are more likely than with the normal distribution. In their Monte Carlo simulations, FiveThirtyEight uses the t-distribution to generate errors that better model the deviations we see in election data. For example, in Wisconsin, the average of six high quality polls was 7% in favor of Clinton with a standard deviation of 3%, but Trump won by 0.8%. Even after taking into account the overall bias, this 7.7% residual is more in line with t-distributed data than the normal distribution.
 
 ```{r}
 polls_us_election_2016 |>
@@ -308,9 +314,9 @@ x <- heights |> filter(sex == "Male") |>
 
 to answer the following questions.
 
-1\. Mathematically speaking, `x` is our population. Using the urn analogy, we have an urn with the values of `x` in it. What are the average and standard deviation of our population?
+1\. Mathematically speaking, `x` is our population. Using the urn analogy, we have an urn with the values of `x` in it. What are the mean and standard deviation of our population?
 
-2\. Call the population average computed above $\mu$ and the standard deviation $\sigma$. Now take a sample of size 50, with replacement, and construct an estimate for $\mu$ and $\sigma$.
+2\. Call the population mean computed above $\mu$ and the standard deviation $\sigma$. Now take a sample of size 50, with replacement, and construct an estimate for $\mu$ and $\sigma$.
 
 3\. What does the theory tell us about the sample average $\bar{X}$ and how it is related to $\mu$?
 
@@ -319,10 +325,10 @@ b.  It is a random variable with expected value $\mu$ and standard error $\sigma
 c.  It is a random variable with expected value $\mu$ and standard error $\sigma$.
 d.  Contains no information.
 
-4\. So, how is this useful? We are going to use an oversimplified yet illustrative example. Suppose we want to know the average height of our male students, but we can only measure 50 of the 708. We will use $\bar{X}$ as our estimate. We know from the answer to exercise 3 that the standard error of our estimate $\bar{X}-\mu$ is $\sigma/\sqrt{N}$. We want to compute this, but we don't know $\sigma$. Based on what is described in this section, show your estimate of $\sigma$.
+4\. So, how is this useful? We are going to use an oversimplified yet illustrative example. Suppose we want to know the average height of our male students, but we can only measure 50 of the 708. We will use $\bar{X}$ as our estimate. We know from the answer to exercise 3 that the standard error of our estimate $\bar{X}-\mu$ is $\sigma/\sqrt{N}$. We want to compute this, but we don't know $\sigma$. Based on what is described in this chapter, show your estimate of $\sigma$.
 
-5\. Now that we have an estimate of $\sigma$, let's call our estimate $s$. Construct a 95% confidence interval for $\mu$.
+5\. Construct a 95% confidence interval for $\mu$ using our estimate of $\sigma$.
 
-6\. Now run a Monte Carlo simulation in which you compute 10,000 confidence intervals as you have just done. What proportion of these intervals include $\mu$?
+6\. Now run a Monte Carlo simulation in which you compute 10,000 confidence intervals as you did in exercise 5. What proportion of these intervals include $\mu$?
 
 7\. Use the `qnorm` and `qt` functions to generate quantiles. Compare these quantiles for different degrees of freedom for the t-distribution. Use this to motivate the sample size of 30 rule of thumb.

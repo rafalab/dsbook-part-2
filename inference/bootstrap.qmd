@@ -36,11 +36,10 @@ In the following sections, we introduce the *bootstrap*, a powerful resampling m
 
 Can we construct a confidence interval? What is the distribution of $M$?
 
-Because we are simulating the data, we can use a Monte Carlo simulation to learn the distribution of $M$.
+Because we are simulating the data, we can use a Monte Carlo simulation to learn the actual distribution of $M$.
 
 ```{r, eval=FALSE}
-B <- 10^4
-m <- replicate(B, {
+m <- replicate(10^4, {
   x <- sample(income, N)
   median(x)
 })
@@ -49,8 +48,7 @@ qqnorm(scale(m)); abline(0,1)
 ```
 
 ```{r median-is-normal, message = FALSE, warning = FALSE, out.width="100%", echo=FALSE}
-B <- 10^4
-m <- replicate(B, {
+m <- replicate(10^4, {
   x <- sample(income, N)
   median(x)
 })
@@ -65,7 +63,7 @@ If we know this distribution, we can construct a confidence interval. The proble
 median(x) + 1.96*sd(x)/sqrt(N)*c(-1, 1)
 ```
 
-is quite different from the confidence interval we would generate if we know the actual distribution of $M$:
+is quite different from the confidence interval we would generate if we knew the actual distribution of $M$:
 
 ```{r}
 quantile(m, c(0.025, 0.975))
@@ -78,8 +76,7 @@ In many practical situations, the distribution of the statistics computed from b
 The following code demonstrates how to generate bootstrap samples and approximate the sampling distribution of the median:
 
 ```{r}
-B <- 10^4
-m_star <- replicate(B, {
+m_star <- replicate(10^4, {
   x_star <- sample(x, N, replace = TRUE)
   median(x_star)
 })

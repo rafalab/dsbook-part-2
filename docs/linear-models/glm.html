@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Rafael A. Irizarry">
+<title>18&nbsp; Generalized Linear Models – Introduction to Data Science</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../linear-models/association-not-causation.html" rel="next">
+<link href="../linear-models/treatment-effect-models.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-314d552717907458410b1a40a915f399.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+</head>
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../linear-models/intro-to-linear-models.html">Linear Models</a></li><li class="breadcrumb-item"><a href="../linear-models/glm.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Generalized Linear Models</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Introduction to Data Science</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/rafalab/dsbook-part-2" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false">
+ <span class="menu-text">Front Matter</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../summaries/intro-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Summary Statistics</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/distributions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Distributions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/numerical-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Numerical Summaries</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/comparing-groups.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Comparing Groups</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../summaries/reading-summaries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended Reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../prob/intro-to-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Probability</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/connecting-data-and-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Connecting Data and Probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/discrete-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Discrete Probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/continuous-probability.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Continuous Probability</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/random-variables.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Random Variables</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/sampling-models-and-clt.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Sampling Models and the Central Limit Theorem</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../prob/reading-prob.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended Reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../inference/intro-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Statistical Inference</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/estimates-confidence-intervals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Estimates and Confidence Intervals</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Data-Driven Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bayes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Bayesian Statistics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hierarchical-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Hierarchical Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/hypothesis-testing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hypothesis Testing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/bootstrap.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Bootstrap</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../inference/reading-inference.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended Reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../linear-models/intro-to-linear-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Linear Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Introduction to Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/linear-model-framework.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">The Linear Model Framework</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/treatment-effect-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Treatment Effect Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/glm.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Generalized Linear Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/association-not-causation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Association Is Not Causation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/multivariable-regression.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Multivariable Regression</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../linear-models/reading-lm.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended Reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../highdim/intro-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">High Dimensional Data</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/matrices-in-R.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Matrices in R</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/linear-algebra.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Applied Linear Algebra</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/dimension-reduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Dimension Reduction</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/regularization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Regularization</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/latent-factor-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Latent Factor Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../highdim/reading-highdim.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="../ml/intro-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine Learning</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="false" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 ">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/notation-and-terminology.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Notation and Terminology</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/evaluation-metrics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Evaluation Metrics</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/conditionals.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Conditional Probabilities and Expectations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Smoothing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/resampling-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Resampling Methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/algorithms.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Examples of Algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/clustering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Clustering</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/ml-in-practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Machine Learning in Practice</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../ml/reading-ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li>
+<a href="#sec-association-tests" id="toc-sec-association-tests" class="nav-link active" data-scroll-target="#sec-association-tests"><span class="header-section-number">18.1</span> Association Tests</a>
+  <ul class="collapse">
+<li><a href="#case-study-funding-success-rates" id="toc-case-study-funding-success-rates" class="nav-link" data-scroll-target="#case-study-funding-success-rates">Case study: Funding success rates</a></li>
+  <li><a href="#the-lady-tasting-tea" id="toc-the-lady-tasting-tea" class="nav-link" data-scroll-target="#the-lady-tasting-tea">The Lady Tasting Tea</a></li>
+  <li><a href="#sec-chisq-test" id="toc-sec-chisq-test" class="nav-link" data-scroll-target="#sec-chisq-test">Two-by-two tables and the Chi-square test</a></li>
+  <li><a href="#odds-ratios" id="toc-odds-ratios" class="nav-link" data-scroll-target="#odds-ratios">Odds ratios</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#sec-glm" id="toc-sec-glm" class="nav-link" data-scroll-target="#sec-glm"><span class="header-section-number">18.2</span> Logistic regression</a>
+  <ul class="collapse">
+<li><a href="#estimation" id="toc-estimation" class="nav-link" data-scroll-target="#estimation">Estimation</a></li>
+  <li><a href="#fitting-the-model-in-r" id="toc-fitting-the-model-in-r" class="nav-link" data-scroll-target="#fitting-the-model-in-r">Fitting the model in R</a></li>
+  <li><a href="#relation-to-earlier-methods" id="toc-relation-to-earlier-methods" class="nav-link" data-scroll-target="#relation-to-earlier-methods">Relation to earlier methods</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#generalizing-the-model" id="toc-generalizing-the-model" class="nav-link" data-scroll-target="#generalizing-the-model"><span class="header-section-number">18.3</span> Generalizing the model</a>
+  <ul class="collapse">
+<li><a href="#logistic-regression-example-coronary-heart-disease" id="toc-logistic-regression-example-coronary-heart-disease" class="nav-link" data-scroll-target="#logistic-regression-example-coronary-heart-disease">Logistic regression example: Coronary heart disease</a></li>
+  <li><a href="#poisson-regression-example-effectiveness-of-insect-sprays" id="toc-poisson-regression-example-effectiveness-of-insect-sprays" class="nav-link" data-scroll-target="#poisson-regression-example-effectiveness-of-insect-sprays">Poisson regression example: Effectiveness of insect sprays</a></li>
+  <li><a href="#beyond-logistic-and-poisson-regression" id="toc-beyond-logistic-and-poisson-regression" class="nav-link" data-scroll-target="#beyond-logistic-and-poisson-regression">Beyond logistic and Poisson regression</a></li>
+  </ul>
+</li>
+  <li><a href="#large-samples-small-p-values" id="toc-large-samples-small-p-values" class="nav-link" data-scroll-target="#large-samples-small-p-values"><span class="header-section-number">18.4</span> Large samples, small p-values</a></li>
+  <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">18.5</span> Exercises</a></li>
+  </ul><div class="toc-actions"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/linear-models/glm.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../linear-models/intro-to-linear-models.html">Linear Models</a></li><li class="breadcrumb-item"><a href="../linear-models/glm.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Generalized Linear Models</span></a></li></ol></nav><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Generalized Linear Models</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header><p>The statistical models we have used so far assume that the outcome of interest is continuous. However, in many real applications the outcomes are binary, categorical, or counts. In these settings, we are often interested in how the outcome changes with one or more explanatory variables.</p>
+<p>For example, we may want to study how the probability of developing coronary heart disease varies with age, systolic blood pressure, or other clinical measurements; how the chance of surviving the sinking of the Titanic depends on passenger characteristics; or how different insecticides influence the number of insects observed in agricultural field plots.</p>
+<p>Although these outcomes are no longer continuous, many of the ideas introduced in the linear model framework continue to apply. With a small adaptation, we can extend the mathematical approach used for linear models so that it can be applied in all of these situations, while also continuing to use the same modeling tools in R.</p>
+<p>These extended models are known as <em>generalized</em> linear models. To motivate them, we begin this chapter with association tests for two categorical variables. We then show how these tests arise naturally from logistic regression, our first example of a generalized linear model for binary outcomes. We conclude with examples that illustrate how the same framework can be applied across a range of contexts, including outcomes that are binary, or counts.</p>
+<section id="sec-association-tests" class="level2" data-number="18.1"><h2 data-number="18.1" class="anchored" data-anchor-id="sec-association-tests">
+<span class="header-section-number">18.1</span> Association Tests</h2>
+<p>We start with the simplest case: assessing whether two categorical variables are associated. These methods were developed before GLMs, but they can be understood as special cases of logistic regression. Once we establish this connection, the general GLM framework will follow naturally.</p>
+<section id="case-study-funding-success-rates" class="level3"><h3 class="anchored" data-anchor-id="case-study-funding-success-rates">Case study: Funding success rates</h3>
+<p>A 2014 PNAS paper<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a> analyzed success rates from funding agencies in the Netherlands and concluded that their</p>
+<blockquote class="blockquote">
+<p>results reveal gender bias favoring male applicants over female applicants in the prioritization of their “quality of researcher” (but not “quality of proposal”) evaluations and success rates, as well as in the language use in instructional and evaluation materials.</p>
+</blockquote>
+<p>The main evidence supporting this conclusion is based on a comparison of the percentages which we can compute using the data presented in the paper:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="va">totals</span> <span class="op">&lt;-</span> <span class="va">research_funding_rates</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">discipline</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise_all.html">summarize_all</a></span><span class="op">(</span><span class="va">sum</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>yes_men <span class="op">=</span> <span class="va">awards_men</span>, </span>
+<span>            no_men <span class="op">=</span> <span class="va">applications_men</span> <span class="op">-</span> <span class="va">awards_men</span>, </span>
+<span>            yes_women <span class="op">=</span> <span class="va">awards_women</span>, </span>
+<span>            no_women <span class="op">=</span> <span class="va">applications_women</span> <span class="op">-</span> <span class="va">awards_women</span><span class="op">)</span> </span>
+<span></span>
+<span><span class="va">totals</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>percent_men <span class="op">=</span> <span class="va">yes_men</span><span class="op">/</span><span class="op">(</span><span class="va">yes_men</span> <span class="op">+</span> <span class="va">no_men</span><span class="op">)</span>,</span>
+<span>                    percent_women <span class="op">=</span> <span class="va">yes_women</span><span class="op">/</span><span class="op">(</span><span class="va">yes_women</span> <span class="op">+</span> <span class="va">no_women</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   percent_men percent_women</span></span>
+<span><span class="co">#&gt; 1       0.177         0.149</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>But could this be due just to random variability? Here we learn how to perform inference for this type of data.</p>
+<p>In <a href="#sec-chisq-test" class="quarto-xref"><span>Section 18.1.3</span></a>, we introduce association tests that permit us to answer this question. Before doing so, we present a historically important example that illustrates the need for such methods.</p>
+</section><section id="the-lady-tasting-tea" class="level3"><h3 class="anchored" data-anchor-id="the-lady-tasting-tea">The Lady Tasting Tea</h3>
+<p>The classic motivating example for association tests is the <em>Lady Tasting Tea</em> experiment designed by R. A. Fisher. A colleague at the Rothamsted Experimental Station claimed she could tell whether milk was poured into a cup before or after the tea. Fisher proposed a randomized test and derived the probability of each possible result under the assumption that she was simply guessing. This led to what is now known as <em>Fisher’s exact test</em>, based on the hypergeometric distribution.</p>
+<p>As an example, suppose she correctly identified 3 out of 4 cups:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span>guess <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span><span class="op">)</span>,</span>
+<span>             actual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"m"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">tab</span></span>
+<span><span class="co">#&gt;      actual</span></span>
+<span><span class="co">#&gt; guess m t</span></span>
+<span><span class="co">#&gt;     m 3 1</span></span>
+<span><span class="co">#&gt;     t 1 3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To evaluate whether this provides evidence of real ability, we consider the <em>null hypothesis</em> that she is guessing. Because she knows there are four of each type, guessing corresponds to randomly drawing 4 cups from an urn containing 4 <em>milk-first</em> and 4 <em>tea-first</em> cups.</p>
+<p>The probability of correctly guessing <span class="math inline">\(k\)</span> cups is given by the hypergeometric formula:</p>
+<p><span class="math display">\[
+\frac{\binom{4}{k}\binom{4}{4-k}}{\binom{8}{4}}.
+\]</span></p>
+<p>The probability of getting 3 or more correct by chance is therefore : <span class="math display">\[
+\frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{16}{70} \approx 0.24.
+\]</span> So correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.</p>
+<p>This calculation is what <em>Fisher’s exact test</em> performs. In R we can type:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/fisher.test.html">fisher.test</a></span><span class="op">(</span><span class="va">tab</span>, alternative <span class="op">=</span> <span class="st">"greater"</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="co">#&gt; [1] 0.243</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Historical accounts suggest that the lady <em>did</em> perform well in the original demonstration. Fisher’s goal was not to confirm or refute her ability, but to illustrate how to design a fair experiment and evaluate evidence with probability.</p>
+</div>
+</div>
+</div>
+</section><section id="sec-chisq-test" class="level3"><h3 class="anchored" data-anchor-id="sec-chisq-test">Two-by-two tables and the Chi-square test</h3>
+<p>Notice that our funding example is analogous to the Lady Tasting Tea: under the null hypothesis, funding is assigned at random regardless of gender, just as in Fisher’s example cups are guessed at random regardless of when the milk was poured.</p>
+<p>However, in the Lady Tasting Tea example, we were able to use the hypergeometric distribution because the design <em>fixed</em> both the number of cups of each type and the number of selections for each category. In other words, the row totals and the column totals of <code>tab</code> were predetermined by the experiment.</p>
+<p>In the funding example, and in most real-world data, this is not the case. Neither the number of funded applications nor the number of male and female applicants is fixed in advance; these totals arise from the data we observe. Because the row and column totals are not fixed, the hypergeometric model is no longer appropriate and rarely used in practice.</p>
+<p>In such settings, we instead use the <em>Chi-squared test</em>, which provides a way to test for association between two categorical variables without requiring fixed margins. Let’s apply it to the funding rates example.</p>
+<p>The first step in a Chi-squared test is to create the observed <em>two-by-two table</em>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_men</span>, <span class="va">yes_men</span><span class="op">)</span>, </span>
+<span>                             women <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_women</span>, <span class="va">yes_women</span><span class="op">)</span>,</span>
+<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then estimate the overall funding rate which we will use to determine what we expect to see if successful funding was assigned independent of gender:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="op">(</span><span class="va">yes_men</span> <span class="op">+</span> <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">totals</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We use this to compute what we expect to see by chance:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="op">(</span><span class="va">no_men</span> <span class="op">+</span> <span class="va">yes_men</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">rate</span>, <span class="va">rate</span><span class="op">)</span>,</span>
+<span>                             women <span class="op">=</span> <span class="op">(</span><span class="va">no_women</span> <span class="op">+</span> <span class="va">yes_women</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">rate</span>, <span class="va">rate</span><span class="op">)</span>,</span>
+<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can see that more men than expected and fewer women than expected received funding:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">o</span>, <span class="va">e</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      men women  men women</span></span>
+<span><span class="co">#&gt; no  1345  1011 1365   991</span></span>
+<span><span class="co">#&gt; yes  290   177  270   197</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>However, under the null hypothesis these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by:</p>
+<ol type="1">
+<li>Taking the difference between each observed and expected cell value.</li>
+<li>Squaring this difference.</li>
+<li>Dividing each squared difference by the expected value.</li>
+<li>Summing all these values together to get the final statistic.</li>
+</ol>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="va">e</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 4.01</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We use this summary statistic because its sampling distribution can be approximated by a known parametric distribution: the Chi-square distribution.</p>
+<p>The R function <code>chisq.test</code> takes a two-by-two table and returns the results from the test:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We see that the p-value is 0.045:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="co">#&gt; [1] 0.0451</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>By default, the <code>chisq.test</code> function applies a <em>continuity correction</em>. This correction subtracts 0.5 from the absolute deviation between observed and expected counts:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span> <span class="op">-</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="va">e</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 3.81</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and this matches the default behavior of:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">$</span><span class="va">statistic</span></span>
+<span><span class="co">#&gt; X-squared </span></span>
+<span><span class="co">#&gt;      3.81</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The reason for this adjustment is that the chi-square test is based on a <em>continuous</em> probability distribution, while the two-by-two table counts are <em>discrete</em>. When sample sizes are small, the difference between a continuous approximation and the discrete distribution can be noticeable. The continuity correction slightly reduces the test statistic to account for this mismatch, making the approximation more conservative (that is, less likely to produce small p-values by chance).</p>
+<p>We previously used the argument <code>correct = FALSE</code> to avoid this adjustment because, in moderate-to-large samples, the correction is not needed and can slightly reduce the test’s power.</p>
+</div>
+</div>
+</div>
+</section><section id="odds-ratios" class="level3"><h3 class="anchored" data-anchor-id="odds-ratios">Odds ratios</h3>
+<p>The Chi-square test provides a p-value but it does not quantify the size of the effect. As discussed in <a href="../inference/hypothesis-testing.html" class="quarto-xref"><span>Chapter 13</span></a>, we generally prefer confidence intervals over p-values because they communicate effect size and uncertainty. So how do we quantify the effect here?</p>
+<p>For two categorical groups, our data can be summarized in a two-by-two table:</p>
+<table class="caption-top table">
+<thead><tr class="header">
+<th></th>
+<th>Women</th>
+<th>Men</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Awarded</td>
+<td>a</td>
+<td>b</td>
+</tr>
+<tr class="even">
+<td>Not Awarded</td>
+<td>c</td>
+<td>d</td>
+</tr>
+</tbody>
+</table>
+<p>One option is to compare the difference in proportions:</p>
+<p><span class="math display">\[
+\frac{a}{a+c} - \frac{b}{b+d}.
+\]</span></p>
+<p>However, differences in proportions are not directly comparable across baseline levels. For example, a change from 1% to 2% is just as large on the probability scale as a change from 49% to 50%, yet the practical interpretation is very different.</p>
+<p>For this reason, a more common way to quantify association in our context is the <em>odds ratio</em>:</p>
+<p><span class="math display">\[
+\text{odds ratio} = \frac{a/c}{b/d} = \frac{ad}{bc}
+\]</span> This quantity compares the odds of being funded for women to the odds of being funded for men.</p>
+<p>The <em>log</em> odds ratio is often used because it is symmetric around 0:</p>
+<p><span class="math display">\[
+\log\left(\frac{ad}{bc}\right) = 0 \quad \text{when there is no difference between groups.}
+\]</span></p>
+<p>Moreover, the log odds ratio has a convenient approximate standard error:</p>
+<p><span class="math display">\[
+\mathrm{SE}\left[\log\left(\frac{ad}{bc}\right)\right]
+\approx\sqrt{\frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}}.
+\]</span></p>
+<p>and can be shown to be asymptotically normal. This allows us to construct confidence intervals. A 95% confidence interval would be:</p>
+<p><span class="math display">\[
+\log\left(\frac{ad}{bc}\right)
+\pm 1.96 \sqrt{\frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}}
+\]</span> Once we construct a confidence interval for the log odds ratio, we can obtain a confidence interval for the odds ratio by exponentiating the two endpoints.</p>
+<p>Her we compute the odds ratio for our funding data and construct a 95% confidence interval:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">o</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">or</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.662 0.996</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This allows us to assess both the magnitude of the association and the uncertainty around it. The estimated odds ratio is less than 1, indicating that women have lower odds of being funded than men in this dataset. The 95% confidence interval does not include 1, which implies the p-value is less than 0.05.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The log odds ratio is not defined if any of the cells of the two-by-two table is 0. This is because if <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, or <span class="math inline">\(d\)</span> are 0, the <span class="math inline">\(\log(\frac{ad}{bc})\)</span> is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the <em>Haldane-Anscombe correction</em> and has been shown, both in practice and theory, to work well.</p>
+</div>
+</div>
+</div>
+</section></section><section id="sec-glm" class="level2" data-number="18.2"><h2 data-number="18.2" class="anchored" data-anchor-id="sec-glm">
+<span class="header-section-number">18.2</span> Logistic regression</h2>
+<p>We now connect the association tests described above to the linear model framework introduced in <a href="treatment-effect-models.html" class="quarto-xref"><span>Chapter 17</span></a>. Once we make this connection, the same ideas extend naturally to more complex settings, including models with continuous predictors and multiple explanatory variables.</p>
+<p>If we define <span class="math inline">\(Y_i\)</span> to be 1 if applicant <span class="math inline">\(i\)</span> was funded and 0 otherwise, and set <span class="math inline">\(x_i = 1\)</span> for women and <span class="math inline">\(x_i = 0\)</span> for men, we might be tempted to write a linear model:</p>
+<p><span class="math display">\[
+Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i.
+\]</span></p>
+<p>However, this model is not appropriate because the left-hand side only takes values 0 or 1, while the right-hand side can take any real value. In particular, the implied expected value</p>
+<p><span class="math display">\[
+\mathrm{E}[Y_i] = \Pr(Y_1=1) = \beta_0 + \beta_1 x_i
+\]</span></p>
+<p>could be less than 0 or greater than 1, which is not possible for a probability.</p>
+<p>If we instead model the log odds as a linear function of <span class="math inline">\(x_i\)</span></p>
+<p><span class="math display">\[
+\log\left\{\frac{\Pr(Y_i=1)}{1 - \Pr(Y_i=1)}\right\}= \beta_0 + \beta_1 x_i.
+\]</span></p>
+<p>we get the following useful interpretation of the parameters:</p>
+<ul>
+<li>
+<span class="math inline">\(e^{\beta_0}\)</span> is the odds of funding for men,</li>
+<li>
+<span class="math inline">\(e^{\beta_0} e^{\beta_1}\)</span> is the odds of funding for women.</li>
+<li>
+<span class="math inline">\(e^{\beta_1}\)</span> is the odds ratio comparing women to men.</li>
+</ul>
+<p>The parameter <span class="math inline">\(\beta_1\)</span> is thus the <em>log odds ratio</em>.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The name <em>logistic regression</em> comes from the fact that</p>
+<p><span class="math display">\[
+g(p) = \log\frac{p}{1-p}
+\]</span> is called the <em>logistic function</em> or <em>logit transformation</em>.</p>
+</div>
+</div>
+</div>
+<p>Note that we can write the probability <span class="math inline">\(p_i = Pr(Y_i = 1)\)</span> as a function of the paremeters <span class="math inline">\(\beta_0+\beta_1x_i\)</span> for any <span class="math inline">\(x_i\)</span> by using the inverse of the logit transformation:</p>
+<p><span class="math display">\[
+\Pr(Y_i=1) = g^{-1}(g(p_i)) = g^{-1}\left(\beta_0+\beta_1x_i\right) = \frac{e^{\beta_0+\beta_1x_i}}{1 + e^{\beta_0+\beta_1x_i}} = \frac{1}{1 + e^{-\beta_0-\beta_1x_i}}
+\]</span></p>
+<section id="estimation" class="level3"><h3 class="anchored" data-anchor-id="estimation">Estimation</h3>
+<p>Unlike linear regression, least squares is not optimal here because the variance of the outcome depends on its mean and the model for the expected value is nonlinear. Instead, the parameters are estimated using <em>maximum likelihood estimation</em> (MLE). The basic idea of MLE is to choose the parameter values that make the observed data most probable according to the assumed statistical model. For logistic regression, this means finding the values of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> that maximize the probability of observing the particular pattern of zeros and ones in the data.</p>
+<p>Our example analyzing a two-by-two table is a special case in which the estimates can be written directly as functions of the observed proportions. But in general, for logistic regression models, the estimates cannot be written in a simple closed-form expression. Instead, numerical optimization algorithms are used to find the values that maximize the likelihood. Under standard conditions, a version of the central limit theorem applies to these estimates. This implies that for large sample sizes the estimates are approximately normally distributed and that their standard errors can be computed from the curvature of the likelihood function near the maximum. This, in turn, permits the construction of confidence intervals and hypothesis tests.</p>
+<p>Readers interested in a deeper and more general treatment of MLE and logistic regression can consult the Recommended Reading section, where we point to textbooks that develop the likelihood framework, the asymptotic results, and the numerical algorithms in more detail.</p>
+</section><section id="fitting-the-model-in-r" class="level3"><h3 class="anchored" data-anchor-id="fitting-the-model-in-r">Fitting the model in R</h3>
+<p>We can fit the logistic regression model in R using the <code>glm</code> function with <code>family = binomial</code>.</p>
+<p>Although we do not have individual-level records, we <em>do</em> have totals for each group. This is sufficient because the sum of the outcomes for men is a binomial random variable with <span class="math inline">\(N_0\)</span> trials (the number of male applicants) and success probability <span class="math inline">\(p_0\)</span>, which satisfies</p>
+<p><span class="math display">\[
+\log\left(\frac{p_0}{1-p_0}\right) = \beta_0.
+\]</span></p>
+<p>Similarly, the sum of outcomes for women is binomial with <span class="math inline">\(N_1\)</span> trials and success probability <span class="math inline">\(p_1\)</span>, where</p>
+<p><span class="math display">\[
+\log\left(\frac{p_1}{1-p_1}\right) = \beta_0 + \beta_1.
+\]</span></p>
+<p>The <code>glm</code> function can work directly with grouped counts by using a two-column matrix of successes and failures:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">success</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">yes_men</span>, <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">failure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_men</span>, <span class="va">no_women</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">success</span>, <span class="va">failure</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>and encoding the group indicator:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"men"</span>, <span class="st">"women"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We then fit the model with <code>glm</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;             Estimate Std. Error z value  Pr(&gt;|z|)</span></span>
+<span><span class="co">#&gt; (Intercept)   -1.534     0.0647   -23.7 3.83e-124</span></span>
+<span><span class="co">#&gt; xwomen        -0.208     0.1041    -2.0  4.54e-02</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To obtain the estimated odds ratio, we exponentiate the coefficient:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">coef</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; xwomen </span></span>
+<span><span class="co">#&gt;  0.812</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This value represents the multiplicative change in the odds of being funded for women compared to men.</p>
+<p>A 95% confidence interval for this odds ratio is obtained by exponentiating the corresponding confidence interval for <span class="math inline">\(\beta_1\)</span>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  2.5 % 97.5 % </span></span>
+<span><span class="co">#&gt;  0.661  0.995</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This interval provides both an effect size and a measure of uncertainty.</p>
+</section><section id="relation-to-earlier-methods" class="level3"><h3 class="anchored" data-anchor-id="relation-to-earlier-methods">Relation to earlier methods</h3>
+<p>We can confirm that logistic regression yields the same odds ratio estimate as the simple two-by-two table (saved in <code>o</code>) calculation: and saved in <code>or</code> and <code>se</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">o</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">or</span><span class="op">)</span>,<span class="va">se</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -0.208  0.104</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] -0.208  0.104</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="callout callout-style-simple callout-warning">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The p-values obtained from <code>chisq.test</code> and from logistic regression</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="co">#&gt; [1] 0.0451</span></span>
+<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 0.0454</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>differ slightly because they are based on different approximations.</p>
+</div>
+</div>
+</div>
+</section></section><section id="generalizing-the-model" class="level2" data-number="18.3"><h2 data-number="18.3" class="anchored" data-anchor-id="generalizing-the-model">
+<span class="header-section-number">18.3</span> Generalizing the model</h2>
+<p>At first glance, logistic regression may seem like an unnecessarily complicated way to obtain the same results we derived using the odds ratio and the standard error approximation. So why introduce this more general framework?</p>
+<p>The key advantage becomes clear when the explanatory variables are not just two categories. For example, returning to the question of coronary heart disease, age is a continuous variable. There is no simple way to form a two-by-two table for every possible age value. Similarly, if we wish to adjust for several explanatory variables simultaneously (as we did in <a href="treatment-effect-models.html" class="quarto-xref"><span>Chapter 17</span></a>), we need a model-based approach rather than a table-based one.</p>
+<p>The general strategy is to assumes <span class="math inline">\(Y_i\)</span> follow a known distribution, such as binomial or exponential, and model a <em>transformation</em> of the expected value of the outcome using a linear combination of predictors:</p>
+<p><span class="math display">\[
+g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
+\]</span></p>
+<p>Here <span class="math inline">\(x_{ij}\)</span> is the value of the <span class="math inline">\(j\)</span>-th explanatory variable for individual <span class="math inline">\(i\)</span>, and <span class="math inline">\(g(\cdot)\)</span> is called the <em>link function</em>. For binary outcomes we used the logistic function because it maps probabilities (which must lie between 0 and 1) to all real numbers. For count data, which we often model with a Poisson distribution, the expected value <span class="math inline">\(\mathrm{E}[Y_i]\)</span> can exceed 1, so the logit link is not suitable. Instead, the <em>log</em> link is typically used: <span class="math inline">\(g(\lambda) = \log(\lambda)\)</span>. This link maps positive values (such as rates) to the real line and provides an interpretable multiplicative form: if <span class="math inline">\(\exp(\beta_1)= 1.10\)</span>, then a one-unit increase in <span class="math inline">\(x_{i1}\)</span> corresponds to a 10% increase in the rate.</p>
+<p>This framework is known as a <strong>generalized linear model</strong> (GLM). Logistic regression is one special case; Poisson regression is another.</p>
+<section id="logistic-regression-example-coronary-heart-disease" class="level3"><h3 class="anchored" data-anchor-id="logistic-regression-example-coronary-heart-disease">Logistic regression example: Coronary heart disease</h3>
+<p>The <code>SAheart</code> dataset contains observations from a retrospective sample of adult males in a high-risk region of South Africa:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"SAheart"</span>, package <span class="op">=</span> <span class="st">"bestglm"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If we compute the proportion of individuals with heart disease at each age and examine the log-odds, the relationship appears approximately linear:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">SAheart</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">age</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>chd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">chd</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">age</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">chd</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">chd</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="glm_files/figure-html/heart-study-eda-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>This suggests the logistic regression model:</p>
+<p><span class="math display">\[
+\log\left\{\frac{\Pr(Y_i=1)}{1 - \Pr(Y_i=1)}\right\} = \beta_0 + \beta_1 x_i
+\]</span> with <span class="math inline">\(Y_i\)</span> an indicator of coronary heart disease and <span class="math inline">\(x_i\)</span> representing the age of individual <span class="math inline">\(i\)</span>. The estimate for <span class="math inline">\(\beta_1\)</span> converts into an <em>odds ratio</em>. The quantity <span class="math inline">\(\exp(\beta_1)\)</span> represents the multiplicative increase in the odds of heart disease for each one-year increase in age.</p>
+<p>Fitting can fit the model using:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">chd</span> <span class="op">~</span> <span class="va">age</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">SAheart</span><span class="op">)</span></span>
+<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span></span>
+<span><span class="co">#&gt; # A tibble: 1 × 5</span></span>
+<span><span class="co">#&gt;   term  estimate std.error statistic  p.value</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 age     0.0641   0.00853      7.51 5.76e-14</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can then use GLM theory to construct a 95% confidence interval for the odds ratio:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt; Waiting for profiling to be done...</span></span>
+<span><span class="co">#&gt;  2.5 % 97.5 % </span></span>
+<span><span class="co">#&gt;   1.05   1.08</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We can also use the fitted model to compute predicted probabilities for specific ages:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">80</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      1      2      3      4      5      6      7 </span></span>
+<span><span class="co">#&gt; 0.0963 0.1682 0.2774 0.4216 0.5805 0.7243 0.8330</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>When <code>type = respsone</code> the <code>predict</code> function uses the inverse logistic transformation to convert <span class="math inline">\(\hat{\beta}_0 + \hat{\beta}_1 x_i\)</span> to estimated probabilities.</p>
+<p>Note that the <code>SAheart</code> dataset includes several additional explanatory variables that could plausibly relate to heart disease risk, such as tobacco use, cholesterol level, and family history. With the <code>glm</code> function, we can include these predictors in the model simply by adding them to the right-hand side of the formula. However, we must be cautious when interpreting the resulting coefficients. A logistic regression model will always return parameter estimates, p-values, and confidence intervals, but these numbers are only meaningful if the model is a reasonable approximation to the data-generating mechanism. In many biomedical settings, there is no underlying physiological theory guaranteeing that the relationship between predictors and the log-odds of disease is linear. Therefore, model assumptions should be examined critically. This includes exploratory data analysis, consideration of possible confounding variables, and assessment of model fit through diagnostic tools, rather than accepting the fitted model at face value.</p>
+</section><section id="poisson-regression-example-effectiveness-of-insect-sprays" class="level3"><h3 class="anchored" data-anchor-id="poisson-regression-example-effectiveness-of-insect-sprays">Poisson regression example: Effectiveness of insect sprays</h3>
+<p>The <code>InsectSprays</code>dataset records the number of insects found in agricultural field units after treatment with different sprays:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span> <span class="op">|&gt;</span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">spray</span>, <span class="va">count</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html">geom_jitter</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="glm_files/figure-html/insect-spray-boxplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Spray C appears most effective. We could compare mean insect counts across sprays:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">InsectSprays</span>, <span class="fu"><a href="https://rdrr.io/r/base/tapply.html">tapply</a></span><span class="op">(</span><span class="va">count</span>, <span class="va">spray</span>, <span class="va">mean</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>But how do we assess uncertainty? Can we construct confidence inteverals? Note that counts are small (often under 10), and the sample size per group is only 12, so normal approximations may be unreliable.</p>
+<p>A Poisson regression provides an alternative. First we choose C as the reference group and then we fit the model:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html">relevel</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span>, ref <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span> </span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
+<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; # A tibble: 6 × 7</span></span>
+<span><span class="co">#&gt;   term        estimate std.error statistic  p.value conf.low conf.high</span></span>
+<span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
+<span><span class="co">#&gt; 1 (Intercept)    0.734     0.200      3.67 2.43e- 4   0.315       1.10</span></span>
+<span><span class="co">#&gt; 2 sprayA         1.94      0.214      9.07 1.18e-19   1.54        2.38</span></span>
+<span><span class="co">#&gt; 3 sprayB         2.00      0.213      9.36 7.65e-21   1.60        2.44</span></span>
+<span><span class="co">#&gt; 4 sprayD         0.859     0.239      3.60 3.20e- 4   0.404       1.34</span></span>
+<span><span class="co">#&gt; 5 sprayE         0.519     0.253      2.05 4.00e- 2   0.0315      1.03</span></span>
+<span><span class="co">#&gt; # ℹ 1 more row</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here the parameters measure the log of the multiplicative change in the expected count relative to Spray C. If a spray has the same effectiveness as Spray C, its corresponding parameter estimate would be 0. The estimated coefficients and their confidence intervals indicate that several sprays differ substantially from Spray C, and these differences are too large to be explained by Poisson sampling variability alone. In other words, Spray C’s superior performance is unlikely to be due to chance.</p>
+<p>The inference relies on asymptotic approximations similar to the CLT but often performs better than applying the CLT directly to means when counts are small.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>In this example, a simple comparison of group means would have also worked. The advantage of Poisson regression becomes more evident when the explanatory variable is continuous, e.g., modeling counts as a function of exposure time or concentration levels, where group-by-group averaging is not practical.</p>
+</div>
+</div>
+</div>
+</section><section id="beyond-logistic-and-poisson-regression" class="level3"><h3 class="anchored" data-anchor-id="beyond-logistic-and-poisson-regression">Beyond logistic and Poisson regression</h3>
+<p>Logistic and Poisson regression are the two most widely used GLMs because binary and count outcomes are common in scientific applications. However, the GLM framework is more general:</p>
+<ul>
+<li>
+<em>Negative binomial regression</em> handles count data for which the variability is larger than what is predicted by the Poisson model.</li>
+<li>
+<em>Gamma regression</em> is useful for positive continuous outcomes such as reaction times or insurance claim sizes.</li>
+<li>
+<em>Quasi-likelihood GLMs</em> allow modeling of mean–variance relationships without fully specifying a distribution.</li>
+</ul>
+<p>In practice, GLMs require careful model checking. Diagnostic plots and residual analysis are especially important here because, unlike ordinary least squares, we are explicitly assuming a particular outcome distribution.</p>
+<p>To go further, consult the recommended readings listed at the end of the chapter. They cover link functions, likelihood theory, diagnostics, and extensions in much greater detail.</p>
+</section></section><section id="large-samples-small-p-values" class="level2" data-number="18.4"><h2 data-number="18.4" class="anchored" data-anchor-id="large-samples-small-p-values">
+<span class="header-section-number">18.4</span> Large samples, small p-values</h2>
+<p>As mentioned earlier, reporting only p-values is not always a useful way to report the results of data analysis. In scientific journals, some studies seem to overemphasize p-values. Some of these studies have large sample sizes and report impressively small p-values. Yet by looking closely at the results, we realize that the odds ratios are quite modest: barely bigger than 1. In this case, the difference may not be <em>practically significant</em> or <em>scientifically significant</em>.</p>
+<p>Note that the relationship between odds ratio and p-value is not one-to-one; it depends on the sample size. Therefore, a very small p-value does not necessarily mean a very large odds ratio. Observe what happens to the p-value if we multiply our two-by-two table by 10, which does not change the odds ratio:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ox10</span> <span class="op">&lt;-</span> <span class="va">o</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>men <span class="op">=</span> <span class="va">men</span><span class="op">*</span><span class="fl">10</span>, women <span class="op">=</span> <span class="va">women</span><span class="op">*</span><span class="fl">10</span><span class="op">)</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span>, <span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">ox10</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 5.09e-02 2.63e-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="exercises" class="level2" data-number="18.5"><h2 data-number="18.5" class="anchored" data-anchor-id="exercises">
+<span class="header-section-number">18.5</span> Exercises</h2>
+<p>1. A famous athlete boasts an impressive career, winning 70% of her 500 career matches. Nevertheless, this athlete is criticized because in important events, such as the Olympics, she has a losing record of 8 wins and 9 losses. Perform a Chi-square test to determine if this losing record can be simply due to chance as opposed to not performing well under pressure.</p>
+<p>2. Why did we use the Chi-square test instead of Fisher’s exact test in the previous exercise?</p>
+<ol type="a">
+<li>It actually does not matter, since they give the exact same p-value.</li>
+<li>Fisher’s exact and the Chi-square are different names for the same test.</li>
+<li>Because the sum of the rows and columns of the two-by-two table are not fixed so the hypergeometric distribution is not an appropriate assumption for the null hypothesis. For this reason, Fisher’s exact test is rarely applicable with observational data.</li>
+<li>Because the Chi-square test runs faster.</li>
+</ol>
+<p>3. Now compute the odds ratio of “losing under pressure” and use the approximation we learned to construct a 95% confidence interval. What do you say to those critiquing the athlete? Is the criticism fair?</p>
+<p>4. Repeat exercise 3 but using the <code>glm</code> function. Compare the results.</p>
+<p>5. Use the <code>research_funding_rates</code> data to estimate the log odds ratio and standard errors comparing women to men for each discipline. Compute a confidence interval for each discipline. Plot the log odds ratios and use error bars to denote 95% confidence intervals</p>
+<p>6. Report all the disciplines for which one gender appears to be favored over the other.</p>
+<p>7. Divide the log odds ratio estimates by their respective standard errors and generate a qqplot comparing these to a standard normal. Do any of the disciplines clearly deviate from what is expected by chance?</p>
+<p>8. During the 2016 US presidential election, then candidate Donald J. Trump used his twitter account as a way to communicate with potential voters. Todd Vaziri hypothesized that “Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him).” We will test this hypothesis using association tests. The <strong>dslabs</strong> object <code>sentiment_counts</code> provides a table with the counts for several sentiments from each source (Android or iPhone):</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<span><span class="va">sentiment_counts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Compute an odds ratio comparing Android to iPhone for each sentiment and add it to the table.</p>
+<p>9. Compute a 95% confidence interval for each odds ratio.</p>
+<p>10. Generate a plot showing the estimated odds ratios along with their confidence intervals.</p>
+<p>11. For each sentiment, test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.</p>
+<p>12. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2.</p>
+<p>13. The <code>titanic_train</code> dataset in the <strong>titanic</strong> package has data for 891 passangers that were on the Titanic:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paulhendricks/titanic">titanic</a></span><span class="op">)</span></span>
+<span><span class="va">titanic_train</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In this dataset:</p>
+<ul>
+<li>
+<code>Survived</code> is a binary variable (<code>Yes</code> / <code>No</code>)</li>
+<li>
+<code>Sex</code>, <code>Age</code>, and <code>Class</code> are explanatory variables</li>
+</ul>
+<p>Fit a logistic regression model with survival as the outcome and sex as the predictor.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_gender</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_gender</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="a">
+<li>Interpret the sign of the coefficient for <code>Sex</code>.</li>
+<li>Compute and interpret the <em>odds ratio</em>.</li>
+<li>Construct a 95% confidence interval for the odds ratio.</li>
+</ol>
+<p>14. Now fit a model with both <code>Sex</code> and <code>Class</code>:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span><span class="op">)</span></span>
+<span><span class="va">fit_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span> <span class="op">+</span> <span class="va">Pclass</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_class</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="a">
+<li>Which passenger class has the highest odds of survival, based on the estimates?</li>
+<li>How does the estimated effect of gender change after adjusting for class? Explain why.</li>
+</ol>
+<p>15. Fit a model with an interaction term:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_interaction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span> <span class="op">*</span> <span class="va">Pclass</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="a">
+<li>Does the effect of gender vary by class?</li>
+<li>Use <code>exp(coef(fit_interaction))</code> to interpret interaction patterns in terms of odds ratios.</li>
+</ol>
+<p>16. The <code>InsectSprays</code> dataset records insect counts for six spray types.</p>
+<p>Recall the Poisson regression model:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_glm</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Fit a linear regression model to the log-transformed counts (we have to add 0.5 because some counts are 0):</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">log_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">count</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">fit_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">log_count</span> <span class="op">~</span> <span class="va">spray</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_lm</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="a">
+<li>Compare the estimated spray effects from <code>fit_glm</code> and <code>fit_lm</code>.</li>
+<li>Discuss the advantages of one model over the other.</li>
+</ol>
+<p>17. In GLMs there is no separate error term <span class="math inline">\(\varepsilon\)</span>. However, we can still define <em>residuals</em> by comparing the observed outcome <span class="math inline">\(y_i\)</span> to the fitted value <span class="math inline">\(\hat{y}_i\)</span>. However, unlike in standard linear regression, the variance of <span class="math inline">\(Y_i\)</span> is not constant. For instance:</p>
+<ul>
+<li>In logistic regression, $[Y_i] = p_i(1 - p_i) $, which depends on the fitted probability <span class="math inline">\(p_i=\Pr(Y_i=1)\)</span>.</li>
+<li>In Poisson regression, <span class="math inline">\(\mathrm{Var}[Y_i]= \mathrm{E}[Y_i]\)</span>, so the standard error can be estimated with <span class="math inline">\(\sqrt{\hat{y}_i}\)</span>.</li>
+</ul>
+<p>Because the variability changes across observations, raw residuals $ y_i - _i$ are not directly comparable. <em>Pearson residuals</em> address this by dividing by an estimate of their standard deviation:</p>
+<p><span class="math display">\[
+r_i = \frac{y_i - \hat{y}_i}{\sqrt{\widehat{\mathrm{Var}}(Y_i)}}.
+\]</span></p>
+<p>For a Poisson regression model with fitted mean <span class="math inline">\(\hat{\mu}_i = \exp(\hat{\beta}_0 + \hat{\beta}_1 x_i)\)</span>, the Pearson residual is:</p>
+<p><span class="math display">\[
+r_i = \frac{y_i - \hat{\mu}_i}{\sqrt{\hat{\mu}_i}}.
+\]</span></p>
+<p>These residuals are scaled so that they are approximately centered at 0 with variance 1, which makes them useful for diagnostic plots.</p>
+<p>You can plot Pearson residuals in R using:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_glm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>To compare this to fitting a linear model to log-transformed counts:</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_lm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ol type="a">
+<li>Which model appears to better describe the data?</li>
+<li>In what situations might the log-transform approach fail while Poisson regression still works?</li>
+</ol>
+<p>18. Explain in your own words:</p>
+<ul>
+<li>Why logistic and Poisson regression are useful when modeling binary or count data.</li>
+<li>Why it is not always appropriate to apply standard linear regression to these outcomes.</li>
+<li>Why checking model assumptions (for example, plots, fit diagnostics) is critical when using GLMs.</li>
+</ul>
+
+
+</section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><hr>
+<ol>
+<li id="fn1"><p>http://www.pnas.org/content/112/40/12349.abstract<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
+</ol></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("http:\/\/rafalab\.dfci\.harvard\.edu\/dsbook-part-2");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="../linear-models/treatment-effect-models.html" class="pagination-link" aria-label="Treatment Effect Models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Treatment Effect Models</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../linear-models/association-not-causation.html" class="pagination-link" aria-label="Association Is Not Causation">
+        <span class="nav-page-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Association Is Not Causation</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Introduction to Data Science was written by Rafael A. Irizarry</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/rafalab/dsbook-part-2/blob/main/linear-models/glm.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li><li><a href="https://github.com/rafalab/dsbook-part-2/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>This book was built with <a href="https://quarto.org/">Quarto</a>.</p>
+</div>
+  </div>
+</footer>
+
+
+</body></html>

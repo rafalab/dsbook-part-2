@@ -80,13 +80,15 @@ tmp_2 |>
   
 ```
 
-But what does this mean in the context of the theory we have previously covered, in which these percentages are considered fixed? Furthermore, election forecasters make probabilistic statements such "Obama has a 90% chance of winning the election." Note that in the context of an urn model, this would be equivalent to stating that the probability of $p>0.5$ is 90%. However, in the urn model $p$ is a fixed parameter and it does not make sense to talk about probability. With Bayesian statistics, we assume $p$ is a random variable, and thus, a statement such as "90% chance of winning" is consistent with the mathematical approach. Forecasters also use models to describe variability at different levels. For example, sampling variability, pollster to pollster variability, day to day variability, and election to election variability. One of the most successful approaches used for this are hierarchical models, which can be explained in the context of Bayesian statistics.
+But what does this mean in the context of the theory we have previously covered, in which these percentages are considered fixed? Furthermore, election forecasters make probabilistic statements such as "Obama has a 90% chance of winning the election." Note that in the context of an urn model, this would be equivalent to stating that the probability of $p>0.5$ is 90%. However, in the urn model $p$ is a fixed parameter and it does not make sense to talk about probability. With Bayesian statistics, we assume $p$ is a random variable, and thus, a statement such as "90% chance of winning" is consistent with the mathematical approach. Forecasters also use models to describe variability at different levels. For example, sampling variability, pollster to pollster variability, day to day variability, and election to election variability. One of the most successful approaches used for this are hierarchical models, which can be explained in the context of Bayesian statistics.
+
+
+In this chapter, we will briefly describe Bayesian statistics. We use three cases studies: 1) interpreting diagnostic tests for a rare disease, and 2) estimating the probability of Hillary Clinton winning the popular vote in 2016 using pre-election poll data. 
 
 ::: {.callout-note}
 The approach described in the previous chapters, where parameters are treated as fixed, is known as the _frequentist approach_. The term frequentist comes from the idea that probability is interpreted as the long-run _frequency_ of events. Parameters are considered fixed and unknown, while data is seen as random. Frequentist methods rely on how often an outcome would occur if an experiment were repeated many times, focusing on the frequency of observed results rather than assigning probabilities to the parameters themselves.
 :::
 
-In this chapter, we will briefly describe Bayesian statistics. We use three cases studies: 1) interpreting diagnostic tests for a rare disease, and 2) estimating the probability of Hillary Clinton winning in 2016 using pre-election poll data. For an in-depth treatment of this topic, we recommend one of the following textbooks:
 
 ## Bayes theorem
 
@@ -100,7 +102,9 @@ $$
 
 with $+$ meaning a positive test and $D$ representing if you actually have the disease (1) or not (0).
 
-Imagine we select a random person and they test positive. What is the probability that they have the disease? We write this as $\mathrm{Pr}(D=1 \mid +)?$ The cystic fibrosis rate is 1 in 3,900, which implies that $\mathrm{Pr}(D=1)=0.00025$. To answer this question, we will use Bayes theorem, which tells us that:
+Imagine we select a random person and they test positive. What is the probability that they have the disease? We write this probability as $\mathrm{Pr}(D=1 \mid +)$. 
+
+To answer this question, we will use Bayes theorem, which tells us that:
 
 $$
 \mathrm{Pr}(A \mid B)  =  \frac{\mathrm{Pr}(B \mid A)\mathrm{Pr}(A)}{\mathrm{Pr}(B)} 
@@ -115,7 +119,7 @@ $$
 \end{aligned}
 $$
 
-Plugging in the numbers, we get:
+The cystic fibrosis rate is 1 in 3,900, which implies that $\mathrm{Pr}(D=1)\approx0.00025$. Plugging in the numbers, we get:
 
 $$
 \mathrm{Pr}(D=1 \mid +)  = \frac{0.99 \cdot 0.00025}{0.99 \cdot 0.00025 + 0.01 \cdot (.99975)}  \approx  0.02 
@@ -148,8 +152,8 @@ This makes it more probable that we will see some false positives given that the
 ```{r}
 acc <- 0.99
 test <- vector("character", N)
-test[D == 1]  <- sample(c("+", "-"), N_1, replace = TRUE, prob = c(acc, 1 - acc))
-test[D == 0]  <- sample(c("-", "+"), N_0, replace = TRUE, prob = c(acc, 1 - acc))
+test[D == 1] <- sample(c("+", "-"), N_1, replace = TRUE, prob = c(acc, 1 - acc))
+test[D == 0] <- sample(c("-", "+"), N_0, replace = TRUE, prob = c(acc, 1 - acc))
 ```
 
 Since the number of healthy individuals is much larger than the number of individuals with the disease, even a low false positive rate results in more healthy individuals testing positive than actual cases.
@@ -160,9 +164,9 @@ table(D, test)
 
 From this table, we see that the proportion of positive tests that have the disease is `r sum(test=="+" & D == "1")` out of `r sum(test=="+")`. We can run this over and over again to see that, in fact, the probability converges to about 0.02.
 
-## Priors, posteriors and and credible intervals 
+## Priors and posteriors
 
-In the previous chapter, we computed an estimate and margin of error for the difference in popular votes between Hillary Clinton and Donald Trump. We denoted the parameter, the difference in popular votes, with $\theta$. The estimate was between 2 and 3 percent, and the confidence interval did not include 0. A forecaster would use this to predict Hillary Clinton would win the popular vote. But to make a probabilistic statement about winning the election, we need to use a Bayesian approach.
+In the previous chapter, we computed an estimate and margin of error for the difference in popular votes between Hillary Clinton and Donald Trump. We denoted the parameter, the difference in popular votes, with $\theta$. The estimate was between 2 and 4 percent, and the confidence interval did not include 0. A forecaster would use this to predict Hillary Clinton would win the popular vote. But to make a probabilistic statement about winning the election, we need to use a Bayesian approach.
 
 We start the Bayesian approach by quantifying our knowledge _before_ seeing any data. This is done using a probability distribution referred to as a _prior_. For our example, we could write:
 
@@ -192,7 +196,7 @@ $$
 and standard error :
 
 $$
-\mathrm{SE}[\mu \mid \bar{X}] = \sqrt{\frac{1}{N/\sigma^2+1/\tau^2}}.
+\mathrm{SE}[\mu \mid \bar{Y}] = \sqrt{\frac{1}{N/\sigma^2+1/\tau^2}}.
 $$ 
   
 
@@ -207,9 +211,11 @@ The closer $B$ is to 1, the more we _shrink_ our estimate toward $\theta_0$.
 
 These formulas are useful way quantifying how we _update our beliefs_. 
 
-We can also report intervals with high probability of occurring given our model. Specifically, for any probability value $\alpha$ we can use the posterior distribution to construct intervals centered at our estimate and with $\alpha$ chance of occurring. These are called _credible intervals_. 
+## Credible intervals 
 
-As an example, we compute a posterior distribution and construct a credible interval for the popular vote, after defining a prior distribution with mean 0% and standard error 5%. This prior distribution can be interpreted as follows: before seeing polling data, we don't think any candidate has the advantage, and a difference of up to 10% either way is possible.
+We can also report intervals with high probability of occurring given our model. Specifically, for any probability value $\alpha$ we can use the posterior distribution to construct intervals centered at our posterior mean and with $\alpha$ chance of occurring. These are called _credible intervals_. 
+
+As an example, we compute a posterior distribution and construct a credible interval for the popular vote difference, after defining a prior distribution with mean 0% and standard error 5%. This prior distribution can be interpreted as follows: before seeing polling data, we don't think any candidate has the advantage, and a difference of up to 10% either way is possible.
 
 ```{r}
 theta_0 <- 0
@@ -279,7 +285,7 @@ b.  He made two mistakes. First, he misused the multiplication rule and did not 
 c.  He mixed up the numerator and denominator of Bayes' rule.
 d.  He did not use R.
 
-6\. Florida is one of the most closely watched states in U.S. elections because it has many electoral votes. In past elections, Florida was a swing state where both Republicans and Democrats won implying it could affect a close elections. 
+6\. Florida is one of the most closely watched states in U.S. elections because it has many electoral votes, giving it a large influence on the final result. Before 2016, Florida was a swing state where both Republicans and Democrats won implying it could affect a close elections. 
 
 Create the following table with the polls taken during the last two weeks:
 

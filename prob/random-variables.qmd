@@ -1,10 +1,10 @@
 # Random Variables {#sec-random-variables}
 
-Most datasets we work with are subject to chance, whether from random sampling, measurement error, or inherently stochastic processes. Quantifying the uncertainty introduced by this randomness is one of the most important responsibilities of a data analyst. *Statistical inference* (the topic of the next part of this book) provides both the framework and the tools to do just that. The first step is learning how to describe *random variables* mathematically. In this chapter, we introduce random variables and their key properties using simple examples.
+To study uncertainty rigorously, we need mathematical tools that describe how data behave under randomness. *Statistical inference*, the topic of the next part of this book, builds on these tools to quantify uncertainty and make predictions. In this chapter, we introduce the concept of *random variables* and explore their main properties through simple examples.
 
 ## Definition 
 
-Statistical inference begins with the concept of a **random variable**, a numerical quantity whose value depends on the outcome of a random process. Random variables connect probability theory to data analysis by giving us a way to describe uncertainty mathematically. Once we define a random variable, we can study its distribution, compute its expected value and variability, and use it to make probability-based statements about future or unseen outcomes.
+Statistical inference begins with the concept of a *random variable*, a numerical quantity whose value depends on the outcome of a random process. Random variables connect probability theory to data analysis by giving us a way to describe uncertainty mathematically. Once we define a random variable, we can study its distribution, compute its expected value and variability, and use it to make probability-based statements about future or unseen outcomes.
 
 In this chapter, we focus on cases in which the probability distribution of the random variable is completely known. These are idealized settings, such as games of chance, where probabilities are determined by the rules of the game rather than by data. Working with these simple, controlled examples allows us to understand the mathematical foundations of probability, expected values, standard errors, and sampling distributions.  
 
@@ -27,7 +27,7 @@ beads <- rep(c("red", "blue"), times = c(2, 3))
 x <- ifelse(sample(beads, 1) == "blue", 1, 0)
 ```
 
-Each time we draw a bead, the value of $X$ may change because the outcome is random. A variable like this, which takes only the values 0 and 1, is called a *Bernoulli random variable* in statistical textbooks. Bernoulli trials are the building blocks for many statistical models, since many outcomes, such as success/failure, yes/no, or heads/tails—can be represented this way.
+Each time we draw a bead, the value of $X$ may change because the outcome is random. A variable like this, which takes only the values 0 and 1, is called a *Bernoulli random variable* in statistical textbooks. Bernoulli trials are the building blocks for many statistical models, since many outcomes, such as success/failure, yes/no, or heads/tails, can be represented this way.
 
 A classic example is the number of heads, call it $S_n$, observed when tossing $n$ fair coins. We can generate one observation of this random variable using a simulation:
 
@@ -38,7 +38,7 @@ s <- sum(sample(c(0,1), n, replace = TRUE))
 
 We will use this example in later sections.
 
-Not all random variables are discrete. Some can take on a continuum of values. For example, the height of a randomly selected person or the result of a physical measurement can be viewed as a *continuous random variable*. We can simulate such a variable using the normal distribution:
+Not all random variables are discrete. Some can take on a continuum of values. For example, the height of a randomly selected person or the result of a physical measurement can be viewed as a *continuous random variable*. As an example, we simulate such a variable using the normal distribution:
 
 ```{r}
 x <- rnorm(10, mean = 70, sd = 3)
@@ -48,9 +48,9 @@ Here each value of `x` represents one realization of a random variable drawn fro
 
 These examples, discrete Bernoulli variables and a continuous normal variable, illustrate the main types of random variables we will study in this chapter. Understanding their behavior and summarizing their distributions are the key steps that lead us toward the ideas of expected value, variability, and, ultimately, statistical inference.
 
-## Notation for Random Variables
+## Notation for random variables
 
-In statistical notation, uppercase letters denote random variables, while lowercase letters represent observed values. Sometimes both appear together, as in $X \leq x$, where $X$ is random and $x$ is a fixed value. For example, $X$ might represent the number shown on a die roll, and $x$ an observed outcome, 1, 2, 3, 4, 5, or 6:
+In statistical notation, uppercase letters denote random variables, while lowercase letters represent observed values. Sometimes both appear together, as in $X = x$, where $X$ is random and $x$ is a fixed value. For example, $X$ might represent the number shown on a die roll, and $x$ an observed outcome, 1, 2, 3, 4, 5, or 6:
 
 $$
 \mathrm{Pr}(X = x) = 1/6 \quad \text{for } x = 1, \dots, 6.
@@ -58,7 +58,7 @@ $$
 
 This notation is convenient because it lets us express probability statements compactly. It may seem odd at first, since $X$ represents an outcome not yet observed, we can discuss the likelihood of its possible values, but not its realized value. Once data are collected, we observe one realization of $X$, and then reason about what *could* have occurred, given what *did* occur.
 
-## The Probability Distribution of a Random Variable
+## The probability distribution of a random variable
 
 The *probability distribution* of a random variable tells us how likely each possible outcome is. For example, if we toss $n$ fair coins, we might ask for the probability of observing 40 or fewer heads. This is equivalent to asking for $\mathrm{Pr}(S_n \leq 40)$.
 
@@ -68,8 +68,7 @@ We can approximate this distribution function by Monte Carlo simulation. For exa
 
 ```{r}
 n <- 100
-B <- 100000
-s <- replicate(B, sum(sample(c(0,1), n, replace = TRUE)))
+s <- replicate(100000, sum(sample(c(0,1), n, replace = TRUE)))
 ```
 
 We can then estimate $\mathrm{Pr}(S_n \leq a)$ by computing the proportion of simulated values less than or equal to `a`:
@@ -116,12 +115,12 @@ We can also simnulate the number of heads using a `rbinom` instead of `replicate
 ```{r}
 #| eval: false
 
-rbinom(B, n, 1/2)
+rbinom(100000, n, 1/2)
 ```
 :::
 
 
-## The Expected Value and Standard Error {#sec-mean-var-eqs}
+## The expected value and standard error {#sec-mean-var-eqs}
 
 In statistics textbooks, the expected value of a random variable $X$ is commonly denoted as $\mu_X$ or $\mathrm{E}[X]$, both meaning "the expected value of $X$."
 
@@ -199,7 +198,7 @@ Thus, one coin has an expected value of 0.5 and a standard error of 0.5—reason
 We use the Greek letters $\mu$ and $\sigma$ to denote the expected value and standard error, respectively. This convention reflects their connection to the *mean* ($m$) and *standard deviation* ($s$). However, we often prefer $\mathrm{E}[X]$ and $\mathrm{SE}[X]$ notation because it generalizes more clearly to mathematical expressions involving sums or transformations of random variables.
 :::
 
-## Key Properties of Expectations and Standard Errors {#sec-key-properties}
+## Key properties of expectations and standard errors {#sec-key-properties}
 
 There are several mathematical properties of expectations and standard errors that we will use frequently when working with data.
 
@@ -218,13 +217,15 @@ $$
 
 which is another way of writing the result we show above for the sum of draws.
 
-2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. This is easier to explain with symbols:
+2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. If we shift the random variable, the expected value shifts by that amount. This is easier to explain with symbols:
 
 $$
-\mathrm{E}[aX] =  a\times\mathrm{E}[X]
+\mathrm{E}[aX+b] =  a\times\mathrm{E}[X] + b
 $$
 
-To understand why this is intuitive, consider changing units. If we change the units of a random variable, such as from dollars to cents, the expectation should change in the same way. A consequence of the above two facts is that the expected value of the average of independent draws from the same urn is the expected value of the urn, denoted as $\mu_X$ again:
+To understand why this is intuitive, consider changing units. If we change the units of a random variable, such as from dollars to cents, the expectation should change in the same way. 
+
+A consequence of the above two facts is that the expected value of the average of independent draws from the same urn is the expected value of the urn, denoted as $\mu_X$ again:
 
 $$
 \mathrm{E}[(X_1+X_2+\dots+X_n) / n]=   \mathrm{E}[X_1+X_2+\dots+X_n] / n = n\mu_X/n = \mu_X 
@@ -249,7 +250,14 @@ $$
 \mathrm{SE}[aX] =  a \times \mathrm{SE}[X]
 $$
 
-To see why this is intuitive, again think of units.
+To see why this is intuitive, again think of units. 
+
+If we shift the random variable by a constant the variability does not change. So it has not effect on the standard error:
+
+$$
+\mathrm{SE}[aX+b] =  a \times \mathrm{SE}[X]
+$$
+
 
 A consequence of 3 and 4 is that the standard error of the average of independent draws from the same urn is the standard deviation of the urn divided by the square root of $n$ (the number of draws), call it $\sigma_X$:
 
@@ -285,7 +293,7 @@ An important implication of result 4 above is that the standard error of the ave
 :::{.callout-warning title="Misinterpretation of the law of averages"}
 The law of averages is sometimes misinterpreted. For example, if you toss a coin 5 times and see a head each time, you might hear someone argue that the next toss is probably a tail because of the law of averages: on average we should see 50% heads and 50% tails. A similar argument would be to say that red "is due" on the roulette wheel after seeing black come up five times in a row. Yet these events are independent so the chance of a coin landing heads is 50%, regardless of the previous 5. The same principle applies to the roulette outcome. The law of averages applies only when the number of draws is very large and not in small samples. After a million tosses, you will definitely see about 50% heads regardless of the outcome of the first five tosses. Another funny misuse of the law of averages is in sports when TV sportscasters predict a player is about to succeed because they have failed a few times in a row.
 :::
-## Data Distributions and Probability Distributions
+## Data distributions versus probability distributions
 
 
 Before moving on, it is important to distinguish between the **distribution of a dataset** and a **probability distribution**.  
