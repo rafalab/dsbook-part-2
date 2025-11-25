@@ -9,7 +9,8 @@ y <- mnist$train$labels
 ```
 
 Linear algebra is the main mathematical technique used to describe and motivate statistical methods and machine learning approaches. In this chapter, we introduce some of the mathematical concepts needed to understand these techniques. We use these concepts and techniques throughout the remainder of the book. 
-## Matrix multiplication
+
+## Matrix multiplication {#sec-matrix-mult}
 
 A commonly used operation in data analysis is matrix multiplication. Here, we define and motivate the operation.
 
@@ -43,7 +44,16 @@ b_{n1}&b_{n2}&\dots&b_{np}
 \end{pmatrix}
 $$
 
-and define the product of matrices $\mathbf{A}$ and $\mathbf{B}$ as the matrix $\mathbf{C} = \mathbf{A}\mathbf{B}$ that has entries $c_{ij}$ equal to the sum of the component-wise product of the $i$th row of $\mathbf{A}$ with the $j$th column of $\mathbf{B}$. Using R code, we can define $\mathbf{C}= \mathbf{A}\mathbf{B}$ as follows:
+and define the product of matrices $\mathbf{A}$ and $\mathbf{B}$ as the matrix $\mathbf{C} = \mathbf{A}\mathbf{B}$ that has entries $c_{ij}$ equal to the sum of the component-wise product of the $i$th row of $\mathbf{A}$ with the $j$th column of $\mathbf{B}$. 
+
+We can define matrix multipicaiton $\mathbf{C}= \mathbf{A}\mathbf{B}$ for any two matrices, say
+
+```{r}
+#| eval: false
+A <- matrix(1:12, 4, 3); B <- matrix(1:18, 3, 6)
+```
+
+using R code as follows:
 
 ```{r, eval=FALSE}
 m <- nrow(A)
@@ -82,9 +92,11 @@ a_{m1}b_{1p} + \dots + a_{mn}b_{np}\\
 \end{pmatrix}
 $$
 
-Note this definition implies that the multiplication $\mathbf{A}\mathbf{B}$ is only possible when the number of rows of $\mathbf{A}$ matches the number of columns of $\mathbf{B}$.
+Note this definition implies that the multiplication $\mathbf{A}\mathbf{B}$ is only possible when the number of rows of $\mathbf{A}$ matches the number of columns of $\mathbf{B}$. When this happens we say the two matrices are *conformable*. 
 
-So how does this definition of matrix multiplication help solve systems of equations? First, any system of equations with unknowns $x_1, \dots x_n$
+So how does this definition of matrix multiplication help solve systems of equations? 
+
+To understand this consider the following system of equations with unknowns $x_1, \dots x_n$:
 
 $$
 \begin{aligned}
@@ -95,7 +107,7 @@ a_{n1} x_1 + a_{n2} x_2 \dots + a_{nn}x_n &= b_n\\
 \end{aligned}
 $$
 
-can now be represented as matrix multiplication by defining the following matrices:
+We can represent this as matrix multiplication by defining the following matrices,
 
 $$
 \mathbf{A} =\begin{pmatrix}
@@ -128,7 +140,7 @@ $$
 \mathbf{A}\mathbf{x} =  \mathbf{b}
 $$
 
-The linear algebra algorithms listed above, such as Gaussian elimination, provide a way to compute the *inverse* matrix $A^{-1}$ that solves the equation for $\mathbf{x}$:
+The linear algebra algorithms listed above, such as Gaussian elimination, provide a way to compute the *inverse* matrix $\mathbf{A}^{-1}$ that solves the equation for $\mathbf{x}$:
 
 $$
 \mathbf{A}^{-1}\mathbf{A}\mathbf{x} =   \mathbf{x} = \mathbf{A}^{-1} \mathbf{b}
@@ -250,7 +262,7 @@ $$
 If we use the digit data, the distance between the first and second observation will compute distance using all 784 features:
 
 $$
-\| \mathbf{x}_1 - \mathbf{x}_2 \| = \sqrt{ \sum_{j=1}^{784} (x_{1,j}-x_{2,j })^2 }
+\| \mathbf{x}_1 - \mathbf{x}_2 \| = \sqrt{ \sum_{j=1}^{784} (x_{1j}-x_{2j })^2 }
 $$
 
 To demonstrate, let's pick the features for three digits:
@@ -281,7 +293,7 @@ We can see that the distance is smaller between the first two. This agrees with 
 y[c(6, 17, 16)]
 ```
 
-We can also compute **all** the distances at once relatively quickly using the function `dist`, which takes a matrix as input and computes the distance between each row and produces an object of class `dist`:
+We can also compute all the distances at once relatively quickly using the function `dist`, which takes a matrix as input and computes the distance between each row and produces an object of class `dist`:
 
 ```{r}
 d <- dist(x[c(6,17,16),])
@@ -300,25 +312,17 @@ Note that the diagonal is omitted because all self-distances are zero, and the u
  
 To access the entries using row and column indices, we need to coerce it into a matrix. 
 
-The `image` function allows us to quickly see an image of distances between observations. As an example, we compute the distance between each of the first 300 observations and then make an image:
-
-```{r distance-image, fig.width = 4, fig.height = 4, eval=FALSE}
-d <- dist(x[1:300,])
-image(as.matrix(d))
-```
+The `image` function allows us to quickly see an image of distances between observations. As an example, we compute the distance between each of the first 300 observations like this:
 
 ```{r}
-#| echo: false
 d <- dist(x[1:300,])
 ```
+
+To see an image we simply convert `d` to a matrix send to the function: `image(as.matrix(d))`.
 
 If we order this distance by the labels, we can see yellowish squares near the diagonal. This is because observations from the same digits tend to be closer than to different digits:
 
-```{r eval=FALSE}
-image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
-```
-
-```{r diatance-image-ordered, fig.width = 4, fig.height = 4, out.width="50%", echo=FALSE}
+```{r diatance-image-ordered, fig.width = 4, fig.height = 4, out.width="50%", echo=-1}
 rafalib::mypar()
 image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
 ```
@@ -327,7 +331,7 @@ image(as.matrix(d)[order(y[1:300]), order(y[1:300])])
 
 *Predictor space* is a concept that is often used to describe machine learning algorithms. The term *space* refers to an advanced mathematical definition for which we provide a simplified explanation to help understand the term predictor space when used in the context of machine learning algorithms.
 
-We can think of all predictors $(x_{i,1}, \dots, x_{i,p})^\top$ for all observations $i=1,\dots,n$ as $n$ $p$-dimensional points. A *space* can be thought of as the collection of all possible points that should be considered for the data analysis in question. This includes points we could see, but have not been observed yet. In the case of the handwritten digits, we can think of the predictor space as any point $(x_{1}, \dots, x_{p})^\top$ as long as each entry $x_i, \, i = 1, \dots, p$ is between 0 and 255.
+We can think of all predictors $(x_{i1}, \dots, x_{ip})^\top$ for all observations $i=1,\dots,n$ as $n$ $p$-dimensional points. A *space* can be thought of as the collection of all possible points that should be considered for the data analysis in question. This includes points we could see, but have not been observed yet. In the case of the handwritten digits, we can think of the predictor space as any point $(x_{1}, \dots, x_{p})^\top$ as long as each entry $x_i, \, i = 1, \dots, p$ is between 0 and 255.
 
 Some Machine Learning algorithms also define subspaces. A commonly defined subspace in machine learning are _neighborhoods_ composed of points that are close to a predetermined *center*. We do this by selecting a center $\mathbf{x}_0$, a minimum distance $r$, and defining the subspace as the collection of points $\mathbf{x}$ that satisfy:
 

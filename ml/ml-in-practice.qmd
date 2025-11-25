@@ -1,6 +1,4 @@
-# Machine Learning in Practice {#sec-ml-in-practice}
-
-Now that we have learned several methods and explored them with simple examples, we will try them out on a real example: the MNIST digits. 
+#  Building Machine Learning Models {#sec-ml-in-practice}
 
 ```{r}
 #| echo: false
@@ -8,7 +6,14 @@ Now that we have learned several methods and explored them with simple examples,
 library(dslabs)
 ```
 
-We can load this data using the following **dslabs** package function:
+Building machine learning models requires more than understanding the underlying mathematics.
+The theory helps us avoid conceptual mistakes and choose appropriate methods, but turning these ideas into effective, real-world models involves additional practical considerations. We must decide how to preprocess and transform features, incorporate contextual knowledge to select relevant predictors, manage computational constraints, tune and compare algorithms, and often combine multiple models through techniques such as ensembling to boost predictive performance.
+
+In this chapter, we bring these pieces together by walking through a complete case study using the MNIST handwritten-digit dataset, illustrating how the conceptual tools developed in earlier chapters translate into a practical machine learning workflow.
+
+## Case study: handwritten digit recognition
+
+We will use the MNIST dataset was introduced in @sec-mnist. We can load this data using the following **dslabs** package function:
 
 ```{r, message=FALSE, warning=FALSE}
 library(dslabs)
@@ -34,7 +39,7 @@ class(mnist$train$labels)
 table(mnist$train$labels)
 ```
 
-Because we want this example to run on a small laptop and in less than one hour, we will consider a subset of the dataset. We will sample 10,000 random rows from the training set and 1,000 random rows from the test set:
+Because we want this example to run on a laptop and in less than one hour, we will consider a subset of the dataset. We will sample 10,000 random rows from the training set and 1,000 random rows from the test set:
 
 ```{r}
 set.seed(1990)
@@ -45,6 +50,8 @@ index <- sample(nrow(mnist$test$images), 1000)
 x_test <- mnist$test$images[index,]
 y_test <- factor(mnist$test$labels[index])
 ```
+
+But you are welcommed to try the ideas on the entire dataset.
 
 When fitting models to large datasets, we recommend using matrices instead of data frames, as matrix operations tend to be faster. In the **caret** package, predictor matrices must have column names to track features accurately during prediction on the test set. If the matrices lack column names, you can assign names based on their position:
 
@@ -91,12 +98,12 @@ As we explain in more detail in @sec-caret-cv, the `train` function selects para
 
 ### The `predict` function
 
-The predict function is one of the most useful tools in R for machine learning and statistical modeling. It takes a fitted model object and a data frame containing the features $\mathbf{x}$ for which we want to make predictions, then returns the corresponding predicted values.
+The predict function is one of the most useful tools in R for machine learning and statistical modeling in general. It takes a fitted model object and a data frame containing the features $\mathbf{x}$ for which we want to make predictions, then returns the corresponding predicted values.
 
 Here is an example with logistic regression:
 
 ```{r}
-fit <- glm(y ~ ., data = mnist_27$train, family = "binomial")
+fit <- glm(y ~ ., family = "binomial", data = mnist_27$train)
 p_hat <- predict(fit, newdata = mnist_27$test)
 ```
 
@@ -137,8 +144,9 @@ y_hat_knn <- predict(train_knn, mnist_27$test, type = "raw")
 This permits us to quickly compare the algorithms. For example, we can compare the accuracy like this:
 
 ```{r}
-fits <- list(glm = y_hat_glm, qda = y_hat_qda, knn = y_hat_knn)
-sapply(fits, function(f) confusionMatrix(f, mnist_27$test$y)$overal[["Accuracy"]])
+fits <- list(glm = train_glm, qda = train_qda, knn = train_knn)
+sapply(fits, function(fit) 
+  mean(predict(fit, mnist_27$test, type = "raw") == mnist_27$test$y))
 ```
 
 
@@ -173,19 +181,18 @@ By default, the resampling is performed by taking 25 bootstrap samples, each com
 
 For the `knn` method, the default is to try $k=5,7,9$. We change this using the `tuneGrid` argument. The grid of values must be supplied by a data frame with the parameter names as specified in the `modelLookup` output. 
 
-Here we present an example where we try out 38 values between 1 and 75. To do this with __caret__, we need to define a column named `k`, so we use this:  `data.frame(k = seq(1, 75, 2))`. Note that when running this code, we are fitting 38 versions of kNN to 25 bootstrapped samples. Since we are fitting $38 \times 25 = 950$ kNN models, running this code will take several seconds.
+Here we present an example where we try out 38 values between 1 and 75. To do this with __caret__, we need to define a column named `k`, so we use this:  `data.frame(k = seq(11, 105, 2))`. Note that when running this code, we are fitting 38 versions of kNN to 25 bootstrapped samples. Since we are fitting $38 \times 25 = 950$ kNN models, running this code will take several seconds.
 
 
 ```{r train-knn-plot}
 train_knn <- train(y ~ ., method = "knn", 
                    data = mnist_27$train,
-                   tuneGrid = data.frame(k = seq(1, 75, 2)))
+                   tuneGrid = data.frame(k = seq(11, 105, 4)))
 ggplot(train_knn, highlight = TRUE)
 ```
 
-:::{.calout-note}
-Because resampling methods are random procedures, the same code can result in different
-results. To assure reproducible results you should set the seed, as we did at the start of this chapter.
+:::{.callout-note}
+Resampling methods involve random sampling steps, so repeated runs of the same code can produce different outcomes. To ensure that your results can be reproduced exactly, always set the random seed at the start of the analysis, as we did at the beginning of this chapter.
 :::
 
 To access the parameter that maximized the accuracy, you can use this:
@@ -204,8 +211,7 @@ train_knn$finalModel
 The function `predict` will use this best performing model. Here is the accuracy of the best model when applied to the test set, which we have not yet used because the cross validation was done on the training set:
 
 ```{r}
-confusionMatrix(predict(train_knn, mnist_27$test, type = "raw"),
-                mnist_27$test$y)$overall["Accuracy"]
+mean(predict(train_knn, mnist_27$test, type = "raw") == mnist_27$test$y)
 ```
 
 Bootstrapping is not always the best approach to resampling (see @sec-knn-in-practice, for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
@@ -214,7 +220,7 @@ Bootstrapping is not always the best approach to resampling (see @sec-knn-in-pra
 control <- trainControl(method = "cv", number = 10, p = .9)
 train_knn_cv <- train(y ~ ., method = "knn", 
                    data = mnist_27$train,
-                   tuneGrid = data.frame(k = seq(1, 71, 2)),
+                   tuneGrid = data.frame(k = seq(11, 105, 4)),
                    trControl = control)
 ```
 
@@ -236,10 +242,10 @@ Examples of preprocessing include standardizing the predictors, taking the log t
 
 For example, we can run the `nearZeroVar` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with close to 0 variability:
 
-```{r pixel-sds, message=FALSE, warning=FALSE, cache=FALSE}
+```{r pixel-sds, message=FALSE, warning=FALSE, cache=FALSE, echo = -1}
+rafalib::mypar()
 library(matrixStats)
-sds <- colSds(x)
-hist(sds, breaks = 256)
+hist(colSds(x), breaks = 256)
 ```
 
 This is expected because there are parts of the image that rarely contain writing (dark pixels).
@@ -252,18 +258,14 @@ nzv <- nearZeroVar(x)
 
 We can see the columns recommended for removal are the near the edges:
 
-```{r, eval=FALSE}
-image(matrix(1:784 %in% nzv, 28, 28))
-```
-
-```{r near-zero-image, fig.width = 4, fig.height = 4, out.width="50%", echo=FALSE}
+```{r near-zero-image, fig.width = 4, fig.height = 4, out.width="50%", echo=-1}
 rafalib::mypar()
 image(matrix(1:784 %in% nzv, 28, 28))
 ```
 
-So we end up removing `length(nzv)` = `r length(nzv)` redictors.
+So we end up removing `length(nzv)` = `r length(nzv)` predictors.
 
-The **caret** package features the `preProcess` function, which allows users to establish a predefined set of preprocessing operations based on a training set. This function is designed to apply these operations to new datasets without recalculating anything on the test set, ensuring that all preprocessing steps are consistent and derived solely from the training data.
+The **caret** package features the `preProcess` function, which allows users to establish a predefined set of preprocessing operations based on a training set. This function is designed to apply these operations to new datasets without recalculating anything on the validation set, ensuring that all preprocessing steps are consistent and derived solely from the training data.
 
 Below is an example demonstrating how to remove predictors with near-zero variance and then center the remaining predictors:
 
@@ -283,13 +285,15 @@ During cross-validation or bootstrapping, the process of fitting models to diffe
 The **caret** package is designed to take advantage of parallel processing, but you need to explicitly tell R to run tasks in parallel. To do this, we use the **doParallel** package:
 
 ```{r}
+#| message: false
+#| warning: false
 library(doParallel)
 nc <- detectCores() - 1   # it is convention to leave 1 core for the OS
 cl <- makeCluster(nc)
 registerDoParallel(cl)
 ```
 
-If you do use parallelization, make sure to let R know you are done with the following lines of code:
+If you do use parallelization, once you are finished fitting your models, make sure to let R know you are done with the following lines of code:
 
 ```{r}
 #| eval: false
@@ -298,7 +302,7 @@ stopImplicitCluster()
 ```
 
 :::{.callout-warning}
-When parallelizing tasks across multiple processors, it's important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
+When parallelizing tasks across multiple processors, it is important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
 :::
 
 ## k-nearest neighbors {#sec-knn-in-practice}
@@ -312,6 +316,8 @@ Before starting this section, note that the first two calls to the `train` funct
 ### Limitations of Bootstrapping for kNN
 
 As we will see soon, the optimal $k$ for the MNIST data is between 1 and 7. For small values of $k$, bootstrapping can be problematic for estimating MSE for a k-Nearest Neighbors (kNN). This is because bootstrapping involves sampling with replacement from the original dataset which implies the closest neighbor will often appear twice but considered two independent observations by kNN. This is a unrealistic scenario that can distort the estimate MSE when, for example, $k=3$. We therefore use cross-validation to estimate our MSE.
+
+### Optimizing $k$
 
 The first step is to optimize for $k$.
 
@@ -331,55 +337,66 @@ y_hat_knn <- predict(train_knn, x_test, type = "raw")
 We achieve relatively high accuracy:
 
 ```{r}
-confusionMatrix(y_hat_knn, factor(y_test))$overall["Accuracy"]
+mean(y_hat_knn == y_test)
 ```
 
 ### Dimension reduction with PCA
 
-An alternative to removing low variance columns directly is to use dimension reduction on the feature matrix before applying the algorithms. 
+An alternative to removing low‐variance columns directly is to reduce the dimension of the feature matrix using Principal Component Analysis (PCA). For this dataset, a large fraction of the total variability in the predictors can be captured using only a small number of principal components (PCs).
+
+As an example, suppose we want to retain the smallest number of PCs that explain at least 90% of the variability:
 
 ```{r}
 pca <- prcomp(x)
+p <- which(cumsum(pca$sdev^2) / sum(pca$sdev^2) >= 0.9)[1]
 ```
 
-We can actually explain, say, 75% of the variability in the predictors with a small number of dimensions:
+We can now re-run our algorithm using only these `r p` transformed features:
 
 ```{r}
-p <- which(cumsum(pca$sdev^2)/sum(pca$sdev^2) >= 0.75)[1]
+fit_knn_pca <- knn3(pca$x[, 1:p], y, k = train_knn$bestTune)
 ```
 
-We can then re-run our algorithm on these `r p` features:
+A critical point when using PCA for prediction is that the PCA transformation must be learned only from the training set. If we use the validation or test set to compute principal components, or even to compute the means used for centering, we inadvertently leak information from those sets into the training process, leading to overtraining.
+
+To avoid this, we compute the necessary centering and rotation matrices on the training set:
 
 ```{r}
-fit_knn_pca <- knn3(pca$x[,1:p], y, k = train_knn$bestTune)
-```
-
-When predicting, it is important that we not use the test set when finding the PCs nor any summary of the data, as this could result in overtraining. We therefore compute the averages needed for centering and the rotation on the training set:
-
-```{r}
-newdata <-  sweep(x_test, 2, colMeans(x)) %*% pca$rotation[,1:p]
+newdata <- sweep(x_test, 2, colMeans(x)) %*% pca$rotation[, 1:p]
 y_hat_knn_pca <- predict(fit_knn_pca, newdata, type = "class")
 ```
 
-We obtain similar accuracy, while using only `r p` dimensions:
+The resulting accuracy is similar to what we obtained with the full feature set, but using only `r p` dimensions:
 
 ```{r}
-confusionMatrix(y_hat_knn_pca, factor(y_test))$overall["Accuracy"]
+mean(y_hat_knn_pca == y_test)
 ```
 
-In this example, we used the $k$ optimized for the raw data, not the principal components. Note that to obtain an unbiased MSE estimate we have to recompute the PCA for each cross-validation sample and apply to the validation set. Because the `train` function includes PCA as one of the available preprocessing operations we can achieve this with this modification of the code above:
+In this example, we used the value of $k$ optimized for the raw data, not the PCA-transformed data. To obtain an unbiased MSE estimate when using PCA, we must recompute the PCA inside each cross-validation split and apply the resulting transformation to the corresponding validation fold.
+
+Fortunately, the **caret** package can automate this. The `train` function includes PCA as one of its available preprocessing steps. We can request PCA with a fixed number of components using
+
+`preProcOptions = list(pcaComp = p)`
+
+or ask caret to pick the number of components that explain a fixed fraction of variability, such as 90%, using
+
+`preProcOptions = list(thresh = 0.9)`.
+
+Here is how we modify our earlier code to let caret perform PCA during preprocessing:
 
 ```{r}
 train_knn_pca <- train(x, y, method = "knn", 
                        preProcess = c("nzv", "pca"),
                        trControl = trainControl("cv", number = 20, p = 0.95,
-                                                preProcOptions = list(pcaComp = p)),
+                                                preProcOptions = list(thresh = 0.9)),
                        tuneGrid = data.frame(k = seq(1, 7, 2)))
 y_hat_knn_pca <- predict(train_knn_pca, x_test, type = "raw")
-confusionMatrix(y_hat_knn_pca, factor(y_test))$overall["Accuracy"]
+mean(y_hat_knn_pca == y_test)
 ```
 
-A limitation of this approach is that we don't get to optimize the number of PCs used in the analysis. To do this we need to write our own method. The **caret** manual^[https://topepo.github.io/caret/using-your-own-model-in-train.html] describe how to do this.
+This raises a natural question: why did we choose 0.9? Could another threshold lead to better performance?
+
+One limitation of this approach is that caret does **not** automatically optimize the number of PCs. To tune this quantity directly, just like we tune parameters such as $k$, we would need to define our own model interface. The caret manual^[[https://topepo.github.io/caret/using-your-own-model-in-train.html](https://topepo.github.io/caret/using-your-own-model-in-train.html)] describes how to build custom models that allow full optimization of the PCA dimension.
 
 
 ## Random Forest
@@ -421,7 +438,7 @@ y_hat_rf <- predict(fit_rf, x_test[,-nzv])
 As with kNN, we also achieve high accuracy:
 
 ```{r}
-confusionMatrix(y_hat_rf, y_test)$overall["Accuracy"]
+mean(y_hat_rf == y_test)
 ```
 
 By optimizing some of the other algorithm parameters, we can achieve even higher accuracy.
@@ -444,7 +461,8 @@ For random forest, we can also speed up the training step by running less trees 
 
 Here we can see that error rate stabilizes after about 200 trees:
 
-```{r error-versus-number-of-trees}
+```{r error-versus-number-of-trees, echo=-1}
+rafalib::mypar()
 plot(fit_rf)
 ```
 
@@ -455,21 +473,15 @@ We can use this finding to speed up the cross validation procedure. Specifically
 We described variable importance in @sec-variable-importance. The following function computes the importance of each feature:
 
 ```{r}
-imp <- importance(fit_rf)
+imp <- varImp(fit_rf)
 ```
 
 We can see which features are being used most by plotting an image:
 
-```{r eval=FALSE}
-mat <- rep(0, ncol(x))
-mat[-nzv] <- imp
-image(matrix(mat, 28, 28))
-```
-
-```{r importance-image, echo=FALSE, fig.width = 4, fig.height = 4, out.width="50%"}
+```{r importance-image, echo=-1, fig.width = 4, fig.height = 4, out.width="50%"}
 rafalib::mypar()
 mat <- rep(0, ncol(x))
-mat[-nzv] <- imp
+mat[-nzv] <- imp$Overall
 image(matrix(mat, 28, 28))
 ```
 
@@ -510,7 +522,7 @@ p_rf <- p_rf / rowSums(p_rf)
 p_knn_pca  <- predict(train_knn_pca, x_test, type = "prob")
 p <- (p_rf + p_knn_pca)/2
 y_pred <- factor(apply(p, 1, which.max) - 1)
-confusionMatrix(y_pred, y_test)$overall["Accuracy"]
+mean(y_pred == y_test)
 ```
 
 We have just built an ensemble with just two algorithms. By combing more similarly performing, but uncorrelated, algorithms we can improve accuracy further.
@@ -523,9 +535,21 @@ stopImplicitCluster()
 
 ## Exercises
 
-1\. In the exercises in @sec-example-alogirhms we saw that changing `maxnodes` or `nodesize` in the `randomForest` function improved our estimate. Let's use the `train` function to help us pick these values. From the **caret** manual we see that we can't tune the `maxnodes` parameter or the `nodesize` argument with `randomForest`, so we will use the **Rborist** package and tune the `minNode` argument. Use the `train` function to try values `minNode <- seq(5, 250, 25)`. See which value minimizes the estimated RMSE.
+1\. Create a simple dataset where the outcome grows 0.75 units on average for every increase in a predictor: 
 
-2\. This **dslabs** `tissue_gene_expression` dataset includes a matrix `x`:
+```{r forest-q1}
+n <- 1000
+sigma <- 0.25
+x <- rnorm(n, 0, 1)
+y <- 0.75 * x + rnorm(n, 0, sigma)
+dat <- data.frame(x = x, y = y)
+```
+
+In the exercises in @sec-example-algorithms we saw that changing `maxnodes` or `nodesize` in the `randomForest` function improved our estimate in this dataset. Let's use the `train` function to help us pick these values. From the **caret** manual we see that we can't tune the `maxnodes` parameter or the `nodesize` argument with `randomForest`, so we will use the **Rborist** package and tune the `minNode` argument. Use the `train` function to try values `minNode <- seq(5, 250, 25)`. See which value minimizes the estimated RMSE.
+
+2\. Make a scatterplot of `x` and `y` and add  the prediction from the best fitted model in exercise 1.
+
+3\. This **dslabs** `tissue_gene_expression` dataset includes a matrix `x`:
 
 ```{r, eval = FALSE}
 library(dslabs)
@@ -540,9 +564,9 @@ table(tissue_gene_expression$y)
 
 Split the data in training and test sets, then use kNN to predict tissue type and see what accuracy you obtain. Try it for $k = 1, 3, \dots, 11$.
 
-3\. We are going to apply LDA and QDA to the `tissue_gene_expression` dataset. We will start with simple examples based on this dataset and then develop a realistic example.
+4\. We are going to apply LDA and QDA to the `tissue_gene_expression` dataset. We will start with simple examples based on this dataset and then develop a realistic example.
 
-Create a dataset with just the classes `cerebellum` and `hippocampus` (two parts of the brain) and a predictor matrix with 10 randomly selected columns. Estimate the accuracy of LDA.
+Create a dataset with just the classes `cerebellum` and `hippocampus` (two parts of the brain) and a predictor matrix with 10 randomly selected columns. 
 
 
 ```{r, eval = FALSE}
@@ -554,17 +578,19 @@ x <- tissue_gene_expression$x[ind, ]
 x <- x[, sample(ncol(x), 10)]
 ```
 
-4\. In this case, LDA fits two 10-dimensional normal distributions. Look at the fitted model by looking at the `finalModel` component of the result of train. Notice there is a component called `means` that includes the estimate `means` of both distributions. Plot the mean vectors against each other and determine which predictors (genes) appear to be driving the algorithm. 
+Estimate the accuracy of LDA.
 
-5\. Repeat exercises 3 with QDA. Does it have a higher accuracy than LDA?
+5\. In this case, LDA fits two 10-dimensional normal distributions. Look at the fitted model by looking at the `finalModel` component of the result of train. Notice there is a component called `means` that includes the estimate `means` of both distributions. Plot the mean vectors against each other and determine which predictors (genes) appear to be driving the algorithm. 
 
-6\. Are the same predictors (genes) driving the algorithm? Make a plot as in exercise 4.
+6\. Repeat exercises 4 with QDA. Does it have a higher accuracy than LDA?
 
-7\. One thing we see in the previous plot is that the value of predictors correlate in both groups: some predictors are low in both groups while others are high in both groups. The mean value of each predictor, `colMeans(x)`, is not informative or useful for prediction and often, for interpretation purposes, it is useful to center or scale each column. This can be achieved with the `preProcessing` argument in `train`. Re-run LDA with `preProcessing = "scale"`. Note that accuracy does not change but see how it is easier to identify the predictors that differ more between groups in the plot made in exercise 4.
+7\. Are the same predictors (genes) driving the algorithm? Make a plot as in exercise 5.
 
-8\. In the previous exercises, we saw that both approaches worked well. Plot the predictor values for the two genes with the largest differences between the two groups in a scatterplot to see how they appear to follow a bivariate distribution as assumed by the LDA and QDA approaches. Color the points by the outcome.
+8\. One thing we see in the previous plot is that the value of predictors correlate in both groups: some predictors are low in both groups while others are high in both groups. The mean value of each predictor, `colMeans(x)`, is not informative or useful for prediction and often, for interpretation purposes, it is useful to center or scale each column. This can be achieved with the `preProcessing` argument in `train`. Re-run LDA with `preProcessing = "scale"`. Note that accuracy does not change but see how it is easier to identify the predictors that differ more between groups in the plot made in exercise 5.
 
-9\. Now we are going to increase the complexity of the challenge slightly: we will consider all the tissue types.
+9\. In the previous exercises, we saw that both approaches worked well. Plot the predictor values for the two genes with the largest differences between the two groups in a scatterplot to see how they appear to follow a bivariate distribution as assumed by the LDA and QDA approaches. Color the points by the outcome.
+
+10\. Now we are going to increase the complexity of the challenge slightly: we will consider all the tissue types.
 
 ```{r, eval = FALSE}
 set.seed(1993)
@@ -576,27 +602,33 @@ x <- x[, sample(ncol(x), 10)]
 What accuracy do you get with LDA?
 
 
-10\. We see that the results are slightly worse. Use the `confusionMatrix` function to learn what type of errors we are making.
+11\. We see that the results are slightly worse. Use the `confusionMatrix` function to learn what type of errors we are making.
 
 
-11\. Plot an image of the centers of the seven 10-dimensional normal distributions.
-
-12\. Make a scatterplot along with the prediction from the best fitted model.
+12\. Plot an image of the centers of the seven 10-dimensional normal distributions used by the LDA model fit in exercise 10.
 
 
-13\. Use the `rpart` function to fit a classification tree to the `tissue_gene_expression` dataset. Use the `train` function to estimate the accuracy. Try out `cp` values of `seq(0, 0.05, 0.01)`. Plot the accuracy to report the results of the best model.
+13\. Use the `rpart` function to fit a classification tree to the `tissue_gene_expression` dataset including all genes, that is redefine 
+
+```{r}
+#| eval: false
+x <- tissue_gene_expression$x
+```
+
+Use the `train` function to estimate the accuracy. Try out `cp` values of `seq(0, 0.05, 0.01)`. Plot the accuracy to report the results of the best model.
+
 
 14\. Study the confusion matrix for the best fitting classification tree. What do you observe happening for placenta?
 
 15\. Notice that placentas are called endometrium more often than placenta. Note also that the number of placentas is just six, and that, by default, `rpart` requires 20 observations before splitting a node. Thus it is not possible with these parameters to have a node in which placentas are the majority. Rerun the above analysis, but this time permit `rpart` to split any node by using the argument `control = rpart.control(minsplit = 0)`. Does the accuracy increase? Look at the confusion matrix again.
 
-16\. Plot the tree from the best fitting model obtained in exercise 11.
+16\. Plot the tree from the best fitting model obtained in exercise 13.
 
-17\. We can see that with just six genes, we are able to predict the tissue type. Now let's see if we can do even better with a random forest. Use the `train` function and the `rf` method to train a random forest. Try out values of `mtry` ranging from, at least, `seq(50, 200, 25)`. What `mtry` value maximizes accuracy? To permit small `nodesize` to grow as we did with the classification trees, use the following argument: `nodesize = 1`. This will take several seconds to run. If you want to test it out, try using smaller values with `ntree`. Set the seed to 1990.
+17\. We can see that with just the genes selected by CART, we are able to predict the tissue type. Now let's see if we can do even better with a random forest. Use the `train` function in the **caret** package and the `rf` method to train a random forest. Try out values of `mtry` ranging from, at least, `seq(50, 200, 25)`. What `mtry` value maximizes accuracy? To permit small `nodesize` to grow as we did with the classification trees, use the following argument: `nodesize = 1`.  This will take several seconds to run. If you want to test it out, try using smaller values with `ntree`. Set the seed to 1990.
 
 18\. Use the function `varImp` on the output of `train` and save it to an object called `imp`.
 
-19\. The `rpart` model we ran above produced a tree that used just six predictors. Extracting the predictor names is not straightforward, but can be done. If the output of the call to train was `fit_rpart`, we can extract the names like this:
+19\. The `rpart` model we ran in exercise 15 produced a tree that used just a few predictors. Extracting the predictor names is not straightforward, but can be done. If the output of the call to train was `fit_rpart`, we can extract the names like this:
 
 ```{r, eval = FALSE}
 ind <- !(fit_rpart$finalModel$frame$var == "<leaf>")
@@ -612,8 +644,7 @@ What is the variable importance in the random forest call for these predictors? 
 20\. Extract the top 50 predictors based on importance, take a subset of `x` with just these predictors and apply the function `heatmap` to see how these genes behave across the tissues. We will introduce the `heatmap` function in @sec-clustering.
 
 
-
-21\. Previously, we compared the conditional probability $p(\mathbf{x})$ given two predictors $\mathbf{x} = (x_1, x_2)^\top$ to the fit $\hat{p}(\mathbf{x})$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
+21\. In @sec-example-algorithms, for the 2 or 7 example, we compared the conditional probability $p(\mathbf{x})$ given two predictors $\mathbf{x} = (x_1, x_2)^\top$ to the fit $\hat{p}(\mathbf{x})$ obtained with a machine learning algorithm by making image plots. The following code can be used to make these images and include a curve at the values of $x_1$ and $x_2$ for which the function is $0.5$:
 
 ```{r}
 #| eval: false
@@ -636,41 +667,47 @@ with(mnist_27$true_p, plot_cond_prob(x_1, x_2, p))
 
 Fit a kNN model and make this plot for the estimated conditional probability. Hint: Use the argument `newdata = mnist_27$train` to obtain predictions for a grid points.
 
-22\. Notice that, in the plot made in exercise 1, the boundary is somewhat wiggly. This is because kNN, like the basic bin smoother, does not use a kernel. To improve this we could try loess. By reading through the available models part of the **caret** manual, we see that we can use the `gamLoess` method. We need to install the __gam__ package, if we have not done so already. We see that we have two parameters to optimize:
+22\. Notice that, in the plot made in exercise 21, the boundary is somewhat wiggly. This is because kNN, like the basic bin smoother, does not use a kernel. To improve this we could try loess. By reading through the available models part of the **caret** manual, we see that we can use the `gamLoess` method. We need to install the __gam__ package, if we have not done so already. We see that we have two parameters to optimize:
 
 ```{r}
 modelLookup("gamLoess")
 ```
 
-Use cross-validation to pick a span between 0.15 and 0.75. Keep `degree = 1`. What span does cross-validation select?
+Use resampling to pick a span between 0.15 and 0.75. Keep `degree = 1`. What span is select?
 
 
 23\. Show an image plot of the estimate $\hat{p}(x,y)$ resulting from the model fit in exercise 22. How does the accuracy compare to that of kNN? Comment on the difference between the estimate obtained with kNN. 
 
-24\. Use the `mnist_27` training set to build a model with several of the models available from the **caret** package. For example, you can try these:
+24\. Use the `mnist_27` training set to fit a variety of models available through the **caret** package.
+Your goal is simply to *try many different algorithms* and compare their performance, even if we have not explained them yet.
 
-```{r, eval = FALSE}
-models <- c("glm", "lda",  "naive_bayes",  "svmLinear", "gamboost",  
-            "gamLoess", "qda", "knn", "kknn", "loclda", "gam", "rf", 
-            "ranger","wsrf", "Rborist", "avNNet", "mlp", "monmlp", "gbm", 
-            "adaboost", "svmRadial", "svmRadialCost", "svmRadialSigma")
+Here is a vector of model names you can try:
+
+```{r}
+models <- c(
+  "glm", "lda", "naive_bayes", "svmLinear", "gamboost",
+  "gamLoess", "qda", "knn", "kknn", "loclda", "gam", "rf",
+  "ranger", "wsrf", "Rborist", "avNNet", "mlp", "monmlp",
+  "gbm", "adaboost", "svmRadial", "svmRadialCost", "svmRadialSigma"
+)
 ```
 
-We have not explained many of these, but apply them anyway using `train` with all the default parameters. Keep the results in a list. You might need to install some packages. Keep in mind that you will likely get some warnings.
+Fit each model using `train()` with default tuning parameters and store the fitted model objects in a list.
+You may need to install additional packages depending on which models you try, and some models will produce warnings—that’s expected.
 
 25\. Now that you have all the trained models in a list, use `sapply` or `map` to create a matrix of predictions for the test set. You should end up with a matrix with `length(mnist_27$test$y)` rows and `length(models)` columns.
 
 26\. Compute accuracy for each model on the test set.
 
-27\. Build an ensemble prediction by majority vote and compute its accuracy.
+27\. Build an ensemble prediction by majority vote and compute the accuracy of the ensemble.
 
 28\. Earlier we computed the accuracy of each method on the training set and noticed they varied. Which individual methods do better than the ensemble?
 
 29\. It is tempting to remove the methods that do not perform well and re-do the ensemble. The problem with this approach is that we are using the test data to make a decision. However, we could use the accuracy estimates obtained from cross validation with the training data. Obtain these estimates and save them in an object.
 
-30\. Now let's only consider the methods with an estimated accuracy of 0.8 when constructing the ensemble. What is the accuracy now?
+30\. Now let's only consider the methods with an estimated accuracy of 0.8 when constructing the ensemble. What is the accuracy of the ensemble now?
 
-31\. Note that if two machine algorithms methods predict the same outcome, ensembling them will not change the prediction. For each pair of algorithms compare the percent of observations for which they make the same prediction. Use this to define a function and then use the `heatmap` function to visualize the results. Hint: use the `method = "binary"` argument in the `dist` function.
+31\. Note that if two machine algorithms methods predict the same exact outcome, ensembling them will not change the prediction. For each pair of algorithms compare the percent of observations for which they make the same prediction. Use this to define a function and then use the `heatmap` function to visualize the results. Hint: use the `method = "binary"` argument in the `dist` function.
 
 32\. Note that each method can also produce an estimated conditional probability. Instead of majority vote, we can take the average of these estimated conditional probabilities. For most methods, we can the use the `type = "prob"` in the train function. Note that some of the methods require you to use the argument `trControl=trainControl(classProbs=TRUE)` when calling train. Also, these methods do not work if classes have numbers as names. Hint: change the levels like this:
 

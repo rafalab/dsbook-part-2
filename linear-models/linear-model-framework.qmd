@@ -47,7 +47,7 @@ $$
 
 with $\bar{x} = 1/N \sum_{i=1}^N x_i$ the average of the $x$. In this case, $\beta_0$ represents the height when $x_i = \bar{x}$, which is the height of the son of an average father.
 
-Later, specifically in Chapters [@sec-treatment-effect-models] ans [@sec-multivariable-regression], we will see how the linear model representation permits us to use the same mathematical frameworks in other contexts and to achieve more complicated goals than predicting one variable from another.
+Later, specifically in Chapters -@sec-treatment-effect-models and -@sec-multivariable-regression, we will see how the linear model representation permits us to use the same mathematical frameworks in other contexts and to achieve more complicated goals than predicting one variable from another.
 
 ## Least Squares Estimates  {#sec-lse}
 
@@ -196,9 +196,11 @@ y_hat <- predict(fit, se.fit = TRUE)
 names(y_hat)
 ```
 
-## Diagnostic plots {#sec-diagnostic-plots}
+## Model diagnostics {#sec-diagnostic-plots}
 
-When the linear model is assumed, rather than derived,  all interpretations depend on the usefulness of the model. The `lm` function will fit the model and return summaries even when the model is wrong and not useful.  
+When we assume a linear model, rather than derive it from theory, all interpretations depend on how well the model represents the data. The `lm` function will fit the model and produce coefficient estimates, standard errors, and p-values even if the model is misspecified. Interpreting such results without verifying assumptions can lead to misleading conclusions.
+
+For this reason, checking model assumptions is a **critical requirement** in statistical modeling. Diagnostic plots provide visual tools to assess whether the model captures the main structure in the data, whether residuals behave as expected, and whether potential outliers or influential points are distorting the fit. These checks are especially important when there is no strong theoretical justification for the assumed model—such as when the data-generating process is unknown or complex. In these cases, diagnostics are our main defense against drawing incorrect or overconfident conclusions.
 
 Visually inspecting residuals, defined as the difference between observed values and predicted values:
 
@@ -233,9 +235,9 @@ plot(fit, which = 1:3)
 
 
 
-This function can produce six different plots, and the argument `which` let's you specify which you want to see. You can learn more by reading the `plot.lm` help file. However, some of the plots are based on more advanced concepts beyond the scope of this book. To learn more, we recommend an advanced book on regression analysis.
+This function can produce six different plots, and the argument `which` let's you specify which you want to see. You can learn more by reading the `plot.lm` help file. However, some of the plots are based on more advanced concepts beyond the scope of this book. To learn more, we recommend an advanced book on regression analysis included in the Recommended Reading section.
 
-In Sections [@sec-treatment-effect-models] and [@sec-multivariable-regression], we introduce data analysis challenges in which we may decide to not include certain variables in the model. In these cases, an important diagnostic test is to checks if the residuals are related to variables not included in the model.
+In Chapters -@sec-treatment-effect-models and -@sec-multivariable-regression, we introduce data analysis challenges in which we may decide to not include certain variables in the model. In these cases, an important diagnostic test is to checks if the residuals are related to variables not included in the model.
 
 
 
@@ -310,6 +312,17 @@ broom::augment(fit) |>
   geom_point(aes(time, observed_distance)) + 
   geom_line(aes(time, .fitted), col = "blue")
 ```
+
+The residuals confirm that the normal approximation for the errors is reasonable:
+
+```{r falling-object-resids, echo=-1}
+#| fig-width: 6
+#| fig-height: 3
+
+rafalib::mypar(1,2)
+plot(fit, which=1:2)
+```
+
 
 Thanks to my high school physics teacher, I know that the equation for the trajectory of a falling object is:
 

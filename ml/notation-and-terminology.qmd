@@ -1,26 +1,34 @@
 # Notation and Terminology
 
-In [@sec-mnist], we introduced the MNIST handwritten digits dataset. Here we describe how the task of automatically reading these digits can be framed as a machine learning challenge. In doing so, we introduce machine learning mathematical notation and terminology used throughout this part of the book.
+In [@sec-mnist], we introduced the MNIST handwritten digits dataset. We now return to this dataset and use the task of recognizing handwritten digits as our running example for the next few chapters. Our goal in this section is not yet to develop a full algorithm, but to introduce the machine learning notation and terminology that we will rely on throughout this part of the book.
 
-Originally, mail sorting in the post office involved humans reading zip codes written on the envelopes. Today, thanks to machine learning algorithms, a computer can read zip codes and then a robot sorts the letters. We will learn how to build algorithms that can read a digitized handwritten digit.
+Handwritten digit recognition is a classic machine learning problem. Decades ago, mail sorting in the post office required humans to read every zip code written on envelopes. Today, machines perform this task automatically: a computer reads the digitized image of the zip code, and a robot sorts the letter accordingly.
+
+In the pages that follow, we will describe how to formalize this problem mathematically, define the objects we need to work with, and introduce the language used to describe inputs, outputs, features, predictions, and learning algorithms. This will set the foundation for the machine learning methods developed in later chapters.
 
 
 ## Terminology
 
 In machine learning, data comes in the form of the *outcome* we want to predict and the *features* that we will use to predict the outcome. We build algorithms that take feature values as input and returns a prediction for the outcome when we don't know the outcome. The machine learning approach is to *train* an algorithm using a dataset for which we do know the outcome, and then apply this algorithm in the future to make a prediction when we don't know the outcome.
 
-Prediction problems can be divided into categorical and continuous outcomes. For categorical outcomes can be any one of $K$ classes. The number of classes can vary greatly across applications. For example, in the digit reader data, $K=10$ with the classes being the digits 0, 1, 2, 3, 4, 5, 6, 7, 8, and 9. In speech recognition, the outcomes are all possible words or phrases we are trying to detect. Spam detection has two outcomes: spam or not spam. In this book, we denote the $K$ categories with indexes $k=1,\dots,K$. However, for binary data we will use $k=0,1$ for mathematical conveniences that we demonstrate later.
+Prediction problems can be divided into categorical and continuous outcomes. Categorical outcomes can be any one of $K$ classes. The number of classes can vary greatly across applications. For example, in the digit reader data, $K=10$ with the classes being the digits 0, 1, 2, 3, 4, 5, 6, 7, 8, and 9. In speech recognition, the outcomes are all possible words or phrases we are trying to detect. Spam detection has two outcomes: spam or not spam. In this book, we denote the $K$ categories with indexes $k=1,\dots,K$. However, for binary data we will use $k=0,1$ for mathematical conveniences that we demonstrate later.
 
 
 ## Notation
 
 We will use $Y$ to denote the outcome and $X_1, \dots, X_p$ to denote the features. These features are also sometimes referred to as *predictors* or *covariates*, and we will treat these terms as synonyms.
 
-The first step in building a machine learning algorithm is to clearly identify what the outcomes and features are. In [@sec-mnist], we showed that each digitized image $i$ is associated with a categorical outcome $Y_i$ and a set of features $X_{i,1}, \dots, X_{i,p}$, with $p=784$. For convenience, we often use boldface notation $\mathbf{X}_i = (X_{i,1}, \dots, X_{i,p})^\top$ to represent the vector of predictors, following the notation introduced in [@sec-matrix-notation]. When referring to an arbitrary set of features rather than a specific image, we drop the index $i$ and simply use $Y$ and $\mathbf{X} = (X_1, \dots, X_p)$. We use uppercase to emphasize that these are random variables. Observed values are denoted in lowercase, such as $\mathbf{X} = \mathbf{x}$. In practice, when writing code, we typically use lowercase.
+The first step in building a machine learning algorithm is to clearly identify what the outcomes and features are. In @sec-mnist, we showed that each digitized image $i$ is associated with a categorical outcome $Y_i$ and a set of features $X_{i1}, \dots, X_{ip}$, with $p=784$. For convenience, we often use boldface notation $\mathbf{X}_i = (X_{i1}, \dots, X_{ip})^\top$ to represent the vector of predictors, following the notation introduced in @sec-matrix-notation. 
 
-The machine learning task is to build an algorithm that predicts the outcome given any combination of features. At first glance, this might seem impossible, but we will start with very simple examples and gradually build toward more complex cases. We begin with one predictor, then extend to two predictors, and eventually tackle real-world challenges involving thousands of predictors.
+When referring to an arbitrary set of features rather than a specific image, we drop the index $i$ and simply use $Y$ and $\mathbf{X} = (X_1, \dots, X_p)$. We use uppercase to emphasize that these are random variables. Observed values are denoted in lowercase, such as $Y=y$ and $\mathbf{X} = \mathbf{x}$. In practice, when writing code, we typically always use lowercase.
+
+
+To denote predictions, we use hats, just as we do for parameter estimates. For a specific observation $i$ with predictors $\mathbf{x}_i$, the prediction is written as $\hat{y}_i$. For an arbitrary predictor vector $\mathbf{x}$, we write the prediction as $\hat{y}(\mathbf{x})$, emphasizing that the prediction is a function of the predictors.
+
 
 ## The machine learning challenge
+
+The machine learning task is to build an algorithm that predicts the outcome given any combination of features. At first glance, this might seem impossible, but we will start with very simple examples and gradually build toward more complex cases. We begin with one predictor, then extend to two predictors, and eventually tackle real-world challenges involving thousands of predictors.
 
 The general setup is as follows. We have a series of features and an unknown outcome we want to predict:
 
@@ -53,7 +61,7 @@ tmp <- tibble(outcome = paste0("$y_{", 1:n,"}$"),
               '$\\dots$' = paste0("$\\dots$"),
               'feature 5' = paste0("$x_{",1:n,",p}$"))
 tmp_2 <- rbind(c("$\\vdots$", "$\\vdots$", "$\\vdots$", "$\\vdots$", "$\\ddots$", "$\\vdots$"),
-               c("$y_n$", "$x_{n,1}$","$x_{n,2}$","$x_{n,3}$","$\\dots$","$x_{n,p}$"))
+               c("$y_n$", "$x_{n1}$","$x_{n2}$","$x_{n3}$","$\\dots$","$x_{np}$"))
 colnames(tmp_2) <- names(tmp)
 tmp <- bind_rows(tmp, as_tibble(tmp_2))
 if (knitr::is_html_output()) {
@@ -64,8 +72,52 @@ if (knitr::is_html_output()) {
 }
 ```
 
-When the outcome is continuous, we refer to the task as _prediction_. The model returns a function $f$ that produces a prediction $\hat{y} = f(x_1, x_2, \dots, x_p)$ for any feature vector. We call $y$ the actual outcome. Predictions $\hat{y}$ are rarely exact, so we measure accuracy by the error, defined as $y - \hat{y}$.
+When the outcome is continuous, we refer to the task as _prediction_. The model returns a function $f$ that produces a prediction $\hat{y}(\mathbf{x}) = f(x_1, x_2, \dots, x_p)$ for any feature vector. We call $y$ the actual outcome. Predictions $\hat{y}(\mathbf{x})$ are rarely exact, so we measure accuracy by the error, defined as $y - \hat{y}(\mathbf{x})$.
 
-When the outcome is categorical, the task is called _classification_. The model produces a decision rule that prescribes which of the $K$ classes should be predicted. Typically, models output functions $f_k(x_1, \dots, x_p)$, one for each class $k$. In the binary case, a common rule is: if $f_1(x_1, \dots, x_p) > C$, predict class 1, otherwise predict class 2, with $C$ a chosen cutoff. Here, predictions are either right or wrong.
+When the outcome is categorical, the task is called _classification_. The model produces a decision rule that prescribes which of the $K$ classes should be predicted. Typically, models output functions $f_k(x_1, \dots, x_p),$ one for each class $k$. In the binary case, a common rule is: if $f_1(x_1, \dots, x_p) > c$, predict class 1, otherwise predict class 2, with $c$ a chosen cutoff. Here, predictions are either right or wrong.
 
 It is worth noting that terminology varies across textbooks and courses. Sometimes prediction is used for both categorical and continuous outcomes. The term regression is also used for continuous outcomes, but here we avoid it to prevent confusion with linear regression. In most contexts, whether outcomes are categorical or continuous will be clear, so we will simply use prediction or classification as appropriate.
+
+## Statistical vs. Machine Learning language
+
+Up to this point in the book, we have used terminology that comes from statistics: *models*, *estimators*, and *parameters*. As we transition to machine learning, we encounter a new vocabulary. Some of these new terms overlap with familiar statistical ideas, while others reflect differences in emphasis between the two fields. In this section, we clarify the terminology we will use throughout the machine learning chapters.
+
+In statistics, a *model* refers to a mathematical description of how the data are generated,for example, a linear regression model with coefficients that represent the relationship between predictors and the outcome. In machine learning, the word *model* is used similarly, but with a slightly more practical emphasis: a *model* is the fitted object that we use to make predictions. For instance, when we fit a logistic regression to predict a binary outcome, the resulting estimated regression function is what a machine learner would call the *model*.
+
+A key difference arises with the word *algorithm*. In statistics, an algorithm is simply a computational routine used to compute an estimate. In machine learning, however, *algorithm* is often used more broadly. It can refer to the computational procedure used to fit a model, for example, the iterative steps used to estimate the coefficients in logistic regression, but it also commonly refers to the overall prediction strategy itself. Thus, in machine learning practice, people talk about "the logistic regression algorithm" even though in statistics, a logistic regression is thought more of as a model rather than an algorithm. This dual use of the term is standard in the field, and we follow that convention here.
+
+Finally, machine learning literature often uses *method*, *approach*, or *procedure* as general terms for any systematic way of mapping predictors to predictions. In earlier chapters, we introduced regression and logistic regression as statistical models. From the machine learning point of view, these are also *prediction methods*, functions we learn from data that can be applied to new cases.
+
+Another important pair of terms is *supervised*  versus *unsupervised* learning. In supervised learning, the goal is as described above: to predict an outcome we can observe in the training data. Regression and logistic regression fall into this category, and most of the machine learning techniques we discuss in the next chapters will also be supervised methods. In unsupervised learning, by contrast, there is no outcome variable; the goal is to uncover structure in the predictors themselves. Clustering is the most common example of this. We will study supervised learning first because it connects most directly to prediction,our primary goal, before briefly describing unsupervised learning in the last chapter.
+
+## Exercises
+
+1\. You are given a dataset containing pairs $(x_i, y_i)$, where $x_i$ is a 2-dimensional feature vector describing the width and height of a handwritten digit image, and (y_i \in {0,1}) indicates whether the digit is a “0”.
+
+Write the following objects using the notation introduced in this chapter:
+
+* The set of observed features.
+* The set of corresponding outcomes.
+* A prediction function that takes a new feature vector $x$ and predicts whether it is a "0".
+* A decision rule defined by a threshold $c$, written as a mathematical function.
+
+2\. Suppose we want to build an algorithm that predicts whether a digit image is a "4". Let the image be summarized by a feature vector $x$, and let the prediction function be $\hat{f}(x)$, which returns a number between 0 and 1.
+
+* Write a *decision rule* that uses a cutoff $c$ to convert the prediction $\hat{f}(x)$ into a class label $\hat{y}(x) \in \{0,1\}$.
+* Using the notation introduced in this chapter, write the *set of all decision rules* that can be created by varying the cutoff $c$.
+* Briefly explain in one or two sentences how changing the cutoff affects false positives and false negatives.
+
+3\. Let $\hat{p}(x)$ be a model that estimates the probability that an image is a “1”. Consider the following decision rule with cutoff (c):
+
+$$
+\hat{y}(x) =
+\begin{cases}
+1 & \text{if } \hat{p}(x) > c \\
+0 & \text{otherwise.}
+\end{cases}
+$$
+
+*  Write the 0–1 loss for a single observation ((x_i, y_i)).
+* Write the average loss over a test set of size (m).
+* If $c$ is increased, does the model predict "1" more often or less often? Explain briefly using the notation.
+

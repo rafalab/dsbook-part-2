@@ -1,8 +1,18 @@
 # Association Is Not Causation {#sec-association-not-causation}
 
-*Association is not causation* is perhaps the most important life lesson one can learn in a statistics class. *Correlation is not causation* is another way to say this. We have described tools useful for quantifying associations between variables. However, we must be careful not to over-interpret these associations.
+Throughout this part of the book, we have focused on methods for quantifying *associations* between variables, how changes in one variable relate to changes in another. Linear models, correlation coefficients, and hypothesis tests all provide formal ways to describe and assess these relationships. It is tempting to interpret such results as evidence of cause and effect, especially when the findings seem intuitive or align with our expectations. However, this is a critical mistake: *association is not causation*.
 
-There are many reasons why two observed variables might be correlated without a direct causal relationship. Below, we outline four common situations that can lead to misinterpreting an observed association.
+Statistical tools can reveal patterns, but they cannot, on their own, establish why those patterns exist. Determining causation requires more than observing an empirical relationship. At a minimum, several conditions must be satisfied:
+
+* *Empirical association:* A relationship must exist between the variables of interest.
+* *Temporal priority:* The cause must occur before the effect.
+* *Dose-response relationship:* Changes in the _dose_ of the cause should result in changes of the effect.
+* *Plausibility:* There must be a credible mechanism explaining how the cause could produce the effect.
+* *Elimination of alternative explanations:* Other potential causes, such as confounding factors, must be considered and ruled out.
+
+A major focus of this chapter is *confounding*, one of the most common and deceptive reasons why two variables may appear related even when no causal connection exists. We also discuss several other scenarios that can produce misleading associations, highlighting the importance of careful interpretation.
+
+Finally, we note that randomized controlled experiments, where subjects are assigned to treatments at random, provide the most reliable way to infer causation from data, as randomization minimizes alternative explanations. Yet, most analyses in science, medicine, and the social sciences rely on *observational* or *real-world* data, where randomization is not possible and causal inference must rely on assumptions that are often difficult or impossible to verify. Understanding these limitations is essential for responsible data analysis.
 
 ## Spurious correlation
 
@@ -35,6 +45,8 @@ The cases presented on the website are all instances of what is generally called
 A Monte Carlo simulation can be used to show how data dredging can result in finding high correlations among uncorrelated variables. We will save the results of our simulation into a tibble:
 
 ```{r}
+#| message: false
+#| warning: false
 library(data.table)
 library(ggplot2)
 N <- 25
@@ -51,7 +63,7 @@ res <- sim_data[, .(r = cor(x, y)), by = group][order(-r)]
 max(res$r)
 ```
 
-We see a maximum correlation of `r max(res$r)`. If you just plot the data from the group achieving this correlation, it shows a convincing plot that $X$ and $Y$ are in fact correlated:
+We see a maximum correlation of `r round(max(res$r), 2)`. If you just plot the data from the group achieving this correlation, it shows a convincing plot that $X$ and $Y$ are in fact correlated:
 
 ```{r dredging}
 #| message: false
@@ -69,7 +81,7 @@ Remember that the correlation summary is a random variable. Here is the distribu
 res |> ggplot(aes(x = r)) + geom_histogram(binwidth = 0.1, color = "black")
 ```
 
-It's simply a mathematical fact that if we observe `r cat(prettyNum(g, big.mark=",",scientific=FALSE))` random correlations that are expected to be 0, but have a standard error of `r sd(res$r)`, the largest one will be close to 1.
+It's simply a mathematical fact that if we observe `r prettyNum(g, big.mark=",",scientific=FALSE)` random correlations that are expected to be 0, but have a standard error of `r round(sd(res$r), 2)`, the largest one will be close to 1.
 
 If we performed regression on this group and interpreted the p-value, we would incorrectly claim this was a statistically significant relation:
 
@@ -94,7 +106,8 @@ y[-23] <- scale(y[-23])
 
 The data look like this:
 
-```{r outlier}
+```{r outlier, echo=-1}
+rafalib::mypar()
 plot(x, y)
 ```
 
@@ -112,7 +125,8 @@ cor(x[-23], y[-23])
 
 There is an alternative to the sample correlation for estimating the population correlation that is robust to outliers. It is called *Spearman correlation*. The idea is simple: compute the correlation on the ranks of the values. Here is a plot of the ranks plotted against each other:
 
-```{r scatter-plot-of-ranks}
+```{r scatter-plot-of-ranks, echo=-1}
+rafalib::mypar()
 plot(rank(x), rank(y))
 ```
 
@@ -153,13 +167,13 @@ $$
 X = \beta_0 + \beta_1 y + \varepsilon
 $$
 
-to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backwards, as it would imply that sons' heights determine fathers' heights. Using the previously defined `galton_heights` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
+to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backwards, as it would imply that sons' heights determine fathers' heights. Using the previously defined `galton` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
 
 ```{r, echo=FALSE, cache=FALSE}
 library(HistData)
 
 set.seed(1983)
-galton_heights <- GaltonFamilies |>
+galton <- GaltonFamilies |>
   filter(gender == "male") |>
   group_by(family) |>
   sample_n(1) |>
@@ -169,14 +183,15 @@ galton_heights <- GaltonFamilies |>
 ```
 
 ```{r}
-lm(father ~ son, data = galton_heights) |> tidy() |> filter(term == "son")
+tidy(lm(father ~ son, data = galton))[2,]
 ```
 
-The model fits the data very well. However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son's height causes his father's height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault, and the estimates and p-values are calculated correctly. What is misleading here is the interpretation, not the model or computation.
+The model fits the data very well and the estimates, standard errors, and p-values all correctly show that there is an association between son and father heights.
+However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son's height causes his father's height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault and we did not make coding mistakes. What is misleading here is the interpretation, not the model or computation.
 
 ## Confounders
 
-Confounders are perhaps the most common reason that leads to associations begin misinterpreted.
+Confounders are perhaps the most common reason that leads to associations being misinterpreted.
 
 If $X$ and $Y$ are correlated, we call $Z$ a *confounder* if it, or some factor associated with it, is a cause of both $X$ and $Y$, thereby creating a spurious association between them unless we properly account for $Z$. 
 
@@ -184,9 +199,13 @@ Incorrect interpretation due to confounders is ubiquitous in the lay press and t
 
 ### Example: UC Berkeley admissions
 
-Admission data from six U.C. Berkeley majors, from 1973, showed that more men were being admitted than women: 44% men were admitted compared to 30% women. PJ Bickel, EA Hammel, and JW O'Connell. Science (1975). We can load the data and compute a statistical test, which clearly rejects the hypothesis that gender and admission are independent:
+Admission data from six U.C. Berkeley majors, from 1973, showed that more men were being admitted than women: 44% men were admitted compared to 30% women[^association-not-causation-5]. We can load the data and compute a statistical test, which clearly rejects the hypothesis that gender and admission are independent:
+
+[^association-not-causation-5]: https://pubmed.ncbi.nlm.nih.gov/17835295/
+
 
 ```{r}
+library(dplyr)
 two_by_two <- admissions |> group_by(gender) |> 
   summarize(total_admitted = round(sum(admitted / 100 * applicants)), 
             not_admitted = sum(applicants) - sum(total_admitted)) |>
@@ -199,7 +218,7 @@ But closer inspection shows a paradoxical result. Here are the percent admission
 ```{r}
 admissions |> select(major, gender, admitted) |>
   pivot_wider(names_from = "gender", values_from = "admitted") |>
-  mutate(women_minus_men = women - men)
+  mutate(women_minus_men = women - men) |> print(n = 6)
 ```
 
 For five of the six majors, the differences are small, with major A favoring women. More importantly, these differences are all much smaller than the 14.2-point difference in favor of men observed when looking at the overall totals.
@@ -209,15 +228,15 @@ The paradox is that analyzing the totals suggests a dependence between admission
 Discovering confounders, and understanding how they can lead to misleading conclusions, often requires exploratory data analysis and critical thinking. Looking at the table above, we notice substantial variability in admission rates across majors. Could this be influencing the overall results? To investigate, we add a _selectivity_ column, the overall admission rate within each major, to the admissions table.
 
 ```{r}
-selectivity <- admissions |>
-  group_by(major) |>
-  summarize(selectivity = sum(admitted*applicants/100)/sum(applicants))
+admissions <- group_by(admissions, major) |>
+  summarize(selectivity = sum(admitted*applicants/100)/sum(applicants)) |>
+  right_join(admissions, by = "major")
 ```
 
 Next, we examine how the number of applicants relates to major selectivity. If selectivity is a confounder, patterns may differ by gender across majors with varying selectivity.
 
 ```{r applicants-vs-selectivity}
-left_join(admissions, selectivity, by = "major") |>
+admissions |>
   ggplot(aes(selectivity, applicants, label = major)) +
   geom_text() +
   facet_wrap(~gender) 
@@ -238,7 +257,7 @@ admissions |> ggplot(aes(major, admitted, col = gender, size = applicants)) +
 
 We see that, major by major, there is not much difference in admission rates between genders. However, the large number of men applying to Major B, which admits over 60% of applicants, causes the confusion in the overall comparison. This plot suggests that a more sophisticated analysis adjusting for major is needed. We will learn how to perform such an analysis in the next chapter, in @sec-multivariable-regression.
 
-## Simpson's paradox
+### Simpson's paradox
 
 The case we have just covered is an example of Simpson's paradox. It is called a paradox because we see the sign of the correlation flip when comparing the entire publication to specific strata. As an illustrative example, suppose you have three random variables $X$, $Y$, and $Z$, and we observe realizations of these. Here is a plot of simulated observations for $X$ and $Y$ along with the sample correlation:
 
@@ -283,7 +302,7 @@ It is really $Z$ that is negatively correlated with $X$. If we stratify by $Z$, 
 
 ## Other Sources of Bias
 
-We discussed confounding and reverse causation, but there are many other mechanisms that can create associations that are not causal. For example, **Collider bias** occurs when we condition on a variable influenced by two or more other variables, inadvertently inducing a false relationship between them. A classic example is the negative association sometimes observed between academic ability and athletic skill among students at elite colleges. In the general population, these traits may be independent, but both increase the likelihood of admission. Conditioning on admission, our collider, can create a spurious negative correlation: among admitted students, those who are less athletic may have higher academic ability, and vice versa. A similar effect can occur in hospitals, where two unrelated health conditions, such as diabetes and heart disease, may appear negatively associated among patients simply because both increase the likelihood of hospitalization.
+We discussed confounding and reverse causation, but there are many other mechanisms that can create associations that are not causal. For example, **collider bias** occurs when we condition on a variable influenced by two or more other variables, inadvertently inducing a false relationship between them. A classic example is the negative association sometimes observed between academic ability and athletic skill among students at elite colleges. In the general population, these traits may be independent, but both increase the likelihood of admission. Conditioning on admission, our collider, can create a spurious negative correlation: among admitted students, those who are less athletic may have higher academic ability, and vice versa. A similar effect can occur in hospitals, where two unrelated health conditions, such as diabetes and heart disease, may appear negatively associated among patients simply because both increase the likelihood of hospitalization.
 
 **Selection bias** is another common source of spurious association. It arises when the process determining who or what enters a dataset depends on factors related to both the exposure/treatement and the outcome. For example, comparing mortality rates between two hospitals might suggest that Hospital A provides worse care than Hospital B. However, if Hospital A is a major trauma center treating more severely ill patients, while Hospital B handles mostly routine cases, the comparison is misleading. The difference reflects who is admitted, not differences in quality of care.
 
@@ -324,7 +343,7 @@ Construct the two-by-two table used for the conclusion about differences in awar
 
 5\. To check if this is a case of Simpson's paradox, plot the success rates versus disciplines, which have been ordered by overall success, with colors to denote the genders and size to denote the number of applications.
 
-6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say that there is a clear confounder here. However, we do see that, based on the observed rates, some fields favor men and others favor women. We also see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. Is it possible some of the selection committees are biased and others are not?
+6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say that there is a clear confounder here. However, we do see that, based on the observed rates, some fields may favor men and others may favor women. We also see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. Is it possible some of the selection committees are biased and others are not?
 
 To answer this question we start by checking if any of the differences seen above are statistically significant. Remember that even when there is no bias, we will see differences due to random variability in the review process as well as random variability across candidates. Perform a Chi-square test for each discipline. Hint: define a function that receives the total of a two-by-two table and returns a data frame with the p-value. Use the 0.5 correction. Then use the `summarize` function.
 

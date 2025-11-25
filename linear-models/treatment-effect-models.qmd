@@ -47,7 +47,7 @@ However, this is a random sample of mice, and the assignment to the diet group i
 
 Let $\mu_1$ and $\sigma_1$ represent the weight average and standard deviation, respectively, that we would observe if the entire population of mice were on the high-fat diet. Define $\mu_0$ and $\sigma_0$ similarly, but for the chow diet. Define $N_1$ and $N_0$ as the sample sizes, and $\bar{X}_1$ and $\bar{X}_0$ the sample averages, for the for the high-fat and chow diets, respectively. 
 
-Since the data comes from a random sample, the central limit theorem tells us that, if the sample is large enough, the difference in averages $\bar{X}_1 - \bar{X}_0$ follows a normal distribution, with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{\sigma_1^2}{N_1} + \frac{\sigma_0^2}{N_0}}$. 
+Since the data comes from a random sample, the central limit theorem tells us that, if the sample is large enough, the distribution of the difference in averages $\bar{X}_1 - \bar{X}_0$ can be approximated by a standard normal distribution, with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{\sigma_1^2}{N_1} + \frac{\sigma_0^2}{N_0}}$. 
 
 If we define the null hypothesis as the high-fat diet having no effect, or $\mu_1 - \mu_0 = 0$, this implies that 
 
@@ -85,31 +85,31 @@ with(mice_weights, t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]
 
 Here $t$ is well over 3, so we don't really need to compute the p-value `1-pnorm(t_stat)` as we know it will be very small.
 
-Note that when $N_0$ and $N_1$ are not large enough, the CLT does not apply. However, if the outcome data, in this case weight, follows a normal distribution, then $t$ follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`. Specifically, we use `1-pt(t_stat, with(stats, n[2]+n[1]-2))`. 
+Note that when $N_0$ and $N_1$ are not large enough, the CLT does not apply. However, as we explained in @sec-t-dist,
+if the outcome data, in this case weight, follows an approximately normal distribution, then the $t$, defined above, follows a t-distribution with $N_1+N_2-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`. Specifically, we use `1-pt(t_stat, with(stats, n[2]+n[1]-2))`. 
 
 Differences in means are commonly examined in the scientific studies. As a result this _t-statistic_ is one of the most widely reported summaries. When used to determine if an observed difference is _statistically significant_, we refer to the procedure as "performing a _t test_". 
 
 
 :::{.callout-warning}
-In the computation above, we calculated the probability of observing a $t$ value as large as the one obtained. However, when our interest includes deviations in both directions, for example, either an increase or a decrease in weight—we must consider the probability of obtaining a value of $t$ as extreme as the one observed, regardless of sign. In that case, we use the absolute value of $t$ and double the one-sided probability: `2*(1 - pnorm(abs(t-test)))` or `2*(1-pt(abs(t_stat), with(stats, n[2]+n[1]-2)))`. 
+In the computation above, we calculated the probability of observing a $t$ value as large as the one obtained. However, when our interest includes deviations in both directions, for example, either an increase or a decrease in weight—we must consider the probability of obtaining a value of $t$ as extreme as the one observed, regardless of sign. In that case, we use the absolute value of $t$ and double the one-sided probability: `2*(1 - pnorm(abs(t_stat))` or `2*(1-pt(abs(t_stat), with(stats, n[2]+n[1]-2)))`. 
 :::
 
 ## One factor design
 
 Although the t-test is useful for cases in which we compare two treatments, it is common to have other variables affect our outcomes. Linear models permit hypothesis testing in these more general situations. We start the description of the use of linear models for estimating treatment effects by demonstrating how they can be used to perform t-tests.
 
-If we assume that the weight distributions for both chow and high-fat diets are normally distributed, we can write the following linear model to represent the data:
+If we assume that the weight distributions for mice on both chow and high-fat diets are normally distributed, we can write the following linear model to represent the data:
 
 $$
 Y_i = \beta_0 + \beta_1 x_i + \varepsilon_i
 $$
 
-with $x_i = 1$, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and normally distributed with expected value 0 and standard deviation $\sigma$. 
+with $x_i = 1$, if the $i$-th mice was fed the high-fat diet, and 0 otherwise, and the errors $\varepsilon_i$ independent and again assume normally distributed with expected value 0 and standard deviation $\sigma$. 
 
 Note that this mathematical formula looks exactly like the model we wrote out for the father-son heights. However, the fact that $x_i$ is now 0 or 1 rather than a continuous variable, allows us to use it in this different context. In particular, notice that now $\beta_0$ represents the population average weight of the mice on the chow diet and $\beta_0 + \beta_1$ represents the population average for the weight of the mice on the high-fat diet. 
 
-A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. To perform hypothesis testing on the effect of the high fat diet we can estimate $\beta_1$ and compute the probability of an estimate being as large as the observed when the null hypothesis is true. 
-
+A nice feature of this model is that $\beta_1$ represents the _treatment effect_ of receiving the high-fat diet. The null hypothesis that the high-fat diet has no effect can be quantified as $\beta_1 = 0$. We estimate $\beta_1$ and then ask whether it is plausible for the true value to be zero.
 
 So how do we estimate $\beta_1$ and compute this probability? A powerful characteristic of linear models is that we can estimate the  $\beta$s and their standard errors with the same LSE machinery:
 
@@ -123,18 +123,13 @@ Because `diet` is a factor with two entries, the `lm` function knows to fit the 
 coefficients(summary(fit))
 ```
 
-The `statistic` computed here is the estimate divided by its standard error: $\hat{\beta}_1 / \widehat{\mathrm{SE}}[\hat{\beta}_1]$. In the case of the simple one-factor model, we can show that this statistic is almost equivalent to the t-statistics computed in the previous section: 
+If we look at the `diethf` row, the `t value` computed here is the estimate divided by its estimated standard error: $\hat{\beta}_1 / \widehat{\mathrm{SE}}[\hat{\beta}_1]$. The `Pr(>|t|)` is the p-value when testing the null hypothesis that $\beta_1=0$.
 
-```{r}
-c(coefficients(summary(fit))[2,3], t_stat)
-```
-
-Intuitively, it makes sense, as both $\hat{\beta_1}$ and the numerator of the t-test are estimates of the treatment effect. 
-
-The one minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mathrm{SD}[\varepsilon]$ as a standard deviation. Note that, although we don't demonstrate it with R here, we can redefine the linear model to have different standard errors for each group.
+In the case of the simple one-factor model, we can show that this statistic is almost equivalent to the t-statistics  ` t_stat` computed in the previous section. Intuitively, it makes sense, as both $\hat{\beta}_1$ and the numerator of the t-test are estimates of the treatment effect. 
+The one minor difference is that the linear model does not assume a different standard deviation for each population. Instead, both populations share $\mathrm{SD}[\varepsilon]$ as a standard deviation. Note that, although we don't demonstrate it with R here, we can redefine the linear model to have different standard errors for each group. Also note that you can set `var.equal = TRUE` the `t.test` function and get exactly the same result.
 
 :::{.callout-note}
-In the linear model description provided here, we assumed $\varepsilon$ follows a normal distribution. This assumption permits us to show that the statistics formed by dividing estimates by their estimated standard errors follow t-distribution, which in turn allows us to estimate p-values or confidence intervals. However, note that we do not need this assumption to compute the expected value and standard error of the least squared estimates. Furthermore, if the number of observations is large enough, then the central limit theorem applies and we can obtain p-values and confidence intervals even without the normal distribution assumption for the errors.
+In the linear model description provided here, we assumed $\varepsilon$ follows a normal distribution. This assumption permits us to show that the statistics formed by dividing estimates by their estimated standard errors follows a t-distribution, which in turn allows us to estimate p-values or confidence intervals. However, note that we do not need this assumption to compute the expected value and standard error of the least squared estimates. Furthermore, if the number of observations is large enough, then the central limit theorem applies and we can obtain p-values and confidence intervals even without the normal distribution assumption for the errors.
 :::
 
 ## Two factor designs
@@ -166,12 +161,15 @@ $$
 
 with $x_{i1},\dots,x_{i4}$ indicator variables for each of the four groups. With this representation we allow the diet effect to be different for males and females. 
 
+
+
+
 However, in the original representation, none of the $\beta$ parameters directly correspond to the treatment effect of interest (the effect of the high-fat diet). A useful feature of linear models is that we can reparameterize the model so that the fitted means remain the same, but the coefficients have interpretations aligned with the scientific question.
 
 For example, consider the model
 
 $$
-Y_i = \beta_0 + \beta_1 x_{i1} + \beta_2 x_{i2} + \beta_3, x_{i1} x_{i2} + \varepsilon_i,
+Y_i = \beta_0 + \beta_1 \, x_{i1} + \beta_2 \, x_{i2} + \beta_3 \,x_{i1} x_{i2} + \varepsilon_i\,,
 $$
 
 where
@@ -186,6 +184,19 @@ Then we interpret the parameters as follows:
 * $\beta_2$ is the average difference between males and females under the chow diet
 * $\beta_3$ is the difference in the diet effect between males and females, often called an _interaction_ effect
 
+To see why this works let's examine plug in the four options for $x_{1i}$ and $x_{2i}$ to the linearm combination above and see what we get:
+
+
+$$
+\begin{aligned}
+\mbox{female on chow diet} \implies x_{1i} = 0, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 \\
+\mbox{female on high fat diet} \implies x_{1i} = 1, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_1\\
+\mbox{male on chow diet} \implies x_{1i} = 0, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_2\\
+\mbox{male on chow diet} \implies x_{1i} = 1, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 +\beta_1 + \beta_2\\
+\end{aligned}
+$$
+
+
 This parameterization does not change the predicted values. It simply changes how we interpret the coefficients so that each corresponds to a meaningful comparison.
 
 
@@ -197,7 +208,7 @@ In R, we can specify the linear model above using the following:
 fit <- lm(body_weight ~ diet*sex, data = mice_weights)
 ```
 
-Here, the `*` denotes _factor crossing_, not multiplication: `diet*sex` is shorthand for `diet+sex+diet:sex`,  to calculate diet; sex; and diet combined with sex.
+Here, the `*` denotes _factor crossing_, not multiplication: `diet*sex` is shorthand for `diet+sex+diet:sex`,  to include diet, sex, and the diet/ sex interaction, respecitvely, in the model.
 
 ```{r}
 summary(fit)$coef
@@ -221,10 +232,11 @@ Note that this model does not account for the difference in diet effect between 
 
 ```{r lm-diagnostic-plot, echo=-1}
 rafalib::mypar()
-plot(fit, which = 1)
+boxplot(fit$residuals ~ diet + sex, data = mice_weights) 
+abline(h = 0, lty = 2)
 ```
 
-Scientific studies, particularly within epidemiology and social sciences, frequently omit interaction terms from models due to the high number of variables. Adding interactions necessitates numerous parameters, which in extreme cases may prevent the model from fitting. However, this approach assumes that the interaction terms are zero, and if incorrect, it can skew the interpretation of the results. Conversely, when this assumption is valid, models excluding interactions are simpler to interpret, as parameters are typically viewed as the extent to which the outcome increases with the assigned treatment.
+Scientific studies, particularly within epidemiology and social sciences, frequently omit interaction terms from models due to the high number of variables. Adding interactions necessitates numerous parameters, which in extreme cases may prevent the model from fitting. However leaving interactions out implicitly assumes that they are 0, which can lead to models that do not describe the data well and hence are not suitable for use. Conversely, when we can defend the assumption that there are no interaction effects, models excluding interactions are simpler to interpret, as parameters are typically viewed as the extent to which the outcome increases with the assigned treatment.
 
 :::{.callout-tip}
 Linear models are highly flexible and applicable in many contexts. For example, we can include many more factors than just 2. We have only just scratched the surface of how linear models can be used to estimate treatment effects. We highly recommend learning more about this by exploring linear model textbooks and R manuals that cover the use of functions such as `lm`, `contrasts`, and `model.matrix`.

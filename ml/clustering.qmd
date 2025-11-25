@@ -1,18 +1,26 @@
-# Clustering {#sec-clustering}
+# Unsupervised Learning: Clustering {#sec-clustering}
 
-The algorithms we have described so far are examples of a general approach referred to as *supervised* machine learning. The term *supervised* comes from the fact that the outcomes in the training set are used to *supervise* the construction of a prediction algorithm. 
+The algorithms we have studied so far represent the most widely used branch of machine learning: supervised learning. In supervised learning, the training data include both predictors and outcomes, and the goal is to learn a function that predicts the outcome for new observations. Much of the mathematical and practical framework developed in previous chapters was aimed at understanding, evaluating, and building these supervised prediction models.
 
-In contrast, there is another branch of machine learning known as *unsupervised* learning. In this setting, the outcomes are not provided, and the goal is instead to uncover structure in the data, often in the form of groups. These methods are also referred to as *clustering* algorithms because they group observations into *clusters* based on similarities in their predictors.
+However, supervised learning is only one part of what is broadly referred to as machine learning. A second major branch is *unsupervised learning*, in which the outcomes (labels) are not provided. The goal is no longer prediction, but rather to uncover structure in the data: identify groups, detect patterns, or reveal lower-dimensional representations. This family of techniques is extremely important in practice and includes many methods not covered in this book. Here, we provide a brief introduction and refer readers to the recommended texts for a deeper study.
 
-In the two examples we have considered so far, clustering would not be very effective. For example, given only heights, we would not expect an algorithm to cleanly discover two groups (male and female) because the overlap is substantial. Similarly, in the digit classification example, the distributions of twos and sevens overlap enough to make clustering challenging.
+Unsupervised learning encompasses a wide variety of approaches, but one of the most common is *clustering*: the task of grouping observations with similar features. Clustering can be challenging in settings like height-based sex prediction or the two-versus-seven digit example, because the groups naturally overlap. But in many scientific and applied domains, such as genomics, marketing, image analysis, and recommender systems, nsupervised methods can uncover meaningful patterns that would otherwise remain hidden.
 
-However, there are many applications in which unsupervised learning is a powerful tool, particularly for exploratory data analysis. For example, clustering can reveal hidden subgroups in biological, social, or market data that may not be obvious at first glance.
+In this chapter, we focus on two classic clustering algorithms, each illustrating a very different strategy:
 
-A first step in any clustering algorithm is defining a distance (or similarity) between observations or groups of observations. Once a distance is defined, the next step is to decide how to join observations into clusters. There are many algorithms for doing this. In this chapter, we introduce two common approaches: hierarchical clustering and *k*-means clustering.
+* **Hierarchical clustering**, which groups observations based on recursively merging the closest pairs.
+* **k-means clustering**, which partitions the data by iteratively refining cluster centers.
 
-A first step in any clustering algorithm is defining a distance between observations or groups of observations. Then we need to decide how to join observations into clusters. There are many algorithms for doing this. Here we introduce two as examples: hierarchical and k-means.
+These two methods are foundational as many advanced unsupervised learning techniques build on the same ideas.
 
-We startin by  constructing a simple example based on movie ratings. Here we quickly construct a matrix `y` that has ratings for the 50 movies with the most ratings among users with at least 100 ratings: 
+## Examples
+
+To make the concepts concrete, we study two real examples. These examples illustrate how unsupervised learning can uncover latent structure in real data, even when no outcome labels are available.
+
+
+### Movie ratings
+
+Our first example is based on movie ratings. Here we quickly construct a matrix `movies` that has ratings for the 50 movies with the most ratings among users with at least 100 ratings: 
 
 
 ```{r, cache=FALSE, message=FALSE, warning=FALSE}
@@ -24,29 +32,50 @@ dt <- dt[, if (.N >= 100) .SD, by = userId]
 top_movies <- dt[, .N, by = .(movieId, title)]
 dt <- dt[movieId %in% top_movies[order(-N)][1:50, movieId]]
 dt <- dcast(dt, title ~ userId, value.var = "rating") 
-y <- as.matrix(dt[,-1])
-rownames(y) <- str_remove(dt$title, ": Episode") |> str_trunc(20)
+movies <- as.matrix(dt[,-1])
+rownames(movies) <- str_remove(dt$title, ": Episode") |> str_trunc(20)
 ```
 
-Notice that if we compute distances directly from the original ratings, movies with generally high ratings will tend to be close to each other, as will movies with generally low ratings. However, this is not what we are actually interested in. Instead, we want to capture how ratings correlate *across users* for the `r ncol(y)` different users. To achieve this, we center the ratings for each movie by removing the movie effect:
+Notice that if we compute distances directly from the original ratings, movies with generally high ratings will tend to be close to each other, as will movies with generally low ratings. However, this is not what we are actually interested in. Instead, we want to capture how ratings correlate *across users* for the `r ncol(movies)` different users. To achieve this, we center the ratings for each movie by removing the movie effect:
 
 ```{r}
-y <- y - rowMeans(y, na.rm = TRUE)
+movies <- movies - rowMeans(movies, na.rm = TRUE)
 ```
 
-As described in [@sec-regularization], many of the entries are missing because not every user rates every movie, so we use the argument `na.rm = TRUE`.
+As described in @sec-regularization, many of the entries are missing because not every user rates every movie, so we use the argument `na.rm = TRUE`. With the centered data, we can now cluster movies based on their rating patterns. 
 
-With the centered data, we can now cluster movies based on their rating patterns. The first step is to compute distances between each pair of movies using the `dist` function:
+### Gene expression measurements
+
+
+Our second example uses the `tissue_gene_expression` dataset from **dslabs**. This dataset contains gene-expression measurements for `r length(tissue_gene_expression$y)` tissue samples. The predictors, stored in the component `x`, form a matrix with 500 columns, one for each gene, so each row represents the expression profile of a single tissue sample. The outcome labels, saved in the component `y`, indicate which of seven tissue types each sample comes from.
+
+Although clustering is typically applied when labels are *unknown*, this dataset is pedagogically useful because we *do* know the true tissue types. This lets us examine how well the clusters we find reflect the underlying biological structure: different tissues have distinct patterns of gene expression, even though all cells share the same genome. Different genes play different functional roles in different tissues, and these patterns should be detectable through clustering.
+From a biological perspective, all these tissues share the same genome, every cell contains the same DNA. What makes tissues different is which genes are turned on or off, and by how much. These tissue-specific expression patterns reflect the distinct functions of each cell type. Because of this, we expect that tissue samples with similar biological roles will show similar gene-expression profiles.
+
+Before clustering, we create a centered version of the gene-expression matrix by subtracting each gene's mean expression level. This ensures we focus on *relative differences* in gene expression rather than absolute magnitude:
 
 ```{r}
-d <- dist(y)
+genex <- sweep(tissue_gene_expression$x, 2, colMeans(tissue_gene_expression$x))
+```
+
+When we later explore `genex`, even without giving the algorithm the tissue labels, we should see structure emerge: samples from the same tissue tend to cluster together because they share characteristic expression patterns.
+
+
+## Hierarchical clustering
+
+The first clustering algorithm we describe is *hierarchical cluster*. As with many clustering algorithms, the first step is to compute distances between each pair of observation. We do this for the `movies` matrix as an example:
+
+
+```{r}
+d <- dist(movies)
 ```
 
 The `dist` function automatically accounts for missing values and standardizes the distance measurements, ensuring that the computed distance between two movies does not depend on the number of ratings available.
 
-## Hierarchical clustering
+With the distance between each pair of movies computed, we need an algorithm to define groups, based on these distances. Hierarchical clustering starts by defining each observation as a separate group, then the two closest groups are joined into new groups. We then continue joining the closest groups into new groups iteratively until there is just one group including all the observations. 
 
-With the distance between each pair of movies computed, we need an algorithm to define groups, based on these distances. Hierarchical clustering starts by defining each observation as a separate group, then the two closest groups are joined into new groups. We then continue joining the closest groups into new groups iteratively until there is just one group including all the observations. The `hclust` function implements this algorithm and takes a distance as input.
+
+The `hclust` function implements this algorithm and takes a distance as input:
 
 ```{r}
 h <- hclust(d)
@@ -54,31 +83,30 @@ h <- hclust(d)
 
 We can see the resulting groups using a _dendrogram_. The function `plot` applied to an `hclust` object creates a dendrogram:
 
-```{r, eval=FALSE}
-plot(h, cex = 0.65, main = "", xlab = "")
-```
 
-```{r dendrogram, out.width="100%", fig.width = 8, fig.height = 4, echo=FALSE}
+```{r dendrogram, out.width="100%", fig.width = 10, fig.height = 5, echo=-1}
 rafalib::mypar()
-plot(h, cex = 0.65, main = "", xlab = "")
+plot(h, cex = 0.75, main = "", xlab = "")
 ```
 
 This graph gives us an approximation between the distance between any two movies. To find this distance, we find the first location, from top to bottom, where these movies split into two different groups. The height of this location is the distance between these two groups. So, for example, the distance between the three _Star Wars_ movies is 8 or less, while the distance between _Raiders of the Lost of Ark_ and _Silence of the Lambs_ is about 17.
 
-To generate actual groups, we can do one of two things: 1) decide on a minimum distance needed for observations to be in the same group or 2) decide on the number of groups you want and then find the minimum distance that achieves this. The function `cutree` can be applied to the output of `hclust` to perform either of these two operations and generate groups.
+To generate actual groups, we can do one of two things: 1) decide on a minimum distance needed for observations to be in the same group or 2) decide on the number of groups you want and then find the minimum distance that achieves this. 
+
+The function `cutree` can be applied to the output of `hclust` to perform either of these two operations and generate groups. The argument `k` can be used to provide the number of groups and, alternatively, the argument `h` can be used to denote the minium distance between members of a group. Here is how we ask for 10 groups to be formed:
 
 ```{r}
 groups <- cutree(h, k = 10)
 ```
 
 Note that the clustering provides some insights into types of movies. Group 2 appears to be 
-critically aclaimed movies:
+critically acclaimed movies:
 
 ```{r}
 names(groups)[groups == 2]
 ```
 
-And Group 9 appears to be nerd movies:
+And Group 9 appears to be _nerd_ movies:
 
 ```{r}
 names(groups)[groups == 9]
@@ -89,51 +117,54 @@ We can change the size of the group by either making `k` larger or `h` smaller.
 
 ## Heatmaps
 
-A powerful visualization tool for discovering clusters or patterns in your data is the heatmap. The idea is simple: plot an image of your data matrix with colors used as the visual cue and both the columns and rows ordered according to the results of a clustering algorithm. We will demonstrate this with the `tissue_gene_expression` dataset in **dslabs**.
 
-We start by scaling the columns of the gene expression matrix because we care about relative differences in gene expression. After scaling, we compute perform clustering on both the observations and the predictors:
+A powerful visual tool for revealing clusters or patterns in high-dimensional data is the *heatmap*. Heatmaps are especially useful when *both* the observations and the predictors can form meaningful groups. Gene-expression datasets are a prime example: not only can tissue samples cluster by biological type, but genes themselves often cluster into functional groups that are co-expressed.
+
+The basic idea is straightforward: we create an image of the data matrix using color to represent each value, and we reorder both rows and columns according to the results of a clustering algorithm. This reordering places similar samples and similar genes next to each other, making structure in the data much easier to see.
+
+We illustrate this approach below using the `tissue_gene_expression` dataset from **dslabs**.
 
 ```{r}
-library(dslabs)
-y <- sweep(tissue_gene_expression$x, 2, colMeans(tissue_gene_expression$x))
-h_1 <- hclust(dist(y))
-h_2 <- hclust(dist(t(y)))
+h_1 <- hclust(dist(genex))
+h_2 <- hclust(dist(t(genex)))
 ```
 
 Note that we have performed two clusterings: we clustered samples (`h_1`) and genes (`h_2`).
 
 Now we can use the results of this clustering to order the rows and columns:
 
-```{r heatmap, out.width="100%", fig.height=7, eval=FALSE}
-image(y[h_1$order, h_2$order])
+```{r heatmap, eval=FALSE}
+image(genex[h_1$order, h_2$order])
 ```
 
 The `heatmap` function that does all this for us:
 
-```{r heatmap-2, out.width="100%", fig.height=7, eval=FALSE}
-heatmap(y, col = RColorBrewer::brewer.pal(11, "Spectral"))
+```{r heatmap-2, eval=FALSE}
+heatmap(genex)
 ```
 
-Note we do not show the results of the heatmap function because there are too many features for the plot to be useful. We will therefore filter some columns and remake the plots.
+Note we do not show the results of the two lines of code above because there are too many features for the plot to be useful. We will therefore filter some columns and remake the plots.
 
-If only a few features are different between clusters, including all the features can add enough noise that making cluster detection challenging. A simple approach to avoid this is to assume low variability features are not informative and include only high variance features. For example, in the movie example, users with low variance in their ratings are not really distinguishing movies: all the movies seem about the same to them. 
+If only a few features are different between clusters, including all the features can add enough noise that making cluster detection challenging. A simple approach to avoid this is to assume low variability features are not informative and include only high variability features. For example, in the movie example, users with low variance in their ratings are not really distinguishing movies: all the movies seem about the same to them. Similary, in the gene expression example, genes that don't vary across samples are less likely to be informative of biologically meaningful patterns.
 
-Here is an example code showing how we can include only the features with high variance in a heatmap:
+Here we show how to restrict the heatmap to only the most variable genes, which often reveal the strongest biological patterns. We first compute the standard deviation for each gene, select the top 25 most variable genes, and then plot a heatmap using a more suitable divergent color palette:
 
-```{r heatmap-3, out.width="100%", fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
+```{r heatmap-3, fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
 library(matrixStats)
-sds <- colSds(y, na.rm = TRUE)
+sds <- colSds(genex, na.rm = TRUE)
 o <- order(sds, decreasing = TRUE)[1:25]
-heatmap(y[,o], col = RColorBrewer::brewer.pal(11, "Spectral"))
+heatmap(genex[,o], col = rev(RColorBrewer::brewer.pal(11, "Spectral")))
 ```
+
+We see clear patterns in the heatmap: observations cluster into groups that largely correspond to tissue type, and genes also form clusters that reflect biologically meaningful structure. For example, genes such as SV2B, GPM6B, LRP4, and DOCK4 cluster together because they are all associated with neuronal function.
 
 Note there are several other heatmap functions in R. A popular example is the `heatmap.2` in the **gplots** package.
 
 ## k-means
 
-We have so far described just one clustering algorithm: hierarchical clustering. However, there are many others that take quite different approaches. To demonstrate another, we now introduce the *k-means* clustering algorithm.
+The second clustering algorithm we describe is *k-means*.
 
-The k-means algorithm requires us to predefine \$k\$, the number of clusters we want to create. Once \$k\$ is set, the algorithm proceeds iteratively:
+The k-means algorithm requires us to predefine $k$, the number of clusters we want to create. Once $k$ is set, the algorithm proceeds iteratively:
 
 1. *Initialization:* Define $k$ centers (chosen at random).
 2. *Assignment step:* Each observation is assigned to the cluster with the closest center.
@@ -144,42 +175,144 @@ We can run k-means to see if it can discover the different tissues:
 
 ```{r}
 set.seed(2001)
-k <- kmeans(y, centers = 7)
+km <- kmeans(genex, centers = 7)
 ```
 
 The cluster assignments are stored in the `cluster` component:
 
 ```{r}
-k$cluster[1:5]
+km$cluster[1:5]
 ```
 
-Because the initial centers are chosen at random (hence the use of `set.seed`), the resulting clusters can vary. To improve stability, we can repeat the process multiple times with different random starting points and keep the best result. The number of random starts is set with the `nstart` argument:
+Because the initial centers are chosen at random (which is why we use`set.seed`), the resulting clusters can vary. To improve stability, we can repeat the process multiple times with different random starting points and keep the best result. The number of random starts is set with the `nstart` argument:
+
 
 ```{r}
-k <- kmeans(y, centers = 7, nstart = 100)
+set.seed(2001)
+km <- kmeans(genex, centers = 7, nstart = 100)
 ```
 
-
-We can evaluate how well the clusters match the known tissue labels:
+Because we have true tissue labels for this dataset, we can evaluate how well the clusters produced by k-means align with the known biological groups. The simplest approach is to examine a contingency table and assess how *pure* each cluster is, that is, whether most of its samples come from a single tissue type:
 
 ```{r}
-table(tissue_gene_expression$y, k$cluster)
+table(km$cluster, tissue_gene_expression$y)
 ```
 
-The results show that k-means did a reasonably good job at recovering the tissue groups. For example, clusters 1, 3, 4, 5, and 7 correspond to cerebellum, liver, endometrium, kidney, and placenta, respectively. All hippocampus samples are grouped in cluster 6, though five cerebellum samples are incorrectly included there. Cluster 2 captures almost all colon samples, with just one kidney misclassified.
+The results show that k-means does a reasonably good job at recovering the tissue structure. For example, clusters 1, 3, 4, 5, and 7 correspond largely to cerebellum, liver, endometrium, kidney, and placenta, respectively. All hippocampus samples fall into cluster 6, although five cerebellum samples are incorrectly included there. Cluster 2 captures almost all colon samples, with only one kidney sample misassigned.
+
+In the next section, we discuss formal ways to summarize this agreement with a single number, such as *purity* and other commonly used clustering evaluation metrics.
+
+## Evaluating Clusters with Class Labels {#sec-purity}
+
+In supervised learning, we evaluate performance with quantities such as accuracy, sensitivity, and RMSE. Clustering presents a different challenge: because the method is unsupervised, the algorithm never sees the true outcomes and has no explicit notion of "correct" labels. However, in many real data settings we *do* have ground-truth labels available for evaluation purposes—for example, tissue type in gene-expression studies. In these situations, we can meaningfully ask: How well do the clusters recovered by the algorithm align with the known classes? This kind of external evaluation is common in benchmarking studies that compare clustering methods for a given scientific or applied context.
+
+A convenient first step is to visualize cluster quality using a contingency table (or confusion matrix), as we did above with `table`. Here, rows represent clusters and columns represent true classes. After optionally reordering rows or columns to make the structure easier to interpret:
+
+```{r}
+tab <- table(km$cluster, tissue_gene_expression$y)
+tab[,apply(tab, 1, which.max)]
+```
+
+a "pure" cluster appears as a row with one dominant entry and all remaining entries relatively small. This indicates that observations assigned to that cluster overwhelmingly share the same true label.
+
+If we want to summarize this agreement with a single number, the most widely used measure is *cluster purity*.
+
+### Cluster purity
+
+Suppose we have:
+
+* true class labels $Y_i \in {1,\dots,J}$ for each observation $i=1\dots N$, and
+* a clustering algorithm that assigns each observation $i$ to one of $K$ clusters $C_1,\dots,C_K$.
+
+For each cluster $C_k$, we look at the distribution of true labels inside that cluster and find the most common label. The *purity* of cluster $k$ is the proportion of observations in $C_k$ that belong to this majority class. The overall purity is defined as:
+
+$$
+\text{Purity} = \frac{1}{N} \sum_{k=1}^K \max_j | C_k \cap L_j |
+$$
+
+where $L_j$ is the set of observations in class $j$ and $|C_k \cap L_j|$ is the number of observations in both $C_k$ and $L_j$.
+
+Purity is easy to interpret: a purity of 1 means that every cluster consists of observations from just one class; a purity of 0.6 means that, on average, 60% of the points in each cluster come from its dominant class and 40% are "mixed in" from other classes.
+
+We can compute the purity for our gene expression example and note that it is very close to 1:
+
+```{r}
+tab <- table(km$cluster, tissue_gene_expression$y)
+sum(apply(tab, 1, max))/sum(tab)
+```
 
 
+### Other measures: ARI and NMI
 
-## Exercises 
+Purity is simple and intuitive, but it does not correct for chance and can be biased toward having many small clusters. In more formal evaluations, especially in the machine learning literature, two other measures are common:
 
-1\. Load the `tissue_gene_expression` dataset. Remove the row means and compute the distance between each observation. Store the result in `d`.
+* **Adjusted Rand Index (ARI)**: compares the clustering to the true labels and adjusts for agreement that would occur by chance. It ranges from 0 (random assignment) to 1 (perfect match).
 
+* **Normalized Mutual Information (NMI)**: uses ideas from information theory to measure how much knowing the cluster label reduces uncertainty about the true label. It also typically ranges between 0 and 1, with higher values indicating better alignment.
 
-2\. Make a hierarchical clustering plot and add the tissue types as labels.
-
-
-3\. Run a k-means clustering on the data with $K=7$. Make a table comparing the identified clusters to the actual tissue types. Run the algorithm several times to see how the answer changes.
+In practice, purity and the corresponding contingency table are often the first tools used to understand how clusters relate to known classes, with ARI and NMI providing more formal, chance-corrected summaries when needed.
 
 
-4\. Make a heatmap of the 50 most variable genes. Make sure the observations show up in the columns, that the predictors are centered, and add a color bar to show the different tissue types. Hint: use the `ColSideColors` argument to assign colors. Also, use `col = RColorBrewer::brewer.pal(11, "RdBu")` for a better use of colors.
+## Exercises
+
+1\. Compute the pairwise distance between users in the `movies` dataset using a standard distance (e.g., Euclidean).
+   You will get an error because some user pairs have no movies rated in common, producing rows or columns with all NAs.
+   To diagnose this, create a matrix `in_common` where entry $(i, j)$ is the number of movies that users $i$ and $j$ both rated.
+   *Hint:* use `is.na()` together with `crossprod()`.
+
+2\. Create a reduced version of the `movies` matrix containing only users who share at least one commonly rated movie with every other user in the subset.  Center each user's ratings by subtracting their mean, compute a distance matrix, and run hierarchical clustering (`hclust`).  Inspect the resulting dendrogram: Do you observe any structure? Do any groups of users cluster together?
+
+3\. Use `cutree` with `k = 7` or equivalently `cutree` with `h = 14`  to obtain 7 clusters.
+   Create a table showing how many users fall into each of the 7 clusters.
+
+4\. For the largest and second-largest clusters, examine the users' favorite movies (e.g., movies with highest average ratings).
+   Describe the types of movie watchers in each group. Do the clusters correspond to clear preference patterns (e.g., action fans, romance fans, etc.)?
+
+5\. Perform hierarchical clustering on the gene-expression matrix `genex` and label the dendrogram leaves using the tissue types.
+   Two cerebellum samples (`29` and `30`) and two kidney (`38` and `39`) samples cluster with liver, verify this in your plot.
+
+6\.  The results in Exercise 5 differ from the k-means clustering obtained with:
+
+```{r}
+#| eval: false
+set.seed(2001)
+km <- kmeans(genex, centers = 7, nstart = 100)
+```
+
+Examine the cluster centers in `km$centers`. Plot the gene-expression profile of a cerebellum sample (e.g., `"cerebellum_29"`) against each of the seven centers to see which center it most resembles:
+
+```{r}
+#| eval: false
+par(mfrow = c(4, 2))
+for (i in 1:7) {
+  plot(km$centers[i,], genex["cerebellum_29",],
+       xlim = range(genex), ylim = range(genex))
+}
+```
+
+Repeat for `"cerebellum_30"`, `"kidney_38"`, `"kidney_39"`, `"liver_13"`, and `"liver_14"`, and also compare these samples directly to one another. Use these comparisons to propose possible explanations for the mismatches observed in Exercise 5.
+
+7\. Cluster a subset of MNIST digits into **10** clusters:
+
+```{r}
+#| eval: false
+mnist <- read_mnist()
+set.seed(1990)
+index <- sample(nrow(mnist$train$images), 1000)
+x <- mnist$train$images[index,]
+y <- factor(mnist$train$labels[index])
+km <- kmeans(x, centers = 10, nstart = 100)
+```
+
+Compare cluster assignments to true labels using `table()`.
+Compute the cluter purity of the resulting clustering.
+How well does k-means do when asked to find 10 digit clusters?
+
+8\. Examine the cluster centers as images. For example, note that the center for the cluster most associated with "3" may be a mixture of "3" and "5".    Comment on what you observe.
+
+9\. Rerun k-means with 25 clusters to allow the algorithm to represent multiple handwriting styles for the same digit.
+Inspect both the contingency table, the cluster purity, and the cluster-center images.
+Comment on whether the results improve and what you learn about the variety of ways people write the digits.
+
+10\. As discussed in @sec-purity, purity generally increases with the number of clusters. Repeat Exercise 9 for `k` in `seq(10, 100, 10)`. Compute purity for each value of `k` and make a plot of purity versus number of clusters. Comment on when increases in purity seem meaningful and when they appear to be due only to chance.
 

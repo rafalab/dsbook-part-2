@@ -1,4 +1,4 @@
-# Resampling Methods {#sec-cross-validation}
+# Resampling and Model Assessment {#sec-cross-validation}
 
 In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here we focus on the conceptual and mathematical aspects. We will describe how to implement resampling methods in practice with the **caret** package later in [@sec-caret]. To motivate the concept, we will use the two predictor digits data presented in [@sec-two-or-seven] and introduce k-nearest neighbors (kNN), to demonstrate the ideas.
 
@@ -12,13 +12,21 @@ $$
 
 as defined in @sec-smoothing-ml-connection.
 
-With k-nearest neighbors (kNN) we estimate $p(\mathbf{x})$ in a similar way to bin smoothing. First, we define the distance between all observations based on the features. Then, for any point $\mathbf{x}_0$, we estimate $p(\mathbf{x})$ by identifying the $k$ nearest points to $\mathbf{x}_0$ and afterwards taking an average of the $y$s associated with these points. We refer to the set of points used to compute the average as the *neighborhood*.
+With k-nearest neighbors (kNN) we estimate $p(\mathbf{x})$ in a similar way to bin smoothing. First, we define the distance between all observations based on the features. Then, for any point $\mathbf{x}_0$, we estimate $p(\mathbf{x}_0)$ by identifying the $k$ nearest points to $\mathbf{x}_0$ and taking an average of the $y$s associated with these points. We refer to the set of points used to compute the average as the *neighborhood*.
 
-Due to the connection we described earlier between conditional expectations and conditional probabilities, this gives us $\hat{p}(\mathbf{x}_0)$, just like the bin smoother gave us an estimate of a trend. As with bin smoothers, we can control the flexibility of our estimate through the $k$ parameter: larger $k$s result in smoother estimates, while smaller $k$s result in more flexible and wiggly estimates.
+Due to the connection we described earlier between conditional expectations and conditional probabilities, this gives us $\hat{p}(\mathbf{x}_0)$, just like the bin smoother gave us an estimate of a trend. As with bin smoothers, we can control the flexibility of our estimate through a parameter, in the case the number o neighbors $k$: larger $k$s result in smoother estimates, while smaller $k$s result in more flexible and wiggly estimates.
 
-To implement the algorithm, we can use the `knn3` function from the **caret** package. Looking at the help file for this package, we see that we can call it in one of two ways. We will use the first way in which we specify a *formula* and a data frame. The data frame contains all the data to be used. The formula has the form `outcome ~ predictor_1 + predictor_2 + predictor_3` and so on. Therefore, we type `y ~ x_1 + x_2`. If we are going to use variables in the data frame, we can use the `.` like this `y ~ .`. We also need to pick $k$, which is set to `k = 5` by default. The final call looks like this:
+To fit a $k$-nearest neighbors model, we use the `knn3` function from the **caret** package. The help file shows two ways to call this function; we will use the *formula interface*, which lets us write the model in the form
 
-```{r, message = FALSE, warning = FALSE}
+```
+outcome ~ predictor_1 + predictor_2 + ...
+```
+
+Because our training set is stored in a data frame, we can use the shorthand `y ~ .` to mean "use `y` as the outcome and all other columns as predictors."
+
+We must also choose the number of neighbors $k$. The default is `k = 5`, which we will use here. Putting this together, our call looks like:
+
+```{r}
 library(dslabs)
 library(caret)
 knn_fit <- knn3(y ~ ., data = mnist_27$train, k = 5)
@@ -26,18 +34,21 @@ knn_fit <- knn3(y ~ ., data = mnist_27$train, k = 5)
 
 In this case, since our dataset is balanced and we care just as much about sensitivity as we do about specificity, we will use accuracy to quantify performance.
 
-The `predict` function for `knn3` produces a probability for each class. We can keep the probability of being a 7 as the estimate $\hat{p}(\mathbf{x})$ using `type = "prob"`. Here we 
-obtain the actual prediction using `type = "class"`:
+The `predict` function for `knn3` returns estimes of $p(\mathbf{x})$ (`type = "prob"`) or the prediction (`type = "class"`):
 
 ```{r}
 y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
-confusionMatrix(y_hat_knn, mnist_27$test$y)$overall["Accuracy"]
 ```
 
-We see that kNN, with the default parameter, already beats regression. To see why this is the case, we plot $\hat{p}(\mathbf{x})$ and compare it to the true conditional probability $p(\mathbf{x})$:
+We see that kNN, with the default parameter, already beats GLM:
+
+```{r}
+mean(y_hat_knn == mnist_27$test$y)
+```
+
+To see why this is the case, we plot $\hat{p}(\mathbf{x})$ and compare it to the true conditional probability $p(\mathbf{x})$:
 
 ```{r, echo = FALSE, message=FALSE, warning=FALSE, cache=FALSE}
-library(tidyverse)
 # We use this function to plot the estimated conditional probabilities
 plot_cond_prob <- function(p_hat = NULL){
   tmp <- mnist_27$true_p
@@ -51,7 +62,8 @@ plot_cond_prob <- function(p_hat = NULL){
 }
 ```
 
-```{r knn-fit, echo = FALSE, message = FALSE, warning = FALSE, out.width="100%"}
+```{r knn-fit, echo = FALSE, message = FALSE, warning = FALSE, fig.asp = 0.5}
+library(tidyverse)
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")
 
 p2 <- plot_cond_prob(predict(knn_fit, mnist_27$true_p)[,2]) +
@@ -65,10 +77,10 @@ We see that kNN adapts better to the non-linear shape of $p(\mathbf{x})$. Howeve
 
 ```{r}
 y_hat_knn <- predict(knn_fit, mnist_27$train, type = "class")
-confusionMatrix(y_hat_knn, mnist_27$train$y)$overall["Accuracy"]
+mean(y_hat_knn == mnist_27$train$y)
 
 y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
-confusionMatrix(y_hat_knn, mnist_27$test$y)$overall["Accuracy"]
+mean(y_hat_knn == mnist_27$test$y)
 ```
 
 This is due to what we call *over-training*.
@@ -82,20 +94,20 @@ Here we fit a kNN model with $k = 1$ and confirm we get near perfect accuracy in
 ```{r}
 knn_fit_1 <- knn3(y ~ ., data = mnist_27$train, k = 1)
 y_hat_knn_1 <- predict(knn_fit_1, mnist_27$train, type = "class")
-confusionMatrix(y_hat_knn_1, mnist_27$train$y)$overall[["Accuracy"]]
+mean(y_hat_knn_1 == mnist_27$train$y)
 ```
 
 But in the test set, accuracy is actually worse than what we obtained with regression:
 
 ```{r}
 y_hat_knn_1 <- predict(knn_fit_1, mnist_27$test, type = "class")
-confusionMatrix(y_hat_knn_1, mnist_27$test$y)$overall["Accuracy"]
+mean(y_hat_knn_1 == mnist_27$test$y)
 ```
 
 We can see the over-fitting problem by plotting  the decision rule boundaries produced by $\hat{p}(\mathbf{x})$:
 
 
-```{r knn-1-overfit, echo = FALSE, out.width="100%"}
+```{r knn-1-overfit, echo = FALSE, fig.asp = 0.5}
 tmp <- mnist_27$true_p
 tmp$knn <- predict(knn_fit_1, newdata = mnist_27$true_p)[,2]
 p1 <- tmp |>
@@ -127,12 +139,12 @@ Although not as badly as with $k=1$, we saw that with $k = 5$ we also over-train
 ```{r}
 knn_fit_401 <- knn3(y ~ ., data = mnist_27$train, k = 401)
 y_hat_knn_401 <- predict(knn_fit_401, mnist_27$test, type = "class")
-confusionMatrix(y_hat_knn_401, mnist_27$test$y)$overall["Accuracy"]
+mean(y_hat_knn_401 == mnist_27$train$y)
 ```
 
 The estimate turns out to be similar to the one obtained with regression:
 
-```{r mnist-27-glm-est, echo = FALSE, out.width="100%"}
+```{r mnist-27-glm-est, echo = FALSE, fig.asp = 0.5}
 fit_lm <- lm(y ~ ., data = mutate(mnist_27$train, y=y == "7"))
 p_hat <- predict(fit_lm, newdata = mnist_27$true_p)
 p_hat <- scales::squish(p_hat, c(0, 1))
@@ -147,9 +159,9 @@ grid.arrange(p1, p2, nrow = 1)
 
 In this case, $k$ is so large that it does not permit enough flexibility. We call this *over-smoothing*.
 
-## Tuning parameter
+## Tuning parameters
 
-It is very common for machine learning algorithms to require that we set one or more values *before* fitting the model. A simple example is the choice of $k$ in k-Nearest Neighbors (kNN). In [@sec-example-alogirhms], we will see additional examples. These values are referred to as *tuning parameters*, and an important part of applying machine learning in practice is choosing them, often called *tuning the model*.
+It is very common for machine learning algorithms to require that we set one or more values *before* fitting the model. A simple example is the choice of $k$ in k-Nearest Neighbors (kNN). In [@sec-example-algorithms], we will see additional examples. These values are referred to as *tuning parameters*, and an important part of applying machine learning in practice is choosing them, often called *tuning the model*.
 
 So how do we pick tuning parameters? For instance, how do we decide on the best $k$ in kNN? In principle, we want the value of $k$ that maximizes accuracy or, equivalently, minimizes the expected MSE as defined in [@sec-mse]. The challenge is that we do not know the true expected error. The goal of *resampling methods* is to estimate this error for any given algorithm and set of tuning parameters, such as $k$.
 
@@ -183,17 +195,26 @@ data.frame(k = ks, train = accuracy["train",], test = accuracy["test",]) |>
 
 First, note that the estimate obtained from the training set is generally more optimistic, higher accuracy, than the estimate from the test set, with the gap being larger for smaller values of $k$. This is a classic symptom of *overfitting*.
 
-So should we simply pick the $k$ that maximizes accuracy and report this value? There are two key problems with this approach:
+Should we simply choose the value of $k$ that gives the highest accuracy on the test set and report its accuracy?
+This approach has two important drawbacks:
 
-1.  The accuracy-versus-$k$ plot is quite jagged. We do not expect small changes in $k$ to cause large swings in accuracy or MSE. The jaggedness arises because the accuracy is estimated from a finite sample, making it a random variable.
+1. **The accuracy–versus–(k) curve is noisy.** We do not expect small changes in $k$ to cause large changes in accuracy or MSE.  The jagged pattern occurs because each accuracy estimate is based on a finite test sample, so it fluctuates due to random variation. As a result, the "best" $k$ may appear best just by chance.
 
-2.  Although we used the test set to estimate accuracy for each $k$, we also used the *same* test set to select the best $k$. As a result, the reported minimum test set error is overly optimistic and will not generalize to new, unseen data.
+2. **We are using the test set twice.**
+   Although we are not fitting the model on the test set, we *are* using it to choose $k$ and then using it again to report accuracy. This leads to an optimistic estimate of performance that will typically not hold up on truly new data.
 
-*Resampling methods* provide a principled solution to both problems by reducing variability and ensuring that test data are not used twice—once for evaluation and again for tuning.
+
+
+*Resampling methods* provide a principled solution to both problems by reducing variability and ensuring that test data are not used twice, once for evaluation and again for tuning.
 
 ## Mathematical description of resampling methods
 
-In the previous section, we introduced kNN as an example to motivate the topic of this chapter. In this particular case, there is just one parameter, $k$, that affects the performance of the algorithm. However, in general, machine algorithms may have multiple parameters so we use the notation $\lambda$ to represent any set of parameters needed to define a machine learning algorithm. We also introduce notation to distinguish the predictions you get with each set of parameters with $\hat{y}(\lambda)$ and the MSE for this choice with $\text{MSE}(\lambda)$. Our goal is to find the $\lambda$ that minimizes $\text{MSE}(\lambda)$. Resampling methods help us estimate $\text{MSE}(\lambda)$.
+
+In @sec-knn-cv-intro we introduced $k$-nearest neighbors (kNN) as a simple example to motivate this chapter. In that setting, the algorithm depends on only one tuning parameter, $k$, which directly affects performance. More generally, machine learning algorithms often involve *multiple* tuning parameters. Here we use the notation $\lambda$ to represent the full set of parameters that define the algorithm.
+
+To keep track of how these choices affect performance, we write the predictions produced by a given parameter set for observation $i$ as $\hat{y}_i(\lambda)$ and the corresponding mean squared error as $\mathrm{MSE}(\lambda)$. Our goal is to find the value of $\lambda$ that minimizes $\mathrm{MSE}(\lambda)$.
+
+Resampling methods provide practical ways to estimate $\mathrm{MSE}(\lambda)$ and therefore guide us toward the best tuning parameters.
 
 An intuitive first attempt is the apparent error defined in @sec-mse and used in the previous section:
 
@@ -201,17 +222,17 @@ $$
 \hat{\mbox{MSE}}(\lambda) = \frac{1}{N}\sum_{i = 1}^N \left\{\hat{y}_i(\lambda) - y_i\right\}^2
 $$
 
-As noted in the previous section, this estimate is a random error, based on just one test set, with enough variability to affect the choice of the best $\lambda$ substantially.
+As noted in the previous section, this estimate is a random variable, based on just one test set, with enough variability to affect the choice of the best $\lambda$ substantially.
 
-Now imagine a world in which we could obtain data repeatedly, say from new random samples. We could take a very large number $B$ of new samples, split them into training and test sets, and define: 
+Now imagine a world in which we could obtain data repeatedly, say from new random samples. We could take a very large number $B$ of new samples, split each of them into training and test sets, and define: 
 
 $$
 \frac{1}{B} \sum_{b=1}^B \frac{1}{N}\sum_{i=1}^N \left\{\hat{y}_i^b(\lambda) - y_i^b\right\}^2
 $$
 
-with $y_i^b$ the $i$th observation in sample $b$ and $\hat{y}_{i}^b(\lambda)$ the prediction obtained with the algorithm defined by parameter $\lambda$ and trained independently of $y_i^b$. The law of large numbers tells us that as $B$ becomes larger, this quantity gets closer and closer to $MSE(\lambda)$. This is of course a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires the idea behind resampling methods.
+with $y_i^b$ the $i$th observation in test sample $b$ and $\hat{y}_{i}^b(\lambda)$ the prediction obtained with the algorithm defined by parameter $\lambda$ and trained on train set $b$. The law of large numbers tells us that as $B$ becomes larger, this quantity gets closer and closer to $\mbox{MSE}(\lambda)$. This is of course a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires resampling methods.
 
-The general idea is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe _cross validation_, one of the most widely used resampling methods.
+The general idea behind resampling methods is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe _cross validation_, one of the most widely used resampling methods.
 
 ## Cross validation 
 
@@ -257,7 +278,7 @@ $$
 \mbox{MSE}(\lambda) \approx\frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
 $$
 
-We want to generate a dataset that can be thought of as independent random sample, and do this $B$ times. The K in K-fold cross validation, represents the number of time $B$. In the illustrations, we are showing an example that uses $B = 5$.
+We want to generate a dataset that can be thought of as independent random sample, and do this $B$ times. The K in K-fold cross validation, represents the number of time $B$. In the illustrations below we show an example that uses $B = 5$.
 
 We will eventually end up with $B$ samples, but let's start by describing how to construct the first: we simply pick $M = N/B$ observations at random (we round if $M$ is not a round number) and think of these as a random sample $y_1^b, \dots, y_M^b$, with $b = 1$. We call this the validation set.
 
@@ -285,7 +306,6 @@ and obtain an estimate of our loss. A final step would be to select the $\lambda
 
 Now how do we pick the cross validation fold? Large values of $B$ are preferable because the training data better imitates the original dataset. However, larger values of $B$ will have much slower computation time: for example, 100-fold cross validation will be 10 times slower than 10-fold cross validation. For this reason, the choices of $B = 5$ and $B = 10$ are popular.
 
-One way we can improve the variance of our final estimate is to take more samples. To do this, we would no longer require the training set to be partitioned into non-overlapping sets. Instead, we would just pick $B$ sets of some size at random.
 
 ### Estimate MSE of our optimized algorithm
 
@@ -295,13 +315,13 @@ We have described how to use cross validation to optimize parameters. However, w
 knitr::include_graphics("img/cv-6.png")
 ```
 
-We can actually do cross validation again:
+We can actually do cross validation again, say five times:
 
 ```{r, echo = FALSE}
 knitr::include_graphics("img/cv-7.png")
 ```
 
-and obtain a final estimate of our expected loss. However, note that last cross validation iteration means that our entire compute time gets multiplied by $K$. You will soon learn that fitting each algorithm takes time because we are performing many complex computations. As a result, we are always looking for ways to reduce this time. For the final evaluation, we often just use the one test set.
+and obtain a final estimate of our expected loss by averaging the five MSE estimates. However, note that last cross validation iteration means that our entire compute time gets multiplied by the number of repetitions. You will soon learn that fitting each algorithm takes time because we are performing many complex computations. As a result, we are always looking for ways to reduce this time. For the final evaluation, we often just use the one test set.
 
 Once we are satisfied with this model and want to make it available to others, we could refit the model on the entire dataset, without changing the optimized parameters.
 
@@ -322,9 +342,9 @@ In bootstrap resampling, we create a large number of bootstrap samples from the 
 
 We then average the MSEs obtained in the out-of-bag observations from each bootstrap sample to estimate the model's performance.
 
-This approach is actually the default approach in the **caret** package. We describe how to implement resampling methods with the **caret** package in the next chapter. 
+This approach is actually the default approach in the **caret** package. We describe how to implement resampling methods with the **caret** package in @sec-ml-in-practice.
 
-### Comparison of MSE estimates {#sec-mse-estimates}
+## Comparison of MSE estimates {#sec-mse-estimates}
 
 In @sec-knn-cv-intro, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of applying K-fold cross validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of a 10 fold increase in computation time.
 
@@ -344,65 +364,142 @@ data.frame(k = ks, naive = accuracy["test",],
            boot = boot$results[,2]) |>
   pivot_longer(-k, values_to = "Accuracy", names_to = "set") |>
   mutate(set = factor(set, levels = c("naive", "cv", "boot"),
-                      labels = c("Simple", "K-fold", "Boostrap"))) |>
+                      labels = c("Simple", "10-fold", "Boostrap"))) |>
   ggplot(aes(k, Accuracy, color = set)) + 
   geom_line() 
 ```
 
 
+Note that the three resampling approaches lead to different choices of $\lambda$.
+Using the accuracy curves:
+
+* The naive approach selects $\lambda =$ `r ks[which.max(accuracy["test",])]`.
+* The 10-fold cross-validation approach selects $\lambda =$ `r cv$results[,1][which.max(cv$results[,2])]`.
+* The bootstrap approach selects $\lambda =$ `r boot$results[,1][which.max(boot$results[,2])]`.
+
+These differences highlight an important point: your choice of $\lambda$ is only as good as your estimate of the test error. Reliable resampling methods are essential for finding a tuning parameter that truly generalizes well.
+
+
 ## Exercises
+Below is a **cleaner, clearer, student-friendly version** of the exercise set, expanded to a total of **10 exercises**, with tightened wording, improved motivation, and careful explanations of what students are expected to do.
 
-Generate a set of random predictors and outcomes like this:
+I also added one more exercise (now Exercise 7) so that the set flows logically and reaches 10 total.
 
-```{r, eval = FALSE}
+---
+
+# **Exercises: Overfitting, Feature Selection, and Resampling**
+
+We will work with a dataset in which **the predictors and the outcome are entirely unrelated**. This setting helps us understand how misleading results can arise when we accidentally “peek” at the test set or use the full dataset to perform feature selection.
+
+Generate the dataset:
+
+```{r}
+#| eval: false
 set.seed(1996)
 n <- 1000
 p <- 10000
 x <- matrix(rnorm(n * p), n, p)
-colnames(x) <- paste("x", 1:ncol(x), sep = "_")
-y <- rbinom(n, 1, 0.5) |> factor()
+colnames(x) <- paste0("x_", 1:p)
+y <- factor(rbinom(n, 1, 0.5))   # completely random binary outcome
 
-x_subset <- x[ ,sample(p, 100)]
+# smaller subset for initial exercises
+x_subset <- x[, sample(p, 100)]
 ```
 
-1\. Because `x` and `y` are completely independent, you should not be able to predict `y` using `x` with accuracy larger than 0.5. Confirm this by running cross validation using logistic regression to fit the model. Because we have so many predictors, we selected a random sample `x_subset`. Use the subset when training the model. Hint: use the caret `train` function. The `results` component of the output of `train` shows you the accuracy. Ignore the warnings.
+Because `x` and `y` are independent, no classifier should achieve an accuracy much larger than 0.5.
 
-2\. Now instead of a random selection of predictors, we are going to search for those that are most predictive of the outcome. We can do this by comparing the values for the $y = 1$ group to those in the $y = 0$ group, for each predictor, using a t-test. You can perform this step as follows:
+1\. Using only `x_subset`, randomly split the data into 80% training and 20% test.
 
-```{r, eval = FALSE}
-devtools::install_bioc("genefilter")
-install.packages("genefilter")
-library(genefilter)
-tt <- colttests(x, y)
+Fit a logistic regression model (`glm`, family = "binomial") on the training set and compute the test-set accuracy.
+
+Repeat this entire procedure **five times** with new random splits and report the **average test accuracy**.
+
+2\. We now pick predictors using t-tests, even though all predictors are noise. For each column of `x`, compute a  t-test comparing values in the `y = 1` group to `y = 0`, and extract p-values:
+
+```{r}
+#| eval: false
+ 
+pvals <- apply(x, 2, function(col) t.test(col ~ y)$p.value)
 ```
 
-Create a vector of the p-values and call it `pvals`.
+Create an index `ind` with the predictors whose p-values are < 0.01. How many predictors survive this cutoff?
 
-3\. Create an index `ind` with the column numbers of the predictors that were "statistically significantly" associated with `y`. Use a p-value cutoff of 0.01 to define "statistically significant". How many predictors survive this cutoff?
 
-4\. Re-run the cross validation but after redefining `x_subset` to be the subset of `x` defined by the columns showing "statistically significant" association with `y`. What is the accuracy now?
 
-5\. Re-run the cross validation again, but this time using kNN. Try out the following grid of tuning parameters: `k = seq(101, 301, 25)`. Make a plot of the resulting accuracy.
+3\. Define:
 
-6\. In exercises 3 and 4, we see that despite the fact that `x` and `y` are completely independent, we were able to predict `y` with accuracy higher than 70%. We must be doing something wrong then. What is it?
+```{r}
+#| eval: false
+x_subset <- x[, ind]
+```
 
-a.  The function `train` estimates accuracy on the same data it uses to train the algorithm.
-b.  We are over-fitting the model by including 100 predictors.
-c.  We used the entire dataset to select the columns used in the model. This step needs to be included as part of the algorithm. The cross validation was done **after** this selection.
-d.  The high accuracy is just due to random variability.
+Repeat Exercise 1 but using this new `x_subset`.
 
-7\. Advanced. Re-do the cross validation but this time include the selection step in the cross validation. The accuracy should now be close to 50%.
+What is the **average test accuracy** now? Is it above 0.5?
 
-8\. Load the `tissue_gene_expression` dataset. Use the `train` function to predict tissue from gene expression. Use kNN. What `k` works best?
+4\. Why is accuracy > 0.5 if the data are independent?
 
-9\. The `createResample` function can be used to create bootstrap samples. For example, we can create 10 bootstrap samples for the `mnist_27` dataset like this:
+Choose the *best* explanation:
 
-```{r, eval = FALSE}
+a. The function `train` estimates accuracy on the same data used to train the model.
+b. We are over-fitting because the model uses 100 predictors.
+c. We used the **entire dataset** to perform feature selection, but cross-validation was done **after** selecting predictors.
+d. High accuracy is simply random variation.
+
+
+
+5\. Redo the analysis, but this time perform **feature selection *within* each resampling split**.
+
+This means:
+
+* For each fold or resample,
+* select predictors using *only* the training portion,
+* fit the model using those selected predictors,
+* evaluate on the corresponding test/validation portion.
+
+You should now obtain an accuracy close to 0.5. Explain why.
+
+6\. Load the `tissue_gene_expression` dataset.
+
+Split the data:
+
+* 80% training
+* 20% test
+
+Then, within the training set, repeatedly split into:
+
+* 90% training
+* 10% validation
+
+Use these validation splits to choose the best **k** for a kNN classifier (using `train`).
+
+Report the value of `k` that performs best.
+
+7\. Using the best `k` found in Exercise 6, retrain the kNN model on the entire training set, and evaluate its accuracy on the held-out test set.
+
+Is the accuracy much worse, much better, or roughly the same as what you observed on the validation sets?
+Explain why this comparison matters.
+
+
+8\. We can create bootstrap samples using `createResample`.
+
+```{r}
+#| eval: false
 set.seed(1995)
 indexes <- createResample(mnist_27$train$y, 10)
 ```
 
-How many times do `3`, `4`, and `7` appear in the first re-sampled index?
+In the first bootstrap sample, how many times do the indices 3, 4, and 7 appear?
 
-10\. We see that some numbers appear more than once and others appear no times. This must be so for each dataset to be independent. Repeat the exercise for all the re-sampled indexes.
+9\. Repeat the previous exercise for all 10 bootstrap samples.
 
+Which indices never appear at all in each sample?
+How many observations on average get omitted?
+
+10\. Explain in your own words why a bootstrap sample (sampling with replacement):
+
+* must include some observations multiple times,
+* must omit others entirely, and
+* is still considered a valid "resampled dataset."
+
+Relate this explanation to the idea of using bootstrap samples to estimate prediction error.
