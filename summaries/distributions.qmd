@@ -8,11 +8,12 @@
 
 library(tidyverse)
 library(dslabs)
+library(scales)
 ```
 
 Before we begin, we clarify that this chapter will not cover distributions in the context of probability, which is the mathematical framework used to model uncertainty. We postpone that discussion until the next part of the book, where we will use it throughout. Here, we focus on _distributions_ as a way to describe and summarize data we've already collected. Our goal is to understand the variation and patterns present in a dataset, without yet making probabilistic claims or predictions. The concepts introduced in this chapter will later serve as the foundation for understanding probability distributions, where similar tools are used to describe the likely outcomes of random processes.
 
-To illustrate the concepts needed to understand distribution and how they relate to summary statistics, we will pretend that we have to describe the heights of our classmates to ET, an extraterrestrial that has never seen humans. As a first step, we need to collect data. To do this, we ask students to report their heights in inches. We ask them to provide sex information because we know there are two different distributions by sex. We collect the data and save it in the `heights` data frame included in the **dslabs** package.
+To illustrate the concepts needed to understand distributions and how they relate to summary statistics, we will pretend that we have to describe the heights of our classmates to ET, an extraterrestrial that has never seen humans. As a first step, we need to collect data. To do this, we ask students to report their heights in inches. We ask them to provide sex information because we know that height has different distributions across sexes. We collect the data and save it in the `heights` data frame included in the **dslabs** package.
 
 ```{r}
 library(dslabs)
@@ -28,26 +29,26 @@ It turns out that, in some cases, the two summary statistics introduced in the n
 
 ## Variable types 
 
-Knowing what variable type we are working with is important because it will help us determining the most effective way to summarize our data and display its distribution.
+Knowing what variable type we are working with is important because it will help us determine the most effective way to summarize our data and display its distribution.
 
 We will be working with two types of variables: categorical and numeric. Each can be divided into two other groups: categorical can be ordinal or not, whereas numerical variables can be discrete or continuous.
 
 When data values represent groups instead of numbers, we refer to the data as _categorical_. Two simple examples are sex (male or female) and US regions (Northeast, South, North Central, West). Some categorical data can be ordered even if they are not numbers, such as spiciness (mild, medium, hot). These ordered categorical data are referred to as _ordinal_ data.
 
-Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be a whole number. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes a day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.
+Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be a whole number. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes per day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.
 
 In practice, there are occasions in which discrete variables are treated as continuous. For example, a digital measuring instrument might record data as 16-bit integers. However, because it is rare to obtain exactly the same reading more than once, it is convenient to treat the data as continuous. Another example is country population size. Although population counts are always whole numbers, it is uncommon for two jurisdictions to have exactly the same population. For this reason, population size is also commonly treated as continuous.
 
 
 ## Relative frequency distribution {#sec-pmf-intro}
 
-The most basic statistical summary of a list of numbers or categories is its *distribution*. The simplest way to think of a distribution is as a compact description of values with many entries. This concept should not be new for readers of this book. For example, with categorical data, the _relative frequency distribution_ simply describes the proportion of each unique category:
+The most basic statistical summary of a list of numbers or categories is its *distribution*. The simplest way to think of a distribution is as a compact description of how values are spread across observations. This concept should not be new for readers of this book. For example, with categorical data, the _relative frequency distribution_ simply describes the proportion of each unique category:
 
 $$
 p_k = \frac{\mbox{number of times category }k \mbox{ appears in the list}}{n}
 $$
 
-with $n$ the length of the list.
+with $n$ as the length of the list.
 
 Here is an example with US state regions:
 
@@ -77,18 +78,20 @@ murders |> mutate(x = round(population/10^6)) |> count(x) |> mutate(f = n/sum(n)
 
 When the data is continuous, the task of constructing a summary based on a distribution is more challenging because reporting the frequency of each entry is not an effective summary: most entries are unique so the relative frequency distribution does not summarize much.
 
-Here are the relative frequencies of US state populations:
+Here are the relative frequencies of US state populations, no longer rounded:
 
 ```{r relative-frequencies-of-US}
 #| echo: false
 murders |> filter(state %in% state.name) |>
   count(population) |> mutate(f = n/sum(n)) |> ggplot(aes(population, f)) + 
-  geom_col() + xlab("x") + ylab("f(x)") + theme(panel.grid = element_blank())
+  geom_col() + xlab("x = population") + ylab("f(x)") + theme(panel.grid = element_blank()) +
+  ylab("f(x)") + theme(panel.grid = element_blank()) + 
+  scale_x_continuous(labels = label_comma())
 ```
 
 Since there are 50 states, each with a unique population value $x$, the plot shows $f(x) = \frac{1}{50} = 0.02$ for each state.
 
-To define a distribution for continuous numeric data we define a function that reports the proportion of the data entries $x$ that are below $a$, for all possible values of $a$. This function is called the empirical cumulative distribution function (eCDF) and often denoted with $F$:
+To define a distribution for continuous numeric data, we define a function that reports the proportion of the data entries $x$ that are below a threshold $a$, for all possible values of $a$. This function is called the empirical cumulative distribution function (eCDF) and often denoted with $F$:
 
 $$ F(a) = \mbox{Proportion of data points that are less than or equal to }a$$
 
@@ -99,7 +102,8 @@ Here is the eCDF for state population data above:
 murders |> filter(state %in% state.name) |>
   ggplot(aes(population)) + 
   stat_ecdf() +
-  labs(x = "a", y = "F(a)")
+  labs(x = "a", y = "F(a)") + 
+  scale_x_continuous(labels = label_comma())
 ```
 
 Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us quickly identify medians, ranges, and other important distributional features.
@@ -160,7 +164,7 @@ The R base `hist` function also allows us quickly construct a histogram. We can 
 with(heights, hist(height[sex == "Male"], breaks = c(50, 55, 60:80, 85)))
 ```
 
-If we were to send either of these plots to an extraterrestrial unfamiliar with human height distributions, they would immediately gain key insights about the data. First, the height values range from 50 to 84 inches, with over 95% of observations falling between 63 and 75 inches. Second, the distribution is approximately symmetric around 69 inches. Additionally, by summing bin counts, one could estimate the proportion of data falling within any given interval. Thus, a histogram provides an intuitive summary that preserves most of the information from the original `r sum(heights$sex=="Male")` height measurements using only about 30 bin counts.
+If we were to send either of these plots to an extraterrestrial unfamiliar with human height distributions, they would immediately gain key insights about the data. First, the male height values range from 50 to 84 inches, with over 95% of observations falling between 63 and 75 inches. Second, the distribution is approximately symmetric around 69 inches. Additionally, by summing bin counts, one could estimate the proportion of data falling within any given interval. Thus, a histogram provides an intuitive summary that preserves most of the information from the original `r sum(heights$sex=="Male")` height measurements using only about 30 bin counts.
 
 What information is lost?  A histogram treats all values within a bin as if they were the same when computing bar heights. For instance, values of 64.0, 64.1, and 64.2 inches are grouped together. However, since these differences are barely perceptible, the practical impact is negligible, and we achieve a meaningful summary using just 23 numbers.
 
@@ -172,7 +176,7 @@ heights |> filter(sex == "Male") |> ggplot(aes(x = height)) +
   geom_histogram(breaks = c(50, 55, 60:80, 85), fill = "grey", color = "black")
 ```
 
-Note we use `fill` and `color` to mimic the behavior or `hist`.
+Note we use `fill` and `color` to mimic the behavior of `hist`.
 
 When displaying frequencies, it is important to use equally spaced bins, as larger bins will naturally contain more observations and may distort the visual representation of the data. To instead display **relative** frequency, you can modify the code by setting `y = after_stat(density)`:
 
@@ -186,7 +190,7 @@ heights |> filter(sex == "Male") |>
 
 ### Choosing bin widths
 
-The appearance and interpretation of a histogram depend on the choice of bins, and in the case of equally sized bins, their width. Different bin widths can make the same data look quite different, too narrow, and the histogram may appear noisy or fragmented; too wide, and important features of the distribution may be hidden. The choice of bin width should be guided by the context of the data. For example, in the case of height, most people report values rounded to the nearest half inch, so using bins smaller than that does not make sense. At the same time, because height differences of more than an inch are noticeable in real life, bins larger than about two inches would obscure meaningful variation. For the extreme regions of the distribution, such as below 60 inches or above 80 inches, where there are few observations, it is reasonable to use wider bins to keep the summary clear. Every dataset requires a context-specific decision: the goal is to choose bins that reveal structure without introducing noise, maximizing the information conveyed by a single figure.
+The appearance and interpretation of a histogram depend on the choice of bins, and in the case of equally sized bins, their width. Different bin widths can make the same data look quite different: too narrow, and the histogram may appear noisy or fragmented; too wide, and important features of the distribution may be hidden. The choice of bin width should be guided by the context of the data. For example, in the case of height, most people report values rounded to the nearest half inch, so using bins smaller than that does not make sense. At the same time, because height differences of more than an inch are noticeable in real life, bins larger than about two inches would obscure meaningful variation. For the extreme regions of the distribution, such as below 60 inches or above 80 inches, where there are few observations, it is reasonable to use wider bins to keep the summary clear. Every dataset requires a context-specific decision: the goal is to choose bins that reveal structure without introducing noise, maximizing the information conveyed by a single figure.
 
 ## Smoothed density plots
 
@@ -201,9 +205,9 @@ In this plot, we no longer have sharp edges at the interval boundaries and many 
 
 To understand smooth densities, we have to understand *estimates*, a topic we don't cover until later. However, we provide a heuristic explanation to help you understand the basics.
 
-The main new concept you must understand is that we assume that our list of observed values is a subset of a much larger list of unobserved values. In the case of heights, you can imagine that our list of `r sum(heights$sex=="Male")` male students comes from a hypothetical list containing all the heights of all the male students in all the world measured very precisely. Let's say there are 1,000,000 of these measurements. This list of values has a distribution, like any other list of values, and what we truly want to report to ET is this larger distribution, as it is much more general. Unfortunately, we don't get to see it.
+The main new concept is the assumption that our list of observed values is a subset of an unobserved, much larger list of values. In the case of heights, you can imagine that our list of `r sum(heights$sex=="Male")` male students comes from a hypothetical list containing all the heights of all the male students in all the world measured very precisely. Let's say there are 1,000,000 of these measurements. This list of values has a distribution, like any other list of values, and what we truly want to report to ET is this larger distribution, as it is much more general. Unfortunately, we don't get to see it.
 
-However, we make an assumption that helps us perhaps approximate it. If we had 1,000,000 values, measured very precisely, we could make a histogram with very, very small bins. The assumption is that if we show this, the height of consecutive bins will be similar. This is what we mean by smooth: we don't have big jumps in the heights of consecutive bins. Below, we present histograms for this hypothetical data with bins of size 1, 0.5, and 0.25. To make the curve not depend on the hypothetical size of the hypothetical list, we compute the curve on frequencies rather than counts. The smaller we make the bins, the smoother the histogram becomes:
+However, we may be able to approximate it. If we had 1,000,000 values, measured very precisely, we could make a histogram with very, very small bins. The assumption is that if we show this, the height of consecutive bins will be similar. This is what we mean by smooth: we don't have big jumps in the heights of consecutive bins. Below, we present histograms for this hypothetical data with bins of size 1, 0.5, and 0.25. To make the curve not depend on the hypothetical size of the hypothetical list, we compute the curve on frequencies rather than counts. The smaller we make the bins, the smoother the histogram becomes:
 
 ```{r summaries-simulated-data-histogram-2, fig.width = 9, fig.height = 3,  out.width = "100%",echo = FALSE, message = FALSE}
 set.seed(1988)
@@ -273,7 +277,7 @@ library(gridExtra)
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-Just as a histogram's appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it's reasonable to expect nearby values, within an inch, to occur with similar frequency, the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.
+Just as a histogram's appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it's reasonable to expect nearby values, within an inch, to occur with similar frequency: the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.
 
 ### Interpreting the y-axis
 
@@ -288,7 +292,7 @@ tmp |> ggplot(aes(height,density)) + geom_line() +
 
 The proportion of this area is about `r round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)`, meaning that about `r noquote(paste0(round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)*100, '%'))` of male heights are between 65 and 68 inches.
 
-By understanding this, we are ready to use the smooth density as a summary. For this dataset, we would feel quite comfortable with the smoothness assumption, and therefore with sharing this aesthetically pleasing figure with ET, which he could use to understand our male heights data:
+By understanding this, we are ready to use the smooth density as a summary. For this dataset, we would feel quite comfortable with the smoothness assumption, and therefore with sharing this aesthetically pleasing figure with ET, which he could use it to understand our male heights data:
 
 ```{r summaries-example-of-smoothed-density-2, echo = FALSE}
 heights |> 
@@ -307,7 +311,7 @@ When visualizing data with a histogram or density plot, we often describe the sh
 
 A _mode_ is a value or region where the data are most concentrated, the peak of the distribution. Some distributions have one peak (unimodal), while others have two or more (bimodal or multimodal), which can indicate distinct subgroups within the data.
 
-A symmetric distribution has as many data points to both sides of the mode. A distribution is skewed if it is asymmetric.
+A _symmetric_ distribution has as many data points to both sides of the mode. A distribution is _skewed_ if it is asymmetric.
 
 The _tails_ of a distribution are the regions that extend toward the smallest and largest values.
 
@@ -315,7 +319,7 @@ A _right-skewed_ (positively skewed) distribution has a long tail toward larger 
 
 A _left-skewed_ (negatively skewed) distribution has a longer tail toward smaller values, such as test scores on an easy exam where most students score high but a few perform poorly.
 
-In the next chapter, we introduce the normal distribution, a symmetric, bell-shaped distribution that serves as a useful reference point. Distributions with heavy tails contain more extreme observations than the normal distribution, while light-tailed distributions contain fewer.
+In the next chapter, we introduce the Normal distribution, a symmetric, _bell-shaped_ distribution that serves as a useful reference point. Distributions with _heavy tails_ contain more extreme observations than the Normal distribution, while light-tailed distributions contain fewer.
 
 Here are some simulated examples illustrating the terms described above:
 
@@ -347,7 +351,7 @@ ggplot(df, aes(value, fill = type)) +
 
 ## From visual to numerical summaries
 
-As we've seen, visual tools such as histograms, density plots, and qqplots help us understand the shape of a distribution, its center, spread, symmetry, and tails. However, graphical summaries are often complemented by numerical summaries, which distill much of this information into just a few key numbers. In the next chapter, we introduce two of the most useful numerical summaries, the average and the standard deviation, which provide all the information you need when the data are approximately normal. We will also explore alternative measures that are more appropriate when distributions deviate from normality. The visualization techniques introduced here will guide us in deciding when simple numerical summaries are sufficient and when more detailed descriptions are needed.
+As we've seen, visual tools such as histograms and density plots help us understand the shape of a distribution, its center, spread, symmetry, and tails. However, graphical summaries are often complemented by numerical summaries, which distill much of this information into just a few key numbers. In the next chapter, we introduce two of the most useful numerical summaries, the average and the standard deviation, which provide all the information you need when the data are approximately Normal. We will also explore alternative measures that are more appropriate when distributions deviate from normality. The visualization techniques introduced here will guide us in deciding when simple numerical summaries are sufficient and when more detailed descriptions are needed.
 
 ## Exercises
 
