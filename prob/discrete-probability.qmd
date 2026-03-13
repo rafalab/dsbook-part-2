@@ -1,12 +1,12 @@
-# Discrete Probability
+# Discrete Probability {#sec-discrete-probability}
 
-We begin by covering some basic principles related to categorical data. The specific area of probability which deals with categorical data is referred to as *discrete probability*. Understanding this topic, will help us comprehend the probability theory we will later introduce for numeric and continuous data, which is much more common in data analysis. Since discrete probability is invaluable in card games, we will use these as illustrative examples.
+We begin by covering some basic principles related to categorical data. The specific area of probability that deals with categorical data is referred to as *discrete probability*. Understanding this topic will help us comprehend the probability theory we will later introduce for numeric and continuous data, which is much more common in data analysis. Since discrete probability is invaluable in card games, we will use these as illustrative examples.
 
 ## Relative frequency
 
 The term *probability* is used in everyday language. Yet answering questions about probability is often hard, if not impossible. In this section, we discuss a mathematical definition of *probability* that allows us to give precise answers to certain questions.
 
-For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-probability-1] (most probability books use this archaic term, so we do too) and I pick one at random, what is the probability of picking a red one? Our intuition tells us that the answer is 2/5 or 40%. A precise definition can be given by noting that there are five possible outcomes, of which two satisfy the condition necessary for the event "pick a red bead". Since each of the five outcomes has an equal chance of occurring, we conclude that the probability is .4 for red and .6 for blue.
+For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-probability-1] (most probability books use this archaic term, so we do too) and I pick one at random, what is the probability of picking a red one? Our intuition tells us that the answer is 2/5 or 40%---this is the proportion of beads in the urn that are red, referred to as the *relative frequency* of that category. A precise definition can be given by noting that there are five possible outcomes, of which two satisfy the condition necessary for the event "pick a red bead". Since each of the five outcomes has an equal chance of occurring, we conclude that the probability is 0.4 for red and 0.6 for blue.
 
 [^discrete-probability-1]: https://en.wikipedia.org/wiki/Urn_problem
 
@@ -16,13 +16,13 @@ A more intuitive way to think about the probability of an event is as the long-r
 
 Probability distributions are the foundation of most statistical models. They describe how likely different outcomes are, providing a mathematical summary of uncertainty. Every model we use in data analysis, from simple polling examples to complex multivariate models, is built on assumptions about underlying probability distributions. As we move to continuous and multidimensional settings, these distributions become more complex and abstract. For discrete cases, however, the idea is quite intuitive: each possible outcome, or category, is assigned a probability based on its relative frequency.
 
-If we know the relative frequency of the different categories, defining a distribution for categorical outcomes is relatively straightforward. We simply assign a probability to each category. In cases analogous to beads in an urn, for each bead type, their proportion defines the distribution.
+If we know the true relative frequencies of the different categories---that is, the proportions of each category out of all possible outcomes---defining a distribution for categorical outcomes is relatively straightforward. We simply assign each relative frequency as the probability of its respective category. In cases analogous to beads in an urn, for each bead type, its proportion defines the distribution.
 
-For example, if we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% Undecided, and 2% Green Party, these proportions define the probability for each group in any given call. The probability distribution for each call is defined by four numbers: Pr(calling a Republican) =  0.44, Pr(calling a Democrat) = 0.44, Pr(callin an Undecided) = 10%, and  Pr(calling a Green) = 0.02.
+For example, if we are randomly calling likely voters from a population that is 44% Democrat, 44% Republican, 10% Undecided, and 2% Green Party, these proportions define the probability for each group in any given call. The probability distribution for each call is defined by four numbers: Pr(calling a Republican) =  0.44, Pr(calling a Democrat) = 0.44, Pr(calling an Undecided) = 10%, and Pr(calling a Green) = 0.02.
 
 ## Monte Carlo {#sec-monte-carlo}
 
-Computers provide a way to actually perform the simple random long-run experiment described above: pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
+Computers provide a way to actually perform the simple random long-run experiment described earlier: for many independent and identical trials, pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
 
 An example is the `sample` function in R. We demonstrate its use in the code below. First, we use the function `rep` to generate the urn:
 
@@ -38,9 +38,9 @@ sample(beads, 1)
 
 This line of code produces a single random outcome. We want to repeat this experiment an infinite number of times, but it is impossible to repeat indefinitely. Instead, we repeat the experiment a large enough number of times to make the results _practically equivalent_ to repeating indefinitely. This is an example of a *Monte Carlo* simulation.
 
-Much of what mathematical and theoretical statisticians study, topics that we do not cover in this book, relates to providing rigorous definitions of "practically equivalent". Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this chapter, we provide a practical approach to determining what is "large enough".
+Much of what mathematical and theoretical statisticians study relates to providing rigorous definitions of "practically equivalent" (topics that we do not cover in this book). Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this chapter, we provide a practical approach to determining what is "large enough".
 
-To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event 10,000 times:
+To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event $B =$ 10,000 times:
 
 ```{r}
 set.seed(1986) 
@@ -58,15 +58,15 @@ sample(beads, 10000, replace = TRUE)
 which we explain in the following section.
 :::
   
-We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to count the outcomes and and `prop.table` gives us the proportions:
+We can now verify if our definition actually is in agreement with this Monte Carlo simulation approximation. We use `table` to count the outcomes and `prop.table` gives us the proportions:
 
 ```{r}
 prop.table(table(events))
 ```
 
-The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory tells us that as $B$ gets larger, the estimates get closer to 3/5=.6 and 2/5=.4.
+The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory tells us that as the number of repetitions $B$ gets larger, the estimates get closer to 3/5=0.6 and 2/5=0.4.
 
-This is a simple and not very useful example, since we can easily compute the probabilities mathematically. Monte Carlo simulations are useful when it is hard, or impossible, to compute the exact probabilities mathematically. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
+This is a simple and not very useful example, since we can easily compute the probabilities mathematically. Monte Carlo simulations are useful when it is hard or impossible to compute the exact probabilities mathematically. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
 
 ### Setting the random seed
 
@@ -76,7 +76,7 @@ Before we continue, we will briefly explain the following important line of code
 set.seed(1986) 
 ```
 
-Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when following the code as presented. This is actually fine, given that the results are random and change by chance. However, if you want to ensure that results are consistent with each run, you can set R's random number generation seed to a specific number. Above we set it to 1986. We want to avoid using the same seed every time and we used a popular way to pick the seed which is year - month - day. For example, we chose 1986 on December 20, 2018: $2018 - 12 - 20 = 1986$.
+Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when you run the presented code. This is actually fine, given that the results are random and should change by chance. However, if you want to ensure that results are consistent with each run, you can set R's random number generation seed to a specific number. Above, we set it to 1986. We want to avoid using the same seed every time and we used a popular way to pick the seed which is year - month - day. For example, we chose 1986 based on the date December 20, 2018: $2018 - 12 - 20 = 1986$.
 
 You can learn more about setting the seed by looking at the documentation:
 
@@ -84,7 +84,7 @@ You can learn more about setting the seed by looking at the documentation:
 ?set.seed
 ```
 
-In the exercises, we may ask you to set the seed to assure that the results you obtain are exactly what we expect them to be.
+In the exercises, we may ask you to set the seed to ensure that the results you obtain are exactly what we expect them to be.
 
 ### With and without replacement
 
@@ -145,7 +145,7 @@ combinations(3, 2)
 
 Now (1,2) and (2,1) are treated as the same outcome.
 
-Let's use these tools to compute the probability of a *Natural 21* in Blackjack, which occurs when a player's first two cards are an Ace and a face card (Jack, Queen, King, or Ten). Since order does not matter, we use `combinations()`:
+Let's use these tools to compute the probability of a *Natural 21* in Blackjack, which occurs when a player's first two cards are an Ace and a face card (Jack, Queen, King, or Ten). Since order does not matter, we use `combinations()`, and pass our deck of cards in as the values corresponding to numbers 1 through 52 using the parameter `v`:
 
 ```{r}
 aces <- paste("Ace", suits)
@@ -179,7 +179,7 @@ In this section, we describe two discrete probability popular examples: the Mont
 
 ### Monty Hall problem
 
-In the 1970s, there was a game show called "Let's Make a Deal," with Monty Hall as the host. At some point in the game, contestants were asked to pick one of three doors. Behind one door, there was a prize, while the other doors had a goat behind them to show the contestant had lost. After the contestant picked a door, before revealing whether the chosen door contained a prize, Monty Hall would open one of the two remaining doors and reveal to the contestant that there was no prize behind that door. Then, he would ask, "Do you want to switch doors?" What would you do?
+In the 1970s, there was a game show called "Let's Make a Deal," with Monty Hall as the host. At some point in the game, contestants were asked to pick one of three doors. Behind one door, there was a prize, while the other two doors had goats behind them to show the contestant had lost. After the contestant picked a door, before revealing whether the chosen door contained a prize, Monty Hall would open one of the two remaining doors to reveal a goat. Then, he would ask, "Do you want to switch doors?" What would you do?
 
 We can use probability to demonstrate that if you stick with the original door choice, your chances of winning a prize remain 1 in 3. However, if you switch to the other door, your chances of winning double to 2 in 3! This might seem counterintuitive. Many people incorrectly think both chances are 1 in 2 since you are choosing between 2 options. You can watch a detailed mathematical explanation on Khan Academy[^discrete-probability-2] or read one on Wikipedia[^discrete-probability-3]. Below, we use a Monte Carlo simulation to see which strategy is better. Note that this code is written longer than it should be for pedagogical purposes.
 
@@ -202,7 +202,7 @@ mean(replicate(B, monty_hall("stick")))
 mean(replicate(B, monty_hall("switch")))
 ```
 
-As we examine the code, we notice that the lines starting with `my_pick` and `show` do not affect the final outcome when we stick with our original choice. This confirms that our winning probability in that case is 1 in 3, as expected. When we switch, the Monte Carlo simulation verifies the 2/3 probability. This illustrates why switching improves our odds: the `show` line removes a door that is guaranteed not to be the winner, effectively transferring its probability to the remaining unopened door. Thus, unless our initial choice was correct, which happens only one-third of the time, we win by switching, which occurs two-thirds of the time.
+As we examine the code, we notice that when we stick with our original choice, the line of code defining `show` does not affect `final`. Winning depends only on whether `my_pick` equals `prize_door`, and the host's reveal (`show`) plays no role. This confirms that our winning probability in that case is 1 in 3, as expected. When we switch, `final` now depends on the `show` line, which removes a door that is guaranteed not to be the winner, effectively transferring its probability to the remaining unopened door. We win by switching if our initial choice was incorrect, which occurs two-thirds of the time. The Monte Carlo simulation verifies this 2/3 probability.
 
 ### Birthday problem
 
@@ -235,7 +235,7 @@ results <- replicate(10000, same_birthday(50))
 mean(results)
 ```
 
-People tend to underestimate these probabilities so let's say we want to use this knowledge to make bet with friends about the likelihood of two people sharing the same birthday in a group. At what group size do the chances become greater than 50%? Greater than 75%? 
+People tend to underestimate these probabilities, so let's say we want to use this knowledge to make a bet with friends about the likelihood of two people sharing the same birthday in a group. At what group size do the chances become greater than 50%? Greater than 75%? 
 
 Let's create a look-up table. We can quickly create a function to compute this for any group size:
 
@@ -273,9 +273,7 @@ This plot shows that the Monte Carlo simulation provided a very good estimate of
 
 ## Infinity in practice
 
-The theory described here requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. 
-
-Althought in this case we know the exact probability is `r eprob[25]`, in practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
+Theoretically, obtaining a Monte Carlo estimate that equals the exact probability requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. 
 
 One practical approach is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
 
@@ -288,23 +286,25 @@ plot(log10(B), prob)
 abline(h = eprob[25], lty = 2)
 ```
 
-In this plot, we can see that the values start to stabilize at around 1,000. 
+In this plot, we can see that the values start to stabilize at around $10^3 = 1000$. 
+
+Although in this case we know the exact probability is `r eprob[25]`, in practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
 
 ## Exercises
 
-1\. A box contains 3 cyan balls, 5 magenta balls, and 7 yellow balls. One ball is drawn at random. Write a Monte Carlo simulation to estimate and confirm the probability that the ball drawn is cyan.
+1\. A box contains 3 cyan balls, 5 magenta balls, and 7 yellow balls. One ball is drawn at random. Write a Monte Carlo simulation to estimate the probability that the ball drawn is cyan. Confirm this by computing the exact probability.
 
-2\. Do the same for the probability that the ball will not be cyan?
+2\. Do the same for the probability that the ball will not be cyan.
 
-3\. Instead of taking just one draw, consider taking two draws. You take the second draw without returning the first draw to the box. We call this sampling **without** replacement. Write a Monte Carlo simulation to estimate and confirm the probability of the first draw being cyan and the second draw not being cyan?
+3\. Instead of taking just one draw, consider taking two draws. You take the second draw without returning the first draw to the box. We call this sampling **without** replacement. Write a Monte Carlo simulation to estimate the probability of the first draw being cyan and the second draw not being cyan. Confirm this by computing the exact probability.
 
-4\. Now repeat the experiment, but this time, after taking the first draw and recording the color, return it to the box and shake the box. We call this sampling **with** replacement. Write a Monte Carlo simulation to estimate and confirm the probability of the first draw being cyan and the second draw not being cyan?
+4\. Now repeat the experiment, but this time, after taking the first draw and recording the color, return it to the box and shake the box. We call this sampling **with** replacement. Write a Monte Carlo simulation to estimate the probability of the first draw being cyan and the second draw not being cyan. Confirm this by computing the exact probability.
 
-5\. Let's say you've drawn 5 balls from the box, with replacement, and all have been yellow. What is the probability that the next one will be yellow?
+5\. Let's say you've drawn 5 balls from the box, with replacement, and all have been yellow. What is the probability that the next one will be yellow? This question does not require a simulation.
 
-6\. If you roll a 6-sided die six times, write a Monte Carlo simulation to estimate and confirm the probability  of not seeing a 6?
+6\. If you roll a 6-sided die six times, write a Monte Carlo simulation to estimate the probability of not seeing a 6. Confirm this by computing the exact probability.
 
-7\. Two teams, let's say the Celtics and the Cavaliers, are playing a seven game series. The Cavaliers are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game? 
+7\. Two teams, let's say the Celtics and the Cavaliers, are playing a seven-game series. The first to win four games, therefore, wins the series. The Cavaliers are a better team and have a 60% chance of winning each game. What is the probability that the Celtics will win **at least** one game? 
 
 8\. Create a Monte Carlo simulation to confirm your answer to the previous problem. Use `B <- 10000` simulations. Hint: use the following code to generate the results of the first four games:
 
@@ -314,11 +314,11 @@ celtic_wins <- sample(c(0,1), 4, replace = TRUE, prob = c(0.6, 0.4))
 
 The Celtics must win one of these 4 games.
 
-9\. Two teams, say the Cavaliers and the Warriors, are playing a seven game championship series. The first to win four games, therefore, wins the series. The teams are equally good so they each have a 50-50 chance of winning each game. If the Cavaliers lose the first game, what is the probability that they win the series?
+9\. Two teams, say the Cavaliers and the Warriors, are playing a seven-game series. The teams are equally good, so they each have a 50-50 chance of winning each game. If the Cavaliers lose the first game, what is the probability that they win the series?
 
 10\. Confirm the results of the previous question with a Monte Carlo simulation.
 
-11\. Two teams, $A$ and $B$, are playing a seven game series. Team $A$ is better than team $B$ and has a $p>0.5$ chance of winning each game. Given a value $p$, the probability of winning the series for the underdog team $B$ can be computed with the following function based on a Monte Carlo simulation:
+11\. Two teams, $A$ and $B$, are playing a seven-game series. Team $A$ is better than team $B$ and has a $p>0.5$ chance of winning each game. Given a value $p$, the probability of the underdog team $B$ winning the series can be estimated with a Monte Carlo simulation using the following function:
 
 ```{r, eval=FALSE}
 prob_win <- function(p, B =10000){
@@ -330,7 +330,7 @@ prob_win <- function(p, B =10000){
 }
 ```
 
-Use the function `sapply` to compute the probability, call it `ws`, of winning for `p <- seq(0.5, 0.95, 0.025)`. Then plot the result.
+For `p <- seq(0.5, 0.95, 0.025)`, use the function `sapply` to compute the corresponding probabilities of winning, call it `ws`. Then plot the result.
 
 12\. Repeat the exercise above, but now keep the probability fixed at `p <- 0.75` and compute the probability for different series lengths: best of 1 game, best of 3 games, best of 5 games, and so on. Specifically, `ns <- seq(1, 25, 2)`. Hint: use the function below.
 
