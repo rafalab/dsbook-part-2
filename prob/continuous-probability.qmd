@@ -1,4 +1,4 @@
-# Continuous Probability
+# Continuous Probability {#sec-continuous-probability}
 
 In @sec-ecdf-intro, we discussed why it is not practical to assign a frequency to every possible continuous outcome, such as an exact height, since there are infinitely many possible values. The same idea extends to random outcomes that take values on a continuous scale: each individual value has probability zero. Instead, we describe their behavior through probability density functions, which let us compute probabilities for intervals of values rather than single points.  
 
@@ -48,7 +48,7 @@ Because we can determine the probability of any event from the CDF, it fully def
 For most continuous distributions, we can describe the cumulative distribution function (CDF) in terms of another function, $f(x)$, such that
 
 $$
-F(b) - F(a) = \int_a^b f(x)\,dx
+F(b) - F(a) = \int_a^b f(x)\,dx.
 $$ 
 
 This function $f(x)$ is called the *probability density function* (PDF).  
@@ -67,10 +67,10 @@ ggplot(mapping = aes(x, y)) +
   geom_col(aes(fill = ab), data = disc, show.legend = FALSE) +
   geom_line(data = cont) +
   ylab("f(x)") + 
-  scale_fill_manual(values = c("grey70", "grey40"))
+  scale_fill_manual(values = c("grey70", "grey30"))
 ```
 
-The probability of the outcome falling within an interval, for example, $x \in [0.5, 1.5]$, can be approximated by adding the heights of the bars within that range and dividing by the total height of all bars. As the measurement becomes more precise and the bar widths become narrower, this sum approaches the area under the curve of the continuous function $f(x)$.
+The probability of the outcome falling within an interval, such as the shaded range $x \in [0.5, 1.5]$, can be approximated by adding the heights of the bars within that range and dividing by the total height of all bars. As the measurement becomes more precise and the bar widths become narrower, this sum approaches the area under the curve of the continuous function $f(x)$.
 
 In the limit where the bar widths shrink to zero, the sum and the integral are identical: the probability of $x$ falling in an interval is exactly the area under $f(x)$ over that interval. To make this work, we define $f(x)$ so that the total area under the curve equals 1:
 
@@ -86,7 +86,7 @@ $$
 f(x) = \frac{1}{\sqrt{2\pi}\,\sigma} \exp\left(-\frac{1}{2}\left(\frac{x - \mu}{\sigma}\right)^2\right)
 $$
 
-and as we previous saw has a bell shaped centered at $\mu$ and 95% of the area with $2\sigma$ from $\mu$:
+and as we previously saw has a bell shape centered at $\mu$ and has 95% of the area within $2\sigma$ from $\mu$:
 
 ```{r normal-pdf}
 #| echo: false
@@ -129,7 +129,7 @@ ggplot(df, aes(x, f)) +
 
 ```
 
-In R, this function this PDF is given by `dnorm` and the corresponding CDF by `pnorm`. 
+In R, this PDF is given by `dnorm` and the corresponding CDF by `pnorm`. 
 
 A random outcome is said to be *normally distributed* with mean `m` and standard deviation `s` if its CDF is defined by
 
@@ -138,7 +138,7 @@ A random outcome is said to be *normally distributed* with mean `m` and standard
 F(a) <- pnorm(a, mean = m, sd = s)
 ```
 
-This is particularly useful in practice. If we are willing to assume that a variable, such as height follows a normal distribution, we can answer probability questions without needing the full dataset. For example, to find the probability that a randomly selected student is taller than 70.5 inches, we only need the sample mean and standard deviation:
+This is useful in many data applications. If we are willing to assume that a variable, such as height, follows a normal distribution, we can answer probability questions without needing the full dataset. For example, to find the probability that a randomly selected student is taller than 70.5 inches, we only need the sample mean and standard deviation:
 
 ```{r}
 m <- mean(x)
@@ -146,29 +146,25 @@ s <- sd(x)
 1 - pnorm(70.5, m, s)
 ```
 
-
-Good — your existing **“Theoretical distributions as approximations”** section is clear and conceptually sound, but it overlaps heavily with what you already explain in **“The normal distribution”** (particularly where you discuss approximating discrete data with a continuous normal curve).
-
-
 ## Theoretical distributions as practical models
 
 Theoretical distributions, such as the normal distribution, are defined mathematically rather than derived directly from data. In practice, we use them to *approximate* the behavior of real data that arise from complex or unknown processes. Almost all datasets we analyze consist of discrete observations, yet many of these quantities, such as height, weight, or blood pressure, are better understood as measurements of underlying continuous variables.
 
-For example, our height data appear discrete because values are typically rounded to the nearest inch. A few individuals report more precise metric measurements, while most round to whole inches. It is therefore more realistic to think of height as a continuous variable whose apparent discreteness comes from rounding.
+For example, our height data appear discrete because values are typically rounded to the nearest inch. A few individuals report more precise metric measurements, while most round to whole inches. Therefore, it is more realistic to think of height as a continuous variable whose apparent discreteness comes from rounding.
 
-When using a continuous distribution such as the normal, we no longer assign probabilities to individual points, each exact value has probability zero, but rather to *intervals*. In @sec-numeric-summaries we showed how this theoretical distributions can approximate.
+When using a continuous distribution such as the normal, we no longer assign probabilities to individual points---each exact value has probability zero---but rather to *intervals*. In @sec-numeric-summaries, we showed how theoretical normal distributions can approximate the distribution of height data.
 
-The key idea is that theoretical distributions serve as *useful approximation*. They provide smooth mathematical descriptions that let us compute probabilities and reason about uncertainty. Even though real measurements are discrete, the continuous approximations that apply, such as the normal distribution, allow us to work with data analytically and build models that generalize well beyond a specific dataset.
+The key idea is that theoretical distributions serve as *useful approximations*. They provide smooth mathematical descriptions that let us compute probabilities and reason about uncertainty. Even though real measurements are discrete, the continuous approximations that apply, such as the normal distribution, allow us to work with data analytically and build models that generalize well beyond a specific dataset.
 
 
 ## Monte Carlo simulations
 
 Simulation is a powerful way to understand randomness, approximate probabilities, and explore how theoretical models behave in practice. Many of the probability models used in data analysis are continuous distributions, which describe outcomes that can take any value within a range. 
-In R, all random-number–generating functions that produce simulated data from a continuous distribution, begin with the letter `r`. These functions form part of a consistent family that allows us to simulate from nearly any probability distribution.  In this section, we illustrate Monte Carlo techniques using continuous distributions, starting with the normal distribution and extending to other commonly used models.
+In R, all random-number–generating functions that produce simulated data from a distribution begin with the letter `r`. These functions form part of a consistent family that allows us to simulate from nearly any probability distribution. In this section, we illustrate Monte Carlo techniques using continuous distributions, starting with the normal distribution and extending to other commonly used models.
 
 ### Normal distribution
 
-R provides the `rnorm` function to generate normally distributed outcomes. It takes three arguments, sample size, mean (default 0), and standard deviation (default 1), and produces random numbers that follow a normal distribution.
+R provides the `rnorm` function to generate normally distributed outcomes. It takes three arguments---sample size, mean (default 0), and standard deviation (default 1)---and produces random numbers that follow a normal distribution.
 
 Here is an example of how we could generate data that resemble our reported heights:
 
@@ -191,7 +187,7 @@ This is one of the most useful functions in R because it lets us generate data t
 
 ### Example: extreme values
 
-How rare is it to find a seven-footer among 800 men? Suppose we repeatedly sample 800 male students at random and record the tallest in each group. What does the distribution of these tallest height look like?  The following Monte Carlo simulation helps us find out:
+How rare is it to find a seven-footer among 800 men? Suppose we repeatedly sample 800 male students at random and record the tallest in each group. What does the distribution of these tallest heights look like?  The following Monte Carlo simulation helps us find out:
 
 ```{r}
 tallest <- replicate(10000, max(rnorm(800, m, s)))
@@ -212,14 +208,8 @@ data.frame(tallest = tallest) |> ggplot(aes(tallest)) +
 
 Although deriving this distribution analytically is possible, it is not straightforward. Once derived, it provides a faster way to evaluate probabilities than simulation. However, when analytic derivations are too complex or infeasible, Monte Carlo simulation offers a practical alternative. By repeatedly generating random samples, we can approximate the distribution of almost any statistic and obtain reliable estimates even when theoretical results are unavailable.
 
-### Other continuous distributions
 
-The normal distribution is not the only useful theoretical model. Other continuous distributions that often appear in data analysis include the Student's *t*, chi-square, exponential, gamma, and beta distributions. Their corresponding shorthand names in R are `t`, `chisq`, `exp`, `gamma`, and `beta`.
-
-Each of these distributions has an associated `r` function, such as `rt`, `rchisq`, `rexp`, `rgamma`, and `rbeta`, that allows you to generate random samples for simulation. This consistency makes it easy to apply Monte Carlo methods to a wide variety of data-generating processes.
-
-
-## Calculating densities, probabilities, and quantiles
+## Calculating densities, probabilities, quantiles, and other continuous distributions
 
 Beyond simulation, R provides companion functions to evaluate and summarize continuous distributions. Each distribution in base R follows a simple naming convention:
 
@@ -228,47 +218,46 @@ Beyond simulation, R provides companion functions to evaluate and summarize cont
 * `q` - quantile function
 * `r` - random number generation 
 
-For example, the Student's *t* distribution uses `dt`, `pt`, `qt`, and `rt`. Base R includes the most common continuous distributions, normal, *t*, chi-square, exponential, gamma, and beta, but many additional distributions are available in specialized packages such as **extraDistr** and **actuar**. While there are dozens of continuous distributions in use, the ones provided by base R cover the majority of applications encountered in practice.
-
+For example, the Student's *t* distribution uses `dt`, `pt`, `qt`, and `rt`. Base R includes the most common continuous distributions, normal, *t*, chi-square, exponential, gamma, and beta (corresponding shorthand names in R are `t`, `chisq`, `exp`, `gamma`, and `beta`), but many additional distributions are available in specialized packages such as **extraDistr** and **actuar**. While there are dozens of continuous distributions in use, the ones provided by base R cover the majority of applications encountered in practice.
 
 ## Exercises
 
 1\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 5 feet or shorter?
 
-2\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is 6 feet or taller?
+2\. Assume the same distribution as the previous exercise. If we pick a female at random, what is the probability that she is 6 feet or taller?
 
-3\. Assume the distribution of female heights is approximated by a normal distribution with a mean of 64 inches and a standard deviation of 3 inches. If we pick a female at random, what is the probability that she is between 61 and 67 inches?
+3\. Assume the same distribution as the previous exercise. If we pick a female at random, what is the probability that she is between 61 and 67 inches?
 
 4\. Repeat the exercise above, but convert everything to centimeters. That is, multiply every height, including the standard deviation, by 2.54. What is the answer now?
 
-5\. Notice that the answer to the question does not change when you change units. This makes sense since the standard deviations from the average for an entry in a list are not affected by what units we use. In fact, if you look closely, you notice that 61 and 67 are both 1 SD away from the average. Compute the probability that a randomly picked, normally distributed random variable is within 1 SD from the average.
+5\. Notice that the answers to the previous two exercises are identical even when you change units. This makes sense since the standard deviations from the average for an entry in a list are not affected by what units we use. In fact, if you look closely, you notice that 61 and 67 are both 1 SD away from the average. Compute the probability that a randomly picked, normally distributed random outcome is within 1 SD of the average.
 
-6\. To understand the mathematical rationale that explains why the answers to exercises 3, 4, and 5, suppose we have a random variable $X$ with average $\mu$ and standard error $\sigma$ and that we ask what is the probability of $X$ being smaller or equal to $a$. The probability is:
+6\. To understand the mathematical rationale that explains why the answers to exercises 3, 4, and 5 are the same, suppose we have a random outcome $X$ with average $\mu$ and standard deviation $\sigma$ and that we ask what the probability of $X$ being smaller than or equal to $a$ is. The probability is:
 
 $$
 \mathrm{Pr}(X \leq a)
 $$
-Remember that, by definition, $a$ is $(a - \mu)/\sigma$ standard deviations $s$ away from the average $\mu$. Now we subtract $\mu$ to both sides and then divide both sides by $\sigma$:
+Remember from @sec-numeric-summaries's discussion of standardized units that $a$ is $(a - \mu)/\sigma$ standard deviations $s$ away from the average $\mu$. In our probability statement, we can subtract $\mu$ from both sides and then divide both sides by $\sigma$:
 
 $$
 \mathrm{Pr}\left(\frac{X-\mu}{\sigma} \leq \frac{a-\mu}{\sigma} \right)
 $$
 
-The quantity on the left is a standard normal random variable. It has an average of 0 and a standard error of 1. We will call it $Z$:
+The quantity on the left is a standard normal random outcome. It has an average of 0 and a standard deviation of 1. We will call it $Z$:
 
 $$
 \mathrm{Pr}\left(Z \leq \frac{a-\mu}{\sigma} \right)
 $$
 
-So, no matter the units, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - \mu)/s$. 
+So, no matter the units of $X$, the probability of $X\leq a$ is the same as the probability of a standard normal variable being less than $(a - \mu)/s$. 
 
-If `m` is the average and `s` the standard error, which of the following R code would give us the right answer in every situation?
+If `m` is the average and `s` the standard deviation, which of the following R code would give us the right answer in every situation?
 
 a.  `mean(X <= a)`
 b.  `pnorm((a - m)/s)`
 c.  `pnorm((a - m)/s, m, s)`
 d.  `pnorm(a)`
 
-7\. Imagine the distribution of male adults is approximately normal with an expected value of 69 and a standard deviation of 3. How tall is the male in the 99th percentile? Hint: use `qnorm`.
+7\. Imagine the distribution of male adults is approximately normal with a mean of 69 and a standard deviation of 3. How tall is the male in the 99th percentile? Hint: use `qnorm`.
 
 8\. IQ scores are approximately normally distributed, with a mean of 100 and a standard deviation of 15. Suppose we want to know what the distribution of the highest IQ would look like across all high school graduating classes if 10,000 people are born each year in a school district. Run a Monte Carlo simulation with `B = 1000`, where each iteration generates 10,000 IQ scores and records the highest value. Then, create a histogram to visualize the distribution of the maximum IQ in the district.

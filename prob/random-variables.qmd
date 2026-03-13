@@ -38,15 +38,15 @@ s <- sum(sample(c(0,1), n, replace = TRUE))
 
 We will use this example in later sections.
 
-Not all random variables are discrete. Some can take on a continuum of values. For example, the height of a randomly selected person or the result of a physical measurement can be viewed as a *continuous random variable*. As an example, we simulate such a variable using the normal distribution:
+Not all random variables are discrete. Some can take on a continuum of values, as in @sec-continuous-probability. For example, the height of a randomly selected person or the result of a physical measurement can be viewed as a *continuous random variable*. As an example, we simulate such a variable using the normal distribution:
 
 ```{r}
 x <- rnorm(10, mean = 70, sd = 3)
 ```
 
-Here each value of `x` represents one realization of a random variable drawn from a normal distribution with mean 70 and standard deviation 3. Repeating the simulation produces slightly different numbers each time, reflecting the inherent randomness of the process.
+Here, each value of `x` represents one realization of a random variable drawn from a normal distribution with mean 70 and standard deviation 3. Repeating the simulation produces slightly different numbers each time, reflecting the inherent randomness of the process.
 
-These examples, discrete Bernoulli variables and a continuous normal variable, illustrate the main types of random variables we will study in this chapter. Understanding their behavior and summarizing their distributions are the key steps that lead us toward the ideas of expected value, variability, and, ultimately, statistical inference.
+These examples---discrete Bernoulli variables and a continuous normal variable---illustrate the main types of random variables we will study in this chapter. Understanding their behavior and summarizing their distributions are the key steps that lead us toward the ideas of expected value, variability, and, ultimately, statistical inference.
 
 ## Notation for random variables
 
@@ -56,11 +56,11 @@ $$
 \mathrm{Pr}(X = x) = 1/6 \quad \text{for } x = 1, \dots, 6.
 $$
 
-This notation is convenient because it lets us express probability statements compactly. It may seem odd at first, since $X$ represents an outcome not yet observed, we can discuss the likelihood of its possible values, but not its realized value. Once data are collected, we observe one realization of $X$, and then reason about what *could* have occurred, given what *did* occur.
+This notation is convenient because it lets us express probability statements compactly. It may seem odd at first, since $X$ represents an outcome not yet observed, that we can discuss the likelihood of its possible values but not of its realized value. Once data are collected, we observe one realization of $X$, and we can use statistical inference to reason about what *could* have occurred, given what *did* occur.
 
 ## The probability distribution of a random variable
 
-The *probability distribution* of a random variable tells us how likely each possible outcome is. For example, if we toss $n$ fair coins, we might ask for the probability of observing 40 or fewer heads. This is equivalent to asking for $\mathrm{Pr}(S_n \leq 40)$.
+The *probability distribution* of a random variable tells us how likely each possible outcome is. For example, if we toss $n$ fair coins, we might ask for the probability of observing 40 or fewer heads. Using the notation from above, this is equivalent to asking for $\mathrm{Pr}(S_n \leq 40)$.
 
 If we can define a cumulative distribution function (CDF) $F(a) = \mathrm{Pr}(S_n \leq a)$, we can answer any probability question involving $S_n$, such as the probability of falling within an interval $(a, b]$. We call $F$ the *distribution function* of the random variable.
 
@@ -96,7 +96,7 @@ data.frame(S_n = s) |> ggplot(aes(S_n, after_stat(density))) +
 ```
 
 We see that the distribution is approximately normal. A qqplot will confirm that the normal approximation provides an excellent fit.
-In the next chapter (@sec-clt-prob), we will learn the theory that explains why this approximation works so well. In fact, this result extends far beyond coin flips, it applies broadly to averages and sums of many kinds of random variables.
+In the next chapter (@sec-clt-prob), we will learn the theory that explains why this approximation works so well. In fact, normal approximations extend far beyond coin flips---they apply broadly to averages and sums of many kinds of random variables.
 
 If the distribution is normal, it is fully characterized by its average and standard deviation. These two quantities have special names in probability theory: the *expected value* and the *standard error* of the random variable. We discuss these next.
 
@@ -110,7 +110,7 @@ We can compute probabilities directly with `dbinom` or `pbinom`. For example, to
 pbinom(40, size = n, prob = 1/2)
 ```
 
-We can also simnulate the number of heads using a `rbinom` instead of `replicate` and `sample`:
+We can also simulate the number of heads using a `rbinom` instead of `replicate` and `sample`:
 
 ```{r}
 #| eval: false
@@ -129,13 +129,13 @@ Intuitively, the expected value represents the long-run average outcome if the r
 For a discrete random variable with possible outcomes $x_1,\dots,x_n$, the expected value is defined as:
 
 $$
-\mathrm{E}[X] = \sum_{i=1}^n x_i ,\mathrm{Pr}(X = x_i)
+\mathrm{E}[X] = \sum_{i=1}^n x_i \,\mathrm{Pr}(X = x_i)
 $$
 
 For a continuous random variable with probability density function $f(x)$ and range $(a, b)$, the sum becomes an integral:
 
 $$
-\mathrm{E}[X] = \int_a^b x f(x), dx
+\mathrm{E}[X] = \int_a^b x f(x)\, dx
 $$
 
 If all $x_i$ have equal probability $1/n$, as when drawing uniformly from an urn, the expected value reduces to the arithmetic mean:
@@ -158,16 +158,16 @@ x <- sample(c(0, 1), B, replace = TRUE)
 mean(x)
 ```
 
-The *standard error* (SE) describes the typical deviation of $X$ from its expected value. It is defined as:
+The *standard error* (SE) describes the typical deviation of $X$ from its expected value. For a numeric discrete random variable, it is defined as:
 
 $$
-\mathrm{SE}[X] = \sqrt{\sum_{i=1}^n (x_i - \mathrm{E}[X])^2 ,\mathrm{Pr}(X = x_i)}.
+\mathrm{SE}[X] = \sqrt{\sum_{i=1}^n (x_i - \mathrm{E}[X])^2\, \mathrm{Pr}(X = x_i)}.
 $$
 
 For a continuous random variable with density $f(x)$, this becomes:
 
 $$
-\mathrm{SE}[X] = \sqrt{\int_a^b (x - \mathrm{E}[X])^2 f(x), dx}.
+\mathrm{SE}[X] = \sqrt{\int_a^b (x - \mathrm{E}[X])^2 f(x) \, dx}.
 $$
 
 :::{.callout-note}
@@ -209,15 +209,15 @@ $$
 \mathrm{E}[X_1+X_2+\dots+X_n] =  \mathrm{E}[X_1] + \mathrm{E}[X_2]+\dots+\mathrm{E}[X_n]
 $$
 
-If $X$ represents independent draws from the urn, then they all have the same expected value. Let's denote the expected value with $\mu_X$ and rewrite the equation as:
+If $X$ represents independent draws from the urn, then they all have the same expected value. Let's denote each expected value by $\mu_X$ and rewrite the equation as:
 
 $$ 
 \mathrm{E}[X_1+X_2+\dots+X_n]=  n\mu_X
 $$
 
-which is another way of writing the result we show above for the sum of draws.
+which is another way of writing the result we showed above for the sum of draws.
 
-2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. If we shift the random variable, the expected value shifts by that amount. This is easier to explain with symbols:
+2\. The expected value of a non-random constant times a random variable is the non-random constant times the expected value of a random variable. If we shift the random variable by adding or subtracting, the expected value shifts by that amount as well. This is easier to explain with symbols:
 
 $$
 \mathrm{E}[aX+b] =  a\times\mathrm{E}[X] + b
@@ -231,7 +231,7 @@ $$
 \mathrm{E}[(X_1+X_2+\dots+X_n) / n]=   \mathrm{E}[X_1+X_2+\dots+X_n] / n = n\mu_X/n = \mu_X 
 $$
 
-3\. The variance of the sum of **independent** random variables is the sum of variances of each random variable: 
+3\. The variance of the sum of **independent** random variables is the sum of the variances of each random variable: 
 
 $$ 
 \mathrm{Var}[X_1+X_2+\dots+X_n] =\mathrm{Var}[X_1] + \mathrm{Var}[X_2]+\dots+\mathrm{Var}[X_n]  
@@ -242,7 +242,7 @@ $$
 \mathrm{SE}[X_1+X_2+\dots+X_n] = \sqrt{\mathrm{SE}[X_1]^2 + \mathrm{SE}[X_2]^2+\dots+\mathrm{SE}[X_n]^2  }
 $$
 
-Note that this particular property is not as intuitive as the previous three and more in depth explanations can be found in statistics textbooks.
+Note that this particular property is not as intuitive as the previous three and more in-depth explanations can be found in statistics textbooks.
 
 4\. The standard error of a non-random constant times a random variable is the non-random constant times the random variable's standard error. As with the expectation: 
 
@@ -250,9 +250,9 @@ $$
 \mathrm{SE}[aX] =  a \times \mathrm{SE}[X]
 $$
 
-To see why this is intuitive, again think of units. 
+To see why this is intuitive, think back to units. 
 
-If we shift the random variable by a constant the variability does not change. So it has not effect on the standard error:
+If we shift the random variable by a constant, the variability does not change. So it has not effect on the standard error:
 
 $$
 \mathrm{SE}[aX+b] =  a \times \mathrm{SE}[X]
@@ -272,7 +272,7 @@ $$
 $$
 
 :::{.callout-warning title="The assumption of independence is important"}
-The given equation reveals crucial insights for practical scenarios. Specifically, it suggests that the standard error can be minimized by increasing the sample size, $n$, and we can quantify this reduction. However, this principle holds true only when the variables $X_1, X_2, ... X_n$ are independent. If they are not, the estimated standard error can be significantly off.
+The given equation reveals crucial insights for practical scenarios. Specifically, it suggests that the standard error of the average of independent draws can be minimized by increasing the sample size, $n$, and we can quantify this reduction. However, this principle holds true only when the variables $X_1, X_2, ... X_n$ are independent. If they are not, the estimated standard error can be significantly off.
 
 In @sec-corr-coef, we introduce the concept of correlation, which quantifies the degree to which variables are interdependent. If the correlation coefficient among the $X$ variables is $\rho$, the standard error of their average is:
 
@@ -288,17 +288,17 @@ The key observation here is that as $\rho$ approaches its upper limit of 1, the 
 ## Law of Large Numbers
 
 
-An important implication of result 4 above is that the standard error of the average becomes smaller and smaller as $n$ grows larger. When $n$ is very large, then the standard error is practically 0 and the average of the draws converges to the average of the urn. This is known in statistical textbooks as the law of large numbers or the law of averages.
+An important implication of result 4 above is that the standard error of the average becomes smaller and smaller as $n$ grows larger. When $n$ is very large, then the standard error is practically 0, and the average of the draws converges to the average of the urn. This is known in statistical textbooks as the law of large numbers or the law of averages.
 
 :::{.callout-warning title="Misinterpretation of the law of averages"}
-The law of averages is sometimes misinterpreted. For example, if you toss a coin 5 times and see a head each time, you might hear someone argue that the next toss is probably a tail because of the law of averages: on average we should see 50% heads and 50% tails. A similar argument would be to say that red "is due" on the roulette wheel after seeing black come up five times in a row. Yet these events are independent so the chance of a coin landing heads is 50%, regardless of the previous 5. The same principle applies to the roulette outcome. The law of averages applies only when the number of draws is very large and not in small samples. After a million tosses, you will definitely see about 50% heads regardless of the outcome of the first five tosses. Another funny misuse of the law of averages is in sports when TV sportscasters predict a player is about to succeed because they have failed a few times in a row.
+The law of averages is sometimes misinterpreted. For example, if you toss a coin 5 times and see a head each time, you might hear someone argue that the next toss is probably a tail because of the law of averages: on average, we should see 50% heads and 50% tails. A similar argument would be to say that red "is due" on the roulette wheel after seeing black come up five times in a row. Yet these events are independent, so the chance of a coin landing heads is 50%, regardless of the previous 5. The same principle applies to the roulette outcome. The law of averages applies only when the number of draws is very large and not in small samples. After a million tosses, you will definitely see about 50% heads regardless of the outcome of the first five tosses. Another funny misuse of the law of averages is in sports when TV sportscasters predict a player is about to succeed because they have failed a few times in a row.
 :::
 ## Data distributions versus probability distributions
 
 
 Before moving on, it is important to distinguish between the **distribution of a dataset** and a **probability distribution**.  
 
-Any list of numbers $x_1, \dots, x_n$, or any dataset, has a distribution that describes how the observed values are spread out. We can summarize it with simple statistics such as the mean and standard deviation:
+Any list of numbers $x_1, \dots, x_n$, or any dataset, has a distribution that describes how the observed values are spread out. We can summarize it with simple statistics such as the sample mean and standard deviation:
 
 ```{r, eval=FALSE}
 m <- mean(x)
@@ -316,7 +316,7 @@ This connection can cause confusion: every list of numbers has a standard deviat
 
 1\. In American Roulette, you can bet on black or red. There are 18 reds, 18 blacks, and 2 greens (0 and 00). What are the chances that black comes out?
 
-2\. The payout for winning on black is \$1 dollar. This means that if you bet a dollar and it lands on black, you get \$1, otherwise you lose \$1. Create a sampling model using `sample` to simulate the random variable $X$ for your winnings.
+2\. A bet on black is an even-money bet. This means that if you bet a dollar and it lands on black, your bet is returned and you win an additional \$1, otherwise you lose your bet of \$1. Create a sampling model using `sample` to simulate the random variable $X$ for your winnings when you bet \$1 on black.
 
 3\. Compute the expected value of $X$.
 
@@ -330,18 +330,18 @@ This connection can cause confusion: every list of numbers has a standard deviat
 
 8\. What is the probability that you end up winning money?
 
-10\. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks, and 2 greens (0 and 00). What are the chances the green comes out?
+9\. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks, and 2 greens (0 and 00). What are the chances the green comes out?
 
-11\. The payout for winning on green is \$17 dollars. This means that if you bet a dollar and it lands on green, you get \$17, otherwise you lose \$1. Create a sampling model using `sample` to simulate the random variable $X$ for your winnings.
+10\. The payout for winning on green is 17 times your bet. This means that if you bet a dollar and it lands on green, your bet is returned and you win \$17, otherwise you lose your \$1 bet. Create a sampling model using `sample` to simulate the random variable $X$ for your winnings when betting \$1 on green.
 
-12\. Compute the expected value of $X$.
+11\. Compute the expected value of $X$.
 
-13\. Compute the standard error of $X$.
+12\. Compute the standard error of $X$.
 
-14\. Now create a random variable $S_n$ that is the sum of your winnings after betting on green n = 100 times. Simulate 100,000 outcomes of $S_n$. Start your code by setting the seed to 1 with `set.seed(1)`.
+13\. Now create a random variable $S_n$ that is the sum of your winnings after betting on green n = 100 times. Simulate 100,000 outcomes of $S_n$. Start your code by setting the seed to 1 with `set.seed(1)`.
 
-15\. What is the expected value of $S_n$?
+14\. What is the expected value of $S_n$?
 
-16\. What is the standard error of $S_n$?
+15\. What is the standard error of $S_n$?
 
-17\. What is the probability that you end up winning money? 
+16\. What is the probability that you end up winning money? 
