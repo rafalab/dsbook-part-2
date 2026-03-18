@@ -1,6 +1,6 @@
 # Numerical Summaries {#sec-numeric-summaries}
 
-Histograms and density plots provide excellent summaries of a distribution. But can we summarize even further? We often see the average and standard deviation used as summary statistics: a two-number summary! To understand what these summaries are and why they are so widely used, we need to understand the normal distribution.
+Histograms and density plots provide excellent summaries of a distribution. But can we summarize even further? We often see the average and standard deviation used as summary statistics: a two-number summary! To see why these summaries are especially useful, we introduce the normal distribution.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 library(tidyverse)
@@ -11,11 +11,11 @@ library(dslabs)
 
 The normal distribution, also known as the bell curve and as the Gaussian distribution, is one of the most famous mathematical concepts in history. One reason for this is that approximately normal distributions occur in many situations, including gambling winnings, heights, weights, blood pressure, standardized test scores, and experimental measurement errors. There are explanations for these occurrences, which we will describe later. Here we focus on how the normal distribution helps us summarize data.
 
-Rather than using data, the normal distribution is defined with a mathematical formula. For any interval $(a,b)$, the proportion of values in that interval can be computed using this formula:
+Rather than using data, the normal distribution is defined with a mathematical formula---unlike the empirical distributions in the previous chapter, the normal distribution is a *theoretical* distribution (theoretical distributions will be discussed more in @sec-random-variables). For any interval $(a,b)$, the proportion of values in that interval can be computed using this formula:
 
 $$\mathrm{Pr}(a < x \leq b) = \int_a^b \frac{1}{\sqrt{2\pi}\sigma} e^{-\frac{1}{2}\left( \frac{x-\mu}{\sigma} \right)^2} \, dx$$
 
-But you don't need to memorize the formula to use the normal distribution in practice. The most important characteristics is that it is completely defined by just two parameters: $\mu$ and $\sigma$. The rest of the symbols in the formula represent the interval ends, $a$ and $b$, and known mathematical constants $\pi$ and $e$. These two parameters, $\mu$ and $\sigma$, are referred to as the *mean* and the *standard deviation* (SD) of the distribution, respectively (\mu and \sigma are the Greek letters for $m$ and $s$). In R the function `pnorm` lets us compute the $\mathrm{Pr}(x \leq a)$ for any $a,\mu,$ and $\sigma$:
+But you don't need to memorize the formula to use the normal distribution in practice. The most important characteristics is that it is completely defined by just two parameters: $\mu$ and $\sigma$. The rest of the symbols in the formula represent the interval ends, $a$ and $b$, and known mathematical constants $\pi$ and $e$. These two parameters, $\mu$ and $\sigma$, are referred to as the *mean* and the *standard deviation* (SD) of the distribution, respectively ($\mu$ and $\sigma$ are the Greek letters for $m$ and $s$). In R the function `pnorm` lets us compute the $\mathrm{Pr}(x \leq a)$ for any $a,\mu,$ and $\sigma$:
 
 ```{r}
 #| eval: false
@@ -32,26 +32,31 @@ norm_dist <- data.frame(x = seq(-4, 4,len = 50)*s + m) |> mutate(density = dnorm
 norm_dist |> ggplot(aes(x,density)) + geom_line()
 ```
 
-The fact that the distribution is defined by just two parameters implies that if a dataset's distribution is approximated by the normal distribution, all the information needed to describe the distribution can be encoded in just two numbers: the mean and the standard deviation. 
+The fact that the distribution is defined by just two parameters implies that if a dataset's distribution is approximated by the normal distribution, all the information needed to describe the distribution can be encoded in just two numbers: the mean and the standard deviation.
+
+Although we introduced these concepts in the context of the normal distribution, many distributions---both discrete and continuous---also have means and standard deviations. We will discuss these terms in more detail in @sec-random-variables.
 
 ## The mean and standard deviation {#sec-average-and-sd-def}
 
-Discrete distributions also have means, or averages, and standard deviations. We will discuss these terms in more detail in @sec-random-variables. For a list of values $x_1, \dots, x_n$ the mean, call it $\mu_x$, is defined by 
+For a list of values $x_1, \dots, x_n$ we define the *sample mean* and *sample standard deviation*. The sample mean, denoted $\bar{x}$ (read as "x-bar"), is defined by 
 
 $$
-\mu_x = \frac{1}{n}\sum_{i=1}^n x_i
+\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i
 $$
 Note that this is equivalent to the average of the $x$s. 
 
-The standard deviation is defined with 
+The sample standard deviation is defined with 
 
 $$
-\sigma_x = \sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2}
+s_x = \sqrt{\frac{1}{n-1}\sum_{i=1}^n (x_i - \bar{x})^2}
 $$
-which can be thought of as the average distance of the points $x_i$ to the mean $\mu_x$. 
+which can be thought of as the average distance of the points $x_i$ to the mean $\bar{x}$. 
 
+:::{.callout-warning}
+For reasons explained in @sec-population-sd, $s_x$ divides by $n-1$ rather than $n$. But note that when $n$ is large, $s_x$ and $\sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2}$ are practically equal.
+:::
 
-Let's compute the mean and standard deviations for the height of males:
+Let's compute the sample mean and standard deviations for the height of males:
 
 ```{r}
 library(tidyverse)
@@ -66,14 +71,9 @@ m <- mean(x)
 s <- sd(x)
 ```
 
-:::{.callout-warning}
-For reasons explained in @sec-population-sd, `sd(x)` divides by `length(x)-1` rather than `length(x)`. But note that when `length(x)` is large, `sd(x)` and `sqrt(sum((x-mu)^2)/length(x))` are practically equal.
-:::
+If the distribution of the values stored in `x` is well approximated by a normal distribution, we can use `m <- mean(x)` and `s <- sd(x)` as estimates of the normal distribution's mean $\mu$ and standard deviation $\sigma$. Then the entire distribution of `x` can be summarized with just these two numbers!
 
-
-If the distribution of the values stored in `x` is well approximated by a normal distribution, it makes sense to use the normal distribution with mean `m <- mean(x)` and standard deviation `s <- sd(x)`. Then the entire distribution of `x` can be summarized with just these two numbers!
-
-The plot below shows the smooth density of the observed data (blue) and the corresponding normal approximation (black line) with mean = `r round(m, 1)` and SD = `r round(s, 1)`:
+The plot below shows the smooth density of the observed data (blue) and the corresponding normal approximation (black line) with mean $\mu$ = `r round(m, 1)` and SD $\sigma$ = `r round(s, 1)`:
 
 ```{r summaries-data-and-normal-densities, echo = FALSE}
 norm_dist <- data.frame(x = seq(-4, 4, len = 50)*s + m) |> 
