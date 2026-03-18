@@ -34,29 +34,25 @@ norm_dist |> ggplot(aes(x,density)) + geom_line()
 
 The fact that the distribution is defined by just two parameters implies that if a dataset's distribution is approximated by the normal distribution, all the information needed to describe the distribution can be encoded in just two numbers: the mean and the standard deviation.
 
-Although we introduced these concepts in the context of the normal distribution, many distributions---both discrete and continuous---also have means and standard deviations. We will discuss these terms in more detail in @sec-random-variables.
+Although we introduced these concepts in the context of the normal distribution, the mean and standard deviation can be defined for any list of numbers, and they are commonly used to summarize data. In fact, all discrete distributions have means and standard deviations, and we will discuss these in more detail in @sec-random-variables. For now, we will focus on how to compute these summaries for a list of numbers and how to use them to summarize data. 
 
 ## The mean and standard deviation {#sec-average-and-sd-def}
 
-For a list of values $x_1, \dots, x_n$ we define the *sample mean* and *sample standard deviation*. The sample mean, denoted $\bar{x}$ (read as "x-bar"), is defined by 
+For a list of values $x_1, \dots, x_n$ we define the *mean* and *standard deviation*. The mean, denoted $\mu_x$, is defined by 
 
 $$
-\bar{x} = \frac{1}{n}\sum_{i=1}^n x_i
+\mu_x = \frac{1}{n}\sum_{i=1}^n x_i
 $$
 Note that this is equivalent to the average of the $x$s. 
 
-The sample standard deviation is defined with 
+The standard deviation is defined with 
 
 $$
-s_x = \sqrt{\frac{1}{n-1}\sum_{i=1}^n (x_i - \bar{x})^2}
+\sigma_x = \sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2}
 $$
-which can be thought of as the average distance of the points $x_i$ to the mean $\bar{x}$. 
+which can be thought of as the average distance of the points $x_i$ to the mean $\mu_x$. 
 
-:::{.callout-warning}
-For reasons explained in @sec-population-sd, $s_x$ divides by $n-1$ rather than $n$. But note that when $n$ is large, $s_x$ and $\sqrt{\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2}$ are practically equal.
-:::
-
-Let's compute the sample mean and standard deviations for the height of males:
+Let's compute the mean and standard deviations for the height of males:
 
 ```{r}
 library(tidyverse)
@@ -70,6 +66,16 @@ The pre-built functions `mean` and `sd` can be used here:
 m <- mean(x)
 s <- sd(x)
 ```
+
+:::{.callout-warning}
+For reasons explained in @sec-population-sd, `sd(x)` divides by $n-1$ rather than $n$. When $n$ is large, however, the difference is negligible:
+
+$$
+\frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2 \approx \frac{1}{n-1}\sum_{i=1}^n (x_i - \mu_x)^2.
+$$
+
+In @sec-population-sd we will see that, if we view our list of numbers as a sample from a normal distribution, then the version that divides by $n-1$ provides a better estimate of the population standard deviation. For now, we will use `sd(x)` to compute the standard deviation of the values in `x`.
+:::
 
 If the distribution of the values stored in `x` is well approximated by a normal distribution, we can use `m <- mean(x)` and `s <- sd(x)` as estimates of the normal distribution's mean $\mu$ and standard deviation $\sigma$. Then the entire distribution of `x` can be summarized with just these two numbers!
 
@@ -119,9 +125,9 @@ When using the normal approximation with discrete data (for example, when height
 
 ## Standard units
 
-For data that is approximately normally distributed, it is convenient to think in terms of *standard units*. The standard unit of a value tells us how many standard deviations away from the average it is. Specifically, for a value $x$ from a vector $\mathbf x$, we define the value of $x$ in standard units as $z = (x - m)/s$ with $m$ and $s$ the average and standard deviation of $\mathbf x$, respectively. Why is this convenient?
+For data that is approximately normally distributed, it is convenient to think in terms of *standard units*. The standard unit of a value tells us how many standard deviations away from the average it is. Specifically, for a value $x_i$ from a list $(x_1, \dots, x_n)$, we define the value of $x_i$ in standard units as $z_i = (x_i - \mu_x)/\sigma_x$ with $\mu_x$ and $\sigma_x$ the average and standard deviation of the list, respectively. 
 
-First, revisit the formula for the normal distribution and observe that what is being exponentiated is $-z^2/2$ with $z$ equivalent to $x$ in standard units. Because the maximum of $e^{-z^2/2}$ is at $z = 0$, this explains why the maximum of the distribution occurs at the mean. It also explains the symmetry since $- z^2/2$ is symmetric around 0. Second, note that by converting the normally distributed data to standard units, we can quickly ascertain whether, for example, a person is about average ($z = 0$), one of the tallest ($z \approx 2$), one of the shortest ($z \approx -2$), or an extremely rare occurrence ($z > 3$ or $z < -3$). Remember that it does not matter what the original units are, these rules apply to any data that is approximately normal.
+Why is this convenient? First, revisit the formula for the normal distribution and observe that what is being exponentiated is $-z^2/2$ with $z$ equivalent to $x$ in standard units. Because the maximum of $e^{-z^2/2}$ is at $z = 0$, this explains why the maximum of the distribution occurs at the mean. It also explains the symmetry since $- z^2/2$ is symmetric around 0. Second, note that by converting the normally distributed data to standard units, we can quickly ascertain whether, for example, a person is about average ($z = 0$), one of the tallest ($z \approx 2$), one of the shortest ($z \approx -2$), or an extremely rare occurrence ($z > 3$ or $z < -3$). Remember that it does not matter what the original units are, these rules apply to any data that is approximately normal.
 
 In R, we can transform to standard units using the function `scale`:
 
@@ -252,19 +258,12 @@ Using `pnorm`, we can compute the proportion of data expected to fall within thi
 
 ```{r}
 r <- c(q1 - 1.5*iqr, q3 + 1.5*iqr)
-round((pnorm(r[2]) - pnorm(r[1]))*100, 3)
+round((pnorm(r[2]) - pnorm(r[1]))*100, 1)
 ```
 
-Thus, about `r round((pnorm(r[2]) - pnorm(r[1]))*100, 3)`% of the data lie inside this interval for a normal distribution. In other words, we expect roughly 7 out of every 1,000 observations from a perfectly normal dataset to fall outside this range, not because they are erroneous, but simply due to random variation.
+Thus, about `r round((pnorm(r[2]) - pnorm(r[1]))*100, 1)`% of the data lie inside this interval for a normal distribution. In other words, we expect roughly 7 out of every 1,000 observations from a perfectly normal dataset to fall outside this range, not because they are erroneous, but simply due to random variation.
 
-To make the definition stricter, Tukey proposed using a wider multiplier, such as 3 instead of 1.5, to flag *far-out outliers*. For normally distributed data, the range
-
-```{r}
-r <- c(q1 - 3*iqr , q3 + 3*iqr)
-round((pnorm(r[2]) - pnorm(r[1]))*100, 4)
-```
-
-captures about `r round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of all values, meaning that only about two in a million observations would fall outside it. In **ggplot** `geom_boxplot()` function, this multiplier is controlled by the `coef` argument, which defaults to 1.5.
+To identify *far-out outliers* more strictly, Tukey proposed using a wider multiplier, such as 3 instead of 1.5, to define the outlier boundaries. For normally distributed data, using a multiplier of 3 means the range `c(q1 - 3*iqr, q3 + 3*iqr)` contains approximately `r r <- c(q1 - 3*iqr, q3 + 3*iqr); round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of all values. This means only about 2 in a million observations would be flagged as outliers. In **ggplot2**, you can control this multiplier using the `coef` argument in `geom_boxplot()`, which defaults to 1.5.
 
 Let's apply Tukey's rule to our height data. The extreme 180-foot measurement is well beyond the upper bound of this range defined by $Q_3 + 3 \times \text{IQR}$:
 
