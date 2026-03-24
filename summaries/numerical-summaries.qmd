@@ -34,7 +34,7 @@ norm_dist |> ggplot(aes(x,density)) + geom_line()
 
 The fact that the distribution is defined by just two parameters implies that if a dataset's distribution is approximated by the normal distribution, all the information needed to describe the distribution can be encoded in just two numbers: the mean and the standard deviation.
 
-Although we introduced these concepts in the context of the normal distribution, the mean and standard deviation can be defined for any list of numbers, and they are commonly used to summarize data. In fact, all discrete distributions have means and standard deviations, and we will discuss these in more detail in @sec-random-variables. For now, we will focus on how to compute these summaries for a list of numbers and how to use them to summarize data. 
+Although introduced in the context of the normal distribution, the mean and standard deviation apply to any list of numbers. We will revisit these summaries for discrete distributions in @sec-random-variables; for now, we focus on computing them from data.
 
 ## The mean and standard deviation {#sec-average-and-sd-def}
 
@@ -74,7 +74,7 @@ $$
 \frac{1}{n}\sum_{i=1}^n (x_i - \mu_x)^2 \approx \frac{1}{n-1}\sum_{i=1}^n (x_i - \mu_x)^2.
 $$
 
-In @sec-population-sd we will see that, if we view our list of numbers as a sample from a normal distribution, then the version that divides by $n-1$ provides a better estimate of the population standard deviation. For now, we will use `sd(x)` to compute the standard deviation of the values in `x`.
+We will explain why $n-1$ is often preferred in @sec-population-sd. For now, we will use `sd(x)` to compute the standard deviation of the values in `x`.
 :::
 
 If the distribution of the values stored in `x` is well approximated by a normal distribution, we can use `m <- mean(x)` and `s <- sd(x)` as estimates of the normal distribution's mean $\mu$ and standard deviation $\sigma$. Then the entire distribution of `x` can be summarized with just these two numbers!
@@ -100,7 +100,7 @@ For example, we can compare the proportion of observations falling within a give
 mean(x > a & x <= b)
 ```
 
-Here, the logical expression `x >= a & x <= b` returns `TRUE` for all values of `x` in the interval and `FALSE` otherwise. Because the `mean` function automatically converts `TRUE` to 1 and `FALSE` to 0, the average of this logical vector is simply the proportion of observations that fall within the interval. We will use this convenient approach throughout the book.
+Here, the logical expression `x > a & x <= b` returns `TRUE` for all values of `x` in the interval and `FALSE` otherwise. Because the `mean` function automatically converts `TRUE` to 1 and `FALSE` to 0, the average of this logical vector is simply the proportion of observations that fall within the interval. We will use this convenient approach throughout the book.
 
 The following examples illustrate how closely the observed proportions match the theoretical probabilities from the normal distribution.
 
@@ -180,15 +180,16 @@ Our colleage writes a report on the interesting fact that this group of males is
 sd(outlier_example)
 ```
 
-Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r signif(mean(outlier_example) + c(-2, 2)*sd(outlier_example), 3)` feet, which does not make sense. A quick plot reveals the problem:
+Adding and subtracting two standard deviations, you note that 95% of this population will have heights between `r round(mean(outlier_example) + c(-2, 2)*sd(outlier_example), 1)` feet, which does not make sense. A histogram reveals the problem:
 
 
-```{r, boxplot-reveals-outliers, echo=-1, out.width="50%"}
+```{r, boxplot-reveals-outliers}
+#| warning=FALSE, message=FALSE, echo=FALSE
 rafalib::mypar()
-boxplot(outlier_example)
+hist(outlier_example, breaks = seq(min(outlier_example), max(outlier_example), 1/12))
 ```
 
-There appears to be at least one value that is nonsensical, since we know that a height of `r max(outlier_example)` feet is impossible. The boxplot detects this point as an outlier.
+There appears to be at least one value that is nonsensical, since we know that a height of `r max(outlier_example)` feet is impossible.
 
 
 ### The Median
@@ -209,7 +210,7 @@ The median is often a better measure of *typical* value when the data contain ou
 
 Just as outliers can distort the average, they can also make the standard deviation misleadingly large. A more *robust* measure of spread is the *median absolute deviation (MAD)*.
 
-To compute the MAD, we first find the median, then calculate the absolute deviation of each value from the median, and finally take the median of those deviations. To make it comparable to the standard deviation when data are normally distributed, we multiply this value by 1.4826. (The `mad` function in R applies this correction automatically.)
+To compute the MAD, we first find the median, then calculate the absolute deviation of each value from the median, and finally take the median of those deviations. To make it comparable to the standard deviation when data are normally distributed, we need to multiply this value by 1.4826. (The `mad` function in R applies this correction automatically.)
 
 For our height data, the MAD is:
 
@@ -241,7 +242,7 @@ In addition to summarizing spread, the IQR allows us to formally define what we 
 
 A precise, data-driven definition of an *outlier* was introduced by John Tukey, who also developed the boxplot, a visualization we will introduce in the next section. To construct a boxplot, we first need a formal way to identify which data points count as outliers.
 
-Let the first and third quartiles be denoted as $Q_1 = Q(0.25)$ and $Q_3 = Q(0.75)$, respectively. Tukey defined an observation as an *outlier* if it falls outside the following range:
+Let the first and third quartiles be denoted as $Q_1$ and $Q_3$, respectively. Tukey defined an observation as an *outlier* if it falls outside the following range:
 
 $$
 [Q_1 - 1.5 \times \text{IQR}, ; Q_3 + 1.5 \times \text{IQR}], \quad \text{where } \text{IQR} = Q_3 - Q_1
@@ -263,7 +264,7 @@ round((pnorm(r[2]) - pnorm(r[1]))*100, 1)
 
 Thus, about `r round((pnorm(r[2]) - pnorm(r[1]))*100, 1)`% of the data lie inside this interval for a normal distribution. In other words, we expect roughly 7 out of every 1,000 observations from a perfectly normal dataset to fall outside this range, not because they are erroneous, but simply due to random variation.
 
-To identify *far-out outliers* more strictly, Tukey proposed using a wider multiplier, such as 3 instead of 1.5, to define the outlier boundaries. For normally distributed data, using a multiplier of 3 means the range `c(q1 - 3*iqr, q3 + 3*iqr)` contains approximately `r r <- c(q1 - 3*iqr, q3 + 3*iqr); round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of all values. This means only about 2 in a million observations would be flagged as outliers. In **ggplot2**, you can control this multiplier using the `coef` argument in `geom_boxplot()`, which defaults to 1.5.
+To identify *far-out outliers* more strictly, Tukey proposed using a wider multiplier, such as 3 instead of 1.5, to define the outlier boundaries. For normally distributed data, using a multiplier of 3 means the range `c(q1 - 3*iqr, q3 + 3*iqr)` contains approximately `r r <- c(q1 - 3*iqr, q3 + 3*iqr); round((pnorm(r[2]) - pnorm(r[1]))*100, 4)`% of all values. This means only about 2 in a million observations would be flagged as outliers. Any function that flags outliers must choose a multiplier; in **ggplot2**'s `geom_boxplot()`, this is controlled via the `coef` argument, which defaults to 1.5.
 
 Let's apply Tukey's rule to our height data. The extreme 180-foot measurement is well beyond the upper bound of this range defined by $Q_3 + 3 \times \text{IQR}$:
 

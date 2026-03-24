@@ -23,8 +23,6 @@ str(heights)
 
 One way to convey the heights to ET is to simply send the entire dataset of heights. However, there are much more effective ways to convey this information, and understanding the concept of a distribution will help. To simplify the explanation, we first focus on male heights. We examine the female height data in @sec-stratification.
 
-At this stage, we are thinking of distributions purely as tools for summarizing and describing data. In the next part of the book, we will connect these same ideas to probability, where distributions help us model uncertainty. For now, our goal is simply to explore the patterns and variation present in the data we do have.
-
 It turns out that, in some cases, the two summary statistics introduced in the next chapter, the average and the standard deviation, are all we need to understand the data. We will learn data visualization techniques that will help us determine when this two-number summary is appropriate. These same techniques will serve as an alternative for when two numbers are not enough.
 
 ## Variable types 
@@ -35,7 +33,7 @@ We will be working with two types of variables: categorical and numeric. Each ca
 
 When data values represent groups instead of numbers, we refer to the data as _categorical_. Two simple examples are sex (male or female) and US regions (Northeast, South, North Central, West). Some categorical data can be ordered even if they are not numbers, such as spiciness (mild, medium, hot). These ordered categorical data are referred to as _ordinal_ data.
 
-Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be a whole number. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes per day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.
+Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be whole numbers. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes per day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.
 
 In practice, there are occasions in which discrete variables are treated as continuous. For example, a digital measuring instrument might record data as 16-bit integers. However, because it is rare to obtain exactly the same reading more than once, it is convenient to treat the data as continuous. Another example is country population size. Although population counts are always whole numbers, it is uncommon for two jurisdictions to have exactly the same population. For this reason, population size is also commonly treated as continuous.
 
@@ -106,7 +104,7 @@ murders |> filter(state %in% state.name) |>
   scale_x_continuous(labels = label_comma())
 ```
 
-Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us quickly identify medians, ranges, and other important distributional features.
+Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us to quickly identify medians, ranges, and other important distributional features.
 
 In our heights case study, most students reported heights rounded to the nearest inch. However, some did not. For example, one student reported a height of `68.503937007874` inches, and another reported `68.8976377952756` inches. These values correspond to 174 cm and 175 cm converted to inches, respectively, suggesting that some students knew their heights to the closest centimeter and reported this number divided by 2.54.
 
@@ -158,7 +156,7 @@ heights |> filter(sex == "Male") |>
   ggplot(aes(height, f)) + geom_col()
 ```
 
-The R base `hist` function also allows us quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
+The R base `hist` function also allows us to quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:
 
 ```{r hist-custom-bin-example}
 with(heights, hist(height[sex == "Male"], breaks = c(50, 55, 60:80, 85)))
@@ -197,6 +195,7 @@ The appearance and interpretation of a histogram depend on the choice of bins, a
 Smooth density plots are similar to histograms, but the data is not divided into bins. Here is what a smooth density plot looks like for our heights data:
 
 ```{r summaries-example-of-smoothed-density}
+#| echo: false
 heights |> filter(sex == "Male") |> 
   ggplot(aes(height)) + geom_density(alpha = 0.2, fill = "#00BFC4")
 ```
@@ -263,7 +262,7 @@ grid.arrange(hist1, hist3, hist4, hist5, hist2, hist6, nrow = 2)
 
 ### Choosing the bandwidth
 
-*Smooth* is a relative term. The degree of smoothness in a density curve is not fixed, it depends on a parameter, often called the bandwidth, that controls how much we smooth the curve. Most functions that compute smooth densities include an option to adjust this bandwidth. The examples below show the same histogram with two different bandwidth choices, illustrating how the amount of smoothing can change the appearance of the density curve.
+*Smooth* is a relative term. The degree of smoothness in a density curve is not fixed, it depends on a parameter, often called the bandwidth, that controls how much we smooth the curve. We say more about this in @sec-ml-conditionals. Most functions that compute smooth densities include an option to adjust this bandwidth. The examples below show the same histogram with two different bandwidth choices, illustrating how the amount of smoothing can change the appearance of the density curve.
 
 ```{r summaries-densities-different-smoothness, out.width = "100%", fig.width = 6, fig.height = 3, echo=FALSE,cache=FALSE, message=FALSE}
 p <- heights |> filter(sex == "Male") |> 
@@ -292,7 +291,7 @@ tmp |> ggplot(aes(height,density)) + geom_line() +
 
 The proportion of this area is about `r round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)`, meaning that about `r noquote(paste0(round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)*100, '%'))` of male heights are between 65 and 68 inches.
 
-By understanding this, we are ready to use the smooth density as a summary. For this dataset, we would feel quite comfortable with the smoothness assumption, and therefore with sharing this aesthetically pleasing figure with ET, which he could use it to understand our male heights data:
+By understanding this, we are ready to use the smooth density as a summary. For this dataset, we would feel quite comfortable with the smoothness assumption, and therefore with sharing this aesthetically pleasing figure with ET, which he could use to understand our male heights data:
 
 ```{r summaries-example-of-smoothed-density-2, echo = FALSE}
 heights |> 
@@ -393,7 +392,7 @@ b.  95%
 c.  80%
 d.  72 inches
 
-4\. To the closest inch, what height `m` has the property that 1/2 of the male students are taller than `m` and 1/2 are shorter?
+4\. To the closest inch, what height $m$ has the property that 1/2 of the male students are taller than $m$ and 1/2 are shorter?
 
 a.  61 inches
 b.  64 inches
