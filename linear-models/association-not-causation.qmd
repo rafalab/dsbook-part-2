@@ -6,7 +6,7 @@ Statistical tools can reveal patterns, but they cannot, on their own, establish 
 
 * *Empirical association:* A relationship must exist between the variables of interest.
 * *Temporal priority:* The cause must occur before the effect.
-* *Dose-response relationship:* Changes in the _dose_ of the cause should result in changes of the effect.
+* *Dose-response relationship:* Changes in the _dose_ of the cause should result in changes in the effect.
 * *Plausibility:* There must be a credible mechanism explaining how the cause could produce the effect.
 * *Elimination of alternative explanations:* Other potential causes, such as confounding factors, must be considered and ruled out.
 
@@ -56,7 +56,7 @@ sim_data <- data.table(group = rep(1:g, each = N), x = rnorm(N*g), y = rnorm(N*g
 
 Note we created `r cat(prettyNum(g, big.mark=",", scientific=FALSE))` groups and for each we generated a pair of independent vectors, $X$ and $Y$, with `r N` observations each. Because we constructed the simulation, we know that $X$ and $Y$ are not correlated.
 
-Next, we compute the correlation between `X` and `Y` for each group and look for the max:
+Next, we compute the correlation between `X` and `Y` for each group and look for the maximum:
 
 ```{r}
 res <- sim_data[, .(r = cor(x, y)), by = group][order(-r)]
@@ -94,7 +94,7 @@ This practice, known as p-hacking, is widely discussed because it may undermine 
 
 ## Outliers
 
-Suppose we measure two independent outcomes, $X$ and $Y$, and standardize each set of measurements. Now imagine we make a mistake and forget to standardize just one value, say, entry 23. We can illustrate this situation by simulating such data as follows:
+Suppose we measure two independent outcomes, $X$ and $Y$, and standardize each set of measurements. Now, imagine we make a mistake and forget to standardize just one value, say, entry 23. We can illustrate this situation by simulating such data as follows:
 
 ```{r}
 set.seed(1985)
@@ -150,15 +150,15 @@ In the recommended reading section, we include references on estimation techniqu
 
 ## Reversing cause and effect
 
-Another way association is confused with causation is when the cause and effect are reversed. An example of this is claiming that tutoring makes students perform worse because they test lower than peers that are not tutored. In this case, the tutoring is not causing the low test scores, but the other way around.
+Another way association is confused with causation is when the cause and effect are reversed. An example of this is claiming that tutoring makes students perform worse because they test lower than peers who are not tutored. In this case, the tutoring is not causing the low test scores, but the other way around.
 
 A form of this claim actually made it into an op-ed in the New York Times titled Parental Involvement Is Overrated[^association-not-causation-2]. Consider this quote from the article:
 
 [^association-not-causation-2]: https://opinionator.blogs.nytimes.com/2014/04/12/parental-involvement-is-overrated
 
-> > When we examined whether regular help with homework had a positive impact on children's academic performance, we were quite startled by what we found. Regardless of a family's social class, racial or ethnic background, or a child's grade level, consistent homework help almost never improved test scores or grades... Even more surprising to us was that when parents regularly helped with homework, kids usually performed worse.
+> When we examined whether regular help with homework had a positive impact on children's academic performance, we were quite startled by what we found. Regardless of a family's social class, racial or ethnic background, or a child's grade level, consistent homework help almost never improved test scores or grades... Even more surprising to us was that when parents regularly helped with homework, kids usually performed worse.
 
-A very likely possibility is that the children needing regular parental help, receive this help because they don't perform well in school.
+A very likely possibility is that the children needing regular parental help receive this help because they don't perform well in school.
 
 
 We can illustrate cause-effect reversal by fitting the regression
@@ -167,7 +167,7 @@ $$
 X = \beta_0 + \beta_1 y + \varepsilon
 $$
 
-to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backwards, as it would imply that sons' heights determine fathers' heights. Using the previously defined `galton` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
+to the father–son height data, where $X$ and $y$ represents father and son heights, respectively. Interpreting $\beta_1$ causally here would be backward, as it would imply that sons' heights determine fathers' heights. Using the previously defined `galton` dataset, we do in fact obtain a statistically significant slope, demonstrating that statistical significance does not imply causation or the correct direction of effect.
 
 ```{r, echo=FALSE, cache=FALSE}
 library(HistData)
@@ -186,8 +186,8 @@ galton <- GaltonFamilies |>
 tidy(lm(father ~ son, data = galton))[2,]
 ```
 
-The model fits the data very well and the estimates, standard errors, and p-values all correctly show that there is an association between son and father heights.
-However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son's height causes his father's height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault and we did not make coding mistakes. What is misleading here is the interpretation, not the model or computation.
+The model fits the data very well, and the estimates, standard errors, and p-values all correctly show that there is an association between son and father heights.
+However, if we look only at its mathematical formulation, it could easily be misinterpreted as implying that a son's height causes his father's height. From our knowledge of genetics and biology, we know the direction of influence is the opposite. The statistical model itself is not at fault, and we did not make coding mistakes. What is misleading here is the interpretation, not the model or computation.
 
 ## Confounders
 
@@ -195,7 +195,7 @@ Confounders are perhaps the most common reason that leads to associations being 
 
 If $X$ and $Y$ are correlated, we call $Z$ a *confounder* if it, or some factor associated with it, is a cause of both $X$ and $Y$, thereby creating a spurious association between them unless we properly account for $Z$. 
 
-Incorrect interpretation due to confounders is ubiquitous in the lay press and they are often hard to detect. Here, we present a widely used example related to college admissions.
+Incorrect interpretation due to confounders is ubiquitous in the lay press, and they are often hard to detect. Here, we present a widely used example related to college admissions.
 
 ### Example: UC Berkeley admissions
 
@@ -223,9 +223,9 @@ admissions |> select(major, gender, admitted) |>
 
 For five of the six majors, the differences are small, with major A favoring women. More importantly, these differences are all much smaller than the 14.2-point difference in favor of men observed when looking at the overall totals.
 
-The paradox is that analyzing the totals suggests a dependence between admission and gender, but when the data is grouped by major, this dependence seems to disappear. What's going on? This actually can happen if an uncounted confounder is driving most of the variability.
+The paradox is that analyzing the totals suggests a dependence between admission and gender, but when the data is grouped by major, this dependence seems to disappear. What's going on? This actually can happen if an unaccounted for confounder is driving most of the variability.
 
-Discovering confounders, and understanding how they can lead to misleading conclusions, often requires exploratory data analysis and critical thinking. Looking at the table above, we notice substantial variability in admission rates across majors. Could this be influencing the overall results? To investigate, we add a _selectivity_ column, the overall admission rate within each major, to the admissions table.
+Discovering confounders and understanding how they can lead to misleading conclusions often requires exploratory data analysis and critical thinking. Looking at the table above, we notice substantial variability in admission rates across majors. Could this be influencing the overall results? To investigate, we add a _selectivity_ column, the overall admission rate within each major, to the admissions table.
 
 ```{r}
 admissions <- group_by(admissions, major) |>
@@ -255,7 +255,7 @@ admissions |> ggplot(aes(major, admitted, col = gender, size = applicants)) +
   geom_point()
 ```
 
-We see that, major by major, there is not much difference in admission rates between genders. However, the large number of men applying to Major B, which admits over 60% of applicants, causes the confusion in the overall comparison. This plot suggests that a more sophisticated analysis adjusting for major is needed. We will learn how to perform such an analysis in the next chapter, in @sec-multivariable-regression.
+We see that, major by major, there is not much difference in admission rates between genders. However, the large number of men applying to Majors A and B, which admit over 60% of applicants, causes confusion in the overall comparison. This plot suggests that a more sophisticated analysis, adjusting for major factors, is needed. We will learn how to perform such an analysis in the next chapter, in @sec-multivariable-regression.
 
 ### Simpson's paradox
 
@@ -283,7 +283,7 @@ dat |> ggplot(aes(x, y)) + geom_point(alpha = 0.5) +
   ggtitle(paste("Correlation = ", round(cor(dat$x, dat$y), 2)))
 ```
 
-You can see that $X$ and $Y$ are negatively correlated. However, once we stratify by $Z$ (shown in different colors below), another pattern emerges:
+You can see that $X$ and $Y$ are negatively correlated. However, once we stratify by $Z$ (shown as different colors below), another pattern emerges:
 
 ```{r simpsons-paradox-explained, echo=FALSE}
 means <- do.call(rbind, means) |> 
@@ -298,17 +298,17 @@ dat |> ggplot(aes(x, y, color = z)) +
   annotate("text", x = means$x, y = means$y, label = paste("z =", means$z), cex = 5)  
 ```
 
-It is really $Z$ that is negatively correlated with $X$. If we stratify by $Z$, the $X$ and $Y$ are actually positively correlated, as seen in the plot above.
+It is really $Z$ that is negatively correlated with $X$ and positively correlated with $Y$, inducing a negative marginal correlation between $X$ and $Y$. If we stratify by $Z$, the $X$ and $Y$ are actually positively correlated, as seen in the plot above.
 
 ## Other Sources of Bias
 
-We discussed confounding and reverse causation, but there are many other mechanisms that can create associations that are not causal. For example, **collider bias** occurs when we condition on a variable influenced by two or more other variables, inadvertently inducing a false relationship between them. A classic example is the negative association sometimes observed between academic ability and athletic skill among students at elite colleges. In the general population, these traits may be independent, but both increase the likelihood of admission. Conditioning on admission, our collider, can create a spurious negative correlation: among admitted students, those who are less athletic may have higher academic ability, and vice versa. A similar effect can occur in hospitals, where two unrelated health conditions, such as diabetes and heart disease, may appear negatively associated among patients simply because both increase the likelihood of hospitalization.
+We discussed confounding and reverse causation, but there are many other mechanisms that can create associations that are not causal. For example, **collider bias** occurs when we condition on a variable influenced by two or more other variables, inadvertently inducing a false relationship between them. A classic example is the negative association sometimes observed between academic ability and athletic skill among students at elite colleges. In the general population, these traits may be independent, but both increase the likelihood of admission. Conditioning on admission, our collider, can create a spurious negative correlation: among admitted students, those who are less athletic may have higher academic ability, and vice versa. A similar effect can occur in hospitals, where two unrelated health conditions, such as a broken bone and heart disease, may appear negatively associated among patients simply because both increase the likelihood of hospitalization.
 
-**Selection bias** is another common source of spurious association. It arises when the process determining who or what enters a dataset depends on factors related to both the exposure/treatement and the outcome. For example, comparing mortality rates between two hospitals might suggest that Hospital A provides worse care than Hospital B. However, if Hospital A is a major trauma center treating more severely ill patients, while Hospital B handles mostly routine cases, the comparison is misleading. The difference reflects who is admitted, not differences in quality of care.
+**Selection bias** is another common source of spurious association. It arises when the process determining who or what enters a dataset depends on factors related to both the exposure/treatment and the outcome. For example, comparing mortality rates between two hospitals might suggest that Hospital A provides worse care than Hospital B. However, if Hospital A is a major trauma center treating more severely ill patients, while Hospital B handles mostly routine cases, the comparison is misleading. The difference reflects who is admitted, not differences in quality of care.
 
 **Measurement bias** (or *misclassification*) occurs when variables are measured with error, especially when those errors differ across groups. Consider a study on smoking and lung cancer: if some participants underreport smoking due to stigma, smokers may be misclassified as nonsmokers. If this underreporting occurs equally across groups, the bias is *nondifferential* and tends to weaken the observed association. If it differs between groups, say, lung cancer patients are more likely to admit to smoking, the bias is *differential* and may exaggerate or even reverse the association.
 
-Readers interested in exploring these sources of bias in greater depth—including how they are represented in causal diagrams, will find recommended references in the *Recommended Reading* section. These works provide clear explanations and practical guidance for recognizing and avoiding such biases in real data.
+Readers interested in exploring these sources of bias in greater depth---including how they are represented in causal diagrams---will find recommended references in the *Recommended Reading* section. These works provide clear explanations and practical guidance for recognizing and avoiding such biases in real data.
 
 ## Exercises
 
@@ -339,12 +339,12 @@ Construct the two-by-two table used for the conclusion about differences in awar
 
 3\. In the previous exercise, we noticed that the success rate is lower for women. But is it significant? Compute a p-value using a Chi-square test.
 
-4\. We see that the p-value is about 0.05. So there appears to be some evidence of an association. But can we infer causation here? Is gender bias causing this observed difference? The response to the original paper claims that what we see here is similar to the UC Berkeley admissions example. Specifically, they state that this "could be a prime example of Simpson's paradox; if a higher percentage of women apply for grants in more competitive scientific disciplines, then an analysis across all disciplines could incorrectly show 'evidence' of gender inequality." To settle this dispute, create a dataset with number of applications, awards, and success rate for each gender. Re-order the disciplines by their overall success rate. Hint: use the `reorder` function to re-order the disciplines in a first step, then use `pivot_longer`, `separate`, and `pivot_wider` to create the desired table.
+4\. We see that the p-value is about 0.05. So there appears to be some evidence of an association. But can we infer causation here? Is gender bias causing this observed difference? The response to the original paper claims that what we see here is similar to the UC Berkeley admissions example. To settle this dispute, create a dataset with the number of applications, awards, and success rate for each gender. Re-order the disciplines by their overall success rate. Hint: use the `reorder` function to re-order the disciplines in a first step, then use `pivot_longer`, `separate`, and `pivot_wider` to create the desired table.
 
 5\. To check if this is a case of Simpson's paradox, plot the success rates versus disciplines, which have been ordered by overall success, with colors to denote the genders and size to denote the number of applications.
 
-6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say that there is a clear confounder here. However, we do see that, based on the observed rates, some fields may favor men and others may favor women. We also see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. Is it possible some of the selection committees are biased and others are not?
+6\. We definitely do not see the same level of confounding as in the UC Berkeley example. It is hard to say that there is a clear confounder here. However, we do see that, based on the observed rates, some fields may favor men and others may favor women. We also see that the two fields with the largest difference favoring men are also the fields with the most applications. But, unlike the UC Berkeley example, women are not more likely to apply for the harder subjects. Is it possible that some of the selection committees are biased and others are not?
 
 To answer this question we start by checking if any of the differences seen above are statistically significant. Remember that even when there is no bias, we will see differences due to random variability in the review process as well as random variability across candidates. Perform a Chi-square test for each discipline. Hint: define a function that receives the total of a two-by-two table and returns a data frame with the p-value. Use the 0.5 correction. Then use the `summarize` function.
 
-7\. In the medical sciences, there appears to be a statistically significant difference, but could this be a spurious correlation? We performed 9 tests. Reporting only the one case with a p-value less than 0.05 might be considered an example of cherry picking. Repeat the exercise above, but instead of a p-value, compute a log odds ratio divided by their standard error. Then use qq-plot to see how much these log odds ratios deviate from the normal distribution we would expect: a standard normal distribution.
+7\. In the medical sciences, there appears to be a statistically significant difference, but could this be a spurious correlation? We performed 9 tests. Reporting only the one case with a p-value less than 0.05 might be considered an example of cherry picking. Repeat the exercise above, but instead of a p-value, compute a log odds ratio divided by its standard error. Then use qq-plot to see how much these log odds ratios deviate from the standard normal distribution we would expect.
