@@ -7,13 +7,13 @@ library(dslabs)
 ```
 
 
-The statistical models we have used so far assume that the outcome of interest is continuous. However, in many real applications the outcomes are binary, categorical, or counts. In these settings, we are often interested in how the outcome changes with one or more explanatory variables.
+The statistical models we have used so far assume that the outcome of interest is continuous. However, in many real applications, the outcomes are binary, categorical, or counts. In these settings, we are often interested in how the outcome changes with one or more explanatory variables.
 
 For example, we may want to study how the probability of developing coronary heart disease varies with age, systolic blood pressure, or other clinical measurements; how the chance of surviving the sinking of the Titanic depends on passenger characteristics; or how different insecticides influence the number of insects observed in agricultural field plots.
 
 Although these outcomes are no longer continuous, many of the ideas introduced in the linear model framework continue to apply. With a small adaptation, we can extend the mathematical approach used for linear models so that it can be applied in all of these situations, while also continuing to use the same modeling tools in R.
 
-These extended models are known as *generalized* linear models. To motivate them, we begin this chapter with association tests for two categorical variables. We then show how these tests arise naturally from logistic regression, our first example of a generalized linear model for binary outcomes. We conclude with examples that illustrate how the same framework can be applied across a range of contexts, including outcomes that are binary, or counts.
+These extended models are known as *generalized* linear models. To motivate them, we begin this chapter with association tests for two categorical variables. We then show how these tests arise naturally from logistic regression, our first example of a generalized linear model for binary outcomes. We conclude with examples that illustrate how the same framework can be applied across a range of contexts, including outcomes that are binary or counts.
 
 ## Association Tests {#sec-association-tests}
 
@@ -27,7 +27,7 @@ A 2014 PNAS paper[^association-tests-1] analyzed success rates from funding agen
 
 > results reveal gender bias favoring male applicants over female applicants in the prioritization of their "quality of researcher" (but not "quality of proposal") evaluations and success rates, as well as in the language use in instructional and evaluation materials.
 
-The main evidence supporting this conclusion is based on a comparison of the percentages which we can compute using the data presented in the paper: 
+The main evidence supporting this conclusion is based on a comparison of the percentages that we can compute using the data presented in the paper: 
 
 ```{r}
 library(tidyverse)
@@ -43,7 +43,7 @@ totals |> summarize(percent_men = yes_men/(yes_men + no_men),
                     percent_women = yes_women/(yes_women + no_women))
 ```
 
-But could this be due just to random variability? Here we learn how to perform inference for this type of data.
+But could this be due just to random variability? Here, we learn how to perform inference for this type of data.
 
 In @sec-chisq-test, we introduce association tests that permit us to answer this question. Before doing so, we present a historically important example that illustrates the need for such methods.
 
@@ -71,9 +71,9 @@ The probability of getting 3 or more correct by chance is therefore :
 $$
 \frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{16}{70} \approx 0.24.
 $$
-So correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.
+So, correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.
 
-This calculation is what *Fisher’s exact test* performs. In R we can type:
+This calculation is what *Fisher’s exact test* performs. In R, we can type:
 
 ```{r}
 fisher.test(tab, alternative = "greater")$p.value
@@ -85,7 +85,7 @@ Historical accounts suggest that the lady *did* perform well in the original dem
 
 ### Two-by-two tables and the Chi-square test {#sec-chisq-test}
 
-Notice that our funding example is analogous to the Lady Tasting Tea: under the null hypothesis, funding is assigned at random regardless of gender, just as in Fisher's example cups are guessed at random regardless of when the milk was poured.
+Notice that our funding example is analogous to the Lady Tasting Tea: under the null hypothesis, funding is assigned at random regardless of gender, just as in Fisher's example, cups are guessed at random regardless of when the milk was poured.
 
 However, in the Lady Tasting Tea example, we were able to use the hypergeometric distribution because the design *fixed* both the number of cups of each type and the number of selections for each category. In other words, the row totals and the column totals of `tab` were predetermined by the experiment.
 
@@ -101,7 +101,7 @@ o <- with(totals, data.frame(men = c(no_men, yes_men),
                              row.names = c("no", "yes")))
 ```
 
-We then estimate the overall funding rate which we will use to determine what we expect to see if successful funding was assigned independent of gender: 
+We then estimate the overall funding rate, which we will use to determine what we expect to see if successful funding was assigned independent of gender: 
 
 ```{r}
 rate <- with(totals, (yes_men + yes_women))/sum(totals)
@@ -118,10 +118,14 @@ e <- with(totals, data.frame(men = (no_men + yes_men)*c(1 - rate, rate),
 We can see that more men than expected and fewer women than expected received funding:
 
 ```{r}
-cbind(o, e)
+cbind(o, e) %>%
+  set_names(c(
+    paste("obs", colnames(o)),
+    paste("expected", colnames(e))
+  ))
 ```
 
-However, under the null hypothesis these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by:
+However, under the null hypothesis, these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by:
 
 1.  Taking the difference between each observed and expected cell value.
 2.  Squaring this difference.
@@ -166,7 +170,7 @@ We previously used the argument `correct = FALSE` to avoid this adjustment becau
 
 ### Odds ratios
 
-The Chi-square test provides a p-value but it does not quantify the size of the effect.
+The Chi-square test provides a p-value, but it does not quantify the size of the effect.
 As discussed in @sec-hypothesis-testing, we generally prefer confidence intervals over p-values because they communicate effect size and uncertainty. So how do we quantify the effect here?
 
 For two categorical groups, our data can be summarized in a two-by-two table:
@@ -213,7 +217,7 @@ $$
 $$
 Once we construct a confidence interval for the log odds ratio, we can obtain a confidence interval for the odds ratio by exponentiating the two endpoints.
 
-Her we compute the odds ratio for our funding data and construct a 95% confidence interval:
+Here, we compute the odds ratio for our funding data and construct a 95% confidence interval:
 
 ```{r}
 or <- o[1,1]*o[2,2]/(o[2,1]*o[1,2])
@@ -224,7 +228,7 @@ exp(log(or) + c(-1,1) * qnorm(0.975) * se)
 This allows us to assess both the magnitude of the association and the uncertainty around it. The estimated odds ratio is less than 1, indicating that women have lower odds of being funded than men in this dataset. The 95% confidence interval does not include 1, which implies the p-value is less than 0.05.
 
 :::{.callout-note}
-The log odds ratio is not defined if any of the cells of the two-by-two table is 0. This is because if $a$, $b$, $c$, or $d$ are 0, the $\log(\frac{ad}{bc})$ is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the *Haldane-Anscombe correction* and has been shown, both in practice and theory, to work well. 
+The log odds ratio is not defined if any of the cells of the two-by-two table are 0. This is because if $a$, $b$, $c$, or $d$ are 0, the $\log(\frac{ad}{bc})$ is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the *Haldane-Anscombe correction* and has been shown, both in practice and theory, to work well. 
 :::
 
 ## Logistic regression {#sec-glm}
@@ -279,9 +283,9 @@ $$
 
 ### Estimation
 
-Unlike linear regression, least squares is not optimal here because the variance of the outcome depends on its mean and the model for the expected value is nonlinear. Instead, the parameters are estimated using *maximum likelihood estimation* (MLE). The basic idea of MLE is to choose the parameter values that make the observed data most probable according to the assumed statistical model. For logistic regression, this means finding the values of $\beta_0$ and $\beta_1$ that maximize the probability of observing the particular pattern of zeros and ones in the data.
+Unlike linear regression, least squares is not optimal here because the variance of the outcome depends on its mean, and the model for the expected value is nonlinear. Instead, the parameters are estimated using *maximum likelihood estimation* (MLE). The basic idea of MLE is to choose the parameter values that make the observed data most probable according to the assumed statistical model. For logistic regression, this means finding the values of $\beta_0$ and $\beta_1$ that maximize the probability of observing the particular pattern of zeros and ones in the data.
 
-Our example analyzing a two-by-two table is a special case in which the estimates can be written directly as functions of the observed proportions. But in general, for logistic regression models, the estimates cannot be written in a simple closed-form expression. Instead, numerical optimization algorithms are used to find the values that maximize the likelihood. Under standard  conditions, a version of the central limit theorem applies to these estimates. This implies that for large sample sizes the estimates are approximately normally distributed and that their standard errors can be computed from the curvature of the likelihood function near the maximum. This, in turn, permits the construction of confidence intervals and hypothesis tests.
+Our example, analyzing a two-by-two table, is a special case in which the estimates can be written directly as functions of the observed proportions. But in general, for logistic regression models, the estimates cannot be written in a simple closed-form expression. Instead, numerical optimization algorithms are used to find the values that maximize the likelihood. Under standard  conditions, a version of the central limit theorem applies to these estimates. This implies that for large sample sizes, the estimates are approximately normally distributed and that their standard errors can be computed from the curvature of the likelihood function near the maximum. This, in turn, permits the construction of confidence intervals and hypothesis tests.
 
 Readers interested in a deeper and more general treatment of MLE and logistic regression can consult the Recommended Reading section, where we point to textbooks that develop the likelihood framework, the asymptotic results, and the numerical algorithms in more detail.
 
@@ -343,7 +347,7 @@ This interval provides both an effect size and a measure of uncertainty.
 
 ### Relation to earlier methods
 
-We can confirm that logistic regression yields the same odds ratio estimate as the simple two-by-two table (saved in `o`) calculation: and saved in `or` and `se`:
+We can confirm that logistic regression yields the same odds ratio estimate as a calculation from the simple two-by-two table (saved in `o`):
 
 ```{r}
 or <- o[1,1]*o[2,2]/(o[2,1]*o[1,2])
@@ -370,14 +374,14 @@ At first glance, logistic regression may seem like an unnecessarily complicated 
 
 The key advantage becomes clear when the explanatory variables are not just two categories. For example, returning to the question of coronary heart disease, age is a continuous variable. There is no simple way to form a two-by-two table for every possible age value. Similarly, if we wish to adjust for several explanatory variables simultaneously (as we did in @sec-treatment-effect-models), we need a model-based approach rather than a table-based one.
 
-The general strategy is to assumes $Y_i$ follow a known distribution, such as binomial or exponential, and 
+The general strategy is to assume $Y_i$ follows a known distribution, such as binomial or exponential, and 
 model a *transformation* of the expected value of the outcome using a linear combination of predictors:
 
 $$
 g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 $$
 
-Here $x_{ij}$ is the value of the $j$-th explanatory variable for individual $i$, and $g(\cdot)$ is called the *link function*. For binary outcomes we used the logistic function because it maps probabilities (which must lie between 0 and 1) to all real numbers. For count data, which we often model with a Poisson distribution, the expected value $\mathrm{E}[Y_i]$ can exceed 1, so the logit link is not suitable. Instead, the *log* link is typically used: $g(\lambda) = \log(\lambda)$. This link maps positive values (such as rates) to the real line and provides an interpretable multiplicative form: if $\exp(\beta_1)= 1.10$, then a one-unit increase in $x_{i1}$ corresponds to a 10% increase in the rate.
+Here $x_{ij}$ is the value of the $j$-th explanatory variable for individual $i$, and $g(\cdot)$ is called the *link function*. For binary outcomes, we used the logistic function because it maps probabilities (which must lie between 0 and 1) to all real numbers. For count data, which we often model with a Poisson distribution, the expected value $\mathrm{E}[Y_i]$ can exceed 1, so the logit link is not suitable. Instead, the *log* link is typically used: $g(\lambda) = \log(\lambda)$. This link maps positive values (such as rates) to the real line and provides an interpretable multiplicative form: if $\exp(\beta_1)= 1.10$, then a one-unit increase in $x_{i1}$ corresponds to a 10% increase in the rate.
 
 This framework is known as a **generalized linear model** (GLM). Logistic regression is one special case; Poisson regression is another.
 
@@ -406,7 +410,7 @@ $$
 $$
 with $Y_i$ an indicator of coronary heart disease and $x_i$ representing the age of individual $i$. The estimate for $\beta_1$ converts into an *odds ratio*. The quantity $\exp(\beta_1)$ represents the multiplicative increase in the odds of heart disease for each one-year increase in age.
 
-Fitting can fit the model using:
+We can fit the model using:
 
 ```{r}
 fit <- glm(chd ~ age, family = binomial, data = SAheart)
@@ -425,7 +429,7 @@ We can also use the fitted model to compute predicted probabilities for specific
 predict(fit, data.frame(age = seq(20, 80, 10)), type = "response")
 ```
 
-When `type = respsone` the `predict` function uses the inverse logistic transformation to convert $\hat{\beta}_0 + \hat{\beta}_1 x_i$ to estimated probabilities.
+When `type = "response"`, the `predict` function uses the inverse logistic transformation to convert $\hat{\beta}_0 + \hat{\beta}_1 x_i$ to estimated probabilities.
 
 
 Note that the `SAheart` dataset includes several additional explanatory variables that could plausibly relate to heart disease risk, such as tobacco use, cholesterol level, and family history. With the `glm` function, we can include these predictors in the model simply by adding them to the right-hand side of the formula. However, we must be cautious when interpreting the resulting coefficients. A logistic regression model will always return parameter estimates, p-values, and confidence intervals, but these numbers are only meaningful if the model is a reasonable approximation to the data-generating mechanism. In many biomedical settings, there is no underlying physiological theory guaranteeing that the relationship between predictors and the log-odds of disease is linear. Therefore, model assumptions should be examined critically. This includes exploratory data analysis, consideration of possible confounding variables, and assessment of model fit through diagnostic tools, rather than accepting the fitted model at face value.
@@ -433,7 +437,7 @@ Note that the `SAheart` dataset includes several additional explanatory variable
 
 ### Poisson regression example: Effectiveness of insect sprays
 
-The `InsectSprays`dataset records the number of insects found in agricultural field units after treatment with different sprays:
+The `InsectSprays` dataset records the number of insects found in agricultural field units after treatment with different sprays:
 
 ```{r insect-spray-boxplot}
 InsectSprays |>  ggplot(aes(spray, count)) + geom_boxplot() + geom_jitter()
@@ -446,9 +450,9 @@ Spray C appears most effective. We could compare mean insect counts across spray
 with(InsectSprays, tapply(count, spray, mean))
 ```
 
-But how do we assess uncertainty? Can we construct confidence inteverals? Note that counts are small (often under 10), and the sample size per group is only 12, so normal approximations may be unreliable.
+But how do we assess uncertainty? Can we construct confidence intervals? Note that counts are small (often under 10), and the sample size per group is only 12, so normal approximations may be unreliable.
 
-A Poisson regression provides an alternative. First we choose C as the reference group and then we fit the model:
+A Poisson regression provides an alternative. First, we choose C as the reference group, and then we fit the model:
 
 ```{r}
 InsectSprays$spray <- relevel(InsectSprays$spray, ref = "C") 
@@ -456,7 +460,7 @@ fit <- glm(count ~ spray, family = poisson, data = InsectSprays)
 tidy(fit, conf.int = TRUE)
 ```
 
-Here the parameters measure the log of the multiplicative change in the expected count relative to Spray C. If a spray has the same effectiveness as Spray C, its corresponding parameter estimate would be 0. The estimated coefficients and their confidence intervals indicate that several sprays differ substantially from Spray C, and these differences are too large to be explained by Poisson sampling variability alone. In other words, Spray C’s superior performance is unlikely to be due to chance.
+Here, the parameters measure the log of the multiplicative change in the expected count relative to Spray C. If a spray has the same effectiveness as Spray C, its corresponding parameter estimate would be 0. The estimated coefficients and their confidence intervals indicate that several sprays differ substantially from Spray C, and these differences are too large to be explained by Poisson sampling variability alone. In other words, Spray C’s superior performance is unlikely to be due to chance.
 
 The inference relies on asymptotic approximations similar to the CLT but often performs better than applying the CLT directly to means when counts are small.
 
@@ -481,7 +485,7 @@ To go further, consult the recommended readings listed at the end of the chapter
 
 As mentioned earlier, reporting only p-values is not always a useful way to report the results of data analysis. In scientific journals, some studies seem to overemphasize p-values. Some of these studies have large sample sizes and report impressively small p-values. Yet by looking closely at the results, we realize that the odds ratios are quite modest: barely bigger than 1. In this case, the difference may not be *practically significant* or *scientifically significant*.
 
-Note that the relationship between odds ratio and p-value is not one-to-one; it depends on the sample size. Therefore, a very small p-value does not necessarily mean a very large odds ratio. Observe what happens to the p-value if we multiply our two-by-two table by 10, which does not change the odds ratio:
+Note that the relationship between the odds ratio and the p-value is not one-to-one; it depends on the sample size. Therefore, a very small p-value does not necessarily mean a very large odds ratio. Observe what happens to the p-value if we multiply our two-by-two table by 10, which does not change the odds ratio:
 
 ```{r}
 ox10 <- o |> mutate(men = men*10, women = women*10) 
@@ -497,7 +501,7 @@ c(chisq.test(o)$p.value, chisq.test(ox10)$p.value)
 
 a.  It actually does not matter, since they give the exact same p-value.
 b.  Fisher's exact and the Chi-square are different names for the same test.
-c.  Because the sum of the rows and columns of the two-by-two table are not fixed so the hypergeometric distribution is not an appropriate assumption for the null hypothesis. For this reason, Fisher's exact test is rarely applicable with observational data.
+c.  Because the sums of the rows and columns of the two-by-two table are not fixed, the hypergeometric distribution is not an appropriate assumption for the null hypothesis. For this reason, Fisher's exact test is rarely applicable to observational data.
 d.  Because the Chi-square test runs faster.
 
 3\. Now compute the odds ratio of "losing under pressure" and use the approximation we learned to construct  a 95% confidence interval. What do you say to those critiquing the athlete? Is the criticism fair?
@@ -510,7 +514,7 @@ d.  Because the Chi-square test runs faster.
 
 7\. Divide the log odds ratio estimates by their respective standard errors and generate a qqplot comparing these to a standard normal. Do any of the disciplines clearly deviate from what is expected by chance? 
 
-8\. During the 2016 US presidential election, then candidate Donald J. Trump used his twitter account as a way to communicate with potential voters. Todd Vaziri hypothesized that "Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him)." We will test this hypothesis using association tests. The **dslabs** object `sentiment_counts` provides a table with the counts for several sentiments from each source (Android or iPhone):
+8\. During the 2016 US presidential election, then-candidate Donald J. Trump used his Twitter account as a way to communicate with potential voters. Todd Vaziri hypothesized that "Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him)." We will test this hypothesis using association tests. The **dslabs** object `sentiment_counts` provides a table with the counts for several sentiments from each source (Android or iPhone):
 
 ```{r}
 #| eval: false
@@ -525,11 +529,11 @@ Compute an odds ratio comparing Android to iPhone for each sentiment and add it 
 
 10\. Generate a plot showing the estimated odds ratios along with their confidence intervals.
 
-11\. For each sentiment, test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.
+11\. For each sentiment, test the null hypothesis that there is no difference between tweets from Android and iPhone, and report the sentiments that are more likely to come from Android with p-values less than 0.05.
 
-12\. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2.
+12\. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odds ratio for each, and show a barplot for those with odds ratios larger than 2 or smaller than 1/2.
 
-13\.  The `titanic_train` dataset in the **titanic** package has data for 891 passangers that were on the Titanic:
+13\.  The `titanic_train` dataset in the **titanic** package has data for 891 passengers that were on the Titanic:
 
 ```{r}
 #| eval: false
@@ -601,7 +605,7 @@ a. Compare the estimated spray effects from `fit_glm` and `fit_lm`.
 b. Discuss the advantages of one model over the other.
 
 
-17\. In GLMs there is no separate error term $\varepsilon$. However, we can still define *residuals* by comparing the observed outcome $y_i$ to the fitted value $\hat{y}_i$. However, unlike in standard linear regression, the variance of $Y_i$ is not constant. For instance:
+17\. In GLMs, although there is no separate error term $\varepsilon$, we can still define *residuals* by comparing the observed outcome $y_i$ to the fitted value $\hat{y}_i$. However, unlike in standard linear regression, the variance of $Y_i$ is not constant. For instance:
 
 * In logistic regression, $\mathrm{Var}[Y_i] = p_i(1 - p_i)$, which depends on the fitted probability $p_i=\Pr(Y_i=1)$.
 * In Poisson regression, $\mathrm{Var}[Y_i]= \mathrm{E}[Y_i]$, so the standard error can be estimated with $\sqrt{\hat{y}_i}$.
