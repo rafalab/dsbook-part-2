@@ -90,7 +90,7 @@ If we look back at the height scatterplot above and imagine drawing a line betwe
 
 Now, imagine we *rotate* the entire point cloud so that the variation that was previously along the diagonal is now aligned with the horizontal axis. In this rotated view, the largest differences between points would show up in the first (horizontal) dimension. This would make it easier to describe the data using just one variable, the one that captures the most meaningful variation.
 
-In the next section, we introduce a mathematical approach that makes this intuition precise. It allows us to find a rotation of the data that preserves the distances between points while reorienting the axes to highlight the most important directions of variation. This is the foundation of an approach called *Principal Component Analysis (PCA)*, the most widely used technique for dimension reduction.
+In the next section, we introduce a mathematical approach that makes this intuition precise. It allows us to find a rotation of the data that preserves the distances between points while reorienting the axes to highlight the most important directions of variation. This is the foundation of *Principal Component Analysis (PCA)*, the most widely used technique for dimension reduction.
 
 ## Rotations
 
@@ -235,7 +235,7 @@ $$
 If we define:
 
 ```{r}
-theta <- -45 * pi/180 #convert degrees to radians
+theta <- -45 * pi/180 # convert degrees to radians
 A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
 ```
 
@@ -377,7 +377,7 @@ We have established that orthogonal transformations preserve both the distances 
 
 The main idea behind Principal Component Analysis (PCA) is to find an orthogonal transformation that concentrates as much of the variance as possible into the first few columns. This allows us to reduce the dimensionality of the problem by focusing only on those columns that capture most of the variation in the data.
 
-In our example, we aim to find a rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from -90 to 0 degrees to identify such a transformation:
+In our example, we aim to find a rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from $-90$ to $0$ degrees to identify such a transformation:
 
 ```{r max-rotation, echo=-1, out.width="50%"}
 rafalib::mypar()
@@ -387,7 +387,7 @@ variance_explained <- v[1,]/sum(x^2)
 plot(angles, variance_explained, type = "l")
 ```
 
-We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this rotation matrix with $\mathbf{V}$:
+We find that a $-45$ degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this rotation matrix with $\mathbf{V}$:
 
 ```{r}
 theta <- -45 * pi/180
@@ -601,7 +601,7 @@ Keep in mind that the default behavior is to center the columns of `x` before co
 
 The object `pca` includes the rotated data $Z$ in `pca$x` and the rotation $\mathbf{V}$ in `pca$rotation`.
 
-We can see that columns of the `pca$rotation` are indeed the rotation obtained with -45 (remember the sign is arbitrary):
+We can see that columns of the `pca$rotation` are indeed the rotation obtained with $-45$ (remember the sign is arbitrary):
 
 ```{r}
 pca$rotation
@@ -630,13 +630,13 @@ all.equal(x, pca$x %*% t(pca$rotation))
 
 ### Iris example
 
-The `iris` dataset is a widely used example in data analysis courses. It contains four botanical measurements, sepal length, sepal width, petal length, and petal width, for flowers from three different species:
+The `iris` dataset is a widely used example in data analysis courses. It contains four botanical measurements of iris flowers---sepal length, sepal width, petal length, and petal width:
 
 ```{r}
 names(iris)
 ```
 
-If you inspect the species column using `iris$Species`, you'll see that the observations are grouped by species.
+If you inspect the species column using `iris$Species`, you'll see that the observations are from three different species.
 
 When we visualize the pairwise distances between observations, a clear pattern emerges: the data appear to cluster into three distinct groups, with one species standing out as more clearly separated from the other two. This structure is consistent with the known species labels:
 
@@ -691,7 +691,7 @@ rafalib::mypar()
 illustrate_pca(x)
 ```
 
-we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in the first column), and subtracting a quantity proportional to sepal width (blue in the first column). The second PC is a weighted average of petal length and petal width, minus a weighted average of sepal length and sepal width.
+we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in the first column), and subtracting a quantity proportional to sepal width (blue in the first column). The second PC is a weighted average all four measurements in the same direction (blue in second column).
 
 ### MNIST example
 
@@ -752,7 +752,7 @@ data.frame(label = factor(mnist$train$labels), PC2 = pca$x[,2]) |>
   ggplot(aes(label, PC2)) + geom_boxplot() 
 ```
 
-We can also confirm that the lower variance PCs appear related to unimportant variability, mainly smudges in the corners:
+We can also confirm that the lower variance PCs appear related to unimportant variability in the last few PCs, mainly smudges in the corners:
 
 ```{r mnist-pca-last,, echo = FALSE, out.width="100%", fig.width=9, fig.height=2.625}
 tmp |> dplyr::filter(id > 5) |>
