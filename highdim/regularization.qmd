@@ -2,7 +2,7 @@
 
 Statistical models are meant to capture meaningful structure in data. However, when a model includes many parameters, or when some parameters are informed by only a small number of observations, the fitted values can become unstable. In these situations, the least squares estimates may be much larger than the underlying true effects. This phenomenon is a form of overfitting, and it can lead to misleading interpretations.
 
-The issue becomes particularly apparent when we use fitted models to make predictions for new data, not used during model fitting. A model that overfits will often produce estimates that vary too much from sample to sample. In the next part of this book, we describe overfitting in more detail and introduce tools for diagnosing and preventing it.
+The issue becomes particularly apparent when we use fitted models to make predictions for new data not used during model fitting. A model that overfits will often produce estimates that vary too much from sample to sample. In the next part of this book, we describe overfitting in more detail and introduce tools for diagnosing and preventing it.
 
 Regularization provides one of the most effective general strategies for reducing overfitting. The idea is to modify the fitting procedure so that large parameter estimates are penalized. In practice, this is done by adding a penalty term to the quantity we minimize, such as the sum of squared errors. The penalty discourages extreme estimates, especially when they are supported by limited data. The result is a more stable model with parameter estimates that are smaller in magnitude and more reliable for use beyond the training data.
 
@@ -12,7 +12,7 @@ In this chapter, we introduce regularization in the context of a recommendation 
 
 Recommendation systems, such as the one used by Amazon, operate by analyzing the ratings that customers give to various products. These ratings form a large dataset. The system uses this data to predict how likely a specific user is to favorably rate a particular product. For example, if the system predicts that a user is likely to give a high rating to a certain book or gadget, it will recommend that item to them. In essence, the system tries to guess which products a user will like based on the ratings provided by them and other customers for various items. This approach helps in personalizing recommendations to suit individual preferences.
 
-During its initial years of operation, Netflix used a 5-star recommendation system. One star suggested the user would dislike the movie, whereas five stars suggested the user would love it.  Here, we provide the basics of how these recommendations are made, motivated by some of the approaches taken by the winners of the _Netflix challenges_.  
+During its initial years of operation, Netflix used a 5-star recommendation system. One star suggested the user would dislike the movie, whereas five stars suggested the user would love it. Here, we provide the basics of how these recommendations are made, motivated by some of the approaches taken by the winners of the _Netflix challenges_.  
 
 In October 2006, Netflix offered a challenge to the data science community: improve our recommendation algorithm by 10% and win a million dollars. In September 2009, 
 the winners were announced[^reg-1]. In this chapter, we will demonstrate how regularization was an important part of the winning team's strategy[^reg-2][^reg-3].
@@ -60,7 +60,7 @@ hist(table(dt$userId), seq(0, 2400, 50), xlab = "# Ratings", main = "Users")
 
 The first thing we notice is that some movies receive far more ratings than others. Most movies are rated only a handful of times, while a small number accumulate hundreds of ratings. This pattern is not surprising. Popular, widely released films tend to be watched and rated by many users, while niche or independent films attract much smaller audiences.
 
-We also see variation among users, although the disparity is less extreme. Some users rate only a few about 10 movies, while others rate dozens or even hundreds. 
+We also see variation among users, although the disparity is less extreme. Some users rate only about 10 movies, while others rate dozens or even hundreds. 
 
 These imbalances will be important as we build models, because estimates based on very few observations are inherently less reliable.
 
@@ -363,7 +363,7 @@ range(resid[with(test_set, which(movieId %in% top_movies))])
 
 This is a clear example of *overfitting*. A movie rated only once or twice can receive a very large positive (or negative) estimate simply by chance. The fewer observations that support an estimate, the more variable it becomes. These unstable estimates lead to large prediction errors, which in turn increase the RMSE.
 
-Earlier in the book, when we faced uncertainty, we relied on standard errors or confidence intervals to communicate it. But when making predictions, we do not get to present a range. We must choose a single number, even if the estimate is unreliable.
+Earlier in the book, when we faced uncertainty, we relied on standard errors or confidence intervals to communicate it. But when competing on RMSE, we do not get to present a range. We must choose a single number, even if the estimate is unreliable.
 
 This is where *regularization* becomes essential. Regularization shrinks extreme estimates toward zero when they are based on small samples, producing more stable and reliable predictions. In the next section, we introduce penalized least squares, a principled way to achieve this shrinkage.
 
@@ -409,7 +409,7 @@ However, dividing by $N$ has an important practical advantage. It makes the scal
 
 ### Applying penalization to movie effects
 
-Returning to our setting, we want to shrink movie effects $\beta_j$ toward zero, especially when they are based on only a few ratings. Instead of minimizing:
+Returning to our setting, we want to shrink movie effects $\beta_j$ and user effects $\alpha_i$ toward zero, especially when they are based on only a few ratings. Instead of minimizing:
 
 $$
 \sum_{i,j} \left[y_{ij} - (\mu + \alpha_i + \beta_j) \right]^2,
@@ -431,7 +431,7 @@ $$
 $$
 where $n_i$ is the number of ratings for user $i$ and $N$ is the total number of ratings.
 
-Similarly we can derive a solution for the $\beta_j$s  if $\mu$ and the $\alpha_i$ are known:
+Similarly we can derive a solution for the $\beta_j$s if $\mu$ and the $\alpha_i$ are known:
 
 $$
 \hat{\beta}_j(\lambda) =
@@ -447,7 +447,7 @@ The effect of the penalty is clear. If $n_j$ is large, $n_j + N\lambda \approx n
 
 ### Estimating parameters via ALS
 
-Because `lm.ridge` is inefficient for our setting, we have thousands of indicator variables and a very sparse design, we instead apply the same Alternating Least Squares (ALS) strategy introduced earlier. The key difference is that we now replace the movie-effect update with its penalized version, which shrinks estimates more strongly when a movie has only a few ratings.
+Because `lm.ridge` is inefficient for our setting where we have thousands of indicator variables and a very sparse design, we instead apply the same Alternating Least Squares (ALS) strategy introduced earlier. The key difference is that we now replace the movie-effect and user-effect updates with their penalized versions, which shrink estimates more strongly when a movie or user has only a few ratings.
 
 For convenience, we define an auxiliary function `fit_als` that takes a value of `lambda` and returns a copy of `train_set` with the regularized estimates of the user and movie effects. This function is specific to our movie rating example. It assumes that `train_set` is available in the environment.
 
@@ -484,7 +484,7 @@ Note that in this example we use $\lambda = 0.0001$. In @sec-selecting-penalty-t
 
 ### How shrinkage behaves
 
-We can compare the penalized estimates to the unpenalized ones by plotting them against each other:
+We can compare the penalized movie-effect estimates to the unpenalized ones by plotting them against each other:
 
 ```{r b-reg-vs-b}
 #| echo: false
@@ -566,7 +566,7 @@ resid <- with(test_set, rating - clamp(fit$mu + fit$a[userId] + fit$b[movieId]))
 rmse(resid)
 ```
 
-This result confirms that regularization improves our predictive accuracy. The following table  compares this RMSE to the values obtained from the earlier models.
+This result confirms that regularization improves our predictive accuracy. The following table compares this RMSE to the values obtained from the earlier models.
 
 ```{r echo=FALSE}
 rmse3 <- rmse(resid)
@@ -593,7 +593,7 @@ set.seed(1986)
 n <- round(2^rnorm(1000, 8, 1))
 ```
 
-Now, let's assign a _true_ quality for each school, completely independent from size. This is the parameter we want to estimate, and it represents the score an average student in that school  would get in an aptitude test. We simulate this value like this:
+Now, let's assign a _true_ quality for each school, completely independent from size. This is the parameter we want to estimate, and it represents the score an average student in that school would get in an aptitude test. We simulate this value like this:
 
 ```{r, eval=FALSE}
 mu <- round(80 + 2 * rt(1000, 5))
@@ -606,7 +606,7 @@ schools <- data.frame(id = sprintf("PS%03d", 0:999), size = n, quality = mu,
                       rank = rank(-mu))
 ```
 
-We can see that the top 10 schools are: 
+You can view the top 10 schools with: 
 
 ```{r, eval=FALSE}
 library(dplyr)
@@ -649,12 +649,12 @@ Use the closed form solution for the penalized least square estimates shown in t
 6\. Notice that this improves our results a bit: the number of small schools that are incorrectly highly ranked decreases. But is there a better `lambda`? Find the `lambda` that minimizes the RMSE = $1/100 \sum_{i=1}^{100} (\mbox{school quality} - \mbox{estimate})^2$.
 
 
-7\. Rank the schools based on the average obtained with the best $\lambda. Note that no small school is incorrectly included.
+7\. Rank the schools based on the average obtained with the best $\lambda$. Note that no small school is incorrectly included.
 
 
-8\.  A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually do not improve the results. Confirm this by re-running the code from exercises 5, 6, and 7, but without removing the overall mean. 
+8\. A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don't subtract the overall average before shrinking, we actually do not improve the results. Confirm this by re-running the code from exercises 5, 6, and 7, but without removing the overall mean. 
 
-The remaining exercises use the `movielens` data. Note that not all of them require regularization to solve: some focus on data exploration or model building using other ideas introduced in this chapter.
+The remaining exercises use the `movielens` data. Note that not all of them require regularization to solve---some focus on data exploration or model building using other ideas introduced in this chapter.
 
 9\. In the example worked out in this chapter, we removed users with fewer than 100 ratings. Redo the analysis without filtering these out. Implement an analysis that penalizes for both user and movie effects:
 
@@ -663,7 +663,7 @@ $$
 \lambda \left( \sum_i \alpha_i^2 + \sum_j \beta_j^2\right).
 $$
 
-Note that you will have to edit the function `fit_als`.
+Hint: use the function `fit_als`.
 
 
 10\. Repeat Exercise 9, but now use a model with *two* separate penalty terms:
@@ -680,6 +680,7 @@ To optimize both tuning parameters, perform a *grid search* over a reasonable ra
 We recommend lowering the `tol` argument in your ALS implementation while developing your solution, as this will speed up the computation during the grid search.
 
 11\. Use the `movielens` dataset to explore how ratings vary across three key factors:
+
   * Number of ratings
   * Release year
   * Genre
@@ -692,26 +693,28 @@ We recommend lowering the `tol` argument in your ALS implementation while develo
   * Make a plot of average rating vs. ratings-per-year.
 
 12\. The `movielens` data also includes a timestamp.
+
   * Convert the timestamp to a date (hint: use `lubridate::as_datetime`).
   * Compute the average rating per week (hint: use `round_date` and `group_by`). Plot time on the x-axis and weekly average rating on the y-axis.
   * Interpret the trend. Does a time effect seem plausible?
   
 13\. The `movielens` data also includes `genres`.
+
   * Treat each *unique combination* in `genres` as a category.
   * Compute the average rating and its standard error for each.
   * Make an error bar plot.
 
-14\. Based on your exploration in exercise 12, which of the following models seems most appropriate?
+14\. Based on your exploration in exercises 12 and 13, which of the following models seems most appropriate?
 
 a. $Y_{ij} = \mu + \alpha_i + \beta_j + t_{ij} + \varepsilon_{ij}$
 
-b. $Y_{ij} = \mu + \alpha_i + \beta_j + \gamma , t_{ij} + \varepsilon_{ij}$
+b. $Y_{ij} = \mu + \alpha_i + \beta_j + \gamma \, t_{ij} + \varepsilon_{ij}$
 
-c. $Y_{ij} = \mu + \alpha_i + \beta_j + \gamma , t_{ij} + \delta_{g(j)} + \varepsilon_{ij}$
+c. $Y_{ij} = \mu + \alpha_i + \beta_j + \gamma \, t_{ij} + \delta_{g(j)} + \varepsilon_{ij}$
 
 d. $Y_{ij} = \mu + \alpha_i + \beta_j + f(t_{ij}) + \delta_{g(j)} + \varepsilon_{ij}$
 
-where $g(j)$ is the genre category for movie $j$ and $f(t)$ is a smooth function of $t$.
+where $g(j)$ is the genre category for movie $j$, $t_{ij}$ is the timestamp of rating $Y_{ij}$, and $f(t)$ is a smooth function of $t$.
 
 15\. Using what you learned above, fit at least one model that improves upon the best model presented in this chapter: the user + movie effects model (with regularization)
 
