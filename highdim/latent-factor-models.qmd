@@ -232,18 +232,18 @@ Y_{ij} \approx p_{i1}q_{j1} + p_{i2}q_{j2}, i = 1 \dots, I \mbox{ and } j = 1, \
 $$
 with $I$ the number of users and $J$ the number of movies.
 
-Using matrix representation, we can rewrite the above question like this:
+Using matrix representation, we can rewrite the above expression like this:
 
 $$
 \mathbf{Y} \approx \mathbf{P}\mathbf{Q}^\top
 $$
-with $\mathbf{Y}$ an $I\times J$ matrix with entries $Y_{ij}$, $\mathbf{P}$ a $I\times K$ matrix with entries $p_{ik}$, and $\mathbf{Q}$ a $J\times K$ matrix with entries $q_{jk}$.
+with $\mathbf{Y}$ an $I\times J$ matrix with entries $Y_{ij}$, $\mathbf{P}$ a $I\times K$ matrix with entries $p_{ik}$, and $\mathbf{Q}$ a $J\times K$ matrix with entries $q_{jk}$, where $K$ is the number of latent factors (here, $K = 2$).
 
 This analysis provides insights into the process of generating our data since $\mathbf{P}$ contains user-specific parameters and $\mathbf{Q}$ contains movie-specific parameters. The approach is often referred to as *matrix factorization* because the rating matrix has been *factorized* into two lower-dimensional, interpretable matrices. 
 
 Note that the approach also provides compression since the $120 \times 6 = 720$ observations can be well approximated by a matrix multiplication of a $120 \times 2$ matrix $\mathbf{P}$ and a $6 \times 2$ matrix $\mathbf{Q}$, a total of $252$ parameters. 
 
-In our example with simulated data, we deduced the factors $\mathbf{q}_1$ and $\mathbf{q}_2$ from the sample correlation and our knowledge of movies. These ended up working well. However, in general, deducing factors is not this easy. Furthermore, factors that provide good approximation might be more complicated than containing just two values. For example, _The Godfather III_ has a romantic subplot, so we might not know what value to assign it in `q_1 `. 
+In our example with simulated data, we deduced the factors $\mathbf{q}_1$ and $\mathbf{q}_2$ from the sample correlation and our knowledge of movies. These ended up working well. However, in general, deducing factors is not this easy. Furthermore, factors that provide good approximation might be more complicated than containing just two values. For example, _The Godfather III_ has a romantic subplot, so we might not know what value to assign it in $q_1$. 
 
 So, can we estimate the factors? A challenge is that if $\mathbf{P}$ is unknown, our model is no longer linear: we can't use `lm` to estimate both $\mathbf{P}$ and $\mathbf{Q}$. In the next sections, we describe how PCA can be used to estimate $\mathbf{P}$ and $\mathbf{Q}$.
 
@@ -327,7 +327,7 @@ To understand why we need this constraint, notice that without it, the model is 
 
 The first $K$ columns of the principal components and the associated rotation matrix provide estimates of $\mathbf{P}$ and $\mathbf{Q}$, respectively. In other words, PCA can be viewed as a special case of latent factor modeling where the latent factors are chosen to be orthogonal and ordered by the variance they explain. This explains why PCA naturally recovers interpretable patterns, such as genre preferences or actor-specific effects, without us explicitly coding them into the model.
 
-Another way to see this connection is through optimization. PCA can be formulated as the solution to a least squares problem: among all possible $K$-dimensional projections of the data, PCA finds the one that minimizes the reconstruction error, that is, the sum of squared differences between the original data $\mathbf{Y}$ and its approximation $\mathbf{P}\mathbf{Q}^\top$. In this sense, PCA provides the best rank-$K$ approximation of $\mathbf{Y}$ in the least squares sense. 
+Another way to see this connection is through optimization. PCA can be formulated as the solution to a least squares problem: among all possible $K$-dimensional projections of the data, PCA finds the one that minimizes the reconstruction error. That is, of any $K$ latent factors that could describe the data, the first $K$ PCs minimize the sum of squared differences between the original data $\mathbf{Y}$ and its approximation $\mathbf{P}\mathbf{Q}^\top$. In this sense, PCA provides the best rank-$K$ approximation of $\mathbf{Y}$ in the least squares sense. 
 
 This dual interpretation, both as a factor model and as a least squares optimizer, highlights why PCA is such a powerful tool for uncovering hidden structure in high-dimensional data: it compresses the data efficiently while also providing factors that capture the dominant sources of variation.
 
@@ -368,7 +368,7 @@ As in the simulated example, we see clear correlation patterns. For instance, *T
 
 This motivates extending our earlier model. We now incorporate latent factors that capture similarities between movies and users. This leads us to a simplified version of the approach used by the winning Netflix Prize team, which combined latent factor models with the regularization methods developed in @sec-regularization.
 
-To account for interactions such as these, we use a latent factor model. Specifically, we extend the model from @sec-regularization to include factors that capture similarities between movies:
+To account for effects such as these, we use a latent factor model. Specifically, we extend the model from @sec-regularization to include factors that capture similarities between movies:
 
 $$
 Y_{ij} = \mu + \alpha_i + \beta_j + \sum_{k=1}^K p_{ik}q_{jk} + \varepsilon_{ij}
@@ -674,7 +674,7 @@ Use the SVD to verify in R that:
    * The total sum of squares of all entries in $\mathbf{Y}\mathbf{V} = \mathbf{U}\mathbf{D}$ is the same as in $\mathbf{Y}$.
    * The sum of the squared singular values (the diagonal entries of $\mathbf{D}$) is also equal to `tss_y`.
 
-Check these equalities in R and make sure you understand *why* they must hold (hint: $\mathbf{V}$ is orthogonal, and SVD preserves total sum of squares).
+Check these equalities in R and make sure you understand *why* they must hold. Hint: $\mathbf{V}$ is orthogonal, and SVD preserves total sum of squares.
 
 
 10\. Let $\mathbf{Z} = \mathbf{Y}\mathbf{V} = \mathbf{U}\mathbf{D}$.
@@ -760,7 +760,7 @@ nice_image(t(v[, 1:3]))
 
 Each row corresponds to a course (for example, `Math_1`, `Science_3`, `Arts_5`), and each column corresponds to one factor (PC1, PC2, PC3). How would you interpret the first three columns of $\mathbf{V}$? Write a short interpretation for each of the three factors in plain language.
 
-17\. Based on the patterns seen in exercise 16, how would you interpret the values $u_{i1}$, \dots, $u_{ip}$ for student $i$:
+17\. Based on the patterns seen in exercise 16, how would you interpret the values $u_{i1}, \dots, u_{ip}$ for student $i$:
 
 * Is one roughly quantifying *overall academic strength*?
 * Is one quantifying how much better the student is at *STEM vs. Arts*?
