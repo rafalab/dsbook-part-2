@@ -75,7 +75,7 @@ $$
 
 for any set of features $\mathbf{x} = (x_1, \dots, x_p)^\top$. 
 
-This is easier said than done, since this function can take any shape and $p$ can be very large. Consider a case in which we only have one predictor $x$. The expectation $\mathrm{E}[Y  \mid  X=x]$ can be any function of $x$: a line, a parabola, a sine wave, a step function, anything. It gets even more complicated when we consider instances with large $p$, in which case $f(\mathbf{x})$ is a function of a multidimensional vector $\mathbf{x}$. For example, in our digit reader example, $p = 784$! 
+This is easier said than done, since this function can take any shape and $p$ can be very large. Consider a case in which we only have one predictor $x$. The expectation $\mathrm{E}[Y  \mid  X=x]$ can be any function of $x$: a line, a parabola, a sine wave, a step function, anything. It gets even more complicated when we consider instances with large $p$, in which case $f(\mathbf{x})$ is a function of a multidimensional vector $\mathbf{x}$. For example, in our digits data, $p = 784$! 
 
 The main way in which competing machine learning algorithms differ is in their approach to estimating this conditional expectation. Because we must estimate such a flexible and potentially high-dimensional function from noisy, finite data, we need strategies that extract the underlying signal without being overwhelmed by randomness. A common and powerful idea is to assume that although the data themselves may look scattered, the *true* function $f(\mathbf{x})$ varies smoothly as $\mathbf{x}$ changes. This assumption allows us to borrow strength from nearby points and produce stable estimates even when exact predictor values are rarely repeated. This brings us to the concept of *smoothing*, one of the most fundamental tools in machine learning, underpinning many of the algorithms we will study next.
 
@@ -107,7 +107,7 @@ In the next sections, we explore how smoothing techniques accomplish this, start
 
 ### Example: Is it a 2 or a 7? {#sec-two-or-seven}
 
-To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or a 7 from the proportion of dark pixels in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits divided into training and test sets. Both sets are almost evenly distributed with 2s and 7s.
+To motivate the need for smoothing and make the connection with machine learning, we will construct a simplified version of the MNIST dataset with just two classes for the outcome and two predictors. Specifically, we define the challenge as building an algorithm that can determine if a digit is a 2 or a 7 from the proportion of an image's dark pixels that fall in the upper left quadrant ($X_1$) and the lower right quadrant ($X_2$). We also selected a random sample of 1,000 digits divided into training and test sets. Both sets are almost evenly distributed with 2s and 7s.
 
 
 The **dslabs** package includes this example in the object `mnist_27`. In the training set, we have 800 observations, and in the test set, we have 200. Each observation has:
@@ -118,6 +118,7 @@ The **dslabs** package includes this example in the object `mnist_27`. In the tr
 So the datasets consist of pairs $(\mathbf{x}_i, y_i)$, where each $\mathbf{x}_i$ is a 2D feature, and each $y_i$ is the corresponding digit label.
 
 To illustrate how to interpret $X_1$ and $X_2$, we include four example images. On the left are the original images of the two digits with the largest and smallest values for $X_1$, and on the right, we have the images corresponding to the largest and smallest values of $X_2$:
+
 
 ```{r two-or-seven-images-large-x1, echo=FALSE, fig.height=6, fig.width=11}
 library(dslabs)
@@ -172,7 +173,7 @@ We can immediately see some patterns. For example, if $x_1$ is large (there was 
 
 We can start getting a sense for why these predictors are useful, but also why the problem will be somewhat challenging.
 
-We haven't really learned any algorithms yet, so let's try building an algorithm using a GLM. The model is simply:
+We haven't introduced many classification methods yet, so let's start with a simple one base on a GLM:
 
 $$
 \log\frac{p(\mathbf{x})}{1-p(\mathbf{x})} = \beta_0 + \beta_1 x_1 + \beta_2 x_2
@@ -190,7 +191,7 @@ y_hat <- factor(ifelse(p_hat > 0.5, 7, 2))
 
 If we do this, we get an accuracy of `r confusionMatrix(y_hat, mnist_27$test$y)$overall[["Accuracy"]]`, well above 50%. Not bad for our first try. But can we do better?
 
-Because we constructed the `mnist_27` example and we had at our disposal 60,000 digits in just the MNIST dataset, we used this to build the _true_ conditional distribution $p(\mathbf{x})$. Keep in mind that in practice, we don't have access to the true conditional distribution. We include it in this educational example because it permits the comparison of $\hat{p}(\mathbf{x})$ to the true $p(\mathbf{x})$. This comparison teaches us the limitations of different algorithms. 
+Because we constructed the `mnist_27` example as a subset of the MNIST dataset, we can use the full dataset to build the _true_ conditional distribution $p(\mathbf{x})$, treating the 60,000 MNIST digits as the full population. Keep in mind that in practice, we don't have access to the true conditional distribution. We include it in this educational example because it permits the comparison of $\hat{p}(\mathbf{x})$ to the true $p(\mathbf{x})$. This comparison teaches us the limitations of different algorithms. 
 
 We have stored the true $p(\mathbf{x})$ in the `mnist_27` and can plot it as an image.
 We  draw a curve that separates values of $\mathbf{x}$ for which $p(\mathbf{x}) > 0.5$ and those for which $p(\mathbf{x}) < 0.5$:
@@ -424,7 +425,7 @@ A limitation of the bin smoother approach just described is that we need small w
 
 [^smoothing-3]: https://creativecommons.org/licenses/by/2.0/
 
-Instead of assuming the function is approximately constant in a window, we assume the function is locally linear. We can consider larger window sizes with the linear assumption than with a constant. Instead of the one-week window, we consider a larger one in which the trend is approximately linear. We start with a three-week window and later consider and evaluate other options:
+Instead of assuming the function is approximately constant in a window, we assume the function is locally linear. We can consider larger window sizes with the linear assumption than with a constant. Instead of the one-week window, we consider a larger one in which the trend is approximately linear. We start with a three-week window ($h = 10.5$) and later consider and evaluate other options:
 
 $$
 E[Y_i | X_i = x_i ] = \beta_0 + \beta_1 (x_i-x_0) \mbox{   if   }  |x_i - x_0| \leq 10.5
@@ -556,7 +557,7 @@ tmp |> ggplot(aes(day, margin)) +
   facet_wrap(~span)
 ```
 
-There are three other differences between `loess` and the typical bin smoother.
+There are four other differences between `loess` and the typical bin smoother.
 
 1\. Rather than keeping the bin size the same, `loess` keeps the number of points used in the local fit the same. This number is controlled via the `span` argument, which expects a proportion. For example, if `N` is the number of data points and `span=0.5`, then for a given $x$, `loess` will use the `0.5*N` closest points to $x$ for the fit.
 
@@ -628,7 +629,7 @@ polls_2008 |> ggplot(aes(day, margin)) +
   geom_smooth(method = loess, formula = y ~ x)
 ```
 
-But be careful with default parameters, as they are rarely optimal. However, you can conveniently change. For example, with `loess`, you can use the following code:
+But be careful with default parameters, as they are rarely optimal. However, you can conveniently change them. For example, with `loess`, you can use the following code:
 
 ```{r ggplot-loess-degree-1, warning=FALSE, message=FALSE}
 polls_2008 |> ggplot(aes(day, margin)) +
@@ -644,7 +645,7 @@ $$
 p(\mathbf{x}) = \mathrm{Pr}(Y=1 \mid X_1=x_1 , X_2 = x_2).
 $$ 
 
-with $x_1$ and $x_2$ the two predictors defined in @sec-two-or-seven. In this example, the 0s and 1s we observe are "noisy" because for some regions the probabilities $p(\mathbf{x})$ are not that close to 0 or 1. We therefore need to estimate $p(\mathbf{x})$. Smoothing is an alternative to accomplishing this. In  @sec-two-or-seven, we saw that linear regression was not flexible enough to capture the non-linear nature of $p(\mathbf{x})$, thus smoothing approaches provide an improvement. In @sec-knn-cv-intro, we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.
+with $x_1$ and $x_2$ the two predictors defined in @sec-two-or-seven. In this example, the 0s and 1s we observe are "noisy" because for some regions the probabilities $p(\mathbf{x})$ are not that close to 0 or 1. We therefore need to estimate $p(\mathbf{x})$. Smoothing is an alternative to accomplishing this. In  @sec-two-or-seven, we saw that logistic regression was not flexible enough to capture the non-linear nature of $p(\mathbf{x})$, thus smoothing approaches provide an improvement. In @sec-knn-cv-intro, we describe a popular machine learning algorithm, k-nearest neighbors, which is based on the concept of smoothing.
 
 
 
