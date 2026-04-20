@@ -22,14 +22,14 @@ In this example, we have a single predictor, and the outcome is categorical: eac
 :::{.callout-note}
 In machine learning applications in R, and particularly when using the **caret** package, categorical outcomes should be stored as factors. Doing so ensures they are treated as labels rather than numeric values, preventing errors that arise when numeric codes are mistakenly interpreted as quantitative.
 
-For binary outcomes, **caret** treats the first factor level as $Y=1$ and the second as $Y=0$. Because R assigns factor levels in alphabetical order by default, in our examples this means females are coded as $Y=1$ and males as $Y=0$.
+For binary outcomes, **caret** treats the first factor level as $Y=1$ and the second as $Y=0$. Because R assigns factor levels in alphabetical order by default, in our examples, this means females are coded as $Y=1$ and males as $Y=0$.
 :::
 
 ## Training and test sets {#sec-training-test}
 
 Ultimately, a machine learning algorithm is evaluated on how it performs in the real world with completely new datasets. However, when developing an algorithm, we usually have a dataset for which we know the outcomes, as we do with the heights: we know the sex of every student in our dataset. Therefore, to mimic the ultimate evaluation process, we typically split the data into two parts and act as if we don't know the outcome for one of these. We stop pretending we don't know the outcome to evaluate the algorithm, but only *after* we are done constructing it. We refer to the group for which we know the outcome, and that we use to develop the algorithm, as the _training_ set. We refer to the group for which we pretend we don't know the outcome as the _test_ set. 
 
-A standard way of generating the training and test sets is by randomly splitting the data. The __caret__ package includes the function `createDataPartition` that helps us generate indexes for randomly splitting the data into training and test sets: 
+A standard way of generating the training and test sets is by randomly splitting the data. The __caret__ package includes the function `createDataPartition` that helps us generate indices for randomly splitting the data into training and test sets: 
 
 ```{r}
 set.seed(2010)
@@ -80,7 +80,9 @@ The accuracy goes up from 0.5 to about 0.8:
 mean(test_set$y == y_hat)
 ```
 
-But can we do even better? In the example above, we used a cutoff of 62, but we can examine the accuracy obtained for other cutoffs and then pick the value that provides the best results. But remember, **it is important that we optimize the cutoff using only the training set**: the test set is only for evaluation. Although for this simplistic example it is not much of a problem, later we will learn that evaluating an algorithm on the training set can lead to _overfitting_, which often results in over-optimistic assessments. 
+But can we do even better? In the example above, we used a cutoff of 62, but we can examine the accuracy obtained for other cutoffs and then pick the value that provides the best results. But remember, **it is important that we optimize the cutoff using only the training set**: the test set is only for evaluation.
+
+Later we will learn that evaluating an algorithm on the training set can lead to _overfitting_, which often results in over-optimistic assessments, but for this simplistic example it is not much of a problem.
 
 Here we examine the accuracy of 10 different cutoffs and pick the one yielding the best result:
 
@@ -121,8 +123,8 @@ y_hat <- factor(ifelse(test_set$x <= best_cutoff, "Female", "Male"))
 mean(y_hat == test_set$y)
 ```
 
-We see that it is a bit lower than the accuracy observed for the training set. This is because we used the training set to select the cutoff, so there is some overtraining. 
-However, out cutoff-based approach is still better than guessing. And by testing on a dataset that we did not train on, we know our improvement is not due to overtraining.
+We see that it is a bit lower than the accuracy observed for the training set. This is because we used the training set to select the cutoff, so there is some overfitting. 
+However, our cutoff-based approach is still better than guessing. And by testing on a dataset that we did not train on, we know our improvement is not due to overfitting.
 
 ## The confusion matrix
 
@@ -136,14 +138,14 @@ cm <- confusionMatrix(data = y_hat, reference = test_set$y)
 cm$table
 ```
 
-If we study this table closely, it reveals a problem. If we compute the accuracy separately for each sex (in the next section, we explain that, in this context, _sensitivity_ and _specificity_ are equivalent to accuracy for females and males, respectively) we get:
+If we study this table closely, it reveals a problem. If we compute the accuracy separately for each sex (in the next section, we explain that, in this context, _sensitivity_ and _specificity_ are equivalent to accuracy for females and males, respectively), we get:
 
 ```{r}
 cm$byClass[c("Sensitivity", "Specificity")]
 ```
 
 
-We notice an imbalance: too many females are predicted to be male. We are calling almost half of the females male! How can our overall accuracy be so high then?  This is because the _prevalence_, defined as the proportion of $Y=1$ in our data, is low. These heights were collected from three data sciences courses, two of which had higher male enrollment:
+We notice an imbalance: too many females are predicted to be male. We are calling almost half of the females male! How can our overall accuracy be so high then? This is because the _prevalence_, defined as the proportion of $Y=1$ in our data, is low. These heights were collected from three data sciences courses, two of which had higher male enrollment:
 
 
 ```{r}
@@ -154,7 +156,7 @@ So when computing overall accuracy, the high percentage of mistakes made for fem
 
 This type of bias can actually be a big problem in practice. If your training data is biased in some way, you are likely to develop algorithms that are biased as well. The fact that we used a test set does not matter because it is also derived from the original biased dataset. This is one of the reasons we look at metrics other than overall accuracy when evaluating a machine learning algorithm.
 
-There are several metrics that we can use to evaluate an algorithm in a way that prevalence does not cloud our assessment, and these can all be derived from the confusion matrix. A general improvement to using overall accuracy is to study _sensitivity_ and _specificity_ separately. 
+There are several metrics that we can use to evaluate an algorithm in a way that prevalence does not cloud our assessment, and these can all be derived from the confusion matrix. A general improvement in using overall accuracy is to study _sensitivity_ and _specificity_ separately. 
 
 ## Sensitivity and specificity {#sec-senistivity-and-specificity}
 
@@ -189,11 +191,11 @@ if (knitr::is_html_output()) {
 }
 ```
 
-*Sensitivity* is typically quantified by $TP/(TP+FN)$, the proportion of actual positives (the first column = $TP+FN$) that are called positives ($TP$). This quantity is referred to as the _true positive rate_ (TPR) or _recall_. 
+*Sensitivity* is quantified by $TP/(TP+FN)$, the proportion of actual positives (the first column total, $TP+FN$) that are called positives ($TP$). This quantity is also referred to as the _true positive rate_ (TPR) or _recall_. 
 
-Specificity is defined as $TN/(TN+FP)$ or the proportion of negatives (the second column = $FP+TN$) that are called negatives ($TN$). This quantity is also called the true negative rate (TNR). 
+Specificity is defined as $TN/(TN+FP)$, or the proportion of negatives (the second column total, $FP+TN$) that are called negatives ($TN$). This quantity is also called the true negative rate (TNR). 
 
-There is another way of quantifying *specificity* which is $TP/(TP+FP)$ or the proportion of outcomes called positives (the first row or $TP+FP$) that are actually positives ($TP$). This quantity is referred to as _positive predictive value (PPV)_ and also as _precision_. Note that, unlike TPR and TNR, precision depends on prevalence since higher prevalence implies you can get higher precision even when guessing. 
+There is another way of quantifying *specificity*, which is $TP/(TP+FP)$ or the proportion of outcomes called positives (the first row total, $TP+FP$) that are actually positives ($TP$). This quantity is referred to as _positive predictive value (PPV)_ and also as _precision_. Note that, unlike TPR and TNR, precision depends on prevalence since higher prevalence implies you can get higher precision even when guessing. 
 
 The multiple names can be confusing, so we include a table to help us remember the terms. The table includes a column that shows the definition if we think of the proportions as probabilities.
 
@@ -210,11 +212,11 @@ If you type this into R:
 
 ```{r}
 #| eval: false
-cm <- confusionMatrix(data = y_hat, reference = test_set$sex)
+cm <- confusionMatrix(data = y_hat, reference = test_set$y)
 print(cm)
 ```
 
-you will see several metrics including accuracy, sensitivity, specificity, and PPV.
+you will see several metrics, including accuracy, sensitivity, specificity, and PPV.
 
 You can access these directly, for example, like this:
 
@@ -225,7 +227,7 @@ cm$byClass[c("Sensitivity","Specificity", "Prevalence", "Pos Pred Value")]
 
 We can see that the high overall accuracy is possible despite relatively low sensitivity. As we hinted at above, the reason this happens is because of the low prevalence (0.23): the proportion of females is low. Because prevalence is low, failing to predict females correctly (low sensitivity) does not lower the overall accuracy as much as failing to predict males correctly (low specificity). This is an example of why it is important to examine sensitivity and specificity and not just accuracy. 
 
-Before applying this algorithm to general datasets, we need to ask ourselves if prevalence in the general population will be the same as in our training dataset.
+Before applying this algorithm to general datasets, we need to ask ourselves if the prevalence in the general population will be the same as in our training dataset.
 
 
 ## Balanced accuracy and $F_1$ score
@@ -233,7 +235,7 @@ Before applying this algorithm to general datasets, we need to ask ourselves if 
 Although we usually recommend studying both specificity and sensitivity, it is often  useful to have a one-number summary, for example, for optimization purposes. One metric that is preferred over overall accuracy is the average of specificity and sensitivity, referred to as _balanced accuracy_. Because specificity and sensitivity are rates, it is more appropriate to compute the _harmonic_ average. In fact, the _$F_1$-score_, a widely used one-number summary, is the harmonic average of precision and recall:
 
 $$
-\frac{1}{\frac{1}{2}\left(\frac{1}{\mbox{recall}} + 
+F_1\mbox{-score} = \frac{1}{\frac{1}{2}\left(\frac{1}{\mbox{recall}} + 
     \frac{1}{\mbox{precision}}\right) }
 = 2 \times \frac{\mbox{precision} \cdot \mbox{recall}}
 {\mbox{precision} + \mbox{recall}}.
@@ -292,21 +294,21 @@ sensitivity(y_hat, test_set$y)
 specificity(y_hat, test_set$y)
 ```
 
-We now see that we do much better than guessing, that both sensitivity and specificity are relatively high.
+We now see that we do much better than guessing, with sensitivity and specificity both relatively high.
 
 
 ## ROC and precision-recall curves
 
-When comparing the two methods (guessing versus using a height cutoff), we looked at accuracy and $F_1$. The second method clearly outperformed the first. However, while we considered several cutoffs for the second method, for the first we only considered one approach: guessing with equal probability. Be aware that guessing `Male` with higher probability would give us higher accuracy due to the bias in the sample. But, as described above, this would come at the cost of lower sensitivity. The curves we describe in this section will help us see this.
+When comparing the two methods (guessing versus using a height cutoff), we looked at accuracy and $F_1$. The second method clearly outperformed the first. However, while we considered several cutoffs for the second method, for the first, we only considered one approach: guessing with equal probability. Note that guessing `Male` with higher probability would increase overall accuracy because males are more prevalent in the sample. But, as described above, this would come at the cost of lower sensitivity. The curves in this section illustrate the trade-offs between performance metrics across different cutoffs.
 
 Remember that for each cutoff, we can get a different sensitivity and specificity. For this reason, a very common approach to evaluating methods is to compare them graphically by plotting both.
 
 A widely used plot that does this is the _receiver operating characteristic_ (ROC) curve. If you are wondering about this name, consult the ROC Wikipedia page^[https://en.wikipedia.org/wiki/Receiver_operating_characteristic].
 
-The ROC curve plots sensitivity, represented as the TPR, versus 1 - specificity represented as the false positive rate (FPR). Here we compute the TPR and FPR needed for different probabilities of guessing male:
+The ROC curve plots sensitivity, represented as the TPR, versus 1 - specificity, represented as the false positive rate (FPR). Here we compute the TPR and FPR needed for different probabilities of guessing male:
 
 ```{r roc-1}
-probs <- seq(0, 1, length.out = 10)
+probs <- seq(0, 1, length.out = 11)
 guessing <- sapply(probs, function(p){
   y_hat <- sample(c("Male", "Female"), nrow(test_set), TRUE, c(p, 1 - p)) 
   y_hat <- factor(y_hat, levels = c("Female", "Male"))
@@ -315,7 +317,7 @@ guessing <- sapply(probs, function(p){
 })
 ```
 
-We can use similar code to compute these values for our our second approach. By plotting both curves together, we are able to compare sensitivity for different values of specificity:
+We can use similar code to compute these values for our second approach. By plotting both curves together, we are able to compare sensitivity for different values of specificity. Each point in the "guessing" curve is labeled by the probability that an individual is predicted to be male; each point in the "height cutoff" curve is labeled by the cutoff above which individuals are predicted to be male.
 
 
 ```{r, echo=FALSE}
@@ -352,15 +354,13 @@ rbind(tmp_1, tmp_2) |>
   ggplot(aes(FPR, TPR, label = cutoff, color = method)) +
   geom_line() +
   geom_point() +
-  geom_text_repel(nudge_x = 0.01, nudge_y = -0.01, show.legend = FALSE)
+  geom_text_repel(nudge_x = 0.01, nudge_y = -0.01, show.legend = FALSE) +
+  labs(x = "FPR = 1-specificity", y = "TPR = sensitivity")
 ```
 
-We see that we obtain higher sensitivity with the cutoff  approach for all values of specificity, which implies it is in fact a better method than guessing. Keep in mind that ROC curves for guessing always fall on the identity line. Also, note that when making ROC curves, it is often nice to add the cutoff associated with each point.
+We see that we obtain higher sensitivity with the cutoff  approach for all values of specificity, which implies it is, in fact, a better method than guessing. Keep in mind that ROC curves for guessing always fall on the identity line. The packages **pROC** and **plotROC** are useful for generating these plots.
 
-The packages **pROC** and **plotROC** are useful for generating these plots.
-
-ROC curves have one weakness and it is that neither of the measures plotted depends on prevalence. In cases in which prevalence matters, we may instead make a precision-recall plot. The idea is similar, but we instead plot precision against recall:
-
+ROC curves have a key limitation: neither metric they display depends on prevalence. When prevalence is important, a precision-recall curve is often more appropriate. The concept is similar, but instead of plotting true positive rate against false positive rate, we plot precision against recall.
 
 ```{r precision-recall-1, warning=FALSE, message=FALSE, echo=FALSE}
 library(tidyverse)
@@ -409,17 +409,17 @@ bind_rows(tmp_1, tmp_2) |>
   facet_wrap(~ Positive)
 ```
 
-From the plot on the left, we immediately see that the precision of guessing is not high. This is because the prevalence is low.  From the plot on the right, we see that if we change $Y=1$ to mean `Male` instead of `Female`, the precision increases. Note that the ROC curve would remain the same.
+From the plot on the left, we immediately see that the precision is low when randomly guessing, reflecting the low prevalence of females. In the plot on the right, redefining $Y=1$ to mean `Male` increases precision because the positive class is now more common. Note that the ROC curve would remain the same.
 
 ## Prevalence matters in practice
 
-A machine learning algorithm with very high TPR and TNR may not be useful in practice when prevalence is close to either 0 or 1. To see this, consider the case of a doctor that specializes in a rare disease and is interested in developing an algorithm for predicting who has the disease. 
+A machine learning algorithm with very high TPR and TNR may not be useful in practice when prevalence is close to either 0 or 1. To see this, consider the case or a doctor who specializes in a rare disease and is interested in developing an algorithm for predicting who has the disease. 
 
-The doctor shares data with about 1/2 cases and 1/2 controls and some predictors. You then develop an algorithm with TPR=0.99 and TNR = 0.99. You are excited to explain to the doctor that this means that if a patient has the disease, the algorithm is very likely to predict correctly. The doctor is not impressed and explains that your TNR is too low for this algorithm to be used in practice. 
+The doctor shares data with about 1/2 cases and 1/2 controls, and some predictors. You then develop an algorithm with TPR=0.99 and TNR = 0.99. You are excited to explain to the doctor that this means that if a patient has the disease, the algorithm is very likely to predict correctly. The doctor is not impressed and explains that your TNR is too low for this algorithm to be used in practice. 
 
 This is because, although the study dataset was constructed with equal numbers of cases and controls, the disease is very rare in the general population, with a prevalence of only about 0.5%.
 
-We can use Bayes rule to compute the precision we expect you algorithm to have in the real population: 
+We can use Bayes rule to compute the precision we expect your algorithm to have in the real population: 
 $$
 \begin{aligned}
 &\mathrm{Pr}(Y = 1\mid \hat{Y}=1) = \mathrm{Pr}(\hat{Y}=1 \mid Y=1) \frac{\mathrm{Pr}(Y=1)}{\mathrm{Pr}(\hat{Y}=1)} \implies\\
@@ -428,7 +428,7 @@ $$
 $$
 
 
-Here is plot of precision as a function of prevalence with TPR and TNR both equal to 99%:
+Here is a plot of precision as a function of prevalence with TPR and TNR both equal to 99%:
 
 ```{r precision-vs-prevalence, echo=FALSE}
 tpr <- 0.99; fpr <- 0.01
@@ -439,18 +439,18 @@ data.frame(Prevalence = prevalence,
   labs(title = "Precision as a function of prevalence", subtitle = "when TPR = 0.99 and TNR = 0.99")
 ```
 
-Although your algorithm achieves a precision of about 99% on the balanced training data (with 50% prevalence), its precision would drop to roughly 33% when applied to the general population, where the disease prevalence is only 0.5%. A doctor cannot rely on a test for which two-thirds of positive results are false positives. Even with perfect sensitivity, the precision would still be about 33% under these conditions. To make the algorithm clinically useful, you would need to drastically reduce the false positive rate (FPR).
+Although your algorithm achieves a precision of about 99% on the balanced training data (with 50% prevalence), its precision would drop to roughly 33% when applied to the general population, where the disease prevalence is only 0.5%. A doctor cannot rely on a test for which two-thirds of positive results are false positives. At a fixed specificity, even perfect sensitivity would result in around 33% precision. To make the algorithm clinically useful, you would need to drastically increase the specificity, or equivalently, reduce the false positive rate (FPR).
 
 ## Mean Squared Error {#sec-mse}
 
-Up to now we have described evaluation metrics that apply exclusively to categorical data. 
+Up to now, we have described evaluation metrics that apply exclusively to categorical data. 
 Specifically, for binary outcomes, we have described how sensitivity, specificity, accuracy, and $F_1$ can be used to quantify performance. However, these metrics are not useful for continuous outcomes. 
 
 In this section, we describe how the general approach to defining "best" in machine learning is to define a _loss function_, which can be applied to both categorical and continuous data. 
 
 The most commonly used loss function is the squared loss function. If $\hat{y}$ is our predictor and $y$ is the observed outcome, the squared loss function is simply: $(\hat{y} - y)^2$.
 
-Because we often model $y$ as the outcome of a random process, theoretically, it does not make sense to compare algorithms based on $(\hat{y} - y)^2$ as the minimum can change from sample to sample. For this reason, we minimize mean squared error (MSE):
+Because we often model $y$ as the outcome of a random process, the value of $\hat y$ that minimizes $(\hat{y} - y)^2$ depends on the particular sample. For this reason, we minimize the expected loss, or mean squared error (MSE):
 
 $$
 \text{MSE} \equiv \mathrm{E}[(\hat{Y} - Y)^2 ]
@@ -464,13 +464,13 @@ Different algorithms will result in different predictions $\hat{Y}$, and therefo
 However, note that the mean squared error (MSE) is a theoretical quantity that depends on the unknown data-generating process. How do we estimate it in practice? Because we typically have a test set consisting of many independent observations $y_1, \dots, y_N$, a natural and widely used estimate of the MSE is based on the average of the squared errors over the test set:
 
 $$
-\hat{\mbox{MSE}} = \frac{1}{N}\sum_{i=1}^N (\hat{y}_i - y_i)^2
+\widehat{\mbox{MSE}} = \frac{1}{N}\sum_{i=1}^N (\hat{y}_i - y_i)^2
 $$
 
 with the $\hat{y}_i$ generated completely independently from the the $y_i$s. 
 
-However, the estimate $\hat{\text{MSE}}$ is a random variable. In fact, $\text{MSE}$ and $\hat{\text{MSE}}$ are often referred to as the true error and apparent error, respectively.
-Due to the complexity of some machine learning algorithms, it is difficult to derive the statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation an approach to estimating the MSE. 
+However, the estimate $\widehat{\text{MSE}}$ is a random variable. In fact, $\text{MSE}$ and $\widehat{\text{MSE}}$ are often referred to as the true error and apparent error, respectively.
+Due to the complexity of some machine learning algorithms, it is difficult to derive the statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation, an approach to estimating the MSE. 
 
 We conclude this chapter by noting that squared loss is not the only possible choice of loss function. For instance, the *mean absolute error (MAE)* replaces squared errors $(\hat{Y}_i - Y_i)^2$ with their absolute values $|\hat{Y}_i - Y_i|$. Other loss functions are also possible, depending on the context and goals of the analysis. In this book, however, we focus on squared loss, since it is by far the most widely used and provides important mathematical conveniences that simplify both theory and computation.
 
@@ -495,12 +495,12 @@ titanic <- titanic_train |> select(Survived, Pclass, Sex, Age, Fare) |> drop_na(
          Pclass = factor(Pclass), Sex = factor(Sex))
 ```
 
-Note that we defined the levels to be `c(1,0)` to avoid the defailt behaviou of making 0 (first alphabetically) the first level given that **caret** defines positives $Y=1$ as the first level.
+Note that we defined the levels to be `c(1,0)` to avoid the default behavior of making 0 (first alphabetically) the first level, given that **caret** defines positives $Y=1$ as the first level.
 
-1\. Split the `titanic` datset into to `train_set` with 80% of the data and `test_set` with the remaining 20%.
+1\. Split the `titanic` dataset into `train_set` with 80% of the data and `test_set` with the remaining 20%.
 
 
-2\. Use `Fare` (ticket price) as a continuous score to predict survival. Create a simple rule: predict `1` (survived) if `Fare > cutoff`, otherwise predict `0`.  Take `cutoff = median(train_set$Fare)`. Compute the accuracy on the `test_set`. Hint: When using `factor()`, R orders levels alphabetically by default. This means "0" will come before "1", so if you convert predictions to a factor without specifying levels, the positive class may be assigned incorrectly. In this dataset, however, Survived has 1 as the first level. Make sure the factor levels of your predictions match the levels of test_set$Survived before computing accuracy or a confusion matrix.
+2\. Use `Fare` (ticket price) as a continuous score to predict survival. Create a simple rule: predict `1` (survived) if `Fare > cutoff`, otherwise predict `0`.  Take `cutoff = median(train_set$Fare)`. Compute the accuracy on the `test_set`. Hint: When using `factor()`, R orders levels alphabetically by default. This means "0" will come before "1", so if you convert predictions to a factor without specifying levels, the positive class may be assigned incorrectly. In this dataset, however, Survived has 1 as the first level. Make sure the factor levels of your predictions match the levels of `test_set$Survived` before computing accuracy or a confusion matrix.
 
 
 3\. How does the accuracy achieved in exercise 2 compare to simply predicting `0` (not survived) for everyone? 
@@ -510,7 +510,7 @@ Note that we defined the levels to be `c(1,0)` to avoid the defailt behaviou of 
 Use `sensitivity`, `specificity`, and `posPredValue` from **caret**. Interpret each quantity in the context of predicting who survives based only on ticket price.
 
 
-5\. Now repeat exercise 3 but for different cutoffs:
+5\. Now repeat exercise 2, but for different cutoffs:
 
 ```{r}
 #| eval: false
@@ -519,10 +519,10 @@ cutoffs <- quantile(train_set$Fare, probs = seq(0.05, 0.95, 0.1))
 
 For each cutoff, classify passengers as survived / not survived using `Fare > cutoff` and plot accuracy computed on the `train_set` against cutoff.
 
-6\. Using the results from exercise 5, best cutoff and compare accuracy with the rule chose on exercise 4 on both `train_set` and `test_set`. 
+6\. Using the results from exercise 5, find the best cutoff, and compare the resulting decision rule's accuracy to the rule described in exercise 4 (using median `Fare` as cutoff). Report accuracy for each rule on both `train_set` and `test_set`. 
 
 
-7\. Generate an ROC curve based on the specificity and sensitivity computed on the test_set. For each point on the curve show the corresponding cutoff associated with that point.
+7\. Generate an ROC curve based on the specificity and sensitivity computed on the test_set. For each point on the curve, show the corresponding cutoff associated with that point.
 Briefly describe the trade-off you see as you move the cutoff: what happens to sensitivity and specificity when you increase the cutoff, and why does this make sense in terms of who tends to buy expensive tickets on the Titanic?
 
 8\. Now use a logistic regression model as a more refined continuous score.
@@ -543,7 +543,7 @@ p_hat_test <- predict(fit, newdata = test_set, type = "response")
 
 Classify passengers as survived if this probability is larger than 0.5. How does the accuracy compare when computed on training and test sets? Comment on why the difference is larger than in our previous comparison in exercises 2 and 3.
 
-9\. Consider different cutoffs for `cutofs <- seq(0.05, 0.95, 0.05)` for this probability and generate an ROC curve based in the test set. Based on this ROC curve and the one computed in exercise 7, which method would you say performs better?
+9\. Consider different cutoffs for `cutoffs <- seq(0.05, 0.95, 0.05)` for this probability and generate an ROC curve based on the test set. Based on this ROC curve and the one computed in exercise 7, which method would you say performs better?
 
 10\. The overall prevalence of survival in this dataset is:
 

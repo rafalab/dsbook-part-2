@@ -10,7 +10,7 @@ We begin with a simple illustrative example to build intuition, then introduce t
 
 ## Motivation: preserving distance
 
-For illustrative purposes, we consider a simple example with twin heights. Some pairs are adults, the others are children. Here we simulate 100 two-dimensional points where each point a pair of twins. We use the `mvrnorm` function from the **MASS** package to simulate bivariate normal data.
+For illustrative purposes, we consider a simple example with twin heights. Some pairs are adults, the others are children. Here, we simulate 100 two-dimensional points where each point is a pair of twins. We use the `mvrnorm` function from the **MASS** package to simulate bivariate normal data.
 
 ```{r, message=FALSE}
 set.seed(1983)
@@ -34,7 +34,7 @@ lines(x[c(2, 51),], col = "red", lwd = 2)
 points(x[c(1, 2, 51),], pch = 16)
 ```
 
-Our features are $n$ two-dimensional points, the two heights. For illustrative purposes, we will pretend that visualizing two dimensions is too challenging and we want to explore the data through a histogram of a one-dimensional variable. We therefore want to **reduce the dimensions** from two to one, but still be able to understand important characteristics of the data, in particular that the observations cluster into two groups: adults and children.
+Our features are $n$ two-dimensional points and the two heights. For illustrative purposes, we will pretend that visualizing two dimensions is too challenging, and we want to explore the data through a histogram of a one-dimensional variable. We therefore want to **reduce the dimensions** from two to one, but still be able to understand important characteristics of the data, in particular that the observations cluster into two groups: adults and children.
 
 To show that the ideas presented here are generally useful, we will standardize the data so that observations are in standard units rather than inches:
 
@@ -52,7 +52,7 @@ d <- as.matrix(dist(x))
 c(d[1, 2], d[2, 51])
 ```
 
-This distance is based on two dimensions and we need a distance approximation based on just one.
+This distance is based on two dimensions, and we need a distance approximation based on just one.
 
 ````{=html}
 <!--
@@ -62,7 +62,7 @@ Let's start with the naive approach of simply removing one of the two dimensions
 z <- x[,1]
 ```
 
-To make the distances comparable, we divide the sum of squares by the number of dimensions being added. So for the two dimensional case, we have:
+To make the distances comparable, we divide the sum of squares by the number of dimensions being added. So for the two-dimensional case, we have:
 
 $$
 \sqrt{ \frac{1}{2} \sum_{j=1}^2 (x_{1j}-x_{2j})^2 }
@@ -82,15 +82,15 @@ plot(dist(x) / sqrt(2), dist(z))
 abline(0, 1, col = "red")
 ```
 
-This one number summary does ok at preserving distances, but, can we pick a one-dimensional summary that improves the approximation?
+This one-number summary does ok at preserving distances, but can we pick a one-dimensional summary that improves the approximation?
 --->
 ````
 
 If we look back at the height scatterplot above and imagine drawing a line between any pair of points, the length of that line represents the distance between the two points. Many of these lines tend to align along the diagonal direction, suggesting that most of the variation in the data is not purely horizontal or vertical but spread diagonally across both axes.
 
-Now imagine we *rotate* the entire point cloud so that the variation that was previously along the diagonal is now aligned with the horizontal axis. In this rotated view, the largest differences between points would show up in the first (horizontal) dimension. This would make it easier to describe the data using just one variables, the one that captures the most meaningful variation.
+Now, imagine we *rotate* the entire point cloud so that the variation that was previously along the diagonal is now aligned with the horizontal axis. In this rotated view, the largest differences between points would show up in the first (horizontal) dimension. This would make it easier to describe the data using just one variable, the one that captures the most meaningful variation.
 
-In the next section, we introduce a mathematical approach that makes this intuition precise. It allows us to find a rotation of the data that preserves the distances between points while reorienting the axes to highlight the most important directions of variation. This is the foundation of an approach called *Principal Component Analysis (PCA)*, the most widely used technique for dimension reduction.
+In the next section, we introduce a mathematical approach that makes this intuition precise. It allows us to find a rotation of the data that preserves the distances between points while reorienting the axes to highlight the most important directions of variation. This is the foundation of *Principal Component Analysis (PCA)*, the most widely used technique for dimension reduction.
 
 ## Rotations
 
@@ -165,7 +165,7 @@ lines(z[c(2,51),], col = "red", lwd = 2)
 points(z[c(1,2,51),], pch = 16)
 ```
 
-Note that while the variability of $x_1$ and $x_2$ are similar, the variability of $z_1$ is much larger than the variability of $z_2$. Also, notice that the distances between points appear to be preserved. In the next sections, we show mathematically that this in fact the case.
+Note that while the variabilities of $x_1$ and $x_2$ are similar, the variability of $z_1$ is much larger than the variability of $z_2$. Also, notice that the distances between points appear to be preserved. In the next sections, we show mathematically that this is, in fact, the case.
 
 ## Linear transformations
 
@@ -235,7 +235,7 @@ $$
 If we define:
 
 ```{r}
-theta <- -45 * pi/180 #convert degrees to radians
+theta <- -45 * pi/180 # convert degrees to radians
 A <- matrix(c(cos(theta), -sin(theta), sin(theta), cos(theta)), 2, 2)
 ```
 
@@ -275,13 +275,13 @@ $$
 $$ 
 
 
-Note that the transformation used above is actually $\mathbf{A}^\top$ which implies that
+Note that the transformation used above is actually $\mathbf{A}^\top$, which implies that
 
 $$
 \mathbf{Z} \mathbf{A}^\top = \mathbf{X} \mathbf{A}\mathbf{A}^\top\ = \mathbf{X}
 $$
 
-and therefore that, in this particular case, $\mathbf{A}^\top$ is the inverse of $\mathbf{A}$. This also implies that all the information in $\mathbf{X}$ is included in the rotation $\mathbf{Z}$, and it can be retrieved via a linear transformation. A consequence is that for any rotation the distances are preserved. Here is an example for a 30 degree rotation, although it works for any angle:
+and therefore that, in this particular case, $\mathbf{A}^\top$ is the inverse of $\mathbf{A}$. This also implies that all the information in $\mathbf{X}$ is included in the rotation $\mathbf{Z}$, and it can be retrieved via a linear transformation. A consequence is that for any rotation, the distances are preserved. Here is an example for a 30-degree rotation, although it works for any angle:
 
 ```{r}
 all.equal(as.matrix(dist(rotate(x, 30))), as.matrix(dist(x)))
@@ -315,13 +315,13 @@ Note that if $\mathbf{A} \mathbf{A} ^\top= \mathbf{I}$, then the distance betwee
 
 We refer to transformations with the property $\mathbf{A} \mathbf{A}^\top = \mathbf{I}$ as *orthogonal transformations*. These are guaranteed to preserve the distance between any two points.
 
-We previously demonstrated our rotation has this property. We can confirm using R:
+We previously demonstrated that our rotation has this property. We can confirm using R:
 
 ```{r}
 all.equal(A %*% t(A), diag(2))
 ```
 
-To understand where this name comes from, recall that in linear algebra two vectors, say **x** and **y**, are said to be *orthogonal* if
+To understand where this name comes from, recall that in linear algebra, two vectors, say **x** and **y**, are said to be *orthogonal* if
 
 
 $$
@@ -332,7 +332,7 @@ If a matrix $\mathbf{A}$ satisfies $\mathbf{A}\mathbf{A}^\top = \mathbf{I}$,
 then each row of $\mathbf{A}$ is orthogonal to every other row.
 
 :::{.callout-note}
-The word *orthogonal* comes from the Greek *orthós*, meaning *straight* or *right*, and *gōnía*, meaning *angle*. In two and three dimensions, one can show that vectors with zero inner product meet at a right angle—that is, they are perpendicular. The term was generalized to higher dimensions, where *right angle* is defined through the inner product rather than spatial intuition.
+The word *orthogonal* comes from the Greek *orthós*, meaning *straight* or *right*, and *gōnía*, meaning *angle*. In two and three dimensions, one can show that vectors with zero inner product meet at a right angle—that is, they are perpendicular. The term was generalized to higher dimensions, where a *right angle* is defined through the inner product rather than spatial intuition.
 :::
 
 Notice that $\mathbf{A}$ being orthogonal also guarantees that the total sum of squares (TSS) of $\mathbf{X}$, defined as 
@@ -377,7 +377,7 @@ We have established that orthogonal transformations preserve both the distances 
 
 The main idea behind Principal Component Analysis (PCA) is to find an orthogonal transformation that concentrates as much of the variance as possible into the first few columns. This allows us to reduce the dimensionality of the problem by focusing only on those columns that capture most of the variation in the data.
 
-In our example, we aim to find a rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from –90 to 0 degrees to identify such a transformation:
+In our example, we aim to find a rotation that maximizes the variance explained in the first column. The following code performs a grid search across rotations from $-90$ to $0$ degrees to identify such a transformation:
 
 ```{r max-rotation, echo=-1, out.width="50%"}
 rafalib::mypar()
@@ -387,7 +387,7 @@ variance_explained <- v[1,]/sum(x^2)
 plot(angles, variance_explained, type = "l")
 ```
 
-We find that a -45 degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this rotation matrix with $\mathbf{V}$:
+We find that a $-45$ degree rotation appears to achieve the maximum, with over 98% of the total variability explained by the first dimension. We denote this rotation matrix with $\mathbf{V}$:
 
 ```{r}
 theta <- -45 * pi/180
@@ -496,7 +496,7 @@ plot(dist(x), dist(z[,1]))
 abline(0,1, col = "red")
 ```
 
-We also notice that the two groups, adults and children, can be clearly observed with the one number summary, better than with any of the two original dimensions.
+We also notice that the two groups, adults and children, can be clearly observed with the one-number summary, better than with either of the two original dimensions.
 
 
 ```{r histograms-of-dimensions, out.width="100%", echo = -1}
@@ -510,14 +510,14 @@ hist(z[,1], breaks = seq(-4,4,0.5))
 ```
 
 
-We can visualize these to see how the first component summarizes the data. In the plot below, red represents high values and blue negative values:
+We can visualize these to see how the first component summarizes the data. In the plot below, red represents high values and blue represents negative values:
 
 ```{r illustrate-pca-twin-heights, echo=FALSE, height = 5, out.width="70%"}
 illustrate_pca <- function(x, flip=1,
                            pad = round((nrow(x)/2-ncol(x))*1/4),
                            cex = 5, center = TRUE){
   rafalib::mypar(1,5)
-  ## flip is because PCA chooses arbitrary sign for loadings and PC
+  ## flip is because PCA chooses an arbitrary sign for loadings and PC
   colors = rev(RColorBrewer::brewer.pal(9, "RdBu"))
 
   pca <- prcomp(x, center = center)
@@ -597,11 +597,11 @@ In R, we can find the principal components of any matrix with the function `prco
 pca <- prcomp(x, center = FALSE)
 ```
 
-Keep in mind that default behavior is to center the columns of `x` before computing the PCs, an operation we don't need in our example because our matrix is scaled.
+Keep in mind that the default behavior is to center the columns of `x` before computing the PCs, an operation we don't need in our example because our matrix is scaled.
 
 The object `pca` includes the rotated data $Z$ in `pca$x` and the rotation $\mathbf{V}$ in `pca$rotation`.
 
-We can see that columns of the `pca$rotation` are indeed the rotation obtained with -45 (remember the sign is arbitrary):
+We can see that columns of the `pca$rotation` are indeed the rotation obtained with $-45$ (remember the sign is arbitrary):
 
 ```{r}
 pca$rotation
@@ -630,15 +630,15 @@ all.equal(x, pca$x %*% t(pca$rotation))
 
 ### Iris example
 
-The `iris` dataset is a widely used example in data analysis courses. It contains four botanical measurements, sepal length, sepal width, petal length, and petal width, for flowers from three different species:
+The `iris` dataset is a widely used example in data analysis courses. It contains four botanical measurements of iris flowers---sepal length, sepal width, petal length, and petal width:
 
 ```{r}
 names(iris)
 ```
 
-If you inspect the species column using `iris$Species`, you'll see that the observations are grouped by species.
+If you inspect the species column using `iris$Species`, you'll see that the observations are from three different species.
 
-When we visualize the pairwise distances between observations, a clear pattern emerges: the data appears to cluster into three distinct groups, with one species standing out as more clearly separated from the other two. This structure is consistent with the known species labels:
+When we visualize the pairwise distances between observations, a clear pattern emerges: the data appear to cluster into three distinct groups, with one species standing out as more clearly separated from the other two. This structure is consistent with the known species labels:
 
 
 ```{r iris-distances, fig.width = 4, fig.height = 4, out.width="50%", echo=-1}
@@ -663,7 +663,7 @@ pca <- prcomp(x)
 summary(pca)
 ```
 
-The first two dimensions account for almost 98% of the variability. Thus, we should be able to approximate the distance very well with two dimensions. We confirm this by computing the distance with just the first two dimensions and comparing to the original:
+The first two dimensions account for almost 98% of the variability. Thus, we should be able to approximate the distance very well with two dimensions. We confirm this by computing the distance with just the first two dimensions and comparing it to the original:
 
 
 ```{r dist-approx-4, echo = -1, message = FALSE, fig.height = 6, fig.width = 6, out.width="40%"}
@@ -691,7 +691,7 @@ rafalib::mypar()
 illustrate_pca(x)
 ```
 
-we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in first column), and subtracting a quantity proportional to sepal width (blue in first column). The second PC is a weighted average of petal length and petal width, minus a weighted average of sepal length and sepal width.
+we learn that the first PC is obtained by taking a weighted average of sepal length, petal length, and petal width (red in the first column), and subtracting a quantity proportional to sepal width (blue in the first column). The second PC is a weighted average all four measurements in the same direction (blue in second column).
 
 ### MNIST example
 
@@ -715,7 +715,7 @@ plot(pca$sdev^2/sum(pca$sdev^2), xlab = "PC", ylab = "Variance explained")
 ```
 
 We can see that the first few PCs already explain a large percent of the variability.
-Furthermore, simply by looking at the first two PCs we already see information about the labels. Here is a random sample of 500 digits:
+Furthermore, simply by looking at the first two PCs, we already see information about the labels. Here is a random sample of 500 digits:
 
 ```{r mnist-pca-1-2-scatter, echo=FALSE}
 data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], label = factor(mnist$train$label)) |>
@@ -744,7 +744,7 @@ tmp |>
   facet_wrap(~label, nrow = 1)
 ```
 
-We can clearly see that first PC appears to be separating the 1s (red) from the 0s (blue). We can vaguely discern digits, or parts of digits, in the other three PCs as well. By looking at the PCs stratified by digits, we get further insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:
+We can clearly see that the first PC appears to be separating the 1s (red) from the 0s (blue). We can vaguely discern digits, or parts of digits, in the other three PCs as well. By looking at the PCs stratified by digits, we get further insights. For example, we see that the second PC separates 4s, 7s, and 9s from the rest:
 
 ```{r digit-pc-boxplot}
 #| echo: false
@@ -752,7 +752,7 @@ data.frame(label = factor(mnist$train$labels), PC2 = pca$x[,2]) |>
   ggplot(aes(label, PC2)) + geom_boxplot() 
 ```
 
-We can also confirm that the lower variance PCs appear related to unimportant variability, mainly smudges in the corners:
+We can also confirm that the lower variance PCs appear related to unimportant variability in the last few PCs, mainly smudges in the corners:
 
 ```{r mnist-pca-last,, echo = FALSE, out.width="100%", fig.width=9, fig.height=2.625}
 tmp |> dplyr::filter(id > 5) |>
@@ -771,9 +771,9 @@ tmp |> dplyr::filter(id > 5) |>
 dim(tissue_gene_expression$x)
 ```
 
-We hope to get an idea of which observations are close to each other, but the predictors are 500-dimensional so plotting is difficult. Plot the first two principal components with color representing tissue type.
+We hope to get an idea of which observations are close to each other, but the predictors are 500-dimensional, so plotting is difficult. Plot the first two principal components with color representing tissue type.
 
-2\. The predictors for each observation are measured on the same measurement device (a gene expression microarray) after an experimental procedure. A different device and procedure is used for each observation. This may introduce biases that affect all predictors for each observation in the same way. To explore the effect of this potential bias, for each observation, compute the average across all predictors and then plot this against the first PC with color representing tissue. Report the correlation.
+2\. The predictors for each observation are measured on the same measurement device (a gene expression microarray) after an experimental procedure. A different device and procedure are used for each observation. This may introduce biases that affect all predictors for each observation in the same way. To explore the effect of this potential bias, for each observation, compute the average across all predictors and then plot this against the first PC, with color representing tissue. Report the correlation.
 
 3\. We see an association with the first PC and the observation averages. Redo the PCA, but only after removing the center.
 
