@@ -767,7 +767,7 @@ window.Quarto = {
 <span>  trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"cv"</span>, number <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
 <span>  tuneGrid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_nzv</span>, <span class="va">x_test</span>, type <span class="op">=</span> <span class="st">"raw"</span><span class="op">)</span> <span class="op">==</span> <span class="va">y_test</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.952</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span><span class="co">#&gt; [1] 0.955</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="dimension-reduction-with-pca" class="level3"><h3 class="anchored" data-anchor-id="dimension-reduction-with-pca">Dimension reduction with PCA</h3>
 <p>An alternative to filtering features directly is to reduce the dimension of the feature matrix using Principal Component Analysis (PCA). For this dataset, a large fraction of the total variability in the predictors can be captured using only a small number of principal components (PCs).</p>
@@ -788,7 +788,7 @@ window.Quarto = {
 <p>The resulting accuracy is similar to what we obtained with the full feature set, but using only 87 dimensions:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_pca</span>, <span class="va">newdata</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span> <span class="op">==</span> <span class="va">y_test</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.954</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span><span class="co">#&gt; [1] 0.953</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To obtain an unbiased MSE estimate when training with PCA, we must recompute the PCA inside each cross-validation split and apply the resulting transformation to the corresponding validation fold.</p>
 <p>Fortunately, the <strong>caret</strong> package can automate this. The <code>train</code> function includes PCA as one of its available preprocessing steps. We can request PCA with a fixed number of components using</p>
@@ -809,7 +809,7 @@ window.Quarto = {
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/system.time.html">system.time</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span>, <span class="op">-</span><span class="va">nzv</span><span class="op">]</span>, <span class="va">y</span><span class="op">)</span>, newdata <span class="op">=</span> <span class="va">x_test</span><span class="op">[</span>, <span class="op">-</span><span class="va">nzv</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    user  system elapsed </span></span>
-<span><span class="co">#&gt;   2.081   0.012   2.096</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span><span class="co">#&gt;   2.062   0.021   2.083</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>On a typical laptop, this call takes about 2 seconds. This suggests that the full training process could take over an hour.</p>
 <p>In practice, this cost can be reduced substantially by using parallel computing.</p>

@@ -535,14 +535,14 @@ window.Quarto = {
 
 
 </header><p>Statistical models are meant to capture meaningful structure in data. However, when a model includes many parameters, or when some parameters are informed by only a small number of observations, the fitted values can become unstable. In these situations, the least squares estimates may be much larger than the underlying true effects. This phenomenon is a form of overfitting, and it can lead to misleading interpretations.</p>
-<p>The issue becomes particularly apparent when we use fitted models to make predictions for new data, not used during model fitting. A model that overfits will often produce estimates that vary too much from sample to sample. In the next part of this book, we describe overfitting in more detail and introduce tools for diagnosing and preventing it.</p>
+<p>The issue becomes particularly apparent when we use fitted models to make predictions for new data not used during model fitting. A model that overfits will often produce estimates that vary too much from sample to sample. In the next part of this book, we describe overfitting in more detail and introduce tools for diagnosing and preventing it.</p>
 <p>Regularization provides one of the most effective general strategies for reducing overfitting. The idea is to modify the fitting procedure so that large parameter estimates are penalized. In practice, this is done by adding a penalty term to the quantity we minimize, such as the sum of squared errors. The penalty discourages extreme estimates, especially when they are supported by limited data. The result is a more stable model with parameter estimates that are smaller in magnitude and more reliable for use beyond the training data.</p>
-<p>In this chapter, we introduce regularization in the context of a recommendation system for movie ratings. We start with user and movie specific effects and observe how least squares can produce unrealistic estimates, particularly for movies with very few ratings. Regularization helps by shrinking these unstable estimates toward zero. In the next chapter, we build on this idea and show how it can be extended through latent factor models, which form the basis of modern recommendation systems.</p>
+<p>In this chapter, we introduce regularization in the context of a recommendation system for movie ratings. We start with user and movie-specific effects and observe how least squares can produce unrealistic estimates, particularly for movies with very few ratings. Regularization helps by shrinking these unstable estimates toward zero. In the next chapter, we build on this idea and show how it can be extended through latent factor models, which form the basis of modern recommendation systems.</p>
 <section id="sec-recommendation-systems" class="level2" data-number="24.1"><h2 data-number="24.1" class="anchored" data-anchor-id="sec-recommendation-systems">
 <span class="header-section-number">24.1</span> Case study: recommendation systems</h2>
 <p>Recommendation systems, such as the one used by Amazon, operate by analyzing the ratings that customers give to various products. These ratings form a large dataset. The system uses this data to predict how likely a specific user is to favorably rate a particular product. For example, if the system predicts that a user is likely to give a high rating to a certain book or gadget, it will recommend that item to them. In essence, the system tries to guess which products a user will like based on the ratings provided by them and other customers for various items. This approach helps in personalizing recommendations to suit individual preferences.</p>
 <p>During its initial years of operation, Netflix used a 5-star recommendation system. One star suggested the user would dislike the movie, whereas five stars suggested the user would love it. Here, we provide the basics of how these recommendations are made, motivated by some of the approaches taken by the winners of the <em>Netflix challenges</em>.</p>
-<p>In October 2006, Netflix offered a challenge to the data science community: improve our recommendation algorithm by 10% and win a million dollars. In September 2009, the winners were announced<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. In this chapter we will demonstrate how regularization was an important part of the winning team’s strategy<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
+<p>In October 2006, Netflix offered a challenge to the data science community: improve our recommendation algorithm by 10% and win a million dollars. In September 2009, the winners were announced<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. In this chapter, we will demonstrate how regularization was an important part of the winning team’s strategy<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a><a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>.</p>
 <section id="movielens-data" class="level3"><h3 class="anchored" data-anchor-id="movielens-data">Movielens data</h3>
 <p>The Netflix data is not publicly available, but the GroupLens research lab<a href="#fn4" class="footnote-ref" id="fnref4" role="doc-noteref"><sup>4</sup></a> generated their own database with over 20 million ratings for over 27,000 movies by more than 138,000 users. We make a small subset of this data available via the <strong>dslabs</strong> package:</p>
 <div class="cell" data-layout-align="center">
@@ -563,7 +563,7 @@ window.Quarto = {
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dt</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/as.data.table.html">as.data.table</a></span><span class="op">(</span><span class="va">movielens</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can see the number of unique users that provided ratings and how many unique movies were rated:</p>
+<p>We can see the number of unique users who provided ratings and how many unique movies were rated:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dt</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>n_users <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">userId</span><span class="op">)</span>, n_movies <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/duplicated.html">uniqueN</a></span><span class="op">(</span><span class="va">movieId</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;    n_users n_movies</span></span>
@@ -572,7 +572,7 @@ window.Quarto = {
 </div>
 <p>If we multiply those two numbers, we get a figure exceeding 5 million, yet our dataset contains only about 100,000 rows. This tells us that not every user rated every movie. In fact, the median number of movies rated per user is 71. We can think of the data as a very large matrix, with users as rows and movies as columns, filled with many missing entries. The goal of a movie recommendation system is to accurately predict those missing values.</p>
 </section><section id="data-exploration" class="level3"><h3 class="anchored" data-anchor-id="data-exploration">Data exploration</h3>
-<p>Let’s look at some of the general properties of the data to better understand the challenges by examing histograms of the number of ratings given to movies, and the number of ratings given by users:</p>
+<p>Let’s look at some of the general properties of the data to better understand the challenges by examining histograms of the number of ratings given to movies and the number of ratings given by users:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log2</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">dt</span><span class="op">$</span><span class="va">movieId</span><span class="op">)</span><span class="op">)</span>, <span class="fl">0</span><span class="op">:</span><span class="fl">9</span>, xlab <span class="op">=</span> <span class="st">"# Ratings (log 2)"</span>, main <span class="op">=</span> <span class="st">"Movies"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">dt</span><span class="op">$</span><span class="va">userId</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2400</span>, <span class="fl">50</span><span class="op">)</span>, xlab <span class="op">=</span> <span class="st">"# Ratings"</span>, main <span class="op">=</span> <span class="st">"Users"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -584,7 +584,7 @@ window.Quarto = {
 </div>
 </div>
 <p>The first thing we notice is that some movies receive far more ratings than others. Most movies are rated only a handful of times, while a small number accumulate hundreds of ratings. This pattern is not surprising. Popular, widely released films tend to be watched and rated by many users, while niche or independent films attract much smaller audiences.</p>
-<p>We also see variation among users, although the disparity is less extreme. Some users rate only a few about 10 movies, while others rate dozens or even hundreds.</p>
+<p>We also see variation among users, although the disparity is less extreme. Some users rate only about 10 movies, while others rate dozens or even hundreds.</p>
 <p>These imbalances will be important as we build models, because estimates based on very few observations are inherently less reliable.</p>
 </section><section id="preparing-the-data" class="level3"><h3 class="anchored" data-anchor-id="preparing-the-data">Preparing the data</h3>
 <p>Before we can fit models or make predictions, we need to shape the data into a form suitable for analysis. Our goal is to develop an algorithm using historical ratings and then evaluate how well it predicts ratings not used for training.</p>
@@ -637,7 +637,7 @@ window.Quarto = {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>Although the notation <span class="math inline">\(y_{ij}\)</span> suggests a full <span class="math inline">\(I \times J\)</span> matrix of ratings, in practice we do not observe most of these values. If there are <span class="math inline">\(I\)</span> users and <span class="math inline">\(J\)</span> movies, the complete rating matrix would contain <span class="math inline">\(I \times J\)</span> entries. However, the number of observed ratings, which we denote by <span class="math inline">\(N\)</span>, is much smaller because most users rate only a small subset of all movies. In what follows, a summation written as <span class="math inline">\(\sum_{i,j}\)</span> is understood to run over the <span class="math inline">\(N\)</span> observed pairs <span class="math inline">\((i,j)\)</span>, not over all possible combinations.</p>
+<p>Although the notation <span class="math inline">\(y_{ij}\)</span> suggests a full <span class="math inline">\(I \times J\)</span> matrix of ratings, in practice, we do not observe most of these values. If there are <span class="math inline">\(I\)</span> users and <span class="math inline">\(J\)</span> movies, the complete rating matrix would contain <span class="math inline">\(I \times J\)</span> entries. However, the number of observed ratings, which we denote by <span class="math inline">\(N\)</span>, is much smaller because most users rate only a small subset of all movies. In what follows, a summation written as <span class="math inline">\(\sum_{i,j}\)</span> is understood to run over the <span class="math inline">\(N\)</span> observed pairs <span class="math inline">\((i,j)\)</span>, not over all possible combinations.</p>
 <p>Note that we store the data in a <code>data.table</code> rather than a matrix, since the full matrix representation would be almost entirely <code>NA</code>s.</p>
 </div>
 </div>
@@ -646,7 +646,7 @@ window.Quarto = {
 <p><span class="math display">\[
 \mbox{RMSE} = \sqrt{\frac{1}{N} \sum_{i,j} (y_{ij} - \hat{y}_{ij})^2}
 \]</span></p>
-<p>Here, <span class="math inline">\(N\)</span> is the number of ratings in the test set and the sum runs over those ratings.</p>
+<p>Here, <span class="math inline">\(N\)</span> is the number of ratings in the test set, and the sum runs over those ratings.</p>
 <p>We can interpret RMSE in the same units as the ratings themselves. It behaves much like a standard deviation: it represents the typical size of the error in our predictions. A value greater than 1 means that, on average, our predicted rating is off by more than one star, which is undesirable.</p>
 <p>To make it easy to compute RMSE for any vector of residuals, we define:</p>
 <div class="cell" data-layout-align="center">
@@ -683,7 +683,7 @@ Y_{ij} = \mu + \varepsilon_{ij}
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu">rmse</span><span class="op">(</span><span class="va">test_set</span><span class="op">$</span><span class="va">rating</span> <span class="op">-</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1.17</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This simple approach provides a useful baseline. However, it falls well short of the performance needed to win the Netflix challenge, which required an RMSE of about 0.857 to claim the one million dollar prize. We should be able to do better by incorporating more structure into the model.</p>
+<p>This simple approach provides a useful baseline. However, it falls well short of the performance needed to win the Netflix challenge, which required an RMSE of about 0.857 to claim the one-million-dollar prize. We should be able to do better by incorporating more structure into the model.</p>
 </section><section id="user-effects" class="level3"><h3 class="anchored" data-anchor-id="user-effects">User effects</h3>
 <p>A natural question is whether all users rate movies in the same way. Some users tend to give very high ratings, while others rarely give more than three stars. To see this, we compute the average rating for each user:</p>
 <div class="cell" data-layout-align="center">
@@ -701,7 +701,7 @@ Y_{ij} = \mu + \varepsilon_{ij}
 Y_{ij} = \mu + \alpha_i + \varepsilon_{ij}
 \]</span></p>
 <p>Here, <span class="math inline">\(\mu\)</span> represents the overall average rating, and <span class="math inline">\(\alpha_i\)</span> captures how much user <span class="math inline">\(i\)</span> tends to deviate from that average. Statistics textbooks typically refer to the <span class="math inline">\(\alpha_i\)</span> as treatment effects. In the Netflix prize literature, they are often called <em>bias terms</em>.</p>
-<p>This is a linear model so we can fit the model using <code><a href="https://rdrr.io/r/stats/lm.html">lm()</a></code>:</p>
+<p>This is a linear model, so we can fit the model using <code><a href="https://rdrr.io/r/stats/lm.html">lm()</a></code>:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">rating</span> <span class="op">~</span> <span class="va">userId</span>, data <span class="op">=</span> <span class="va">train_set</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -711,7 +711,7 @@ Y_{ij} = \mu + \alpha_i + \varepsilon_{ij}
 <span><span class="co">#&gt; [1] 263</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We therefore need hundreds of dummy variables, which makes fitting the model computationally inefficient.</p>
-<p>Fortunately, for this model we can derive the least squares estimate directly. The estimate <span class="math inline">\(\hat{\alpha}_i\)</span> is simply the average of <span class="math inline">\(y_{ij} - \hat{\mu}\)</span> for user <span class="math inline">\(i\)</span>:</p>
+<p>Fortunately, for this model, we can derive the least squares estimate directly. The estimate <span class="math inline">\(\hat{\alpha}_i\)</span> is simply the average of <span class="math inline">\(y_{ij} - \hat{\mu}\)</span> for user <span class="math inline">\(i\)</span>:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">$</span><span class="va">rating</span><span class="op">)</span></span>
 <span><span class="va">user_avgs</span> <span class="op">&lt;-</span> <span class="va">train_set</span><span class="op">[</span>, <span class="fu">.</span><span class="op">(</span>avg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">rating</span> <span class="op">-</span> <span class="va">mu</span><span class="op">)</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">userId</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -720,7 +720,7 @@ Y_{ij} = \mu + \alpha_i + \varepsilon_{ij}
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="va">user_avgs</span><span class="op">$</span><span class="va">avg</span>, <span class="va">user_avgs</span><span class="op">$</span><span class="va">userId</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>From this point forward, we use <code>a</code> to represent the vector of user effect estimates <span class="math inline">\(\hat{\alpha}_i\)</span>, and later we will use <code>b</code> for the movie effect estimates. In the code, we drop the hat notation for convenience, but in the mathematical expressions we will continue to write <span class="math inline">\(\hat{\alpha}_i\)</span> and <span class="math inline">\(\hat{\beta}_j\)</span> to make clear that these are estimates.</p>
+<p>From this point forward, we use <code>a</code> to represent the vector of user effect estimates <span class="math inline">\(\hat{\alpha}_i\)</span>, and later we will use <code>b</code> for the movie effect estimates. In the code, we drop the hat notation for convenience, but in the mathematical expressions, we will continue to write <span class="math inline">\(\hat{\alpha}_i\)</span> and <span class="math inline">\(\hat{\beta}_j\)</span> to make clear that these are estimates.</p>
 <p>With the <span class="math inline">\(\hat{\alpha}\)</span>s estimates in place, we predict a rating using:</p>
 <p><span class="math display">\[
 \hat{y}_{ij} = \hat{\mu} + \hat{\alpha}_i
@@ -814,12 +814,12 @@ Y_{ij} = \mu + \alpha_i + \beta_j + \varepsilon_{ij}
 <span><span class="co">#&gt; [1] -1.41 -0.50</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This is a clear example of <em>overfitting</em>. A movie rated only once or twice can receive a very large positive (or negative) estimate simply by chance. The fewer observations that support an estimate, the more variable it becomes. These unstable estimates lead to large prediction errors, which in turn increase the RMSE.</p>
-<p>Earlier in the book, when we faced uncertainty, we relied on standard errors or confidence intervals to communicate it. But when making predictions, we do not get to present a range. We must choose a single number, even if the estimate is unreliable.</p>
+<p>Earlier in the book, when we faced uncertainty, we relied on standard errors or confidence intervals to communicate it. But when competing on RMSE, we do not get to present a range. We must choose a single number, even if the estimate is unreliable.</p>
 <p>This is where <em>regularization</em> becomes essential. Regularization shrinks extreme estimates toward zero when they are based on small samples, producing more stable and reliable predictions. In the next section, we introduce penalized least squares, a principled way to achieve this shrinkage.</p>
 </section></section><section id="penalized-least-squares" class="level2" data-number="24.2"><h2 data-number="24.2" class="anchored" data-anchor-id="penalized-least-squares">
 <span class="header-section-number">24.2</span> Penalized least squares</h2>
 <p>In the previous section, we saw that the largest movie effect estimates came from movies with only one or two ratings. These estimates are unstable, and the resulting predictions can be highly inaccurate. This is a classic example of <em>overfitting</em>, in which estimates become too large because they rely on too little data.</p>
-<p>A common way to address overfitting in linear models is to add a <em>penalty</em> that shrinks large coefficients toward zero. This approach is known as <em>penalized least squares</em>, or <em>ridge regression</em> when the penalty is quadratic.</p>
+<p>A common way to address overfitting in linear models is to add a <em>penalty</em> that shrinks large coefficients toward zero. This approach is known as <em>penalized least squares</em>, or <em>ridge regression</em>, when the penalty is quadratic.</p>
 <section id="a-general-formulation" class="level3"><h3 class="anchored" data-anchor-id="a-general-formulation">A general formulation</h3>
 <p>To describe the idea in a more familiar setting, we temporarily switch from the matrix notation <span class="math inline">\(y_{ij}\)</span> used in the recommendation problem to a standard linear model with outcome <span class="math inline">\(y_i\)</span> and covariates <span class="math inline">\(x_{i1}, \dots, x_{ip}\)</span>:</p>
 <p><span class="math display">\[
@@ -830,13 +830,13 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 \frac{1}{N}\sum_{i=1}^N \left[ y_i - \left(\beta_0 + \sum_{j=1}^p x_{ij}\beta_j\right)\right]^2 +
 \lambda \sum_{j=1}^p \beta_j^2
 \]</span></p>
-<p>The first term is the usual mean squared error. The second term discourages large coefficients, with the tuning parameter <span class="math inline">\(\lambda\)</span> controlling how strongly we penalize them. The intercept <span class="math inline">\(\beta_0\)</span> is typically not penalized as usually know the data is not centered at 0.</p>
+<p>The first term is the usual mean squared error. The second term discourages large coefficients, with the tuning parameter <span class="math inline">\(\lambda\)</span> controlling how strongly we penalize them. The intercept <span class="math inline">\(\beta_0\)</span> is typically not penalized, as we usually know the data is not centered at 0.</p>
 <p>This approach is known as <em>ridge regression</em>. The <code>MASS</code> package in R provides the <code>lm.ridge</code> function to fit the model using penalized least squares:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="http://www.stats.ox.ac.uk/pub/MASS4/">MASS</a></span><span class="op">)</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/MASS/man/lm.ridge.html">lm.ridge</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, lambda <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>However, this function is not efficient for models with thousands of indicator variables, as in our movie rating application. In the sections below we use penalized least squares but to find the estimates we implement the ALS algorithm described in <a href="#sec-movie-effects" class="quarto-xref"><span>Section 24.1.7</span></a>.</p>
+<p>However, this function is not efficient for models with thousands of indicator variables, as in our movie rating application. In the sections below, we use penalized least squares, but to find the estimates, we implement the ALS algorithm described in <a href="#sec-movie-effects" class="quarto-xref"><span>Section 24.1.7</span></a>.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -844,12 +844,12 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 </div>
 <div class="callout-body-container">
 <p>You may notice that some definitions of penalized least squares include the residual sum of squares (RSS) without dividing by <span class="math inline">\(N\)</span>, while others divide by <span class="math inline">\(N\)</span> to form the mean squared error (MSE). Both formulations are mathematically valid, and they lead to the same minimizer if <span class="math inline">\(\lambda\)</span> is scaled appropriately.</p>
-<p>However, dividing by <span class="math inline">\(N\)</span> has an important practical advantage. It makes the scale of the first term less dependent of the dataset size, so the same value of <span class="math inline">\(\lambda\)</span> has a similar interpretation across datasets of different sizes. The <code>lm.ridge</code> function in the MASS package uses this convention, and we follow it here for consistency.</p>
+<p>However, dividing by <span class="math inline">\(N\)</span> has an important practical advantage. It makes the scale of the first term less dependent on the dataset size, so the same value of <span class="math inline">\(\lambda\)</span> has a similar interpretation across datasets of different sizes. The <code>lm.ridge</code> function in the MASS package uses this convention, and we follow it here for consistency.</p>
 </div>
 </div>
 </div>
 </section><section id="applying-penalization-to-movie-effects" class="level3"><h3 class="anchored" data-anchor-id="applying-penalization-to-movie-effects">Applying penalization to movie effects</h3>
-<p>Returning to our setting, we want to shrink movie effects <span class="math inline">\(\beta_j\)</span> toward zero, especially when they are based on only a few ratings. Instead of minimizing:</p>
+<p>Returning to our setting, we want to shrink movie effects <span class="math inline">\(\beta_j\)</span> and user effects <span class="math inline">\(\alpha_i\)</span> toward zero, especially when they are based on only a few ratings. Instead of minimizing:</p>
 <p><span class="math display">\[
 \sum_{i,j} \left[y_{ij} - (\mu + \alpha_i + \beta_j) \right]^2,
 \]</span></p>
@@ -858,7 +858,7 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 \frac{1}{N}\sum_{i,j} \left[y_{ij} - (\mu + \alpha_i + \beta_j) \right]^2 +
 \lambda \left( \sum_i \alpha_i^2 + \sum_j \beta_j^2\right)
 \]</span></p>
-<p>For this model, we can derive a closed form solution for the <span class="math inline">\(\alpha_i\)</span>s that minimizes the penalized sum of square if <span class="math inline">\(\mu\)</span> and the <span class="math inline">\(\beta_j\)</span>s are known:</p>
+<p>For this model, we can derive a closed-form solution for the <span class="math inline">\(\alpha_i\)</span>s that minimizes the penalized sum of squares if <span class="math inline">\(\mu\)</span> and the <span class="math inline">\(\beta_j\)</span>s are known:</p>
 <p><span class="math display">\[
 \hat{\alpha}_i(\lambda) =
 \frac{1}{n_i + N\lambda}
@@ -871,10 +871,10 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 \sum_{i=1}^{n_j} \left(y_{ij} - \mu - \alpha_i\right)
 \]</span></p>
 <p>where <span class="math inline">\(n_j\)</span> is the number of ratings for movie <span class="math inline">\(j\)</span>.</p>
-<p>The effect of the penalty is clear. If <span class="math inline">\(n_j\)</span> is large, <span class="math inline">\(n_j + N\lambda \approx n_j\)</span>, shrinkage is minimal, and <span class="math inline">\(\hat{\beta}_j(\lambda)\)</span> essentially becomes an average. If <span class="math inline">\(n_j\)</span> is small, the estimate is pulled strongly toward 0. The larger the <span class="math inline">\(\lambda\)</span> the larger the pull.</p>
+<p>The effect of the penalty is clear. If <span class="math inline">\(n_j\)</span> is large, <span class="math inline">\(n_j + N\lambda \approx n_j\)</span>, shrinkage is minimal, and <span class="math inline">\(\hat{\beta}_j(\lambda)\)</span> essentially becomes an average. If <span class="math inline">\(n_j\)</span> is small, the estimate is pulled strongly toward 0. The larger the <span class="math inline">\(\lambda\)</span>, the larger the pull.</p>
 </section><section id="estimating-parameters-via-als" class="level3"><h3 class="anchored" data-anchor-id="estimating-parameters-via-als">Estimating parameters via ALS</h3>
-<p>Because <code>lm.ridge</code> is inefficient for our setting, we have thousands of indicator variables and a very sparse design, we instead apply the same Alternating Least Squares (ALS) strategy introduced earlier. The key difference is that we now replace the movie-effect update with its penalized version, which shrinks estimates more strongly when a movie has only a few ratings.</p>
-<p>For convenience, we define an auxiliary function <code>fit_als</code> that takes a value of <code>lambda</code> and returns a copy of <code>train_set</code> with the egularized estimates of the user and movie effects. This function is specific to our movie rating example. It assumes that <code>train_set</code> is available in the environment.</p>
+<p>Because <code>lm.ridge</code> is inefficient for our setting where we have thousands of indicator variables and a very sparse design, we instead apply the same Alternating Least Squares (ALS) strategy introduced earlier. The key difference is that we now replace the movie-effect and user-effect updates with their penalized versions, which shrink estimates more strongly when a movie or user has only a few ratings.</p>
+<p>For convenience, we define an auxiliary function <code>fit_als</code> that takes a value of <code>lambda</code> and returns a copy of <code>train_set</code> with the regularized estimates of the user and movie effects. This function is specific to our movie rating example. It assumes that <code>train_set</code> is available in the environment.</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_als</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">lambda</span>, <span class="va">tol</span> <span class="op">=</span> <span class="fl">1e-6</span>, <span class="va">max_iter</span> <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/data.table/man/copy.html">copy</a></span><span class="op">(</span><span class="va">train_set</span><span class="op">)</span></span>
@@ -902,7 +902,7 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 </div>
 <p>Note that in this example we use <span class="math inline">\(\lambda = 0.0001\)</span>. In <a href="#sec-selecting-penalty-term" class="quarto-xref"><span>Section 24.3</span></a>, we describe a data-driven approach for choosing <span class="math inline">\(\lambda\)</span> that optimizes predictive accuracy.</p>
 </section><section id="how-shrinkage-behaves" class="level3"><h3 class="anchored" data-anchor-id="how-shrinkage-behaves">How shrinkage behaves</h3>
-<p>We can compare the penalized estimates to the unpenalized ones by plotting them against each other:</p>
+<p>We can compare the penalized movie-effect estimates to the unpenalized ones by plotting them against each other:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -932,10 +932,10 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 <span><span class="fu">rmse</span><span class="op">(</span><span class="va">resid</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0.868</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The RMSE improves, confirming that regularization stabilizes estimates and reduces over</p>
+<p>The RMSE improves, confirming that regularization stabilizes estimates and reduces overfitting.</p>
 </section></section><section id="sec-selecting-penalty-term" class="level2" data-number="24.3"><h2 data-number="24.3" class="anchored" data-anchor-id="sec-selecting-penalty-term">
 <span class="header-section-number">24.3</span> Selecting the penalty term</h2>
-<p>The regularization parameter <span class="math inline">\(\lambda\)</span> controls how strongly we shrink the movie effects. If <span class="math inline">\(\lambda\)</span> is too small, we do not reduce overfitting. If it is too large, we shrink too much and lose useful signal.</p>
+<p>The regularization parameter <span class="math inline">\(\lambda\)</span> controls how strongly we shrink the movie effects. If <span class="math inline">\(\lambda\)</span> is too small, we do not reduce overfitting. If it is too large, we shrink too much and lose a useful signal.</p>
 <p>In <a href="../ml/resampling-methods.html" class="quarto-xref"><span>Chapter 29</span></a>, we introduce formal methods for choosing tuning parameters. Here, we take a simple approach for illustrative purposes: we compute the RMSE for a range of <span class="math inline">\(\lambda\)</span> values and pick the one that gives the best performance on our test set.</p>
 <p>We consider 100 values between 0 and 0.0002:</p>
 <div class="cell" data-layout-align="center">
@@ -1003,12 +1003,12 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 </div>
 </section><section id="exercises" class="level2" data-number="24.4"><h2 data-number="24.4" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">24.4</span> Exercises</h2>
-<p>For exercises 1-8 we will use the following simulation: An education expert is advocating for smaller schools. The expert bases this recommendation on the fact that among the best performing schools, many are small. Let’s simulate a dataset for 1000 schools. First, let’s simulate the number of students in each school.</p>
+<p>For exercises 1-8, we will use the following simulation: An education expert is advocating for smaller schools. The expert bases this recommendation on the fact that among the best-performing schools, many are small. Let’s simulate a dataset for 1000 schools. First, let’s simulate the number of students in each school.</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1986</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fl">2</span><span class="op">^</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">8</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Now let’s assign a <em>true</em> quality for each school completely independent from size. This is the parameter we want to estimate and it represent the score an average student in that school would get in an aptitude test. We simulate this value like this:</p>
+<p>Now, let’s assign a <em>true</em> quality for each school, completely independent from size. This is the parameter we want to estimate, and it represents the score an average student in that school would get in an aptitude test. We simulate this value like this:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="fl">80</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/TDist.html">rt</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -1017,12 +1017,12 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">schools</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html">sprintf</a></span><span class="op">(</span><span class="st">"PS%03d"</span>, <span class="fl">0</span><span class="op">:</span><span class="fl">999</span><span class="op">)</span>, size <span class="op">=</span> <span class="va">n</span>, quality <span class="op">=</span> <span class="va">mu</span>, </span>
 <span>                      rank <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rank.html">rank</a></span><span class="op">(</span><span class="op">-</span><span class="va">mu</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can see that the top 10 schools are:</p>
+<p>You can view the top 10 schools with:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org">dplyr</a></span><span class="op">)</span></span>
 <span><span class="va">schools</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/top_n.html">top_n</a></span><span class="op">(</span><span class="fl">10</span>, <span class="va">quality</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html">arrange</a></span><span class="op">(</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html">desc</a></span><span class="op">(</span><span class="va">quality</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Now let’s have the students in the school take a test. There is variability across students in each school so we will as well as random variability in test taking so we will simulate the test scores as normally distributed with the average determined by the school quality and standard deviations of 30 percentage points:</p>
+<p>Now let’s have the students in the school take a test. There is variability across students in each school, so we will also consider random variability in test taking, so we will simulate the test scores as normally distributed, with the average determined by the school quality and standard deviations of 30 percentage points:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">schools</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">schools</span><span class="op">$</span><span class="va">size</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">schools</span><span class="op">$</span><span class="va">quality</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="fl">30</span><span class="op">)</span><span class="op">)</span></span>
@@ -1030,24 +1030,24 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 </div>
 <p>1. What are the top schools based on the average score? Show just the ID, size, and the average score.</p>
 <p>2. Compare the median school size to the median school size of the top 10 schools based on the score.</p>
-<p>3. According to this test, it appears small schools are better than large schools. Five out of the top 10 schools have 100 or fewer students. But how can this be? We constructed the simulation so that quality and size are independent. Repeat the exercise for the worst 10 schools.</p>
-<p>4. The same is true for the worst schools: they are small as well. Plot the average score versus school size to see what’s going on. Highlight the top 10 schools based on the <em>true</em> quality. Use the log scale transform for the size.</p>
+<p>3. According to this test, it appears that small schools are better than large schools. Five out of the top 10 schools have 100 or fewer students. But how can this be? We constructed the simulation so that quality and size are independent. Repeat the exercise for the worst 10 schools.</p>
+<p>4. The same is true for the worst schools: they are small as well. Plot the average score versus school size to see what’s going on. Highlight the top 10 schools based on <em>true</em> quality. Use the log scale transform for the size.</p>
 <p>5. We can see that the standard error of the score has larger variability when the school is smaller. This is a basic statistical reality we learned in the probability and inference sections.</p>
-<p>Let’s use regularization to pick the best schools. Remember regularization <em>shrinks</em> deviations from the average towards 0. So to apply regularization here, we first need to center the value we want to shrink. Let’s call it <code>theta</code>:</p>
+<p>Let’s use regularization to pick the best schools. Remember, regularization <em>shrinks</em> deviations from the average towards 0. So to apply regularization here, we first need to center the value we want to shrink. Let’s call it <code>theta</code>:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">schools</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span><span class="va">schools</span>, theta <span class="op">=</span> <span class="va">score</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Use the closed form solution for the penalized least square estimates shown in this chapter to show that we can find the regularized estimate multiplying <code>theta</code> by <code>size/(size + 1000*lambda)</code>. The try <code>lambda = 0.05</code> and examine the top 10 schools based on this regularized estimate.</p>
+<p>Use the closed form solution for the penalized least square estimates shown in this chapter to show that we can find the regularized estimate multiplying <code>theta</code> by <code>size/(size + 1000*lambda)</code>. Try <code>lambda = 0.05</code> and examine the top 10 schools based on this regularized estimate.</p>
 <p>6. Notice that this improves our results a bit: the number of small schools that are incorrectly highly ranked decreases. But is there a better <code>lambda</code>? Find the <code>lambda</code> that minimizes the RMSE = <span class="math inline">\(1/100 \sum_{i=1}^{100} (\mbox{school quality} - \mbox{estimate})^2\)</span>.</p>
-<p>7. Rank the schools based on the average obtained with the best $. Note that no small school is incorrectly included.</p>
-<p>8. A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don’t subtract the overall average before shrinking, we actually do not improve the results. Confirm this by re-running the code from exercises 5, 6, and 7 but without removing the overall mean.</p>
-<p>The remaining exercises use the <code>movielens</code> data. Note that not all of them require regularization to solve, some focus on data exploration or model building using other ideas introduced in this chapter.</p>
-<p>9. In the example worked out in this chapter we removed users with less than 100 ratings. Redo the analysis without filtering these out. Implement an analysis that penalizes for both user and movie effects:</p>
+<p>7. Rank the schools based on the average obtained with the best <span class="math inline">\(\lambda\)</span>. Note that no small school is incorrectly included.</p>
+<p>8. A common mistake to make when using regularization is shrinking values towards 0 that are not centered around 0. For example, if we don’t subtract the overall average before shrinking, we actually do not improve the results. Confirm this by re-running the code from exercises 5, 6, and 7, but without removing the overall mean.</p>
+<p>The remaining exercises use the <code>movielens</code> data. Note that not all of them require regularization to solve—some focus on data exploration or model building using other ideas introduced in this chapter.</p>
+<p>9. In the example worked out in this chapter, we removed users with fewer than 100 ratings. Redo the analysis without filtering these out. Implement an analysis that penalizes for both user and movie effects:</p>
 <p><span class="math display">\[
 \frac{1}{N}\sum_{i,j} \left[y_{ij} - (\mu + \alpha_i + \beta_j) \right]^2 +
 \lambda \left( \sum_i \alpha_i^2 + \sum_j \beta_j^2\right).
 \]</span></p>
-<p>Note that you will have to edit the function <code>fit_als</code>.</p>
+<p>Hint: use the function <code>fit_als</code>.</p>
 <p>10. Repeat Exercise 9, but now use a model with <em>two</em> separate penalty terms:</p>
 <p><span class="math display">\[
 \frac{1}{N}\sum_{i,j} \left[y_{ij} - (\mu + \alpha_i + \beta_j)\right]^2 +
@@ -1056,24 +1056,39 @@ Y_i = \beta_0 + \sum_{j=1}^p x_{ij}\beta_j + \varepsilon_i, \quad i = 1, \dots, 
 <p>Here, <span class="math inline">\(\lambda_1\)</span> controls the amount of shrinkage applied to the user effects <span class="math inline">\(\alpha_i\)</span>, and <span class="math inline">\(\lambda_2\)</span> controls the shrinkage applied to the movie effects <span class="math inline">\(\beta_j\)</span>.</p>
 <p>To optimize both tuning parameters, perform a <em>grid search</em> over a reasonable range of <span class="math inline">\((\lambda_1, \lambda_2)\)</span> pairs and select the combination that minimizes the RMSE on the test set.</p>
 <p>We recommend lowering the <code>tol</code> argument in your ALS implementation while developing your solution, as this will speed up the computation during the grid search.</p>
-<p>11. Use the <code>movielens</code> dataset to explore how ratings vary across three key factors: * Number of ratings * Release year * Genre</p>
+<p>11. Use the <code>movielens</code> dataset to explore how ratings vary across three key factors:</p>
+<ul>
+<li>Number of ratings</li>
+<li>Release year</li>
+<li>Genre</li>
+</ul>
 <p>Perform the following:</p>
 <ul>
 <li>Compute the number of ratings per movie and plot it against the movie’s release year. Use a square-root transform for the counts.</li>
 <li>Keep only movies released in 1993 or later. Among these, compute <em>ratings per year since release</em>. Report the 25 movies with the highest ratings-per-year and their average rating.</li>
-<li>Stratify these same movies by ratings per year (e.g.&nbsp;20 bins or quantiles) and compute the average rating in each stratum.</li>
+<li>Stratify these same movies by ratings per year (e.g., 20 bins or quantiles) and compute the average rating in each stratum.</li>
 <li>Make a plot of average rating vs.&nbsp;ratings-per-year.</li>
 </ul>
-<p>12. The <code>movielens</code> data also includes a timestamp. * Convert the timestamp to a date (hint: use <code><a href="https://lubridate.tidyverse.org/reference/as_date.html">lubridate::as_datetime</a></code>). * Compute the average rating per week (hint: use <code>round_date</code> and <code>group_by</code>). Plot time on the x-axis and weekly average rating on the y-axis. * Interpret the trend. Does a time effect seem plausible?</p>
-<p>13. The <code>movielens</code> data also includes a <code>genres</code>. * Treat each <em>unique combination</em> in <code>genres</code> as a category. * Compute the average rating and its standard error for each. * Make an error bar plot.</p>
-<p>14. Based on your exploration in exercise 12, which of the following models seems most appropriate?</p>
+<p>12. The <code>movielens</code> data also includes a timestamp.</p>
+<ul>
+<li>Convert the timestamp to a date (hint: use <code><a href="https://lubridate.tidyverse.org/reference/as_date.html">lubridate::as_datetime</a></code>).</li>
+<li>Compute the average rating per week (hint: use <code>round_date</code> and <code>group_by</code>). Plot time on the x-axis and weekly average rating on the y-axis.</li>
+<li>Interpret the trend. Does a time effect seem plausible?</li>
+</ul>
+<p>13. The <code>movielens</code> data also includes <code>genres</code>.</p>
+<ul>
+<li>Treat each <em>unique combination</em> in <code>genres</code> as a category.</li>
+<li>Compute the average rating and its standard error for each.</li>
+<li>Make an error bar plot.</li>
+</ul>
+<p>14. Based on your exploration in exercises 12 and 13, which of the following models seems most appropriate?</p>
 <ol type="a">
 <li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + t_{ij} + \varepsilon_{ij}\)</span></p></li>
-<li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + \gamma , t_{ij} + \varepsilon_{ij}\)</span></p></li>
-<li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + \gamma , t_{ij} + \delta_{g(j)} + \varepsilon_{ij}\)</span></p></li>
+<li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + \gamma \, t_{ij} + \varepsilon_{ij}\)</span></p></li>
+<li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + \gamma \, t_{ij} + \delta_{g(j)} + \varepsilon_{ij}\)</span></p></li>
 <li><p><span class="math inline">\(Y_{ij} = \mu + \alpha_i + \beta_j + f(t_{ij}) + \delta_{g(j)} + \varepsilon_{ij}\)</span></p></li>
 </ol>
-<p>where <span class="math inline">\(g(j)\)</span> is the genre category for movie <span class="math inline">\(j\)</span> and <span class="math inline">\(f(t)\)</span> is a smooth function of <span class="math inline">\(t\)</span>.</p>
+<p>where <span class="math inline">\(g(j)\)</span> is the genre category for movie <span class="math inline">\(j\)</span>, <span class="math inline">\(t_{ij}\)</span> is the timestamp of rating <span class="math inline">\(Y_{ij}\)</span>, and <span class="math inline">\(f(t)\)</span> is a smooth function of <span class="math inline">\(t\)</span>.</p>
 <p>15. Using what you learned above, fit at least one model that improves upon the best model presented in this chapter: the user + movie effects model (with regularization)</p>
 <p>You may (optionally) include:</p>
 <ul>

@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>21&nbsp; Working with Matrices in R – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -541,7 +544,7 @@ window.Quarto = {
   
 
 
-</header><p>When the number of variables associated with each observation is large and they can all be represented as numbers, it is often more convenient to store the data in a matrix and perform the analysis using linear algebra operations, rather than storing the data in a data frame and using <strong>tidyverse</strong> or <strong>data.table</strong> functions. Matrix operations form the computational foundation for many applications of linear algebra in data analysis.</p>
+</header><p>When the number of variables associated with each observation is large, and they can all be represented as numbers, it is often more convenient to store the data in a matrix and perform the analysis using linear algebra, rather than storing the data in a data frame and using <strong>tidyverse</strong> or <strong>data.table</strong> functions. Matrix operations form the computational foundation for many applications of linear algebra in data analysis.</p>
 <p>In fact, many of the most widely used machine learning algorithms, including linear regression, principal component analysis, neural networks, and deep learning, are built around linear algebra concepts, and their implementations rely heavily on efficient matrix operations. Becoming fluent in creating, manipulating, and interpreting matrices in R will make it easier to understand and implement these methods in practice.</p>
 <p>Although we introduce the mathematical framework of linear algebra in the next chapter, the examples we use there rely on being able to work with matrices in R. Therefore, before diving into the mathematical concepts, we begin here with the tools needed to create and operate on matrices in R.</p>
 <p>In <a href="#sec-motivating-tasks" class="quarto-xref"><span>Section 21.5</span></a>, at the end of the chapter, we present motivating examples and specific practical tasks that commonly arise in machine learning workflows, such as centering and scaling variables, computing distances, and applying linear transformations. These tasks can be completed efficiently using matrix operations, and the skills you develop in the earlier sections of the chapter will help you solve them. If you would like to understand the motivation for learning the matrix operations introduced in the previous sections, you may find it helpful to read <a href="#sec-motivating-tasks" class="quarto-xref"><span>Section 21.5</span></a> first.</p>
@@ -555,7 +558,7 @@ window.Quarto = {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>In machine learning, variables are often called <em>features</em>, while in statistics, they are often called <em>covariates</em>. Regardless of the terminology, when working with matrices, features are typically represented by the columns of the matrix, each column corresponds to one variable measured across all observations.</p>
+<p>In machine learning, variables are often called <em>features</em>, while in statistics, they are often called <em>covariates</em>. Regardless of the terminology, when working with matrices, features are typically represented by the columns of the matrix, and each column corresponds to one variable measured across all observations.</p>
 </div>
 </div>
 </div>
@@ -570,7 +573,7 @@ x_{n1}&amp;x_{n2}&amp;\dots&amp;x_{np}\\
 \end{bmatrix}
 \]</span></p>
 <p>with <span class="math inline">\(x_{ij}\)</span> representing the <span class="math inline">\(j\)</span>-th variable for the <span class="math inline">\(i\)</span>-th observation. The matrix is said to have dimensions <span class="math inline">\(n \times p\)</span>, meaning it has <span class="math inline">\(n\)</span> rows and <span class="math inline">\(p\)</span> columns.</p>
-<p>We denote vectors with lower case bold letters and represent them as one column matrices, often referred to as <em>column vectors</em>. R follows this convention when converting a vector to a matrix. For example <code>as.matrix(1:n)</code> will have dimensions <code>n</code> <code>1</code>.</p>
+<p>We denote vectors with lowercase bold letters and represent them as one-column matrices, often referred to as <em>column vectors</em>. R follows this convention when converting a vector to a matrix. For example, <code>as.matrix(1:n)</code> will have dimensions <code>n</code> <span class="math inline">\(\times\)</span> <code>1</code>.</p>
 <p>However, <em>column vectors</em> should not be confused with the columns of the matrix. They have this name simply because they have one column.</p>
 <p>Mathematical descriptions of machine learning often make reference to vectors representing the <span class="math inline">\(p\)</span> variables:</p>
 <p><span class="math display">\[
@@ -582,7 +585,7 @@ x_2\\\
 x_p
 \end{bmatrix}
 \]</span></p>
-<p>To distinguish between variables associated with the observations <span class="math inline">\(i=1,\dots,n\)</span>, we add an index:</p>
+<p>To distinguish between vectors corresponding to different observations <span class="math inline">\(i=1,\dots,n\)</span>, we add an index:</p>
 <p><span class="math display">\[
 \mathbf{x}_i = \begin{bmatrix}
 x_{i1}\\
@@ -597,7 +600,7 @@ x_{ip}
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>Bold lower case letters are also commonly used to represent matrix columns rather than rows. This can be confusing because <span class="math inline">\(\mathbf{x}_1\)</span> can represent either the first row or the first column of <span class="math inline">\(\mathbf{X}\)</span>. One way to distinguish is to use notation similar to computer code. Specifically, using the colon <span class="math inline">\(:\)</span> to represent <em>all</em>. So <span class="math inline">\(\mathbf{X}_{1,:}\)</span> represents the first row and <span class="math inline">\(\mathbf{X}_{:,1}\)</span> is the first column. Another approach is to distinguish by the letter used to index, with <span class="math inline">\(i\)</span> used for rows and <span class="math inline">\(j\)</span> used for columns. So <span class="math inline">\(\mathbf{x}_i\)</span> is the <span class="math inline">\(i\)</span>th row and <span class="math inline">\(\mathbf{x}_j\)</span> is the <span class="math inline">\(j\)</span>th column. With this approach, it is important to clarify which dimension, row or column is being represented. Further confusion can arise because, as aforementioned, it is common to represent all vectors, including the rows of a matrix, as one-column matrices.</p>
+<p>Bold lowercase letters are also commonly used to represent matrix columns rather than rows. This can be confusing because <span class="math inline">\(\mathbf{x}_1\)</span> can represent either the first row or the first column of <span class="math inline">\(\mathbf{X}\)</span>. One way to distinguish is to use notation similar to computer code. Specifically, using the colon <span class="math inline">\(:\)</span> to represent <em>all</em>. So <span class="math inline">\(\mathbf{X}_{1,:}\)</span> represents the first row and <span class="math inline">\(\mathbf{X}_{:,1}\)</span> is the first column. Another approach is to distinguish by the letter used to index, with <span class="math inline">\(i\)</span> used for rows and <span class="math inline">\(j\)</span> used for columns. So <span class="math inline">\(\mathbf{x}_i\)</span> is the <span class="math inline">\(i\)</span>th row and <span class="math inline">\(\mathbf{x}_j\)</span> is the <span class="math inline">\(j\)</span>th column. With this approach, it is important to clarify which dimension is being represented—row or column. Further confusion can arise because, as aforementioned, it is common to represent all vectors, including the rows of a matrix, as one-column matrices.</p>
 </div>
 </div>
 </div>
@@ -627,56 +630,56 @@ x_{ip}
 <p>Each digitized image, indexed by <span class="math inline">\(i\)</span>, is represented by 784 numerical variables corresponding to pixel intensities, along with a categorical outcome, or label, specifying the digit (<span class="math inline">\(0\)</span>-<span class="math inline">\(9\)</span>) depicted in the image.</p>
 <p>Let’s load the data using the <strong>dslabs</strong> package:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
-<span><span class="va">mnist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/read_mnist.html">read_mnist</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">mnist</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/dslabs/man/read_mnist.html">read_mnist</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The pixel intensities are saved in a matrix:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "matrix" "array"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "matrix" "array"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The labels associated with each image are included in a vector:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    0    1    2    3    4    5    6    7    8    9 </span></span>
-<span><span class="co">#&gt; 5923 6742 5958 6131 5842 5421 5918 6265 5851 5949</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 5923 6742 5958 6131 5842 5421 5918 6265 5851 5949</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>To simplify the code below, we will rename these <code>x</code> and <code>y</code> respectively:</p>
+<p>To simplify the code below, we will rename these <code>x</code> and <code>y</code>, respectively:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">images</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">mnist</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">labels</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="matrix-operations-in-r" class="level2" data-number="21.3"><h2 data-number="21.3" class="anchored" data-anchor-id="matrix-operations-in-r">
 <span class="header-section-number">21.3</span> Matrix Operations in R</h2>
 <p>Before we define and work through the tasks designed to teach matrix operations, we begin by reviewing some basic matrix functionality in R.</p>
 <section id="sec-creating-a-matrix" class="level3"><h3 class="anchored" data-anchor-id="sec-creating-a-matrix">Creating a matrix</h3>
 <p>Scalars, vectors, and matrices are the basic building blocks of linear algebra. We have already encountered vectors in earlier chapters, and in R, scalars are represented as vectors of length 1. We now extend this understanding to matrices, starting with how to create them in R.</p>
-<p>We can create a matrix using the <code>matrix</code> function. The first argument is a vector containing the elements that will fill up the matrix. The second and third arguments determine the number of row and columns, respectively. So a typical way to create a matrix is to first obtain a vector of numbers containing the elements of the matrix and feeding it to the <code>matrix</code> function. For example, to create a <span class="math inline">\(100 \times 2\)</span> matrix of normally distributed random variables, we write:</p>
+<p>We can create a matrix using the <code>matrix</code> function. The first argument is a vector containing the elements that will fill up the matrix. The second and third arguments determine the number of rows and columns, respectively. So, a typical way to create a matrix is to first obtain a vector of numbers containing the elements of the matrix and feed it to the <code>matrix</code> function. For example, to create a <span class="math inline">\(100 \times 2\)</span> matrix of normally distributed random variables, we write:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">*</span><span class="fl">2</span><span class="op">)</span>, <span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Note that by default the matrix is filled in column by column:</p>
+<p>Note that by default, the matrix is filled in column by column:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
 <span><span class="co">#&gt; [1,]    1    4    7   10   13</span></span>
 <span><span class="co">#&gt; [2,]    2    5    8   11   14</span></span>
-<span><span class="co">#&gt; [3,]    3    6    9   12   15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [3,]    3    6    9   12   15</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To fill the matrix row by row, we can use the <code>byrow</code> argument:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span>, byrow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
 <span><span class="co">#&gt; [1,]    1    2    3    4    5</span></span>
 <span><span class="co">#&gt; [2,]    6    7    8    9   10</span></span>
-<span><span class="co">#&gt; [3,]   11   12   13   14   15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [3,]   11   12   13   14   15</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The function <code>as.vector</code> converts a matrix back into a vector:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/vector.html">as.vector</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/vector.html">as.vector</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1]  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
@@ -686,63 +689,63 @@ x_{ip}
 <div class="callout-body-container">
 <p>If the product of columns and rows does not match the length of the vector provided in the first argument, <code>matrix</code> recycles values. If the length of the vector is a sub-multiple or multiple of the number of rows, this happens <strong>without warning</strong>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
 <span><span class="co">#&gt; [1,]    1    1    1    1    1</span></span>
 <span><span class="co">#&gt; [2,]    2    2    2    2    2</span></span>
-<span><span class="co">#&gt; [3,]    3    3    3    3    3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [3,]    3    3    3    3    3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
 </div>
 <p>The function <code><a href="https://rdrr.io/r/base/matrix.html">as.matrix()</a></code> attempts to coerce its input into a matrix:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">4</span>, c <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, b <span class="op">=</span> <span class="fl">3</span><span class="op">:</span><span class="fl">4</span>, c <span class="op">=</span> <span class="fl">5</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      a b c</span></span>
 <span><span class="co">#&gt; [1,] 1 3 5</span></span>
-<span><span class="co">#&gt; [2,] 2 4 6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [2,] 2 4 6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="dimensions-of-a-matrix" class="level3"><h3 class="anchored" data-anchor-id="dimensions-of-a-matrix">Dimensions of a matrix</h3>
-<p>The dimension of a matrix is an important characteristic needed to assure that certain linear algebra operations can be performed. The dimension is a two-number summary defined as the number of rows <span class="math inline">\(\times\)</span> the number of columns.</p>
-<p>The <code>nrow</code> function tells us how many rows that matrix has. Here is the number of rows <code>x</code> previously defined to store the MNIST training data:</p>
+<p>The dimension of a matrix is an important characteristic needed to ensure that certain linear algebra operations can be performed. The dimension is a two-number summary defined as the number of rows <span class="math inline">\(\times\)</span> the number of columns.</p>
+<p>The <code>nrow</code> function tells us how many rows the matrix has. Here is the number of rows in <code>x</code>, previously defined to store the MNIST training data images:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 60000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">nrow</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 60000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The function <code>ncol</code> tells us how many columns:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 784</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html">ncol</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 784</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We learn that our dataset contains 60,000 observations (images) and 784 variables (pixels).</p>
 <p>The <code>dim</code> function returns the rows and columns:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 60000   784</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 60000   784</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now we can confirm that R follows the convention of defining vectors of length <span class="math inline">\(n\)</span> as <span class="math inline">\(n\times 1\)</span> matrices or <em>column vectors</em>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">vec</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">vec</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">vec</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 10  1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 10  1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="sec-matrix-subsetting" class="level3"><h3 class="anchored" data-anchor-id="sec-matrix-subsetting">Subsetting</h3>
-<p>To extract a specific entry from a matrix, for example the 300th row of the 100th column, we write:</p>
+<p>To extract a specific entry from a matrix, for example, the 300th row of the 100th column, we write:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">300</span>, <span class="fl">100</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">300</span>, <span class="fl">100</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can extract subsets of the matrices by using vectors of indexes. For example, we can extract the first 100 pixels from the first 300 observations like this:</p>
+<p>We can extract subsets of the matrices by using vectors of indices. For example, we can extract the first 100 pixels from the first 300 observations like this:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To extract an entire row or subset of rows, we leave the column dimension blank. So the following code returns all the pixels for the first 300 observations:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span>,<span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span>,<span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Similarly, we can subset any number of columns by keeping the first dimension blank. Here is the code to extract the first 100 pixels:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
@@ -750,15 +753,15 @@ x_{ip}
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>If we subset just one row or just one column, the resulting object is no longer a matrix. For example notice what happens here:</p>
+<p>If we subset just one row or just one column, the resulting object is no longer a matrix. For example, notice what happens here:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">300</span>,<span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; NULL</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">300</span>,<span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NULL</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To avoid this, we can use the <code>drop</code> argument:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">100</span>,,drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1]   1 784</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">100</span>,,drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]   1 784</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -781,12 +784,12 @@ x_{ip}
   x_{1p}&amp;x_{2p}&amp;\dots &amp; x_{np}
   \end{bmatrix}
 \]</span></p>
-<p>In R we compute the transpose using the function <code>t</code></p>
+<p>In R, we compute the transpose using the function <code>t</code></p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 60000   784</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1]   784 60000</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1]   784 60000</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>One use of the transpose is that we can write the matrix <span class="math inline">\(\mathbf{X}\)</span> as rows of the column vectors representing the variables for each individual observation in the following way:</p>
 <p><span class="math display">\[
@@ -799,60 +802,60 @@ x_{ip}
 \end{bmatrix}
 \]</span></p>
 </section><section id="sec-row-col-summaries" class="level3"><h3 class="anchored" data-anchor-id="sec-row-col-summaries">Row and column summaries</h3>
-<p>A common operation with matrices is to apply the same function to each row or to each column. For example, we may want to compute row averages and standard deviations. The <code>apply</code> function lets you do this. The first argument is the matrix, the second is the dimension, 1 for rows, 2 for columns, and the third is the function to be applied.</p>
+<p>A common operation with matrices is to apply the same function to each row or to each column. For example, we may want to compute row averages and standard deviations. The <code>apply</code> function lets you do this. The first argument is the matrix, the second is the dimension—1 for rows or 2 for columns—and the third is the function to be applied.</p>
 <p>So, for example, to compute the averages and standard deviations of each row, we write:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="va">mean</span><span class="op">)</span></span>
-<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="va">sd</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="va">sd</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To compute these for the columns, we simply change the 1 to a 2:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span></span>
-<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="va">sd</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="va">mean</span><span class="op">)</span></span>
+<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="va">sd</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Because these operations are so common, special functions are available to perform them. So, for example, the functions <code>rowMeans</code> computes the average of each row:</p>
+<p>Because these operations are so common, special functions are available to perform them. So, for example, the function <code>rowMeans</code> computes the average of each row:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>and the function <code>rowSds</code> from the <strong>matrixStats</strong> packages computes the standard deviations for each row:</p>
+<p>and the function <code>rowSds</code> from the <strong>matrixStats</strong> package computes the standard deviations for each row:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/matrixStats">matrixStats</a></span><span class="op">)</span></span>
-<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/HenrikBengtsson/matrixStats">matrixStats</a></span><span class="op">)</span></span>
+<span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The functions <code>colMeans</code> and <code>colSds</code> provide the version for columns.</p>
-<p>For other fast implementations of common operation take a look at what is availabe in the <strong>matrixStats</strong> package.</p>
+<p>For other fast implementations of common operations, take a look at what is available in the <strong>matrixStats</strong> package.</p>
 </section><section id="sec-conditional-filtering" class="level3"><h3 class="anchored" data-anchor-id="sec-conditional-filtering">Conditional filtering</h3>
-<p>One of the advantages of matrices operations over <strong>tidyverse</strong> operations is that we can easily select columns based on summaries of the columns.</p>
-<p>Note that logical filters can be used to subset matrices in a similar way in which they can be used to subset vectors. Here is a simple example subsetting columns with logicals:</p>
+<p>One of the advantages of matrix operations over <strong>tidyverse</strong> operations is that we can easily select columns based on summaries of the columns.</p>
+<p>Note that logical filters can be used to subset matrices in a similar way to how they can be used to subset vectors. Here is a simple example subsetting columns with logicals:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="cn">FALSE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3]</span></span>
 <span><span class="co">#&gt; [1,]    4    7   13</span></span>
 <span><span class="co">#&gt; [2,]    5    8   14</span></span>
-<span><span class="co">#&gt; [3,]    6    9   15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [3,]    6    9   15</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This implies that we can select rows with conditional expression. In the following example we remove all observations containing at least one <code>NA</code>:</p>
+<p>This implies that we can select rows with a conditional expression. In the following example, we remove all observations containing at least one <code>NA</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">all</span><span class="op">)</span>,<span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">all</span><span class="op">)</span>,<span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This being a common operation, we have a <strong>matrixStats</strong> function to do it faster:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/anyMissing.html">rowAnyNAs</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,<span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/anyMissing.html">rowAnyNAs</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,<span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="sec-indexing-matrices" class="level3"><h3 class="anchored" data-anchor-id="sec-indexing-matrices">Indexing with matrices</h3>
 <p>An operation that facilitates efficient coding is that we can change entries of a matrix based on conditionals applied to that same matrix. Here is a simple example:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">15</span>, <span class="fl">3</span>, <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="va">mat</span><span class="op">[</span><span class="va">mat</span> <span class="op">&gt;</span> <span class="fl">6</span> <span class="op">&amp;</span> <span class="va">mat</span> <span class="op">&lt;</span> <span class="fl">12</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
 <span><span class="va">mat</span></span>
 <span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5]</span></span>
 <span><span class="co">#&gt; [1,]    1    4    0    0   13</span></span>
 <span><span class="co">#&gt; [2,]    2    5    0    0   14</span></span>
-<span><span class="co">#&gt; [3,]    3    6    0   12   15</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [3,]    3    6    0   12   15</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>A useful application of this approach is that we can change all the <code>NA</code> entries of a matrix to something else:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html">is.na</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section></section><section id="sec-vectorization-for-matrices" class="level2" data-number="21.4"><h2 data-number="21.4" class="anchored" data-anchor-id="sec-vectorization-for-matrices">
 <span class="header-section-number">21.4</span> Vectorization for matrices</h2>
@@ -860,7 +863,7 @@ x_{ip}
 <section id="matrixvector-operations" class="level3"><h3 class="anchored" data-anchor-id="matrixvector-operations">Matrix–vector operations</h3>
 <p>A common example of matrix vectorization is centering rows: subtracting the mean of each row from its corresponding entries. Although this can be done with the <code><a href="https://rdrr.io/r/base/scale.html">scale()</a></code> function</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">x</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">x</span>, scale <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>R’s vectorization rules make it possible to achieve this more directly and efficiently. We use row centering as an example, but this approach applies broadly to many operations discussed throughout this chapter.</p>
 <p>In R, if we subtract a vector <code>a</code> from a matrix <code>x</code>: <code>x-a</code>, the first element of <code>a</code> is subtracted from the first row, the second element from the second row, and so on. Mathematically, this operation can be written as:</p>
@@ -886,73 +889,73 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 \]</span></p>
 <p>This means we can center each row of <code>x</code> with this single line of code:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The same vectorization applies to other arithmetic operations, such as division. For example, we can both center and scale the rows with:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This is equivalent to <code>scale(x)</code>, but done explicitly to show the underlying vectorized operations.</p>
 </section><section id="the-sweep-function" class="level3"><h3 class="anchored" data-anchor-id="the-sweep-function">The <code>sweep</code> function</h3>
 <p>If we instead want to scale the columns, the following code will not work as expected because subtraction is applied row-wise:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>One workaround is to transpose the matrix, apply the operation, and transpose back:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This works, but it’s cumbersome and inefficient for large matrices due to repeated transpositions.</p>
 <p>The <code>sweep</code> function provides a clearer and more general solution for performing vectorized operations on matrices. It is similar to <code>apply</code>, but designed specifically for array-like data and elementwise arithmetic.</p>
 <p>When used with a matrix <code>x</code>, <code>sweep</code> takes three main arguments:</p>
 <ul>
 <li>
-<code>MARGIN</code> - which dimension to operate over (<code>1</code> for rows, <code>2</code> for columns)</li>
+<code>MARGIN</code>: which dimension to operate over (<code>1</code> for rows, <code>2</code> for columns)</li>
 <li>
-<code>STATS</code> - the vector of values to <em>sweep out</em> (e.g., means or standard deviations)</li>
+<code>STATS</code>: the vector of values to <em>sweep out</em> (e.g., means or standard deviations)</li>
 <li>
-<code>FUN</code> - the operation to apply (default is subtraction <code>"-"</code>)</li>
+<code>FUN</code>: the operation to apply (default is subtraction <code>"-"</code>)</li>
 </ul>
-<p>For example, to subtract each column’s mean we write:</p>
+<p>For example, to subtract each column’s mean, we write:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, MARGIN <span class="op">=</span> <span class="fl">2</span>, STATS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, MARGIN <span class="op">=</span> <span class="fl">2</span>, STATS <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="st">"-"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This centers each column so that its average is zero. Because R allows omitting argument names when defaults are clear, a concise and common shorthand is:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Similarly, to center rows we write:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>(Though note that <code>x - rowMeans(x)</code> is typically faster for this specific operation.)</p>
 <p>To scale rather than center, simply change the operation:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"/"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="st">"/"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The <code>sweep</code> function also generalizes beyond matrices, it can handle arrays with more than two dimensions and statistics vectors (<code>STATS</code>) of matching dimension.</p>
+<p>The <code>sweep</code> function also generalizes beyond matrices: it can handle arrays with more than two dimensions and statistics vectors (<code>STATS</code>) of matching dimensions.</p>
 </section><section id="matrix-matrix-operations" class="level3"><h3 class="anchored" data-anchor-id="matrix-matrix-operations">Matrix-matrix operations</h3>
-<p>In R, if you add, subtract, multiple or divide two matrices, the operation is done element-wise. For example, if two matrices are stored in <code>x</code> and <code>y</code>, then <code>x*y</code> does not result in matrix multiplication as defined in <a href="linear-algebra.html#sec-matrix-mult" class="quarto-xref"><span>Section 22.1</span></a>. Instead, the entry in row <span class="math inline">\(i\)</span> and column <span class="math inline">\(j\)</span> of this product is the product of the entry in row <span class="math inline">\(i\)</span> and column <span class="math inline">\(j\)</span> of <code>x</code> and <code>y</code>, respectively.</p>
+<p>In R, if you add, subtract, multiply, or divide two matrices, the operation is done element-wise. For example, if two matrices are stored in <code>x</code> and <code>y</code>, then <code>x*y</code> does not result in matrix multiplication as defined in <a href="linear-algebra.html#sec-matrix-mult" class="quarto-xref"><span>Section 22.1</span></a>. Instead, the entry in row <span class="math inline">\(i\)</span> and column <span class="math inline">\(j\)</span> of this product is the product of the entry in row <span class="math inline">\(i\)</span> and column <span class="math inline">\(j\)</span> of <code>x</code> and <code>y</code>, respectively.</p>
 </section></section><section id="sec-motivating-tasks" class="level2" data-number="21.5"><h2 data-number="21.5" class="anchored" data-anchor-id="sec-motivating-tasks">
 <span class="header-section-number">21.5</span> Motivating tasks</h2>
 <p>To motivate the use of matrices in R, we will pose six tasks that illustrate how matrix operations can help with data exploration of the handwritten digits dataset. Each task highlights a basic matrix operation that is commonly used in R. By seeing how these operations can be implemented with fast and simple code, you will gain hands-on experience with the kinds of computations that arise frequently in high-dimensional data analysis. The primary goal of these tasks is to help you learn how matrix operations work in practice.</p>
 <section id="visualize-the-original-image" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="visualize-the-original-image">Visualize the original image</h3>
-<p>The pixel intensities are provided as rows in a matrix. Using what we learned in <a href="#sec-creating-a-matrix" class="quarto-xref"><span>Section 21.3.1</span></a>, we can convert each row into a <span class="math inline">\(28 \times 28\)</span> matrix that we can visualize as an image. As an example, we will use the third observation. From the label, we know this is a:</p>
+<p>The pixel intensities are provided as rows in a matrix. Using what we learned in <a href="#sec-creating-a-matrix" class="quarto-xref"><span>Section 21.3.1</span></a>, we can convert each row into a <span class="math inline">\(28 \times 28\)</span> matrix that we can visualize as an image. As an example, we will use the third observation. From the label, we know this is a 4:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span></span>
-<span><span class="co">#&gt; [1] 4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The third row of the matrix <code>x[3,]</code> contains the 784 pixel intensities. If we assume these were entered in order, we can convert them back to a <span class="math inline">\(28 \times 28\)</span> matrix using:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">3</span>,<span class="op">]</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">grid</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">x</span><span class="op">[</span><span class="fl">3</span>,<span class="op">]</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To visualize the data, we can use <code>image</code> in the following way:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="va">grid</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="va">grid</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>However, because the y-axis in <code>image</code> goes bottom to top and <code>x</code> stores pixels top to bottom the code above shows shows a flipped image. To flip it back we can use:</p>
+<p>However, because the y-axis in <code>image</code> goes from bottom to top and <code>x</code> stores pixels from top to bottom, the code above shows a flipped image. To flip it back, we can use:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="va">grid</span><span class="op">[</span>, <span class="fl">28</span><span class="op">:</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="va">grid</span><span class="op">[</span>, <span class="fl">28</span><span class="op">:</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="matrices-in-R_files/figure-html/matrix-image-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
@@ -962,10 +965,10 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 </div>
 </section><section id="do-some-digits-require-more-ink-to-write-than-others" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="do-some-digits-require-more-ink-to-write-than-others">Do some digits require more ink to write than others?</h3>
 <p>Let’s study the distribution of the total pixel darkness and how it varies by digits.</p>
-<p>We can use what we learned in <a href="#sec-row-col-summaries" class="quarto-xref"><span>Section 21.3.5</span></a> to computed this average for each pixel and the display the values for each digit using a boxplot:</p>
+<p>We can use what we learned in <a href="#sec-row-col-summaries" class="quarto-xref"><span>Section 21.3.5</span></a> to compute this average for each pixel and display the values for each digit using a boxplot:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/boxplot.html">boxplot</a></span><span class="op">(</span><span class="va">avg</span> <span class="op">~</span> <span class="va">y</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/boxplot.html">boxplot</a></span><span class="op">(</span><span class="va">avg</span> <span class="op">~</span> <span class="va">y</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="matrices-in-R_files/figure-html/boxplot-of-digit-averages-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -973,16 +976,16 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 </div>
 </div>
 </div>
-<p>From this plot we see that, not surprisingly, 1s use less ink than other digits.</p>
+<p>From this plot, we see that, not surprisingly, 1s use less ink than other digits.</p>
 </section><section id="are-some-pixels-uninformative" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="are-some-pixels-uninformative">Are some pixels uninformative?</h3>
 <p>We now examine the variation of each pixel across digits to identify and remove those that provide little information for classification. Pixels that show little variation across images do not help distinguish between digits and can safely be excluded. In many cases, removing uninformative features not only simplifies the analysis but also reduces the dataset’s size substantially, improving computational speed.</p>
 <p>Using what we learned in Sections <a href="#sec-row-col-summaries" class="quarto-xref"><span>21.3.5</span></a> and <a href="#sec-conditional-filtering" class="quarto-xref"><span>21.3.6</span></a>, we can efficiently compute and filter out such columns. To quantify each pixel’s variability, we calculate its standard deviation across all images using the <code>colSds</code> function from the <strong>matrixStats</strong> package:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">sds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>A quick look at the distribution of these values shows that some pixels have very low entry to entry variability:</p>
+<p>A quick look at the distribution of these values shows that some pixels have very low entry-to-entry variability:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">sds</span>, breaks <span class="op">=</span> <span class="fl">30</span>, main <span class="op">=</span> <span class="st">"SDs"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">sds</span>, breaks <span class="op">=</span> <span class="fl">30</span>, main <span class="op">=</span> <span class="st">"SDs"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="matrices-in-R_files/figure-html/sds-histogram-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -990,9 +993,9 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 </div>
 </div>
 </div>
-<p>This makes sense since we don’t write in some parts of the box. Here is the variance plotted by location after using what we learned in <a href="#sec-creating-a-matrix" class="quarto-xref"><span>Section 21.3.1</span></a> to creat a <span class="math inline">\(28 \times 28\)</span> matrix:</p>
+<p>This makes sense since we don’t write in some parts of the box. Here is the variance plotted by location after using what we learned in <a href="#sec-creating-a-matrix" class="quarto-xref"><span>Section 21.3.1</span></a> to create a <span class="math inline">\(28 \times 28\)</span> matrix:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">sds</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">[</span>, <span class="fl">28</span><span class="op">:</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/image.html">image</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">28</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="va">sds</span>, <span class="fl">28</span>, <span class="fl">28</span><span class="op">)</span><span class="op">[</span>, <span class="fl">28</span><span class="op">:</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="matrices-in-R_files/figure-html/pixel-variance-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
@@ -1004,15 +1007,15 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 <p>We could remove features that have no variation since these can’t help us predict.</p>
 <p>So if we wanted to remove uninformative predictors from our matrix, we could write this one line of code:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">new_x</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">60</span><span class="op">]</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">new_x</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>,<span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">60</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">new_x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 60000   322</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 60000   322</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Only the columns for which the standard deviation is above 60 are kept, which removes over half the predictors.</p>
 </section><section id="can-we-remove-smudges" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="can-we-remove-smudges">Can we remove smudges?</h3>
 <p>We will first look at the distribution of all pixel values.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html">as.vector</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, breaks <span class="op">=</span> <span class="fl">30</span>, main <span class="op">=</span> <span class="st">"Pixel intensities"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/vector.html">as.vector</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, breaks <span class="op">=</span> <span class="fl">30</span>, main <span class="op">=</span> <span class="st">"Pixel intensities"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="matrices-in-R_files/figure-html/histogram-all-pixels-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -1020,36 +1023,36 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
 </div>
 </div>
 </div>
-<p>This shows a clear dichotomy which is explained as parts of the image with ink and parts without. If we think that values below, say, 50 are smudges, we can quickly make them zero using what we learned in <a href="#sec-indexing-matrices" class="quarto-xref"><span>Section 21.3.7</span></a>:</p>
+<p>This shows a clear dichotomy, which is explained as parts of the image with ink and parts without. If we think that values below, say, 50 are smudges, we can quickly make them zero using what we learned in <a href="#sec-indexing-matrices" class="quarto-xref"><span>Section 21.3.7</span></a>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">new_x</span> <span class="op">&lt;-</span> <span class="va">x</span></span>
-<span><span class="va">new_x</span><span class="op">[</span><span class="va">new_x</span> <span class="op">&lt;</span> <span class="fl">50</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">new_x</span> <span class="op">&lt;-</span> <span class="va">x</span></span>
+<span><span class="va">new_x</span><span class="op">[</span><span class="va">new_x</span> <span class="op">&lt;</span> <span class="fl">50</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="binarize-the-data" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="binarize-the-data">Binarize the data</h3>
 <p>The histogram above seems to suggest that this data is mostly binary. A pixel either has ink or does not. Applying what we learned in <a href="#sec-indexing-matrices" class="quarto-xref"><span>Section 21.3.7</span></a>, we can binarize the data using just matrix operations:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bin_x</span> <span class="op">&lt;-</span> <span class="va">x</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bin_x</span> <span class="op">&lt;-</span> <span class="va">x</span></span>
 <span><span class="va">bin_x</span><span class="op">[</span><span class="va">bin_x</span> <span class="op">&lt;</span> <span class="fl">255</span><span class="op">/</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">0</span> </span>
-<span><span class="va">bin_x</span><span class="op">[</span><span class="va">bin_x</span> <span class="op">&gt;</span> <span class="fl">255</span><span class="op">/</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">bin_x</span><span class="op">[</span><span class="va">bin_x</span> <span class="op">&gt;</span> <span class="fl">255</span><span class="op">/</span><span class="fl">2</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can also convert to a matrix of logicals and then coerce to numbers using what we learned in <a href="#sec-vectorization-for-matrices" class="quarto-xref"><span>Section 21.4</span></a>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bin_X</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">255</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="fl">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">bin_x</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">255</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="fl">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="standardize-the-digits" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="standardize-the-digits">Standardize the digits</h3>
 <p>Finally, we will scale each column to have the same average and standard deviation.</p>
 <p>Using what we learned in <a href="#sec-vectorization-for-matrices" class="quarto-xref"><span>Section 21.4</span></a> implies that we can scale each row of a matrix as follows:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">rowMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">rowSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>And for the columns we can combine two calls to <code>sweep</code>:</p>
+<p>And for the columns, we can combine two calls to <code>sweep</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="st">"/"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sweep.html">sweep</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/r/base/colSums.html">colMeans</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fu"><a href="https://rdrr.io/pkg/matrixStats/man/rowSds.html">colSds</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, FUN <span class="op">=</span> <span class="st">"/"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Note we can use this to standardize rows as well by replacing <code>2</code> with <code>1</code> and use <code>rowMeans</code> and <code>rowSds</code>.</p>
+<p>Note that we can use this to standardize rows as well by replacing <code>2</code> with <code>1</code>, and use <code>rowMeans</code> and <code>rowSds</code>.</p>
 <p>Finally, note that equivalent functionality can often be achieved with:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html">t</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This version can be faster for large matrices, though it’s less explicit about what’s happening.</p>
 </section></section><section id="exercises" class="level2" data-number="21.6"><h2 data-number="21.6" class="anchored" data-anchor-id="exercises">
@@ -1117,13 +1120,14 @@ X_{n1}-a_n&amp;\dots &amp; X_{np}-a_n
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

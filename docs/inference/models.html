@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>10&nbsp; Data-Driven Models – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -522,12 +525,10 @@ window.Quarto = {
 
 
 </header><blockquote class="blockquote">
-<blockquote class="blockquote">
 <p>“All models are wrong, but some are useful.” –George E. P. Box</p>
 </blockquote>
-</blockquote>
 <p>So far, our analysis of poll-related results has been based on a simple sampling model. This model assumes that each voter has an equal chance of being selected for the poll, similar to picking beads from an urn with two colors. However, in this section, we explore real-world data and discover that this model is oversimplified. Instead, we propose a more effective approach in which we directly model the outcomes of pollsters rather than the individual polls.</p>
-<p>A more recent development since the original invention of opinion polls, is the use of computers to aggregate publicly available data from different sources and develop data-driven forecasting models. Here, we explore how poll aggregators collected and combined data reported by different experts to produce improved predictions. We will introduce ideas behind the statistical models used to improve election forecasts beyond the power of individual polls. Specifically, we introduce a useful model for constructing a confidence interval for the popular vote difference.</p>
+<p>A more recent development since the original invention of opinion polls is the use of computers to aggregate publicly available data from different sources and develop data-driven forecasting models. Here, we explore how poll aggregators collect and combine data reported by different experts to produce improved predictions. We will introduce ideas behind the statistical models used to improve election forecasts beyond the power of individual polls. Specifically, we introduce a useful model for constructing a confidence interval for the popular vote difference.</p>
 <p>It is important to emphasize that this chapter offers only a brief introduction to the vast field of statistical modeling. The model presented here, for example, does not allow us to assign probabilities to outcomes such as a particular candidate winning the popular vote, as is done by poll aggregators like FiveThirtyEight. In the next chapter, we introduce Bayesian models, which provide the mathematical framework for such probabilistic statements. Later, in the Linear Models part of the book, we explore widely used approaches for analyzing data in practice. Still, this introduction only scratches the surface. Readers interested in statistical modeling are encouraged to consult the Recommended Reading section for additional references that provide a deeper and broader perspective.</p>
 <section id="case-study-poll-aggregators" class="level2" data-number="10.1"><h2 data-number="10.1" class="anchored" data-anchor-id="case-study-poll-aggregators">
 <span class="header-section-number">10.1</span> Case study: poll aggregators</h2>
@@ -558,12 +559,12 @@ window.Quarto = {
 </section><section id="real-data-from-the-2016-presidential-election" class="level3"><h3 class="anchored" data-anchor-id="real-data-from-the-2016-presidential-election">Real data from the 2016 presidential election</h3>
 <p>The following subset of the <code>polls_us_election_2016</code> data in <strong>dslabs</strong> includes results for national polls as well as state polls taken during the year prior to the election and organized by FiveThirtyEight. In this first example, we will filter the data to include national polls conducted on likely voters (lv) within the last week leading up to the election and consider their estimate of the spread:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">polls</span> <span class="op">&lt;-</span> <span class="va">polls_us_election_2016</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"U.S."</span> <span class="op">&amp;</span> <span class="va">enddate</span> <span class="op">&gt;=</span> <span class="st">"2016-11-02"</span> <span class="op">&amp;</span> <span class="va">population</span> <span class="op">==</span> <span class="st">"lv"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">mutate</span><span class="op">(</span>spread <span class="op">=</span> <span class="va">rawpoll_clinton</span><span class="op">/</span><span class="fl">100</span> <span class="op">-</span> <span class="va">rawpoll_trump</span><span class="op">/</span><span class="fl">100</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu">mutate</span><span class="op">(</span>spread <span class="op">=</span> <span class="va">rawpoll_clinton</span><span class="op">/</span><span class="fl">100</span> <span class="op">-</span> <span class="va">rawpoll_trump</span><span class="op">/</span><span class="fl">100</span><span class="op">)</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Note we will focus on predicting the spread, not the proportion <span class="math inline">\(p\)</span>. Since we are assuming there are only two parties, we know that the spread is <span class="math inline">\(\theta = p - (1-p) = 2p - 1\)</span>. As a result, everything we have done can easily be adapted to an estimate of <span class="math inline">\(\theta\)</span>. Once we have our estimate <span class="math inline">\(\bar{X}\)</span> and <span class="math inline">\(\widehat{\mathrm{SE}}[\bar{X}]\)</span>, we estimate the spread with <span class="math inline">\(2\bar{X} - 1\)</span> and, since we are multiplying by 2, the standard error is <span class="math inline">\(2\widehat{\mathrm{SE}}[\bar{X}]\)</span>. Remember that subtracting 1 does not add any variability, so it does not affect the standard error. Also, the CLT applies here because our estimate is a linear combination of a sample average, which itself follows approximately normal distributions.</p>
+<p>Note that we will focus on predicting the spread, not the proportion <span class="math inline">\(p\)</span>. Since we are assuming there are only two parties, we know that the spread is <span class="math inline">\(\theta = p - (1-p) = 2p - 1\)</span>. As a result, everything we have done can easily be adapted to an estimate of <span class="math inline">\(\theta\)</span>. Once we have our estimate <span class="math inline">\(\bar{X}\)</span> and <span class="math inline">\(\widehat{\mathrm{SE}}[\bar{X}]\)</span>, we estimate the spread with <span class="math inline">\(2\bar{X} - 1\)</span> and, since we are multiplying by 2, the standard error is <span class="math inline">\(2\widehat{\mathrm{SE}}[\bar{X}]\)</span>. Remember that subtracting 1 does not add any variability, so it does not affect the standard error. Also, the CLT applies here because our estimate is a linear combination of a sample average, which itself follows approximately normal distributions.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -574,20 +575,20 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>We have 50 estimates of the spread. The theory we learned from sampling models tells us that these estimates are a random variable with a probability distribution that is approximately normal. The expected value is the election night spread <span class="math inline">\(\theta\)</span> and the standard error is <span class="math inline">\(2\sqrt{p (1 - p) / N}\)</span>.</p>
+<p>We have 50 estimates of the spread. The theory we learned from sampling models tells us that these estimates are realizations of a random variable with a probability distribution that is approximately normal. The expected value is the election night spread <span class="math inline">\(\theta\)</span>, and the standard error is <span class="math inline">\(2\sqrt{p (1 - p) / N}\)</span>.</p>
 <p>Assuming the urn model we described earlier is a good one, we can use this information to construct a confidence interval based on the aggregated data. The estimated spread is:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">polls</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">spread</span><span class="op">*</span><span class="va">samplesize</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">samplesize</span><span class="op">)</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">theta_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">polls</span>, <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">spread</span><span class="op">*</span><span class="va">samplesize</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">samplesize</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>and the standard error is:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p_hat</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">theta_hat</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span> </span>
-<span><span class="va">moe</span> <span class="op">&lt;-</span> <span class="fl">2</span><span class="op">*</span><span class="fl">1.96</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">p_hat</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p_hat</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">polls</span><span class="op">$</span><span class="va">samplesize</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p_hat</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">theta_hat</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span> </span>
+<span><span class="va">moe</span> <span class="op">&lt;-</span> <span class="fl">2</span><span class="op">*</span><span class="fl">1.96</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">p_hat</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p_hat</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">polls</span><span class="op">$</span><span class="va">samplesize</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>So we report a spread of 3.59% with a margin of error of 0.4%. On election night, we discover that the actual percentage was 2.1%, which is outside a 95% confidence interval. What happened?</p>
 <p>A histogram of the reported spreads reveals a problem:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">geom_histogram</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, binwidth <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">geom_histogram</span><span class="op">(</span>color <span class="op">=</span> <span class="st">"black"</span>, binwidth <span class="op">=</span> <span class="fl">.01</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="models_files/figure-html/polls-2016-spread-histogram-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -600,13 +601,13 @@ window.Quarto = {
 <span class="header-section-number">10.2</span> Beyond the simple sampling model</h2>
 <p>Notice that data come from various pollsters, and some are taking several polls a week:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">count</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">count</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html">head</a></span><span class="op">(</span><span class="fl">5</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                   pollster n</span></span>
 <span><span class="co">#&gt; 1                 IBD/TIPP 6</span></span>
 <span><span class="co">#&gt; 2 The Times-Picayune/Lucid 6</span></span>
 <span><span class="co">#&gt; 3    USC Dornsife/LA Times 6</span></span>
 <span><span class="co">#&gt; 4 ABC News/Washington Post 5</span></span>
-<span><span class="co">#&gt; 5     CVOTER International 5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 5     CVOTER International 5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Let’s visualize the data for the pollsters that are regularly polling:</p>
 <div class="cell" data-layout-align="center">
@@ -619,7 +620,7 @@ window.Quarto = {
 </div>
 <p>This plot reveals an unexpected result. First, consider that the standard error predicted by theory for each poll is between 0.018 and 0.033:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="fu">n</span><span class="op">(</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">summarize</span><span class="op">(</span>se <span class="op">=</span> <span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">p_hat</span><span class="op">*</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">p_hat</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/stats/median.html">median</a></span><span class="op">(</span><span class="va">samplesize</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 5 × 2</span></span>
 <span><span class="co">#&gt;   pollster                     se</span></span>
@@ -628,17 +629,17 @@ window.Quarto = {
 <span><span class="co">#&gt; 2 CVOTER International     0.0260</span></span>
 <span><span class="co">#&gt; 3 IBD/TIPP                 0.0333</span></span>
 <span><span class="co">#&gt; 4 The Times-Picayune/Lucid 0.0197</span></span>
-<span><span class="co">#&gt; 5 USC Dornsife/LA Times    0.0183</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 5 USC Dornsife/LA Times    0.0183</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This agrees with the within-poll variation we see. However, there appear to be differences <em>across the polls</em>. Observe, for example, how the USC Dornsife/LA Times pollster is predicting a 4% lead for Trump, while Ipsos is predicting a lead larger than 5% for Clinton. The theory we learned says nothing about different pollsters producing polls with different expected values, instead it assumes all the polls have the same expected value. FiveThirtyEight refers to these differences as <em>house effects</em>. We also call them <em>pollster bias</em>. Nothing in our simple urn model provides an explanation for these pollster-to-pollster differences.</p>
+<p>This agrees with the within-poll variation we see. However, there appear to be differences <em>across the polls</em>. Observe, for example, how the USC Dornsife/LA Times pollster is predicting a 4% lead for Trump, while Ipsos is predicting a lead larger than 5% for Clinton. The theory we learned says nothing about different pollsters producing polls with different expected values; instead, it assumes all the polls have the same expected value. FiveThirtyEight refers to these differences as <em>house effects</em>. We also call it <em>pollster bias</em>. Nothing in our simple urn model provides an explanation for these pollster-to-pollster differences.</p>
 <p>This model misspecification led to an overconfident interval that ended up not including the election night result. So, rather than modeling the process generating these values with an urn model, we instead model the pollster results directly. To do this, we collect data. Specifically, for each pollster, we look at the last reported result before the election:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">one_poll_per_pollster</span> <span class="op">&lt;-</span> <span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">enddate</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">enddate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">one_poll_per_pollster</span> <span class="op">&lt;-</span> <span class="va">polls</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">pollster</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">enddate</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">enddate</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">ungroup</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Here is a histogram of the calculated spread for these 20 pollsters’ final polls:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span>, breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span>, breaks <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="models_files/figure-html/pollster-bias-histogram-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -648,18 +649,18 @@ window.Quarto = {
 </div>
 <p>Although we are no longer using a model with red (Republicans) and blue (Democrats) beads in an urn, our new model can also be thought of as an urn model, but containing poll results from all possible pollsters. Think of our <span class="math inline">\(N=\)</span> 20 data points <span class="math inline">\(Y_1,\dots Y_N\)</span> as a random sample from this urn. To develop a useful model, we <em>assume</em> that the expected value of our urn is the actual spread <span class="math inline">\(\theta = 2p - 1\)</span>, which implies that the sample average has expected value <span class="math inline">\(\theta\)</span>.</p>
 <p>Now, instead of 0s and 1s, our urn contains continuous numbers representing poll results. The standard deviation of this urn is therefore no longer <span class="math inline">\(2\sqrt{p(1-p)}\)</span>. In this setting, the variability we observe arises not only from random sampling of voters but also from differences across pollsters. Our new urn captures both sources of variation. The overall standard deviation of this distribution is unknown, and we denote it by <span class="math inline">\(\sigma\)</span>.</p>
-<p>So our new statistical model is that <span class="math inline">\(Y_1, \dots, Y_N\)</span> are a random sample with expected <span class="math inline">\(\theta\)</span> and standard deviation <span class="math inline">\(\sigma\)</span>. The distribution, for now, is unspecified. But we consider <span class="math inline">\(N\)</span> to be large enough to assume that the sample average <span class="math inline">\(\bar{Y} = \sum_{i=1}^N Y_i\)</span> follows a normal distribution with expected value <span class="math inline">\(\theta\)</span> and standard error <span class="math inline">\(\sigma / \sqrt{N}\)</span>. We write:</p>
+<p>So our new statistical model is that <span class="math inline">\(Y_1, \dots, Y_N\)</span> are a random sample with expected <span class="math inline">\(\theta\)</span> and standard deviation <span class="math inline">\(\sigma\)</span>. The distribution, for now, is unspecified. But we consider <span class="math inline">\(N\)</span> to be large enough to assume that the sample average <span class="math inline">\(\bar{Y} = \sum_{i=1}^N Y_i\)</span> follows a normal distribution with expected value <span class="math inline">\(\theta\)</span> and standard error <span class="math inline">\(\sigma / \sqrt{N}\)</span> under the CLT. We write:</p>
 <p><span class="math display">\[
 \bar{Y} \sim \mbox{N}(\theta, \sigma / \sqrt{N})
 \]</span></p>
-<p>Here the <span class="math inline">\(\sim\)</span> symbol tells us that the random variable on the left of the symbol follows the distribution on the right. We use the notation <span class="math inline">\(N(a,b)\)</span> to represent the normal distribution with mean <span class="math inline">\(a\)</span> and standard deviation <span class="math inline">\(b\)</span>.</p>
+<p>Here, the <span class="math inline">\(\sim\)</span> symbol tells us that the random variable on the left of the symbol follows the distribution on the right. We use the notation <span class="math inline">\(N(a,b)\)</span> to represent the normal distribution with mean <span class="math inline">\(a\)</span> and standard deviation <span class="math inline">\(b\)</span>.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>This model for the sample average will be used again the next chapter.</p>
+<p>This model for the sample average will be used again in the next chapter.</p>
 </div>
 </div>
 </div>
@@ -673,18 +674,18 @@ s = \sqrt{ \frac{1}{N-1} \sum_{i=1}^N (Y_i - \bar{Y})^2 }
 <p>Keep in mind that, unlike for the population standard deviation definition, we now divide by <span class="math inline">\(N-1\)</span>. This makes <span class="math inline">\(s\)</span> a better estimate of <span class="math inline">\(\sigma\)</span>. There is a mathematical explanation for this, which is explained in most statistics textbooks, but we do not cover it here.</p>
 <p>The <code>sd</code> function in R computes the sample standard deviation:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.0222</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0222</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="computing-a-confidence-interval" class="level3"><h3 class="anchored" data-anchor-id="computing-a-confidence-interval">Computing a confidence interval</h3>
 <p>We are now ready to form a new confidence interval based on our new data-driven model:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="va">one_poll_per_pollster</span> <span class="op">|&gt;</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="va">one_poll_per_pollster</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">summarize</span><span class="op">(</span>avg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span>, se <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">mutate</span><span class="op">(</span>start <span class="op">=</span> <span class="va">avg</span> <span class="op">-</span> <span class="fl">1.96</span><span class="op">*</span><span class="va">se</span>, end <span class="op">=</span> <span class="va">avg</span> <span class="op">+</span> <span class="fl">1.96</span><span class="op">*</span><span class="va">se</span><span class="op">)</span> </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">results</span><span class="op">*</span><span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    avg  se start end</span></span>
-<span><span class="co">#&gt; 1 3.03 0.5  2.06   4</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1 3.03 0.5  2.06   4</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Our confidence interval is wider now since it incorporates the pollster variability. It does include the election night result of 2.1%. Also, note that it was small enough not to include 0, which means we were confident Clinton would win the popular vote.</p>
 </section><section id="sec-t-dist" class="level3"><h3 class="anchored" data-anchor-id="sec-t-dist">The t-distribution</h3>
@@ -695,23 +696,11 @@ s = \sqrt{ \frac{1}{N-1} \sum_{i=1}^N (Y_i - \bar{Y})^2 }
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>Note that 30 is a very general rule of thumb based on the case when the data come from a normal distribution. There are cases when a large sample size is needed as well as cases when smaller sample sizes are good enough.</p>
+<p>Note that 30 is a very general rule of thumb based on the case when the data come from a normal distribution. There are cases when a larger sample size is needed, as well as cases when smaller sample sizes are good enough.</p>
 </div>
 </div>
 </div>
-<p>However, if the data in the urn is known to follow a normal distribution, then we actually have mathematical theory that tells us how much bigger we need to make the intervals to account for the estimation of <span class="math inline">\(\sigma\)</span>. Applying this theory, we can construct confidence intervals for any <span class="math inline">\(N\)</span>. But again, this <strong>works only if the data in the urn is known to follow a normal distribution</strong>. So for the 0, 1 data of our previous urn model, this theory definitely does not apply.</p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p>The <em>t</em>-distribution approximation used for confidence intervals and hypothesis tests is exact only when the data are normally distributed. However, in practice, it works quite well more broadly. When the distribution of the data is <em>unimodal</em> and <strong>approximately symmetric</strong>, the <em>t</em>-based methods continue to give accurate results even if the data are not perfectly normal.</p>
-<p>This guidance is intentionally imprecise. With experience, you develop a sense for when the approximation is reliable. When the shape of the data is unclear, Nonte Carlo simulations provide a practical check: you can simulate repeated samples under a proposed model and examine whether the resulting confidence interval or test behaves as expected.</p>
-<p>In short: normality is not required, but strong skew or heavy tails can break the approximation, so always look at the data.</p>
-</div>
-</div>
-</div>
+<p>However, if the data in the urn is known to follow a normal distribution, then we actually have mathematical theory that tells us how much bigger we need to make the intervals to account for the estimation of <span class="math inline">\(\sigma\)</span>. Applying this theory, we can construct confidence intervals for any <span class="math inline">\(N\)</span>. But again, this <strong>works only if the data in the urn is known to follow a normal distribution</strong>. So, for the 0, 1 data of our previous urn model, this theory definitely does not apply.</p>
 <p>The statistic on which confidence intervals for <span class="math inline">\(\theta\)</span> are based is:</p>
 <p><span class="math display">\[
 Z = \frac{\bar{Y} - \theta}{\sigma/\sqrt{N}}
@@ -720,7 +709,7 @@ Z = \frac{\bar{Y} - \theta}{\sigma/\sqrt{N}}
 <p><span class="math display">\[
 t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
 \]</span></p>
-<p>This is referred to as a <em>t-statistic</em>. By substituting <span class="math inline">\(\sigma\)</span> with <span class="math inline">\(s\)</span>, we introduce some variability. The theory tells us that <span class="math inline">\(t\)</span> follows a <em>student t-distribution</em> with <span class="math inline">\(N-1\)</span> <em>degrees of freedom</em>. The degrees of freedom is a parameter that controls the variability via fatter tails. Here are three examples of t-distributions with three different degrees of freedom:</p>
+<p>This is referred to as a <em>t-statistic</em>. By substituting <span class="math inline">\(\sigma\)</span> with <span class="math inline">\(s\)</span>, we introduce some variability. The theory tells us that <span class="math inline">\(t\)</span> follows a <em>Student’s t-distribution</em> with <span class="math inline">\(N-1\)</span> <em>degrees of freedom</em>. The degrees of freedom is a parameter that controls the variability via fatter tails. Here are three examples of t-distributions with three different degrees of freedom:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -731,7 +720,7 @@ t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
 </div>
 <p>If we are willing to assume the pollster effect data is normally distributed, based on the sample data <span class="math inline">\(Y_1, \dots, Y_N\)</span>,</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">one_poll_per_pollster</span> <span class="op">|&gt;</span> <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>sample <span class="op">=</span> <span class="va">spread</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">stat_qq</span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">one_poll_per_pollster</span> <span class="op">|&gt;</span> <span class="fu">ggplot</span><span class="op">(</span><span class="fu">aes</span><span class="op">(</span>sample <span class="op">=</span> <span class="va">spread</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu">stat_qq</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="models_files/figure-html/poll-spread-qq-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -739,26 +728,26 @@ t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
 </div>
 </div>
 </div>
-<p>then <span class="math inline">\(t\)</span> follows a t-distribution with <span class="math inline">\(N-1\)</span> degrees of freedom. To construct a 95% confidence interval we simply use <code>qt</code> instead of <code>qnorm</code>: This results in a slightly larger confidence interval than we obtained before:</p>
+<p>then <span class="math inline">\(t\)</span> follows a t-distribution with <span class="math inline">\(N-1\)</span> degrees of freedom. To construct a 95% confidence interval, we simply use <code>qt</code> instead of <code>qnorm</code>: This results in a slightly larger confidence interval than we obtained before:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">one_poll_per_pollster</span><span class="op">$</span><span class="va">spread</span><span class="op">)</span></span>
 <span><span class="va">ttest_ci</span> <span class="op">&lt;-</span> <span class="va">one_poll_per_pollster</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">summarize</span><span class="op">(</span>avg <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span>, se <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu">mutate</span><span class="op">(</span>start <span class="op">=</span> <span class="va">avg</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/TDist.html">qt</a></span><span class="op">(</span><span class="fl">0.975</span>, <span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="va">se</span>, end <span class="op">=</span> <span class="va">avg</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/TDist.html">qt</a></span><span class="op">(</span><span class="fl">0.975</span>, <span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span><span class="op">*</span><span class="va">se</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">select</span><span class="op">(</span><span class="va">start</span>, <span class="va">end</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">ttest_ci</span><span class="op">*</span><span class="fl">100</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   start  end</span></span>
-<span><span class="co">#&gt; 1  1.99 4.07</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1  1.99 4.07</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This interval is a bit larger than the one using normal because the t-distribution has large tails, as seen in the densities. Specifically, the 97.5-th quantile value for the t distribution</p>
+<p>This interval is a bit larger than the one using normal because the t-distribution has large tails, as seen in the densities. Specifically, the 97.5th quantile value for the t distribution</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html">qt</a></span><span class="op">(</span><span class="fl">0.975</span>, <span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 2.09</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/TDist.html">qt</a></span><span class="op">(</span><span class="fl">0.975</span>, <span class="va">n</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 2.09</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>is larger than that for the normal distribution</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1.96</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1.96</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -770,27 +759,38 @@ t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
 </div>
 </div>
 </div>
-<p>The t-distribution can also be used to model errors in bigger deviations that are more likely than with the normal distribution. In their Monte Carlo simulations, FiveThirtyEight uses the t-distribution to generate errors that better model the deviations we see in election data. For example, in Wisconsin, the average of six high quality polls was 7% in favor of Clinton with a standard deviation of 3%, but Trump won by 0.8%. Even after taking into account the overall bias, this 7.7% residual is more in line with t-distributed data than the normal distribution.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The <em>t</em>-distribution approximation used for confidence intervals and hypothesis tests is exact only when the data are normally distributed. However, in practice, it works quite well more broadly. When the distribution of the data is <em>unimodal</em> and <strong>approximately symmetric</strong>, the <em>t</em>-based methods continue to give accurate results even if the data are not perfectly normal.</p>
+<p>This guidance is intentionally imprecise. With experience, you develop a sense for when the approximation is reliable. When the shape of the data is unclear, Monte Carlo simulations provide a practical check: you can simulate repeated samples under a proposed model and examine whether the resulting confidence interval or test behaves as expected.</p>
+<p>In short, normality is not required, but strong skew or heavy tails can break the approximation, so always look at the data.</p>
+</div>
+</div>
+</div>
+<p>The t-distribution can also be used to model errors in bigger deviations that are more likely than with the normal distribution. In their Monte Carlo simulations, FiveThirtyEight uses the t-distribution to generate errors that better model the deviations we see in election data. For example, in Wisconsin, the average of six high-quality polls was 7% in favor of Clinton with a standard deviation of 3%, but Trump won by 0.8%. Even after taking into account the overall bias, this 7.7% residual is more in line with t-distributed data than the normal distribution.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_us_election_2016</span> <span class="op">|&gt;</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_us_election_2016</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">state</span> <span class="op">==</span> <span class="st">"Wisconsin"</span> <span class="op">&amp;</span> <span class="va">enddate</span> <span class="op">&gt;</span> <span class="st">"2016-11-01"</span> <span class="op">&amp;</span> </span>
 <span>            <span class="va">population</span> <span class="op">==</span> <span class="st">"lv"</span> <span class="op">&amp;</span> <span class="va">grade</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"A+"</span>,<span class="st">"A"</span>,<span class="st">"A-"</span>,<span class="st">"B+"</span>,<span class="st">"B"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">left_join</span><span class="op">(</span><span class="va">results_us_election_2016</span>, by <span class="op">=</span> <span class="st">"state"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">mutate</span><span class="op">(</span>spread <span class="op">=</span> <span class="va">rawpoll_clinton</span> <span class="op">-</span> <span class="va">rawpoll_trump</span>, actual <span class="op">=</span> <span class="va">clinton</span> <span class="op">-</span> <span class="va">trump</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">summarize</span><span class="op">(</span>actual <span class="op">=</span> <span class="fu">first</span><span class="op">(</span><span class="va">actual</span><span class="op">)</span>, estimate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">spread</span><span class="op">)</span><span class="op">)</span> </span>
 <span><span class="co">#&gt;   actual estimate sd</span></span>
-<span><span class="co">#&gt; 1 -0.764     7.04  3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1 -0.764     7.04  3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section></section><section id="exercises" class="level2" data-number="10.3"><h2 data-number="10.3" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">10.3</span> Exercises</h2>
-<p>We have been using urn models to motivate the use of probability models. Yet, most data science applications are not related to data obtained from urns. More common are data that come from individuals. The reason probability plays a role here is because the data come from a random sample. The random sample is taken from a population, and the urn serves as an analogy for the population.</p>
-<p>Define the males that replied to the height survey as the population</p>
+<p>We have been using urn models to motivate the use of probability models. Yet, most data science applications are not related to data obtained from urns. More common are data that come from individuals. The reason probability plays a role here is that the data come from a random sample. The random sample is taken from a population, and the urn serves as an analogy for the population.</p>
+<p>To answer the following questions, define the males who replied to the height survey as the population:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">pull</span><span class="op">(</span><span class="va">height</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu">pull</span><span class="op">(</span><span class="va">height</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>to answer the following questions.</p>
 <p>1. Mathematically speaking, <code>x</code> is our population. Using the urn analogy, we have an urn with the values of <code>x</code> in it. What are the mean and standard deviation of our population?</p>
 <p>2. Call the population mean computed above <span class="math inline">\(\mu\)</span> and the standard deviation <span class="math inline">\(\sigma\)</span>. Now take a sample of size 50, with replacement, and construct an estimate for <span class="math inline">\(\mu\)</span> and <span class="math inline">\(\sigma\)</span>.</p>
 <p>3. What does the theory tell us about the sample average <span class="math inline">\(\bar{X}\)</span> and how it is related to <span class="math inline">\(\mu\)</span>?</p>
@@ -857,13 +857,14 @@ t = \frac{\bar{Y} - \theta}{s/\sqrt{N}}
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

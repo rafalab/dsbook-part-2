@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>18&nbsp; Generalized Linear Models – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -534,10 +537,10 @@ window.Quarto = {
   
 
 
-</header><p>The statistical models we have used so far assume that the outcome of interest is continuous. However, in many real applications the outcomes are binary, categorical, or counts. In these settings, we are often interested in how the outcome changes with one or more explanatory variables.</p>
+</header><p>The statistical models we have used so far assume that the outcome of interest is continuous. However, in many real applications, the outcomes are binary, categorical, or counts. In these settings, we are often interested in how the outcome changes with one or more explanatory variables.</p>
 <p>For example, we may want to study how the probability of developing coronary heart disease varies with age, systolic blood pressure, or other clinical measurements; how the chance of surviving the sinking of the Titanic depends on passenger characteristics; or how different insecticides influence the number of insects observed in agricultural field plots.</p>
 <p>Although these outcomes are no longer continuous, many of the ideas introduced in the linear model framework continue to apply. With a small adaptation, we can extend the mathematical approach used for linear models so that it can be applied in all of these situations, while also continuing to use the same modeling tools in R.</p>
-<p>These extended models are known as <em>generalized</em> linear models. To motivate them, we begin this chapter with association tests for two categorical variables. We then show how these tests arise naturally from logistic regression, our first example of a generalized linear model for binary outcomes. We conclude with examples that illustrate how the same framework can be applied across a range of contexts, including outcomes that are binary, or counts.</p>
+<p>These extended models are known as <em>generalized</em> linear models. To motivate them, we begin this chapter with association tests for two categorical variables. We then show how these tests arise naturally from logistic regression, our first example of a generalized linear model for binary outcomes. We conclude with examples that illustrate how the same framework can be applied across a range of contexts, including outcomes that are binary or counts.</p>
 <section id="sec-association-tests" class="level2" data-number="18.1"><h2 data-number="18.1" class="anchored" data-anchor-id="sec-association-tests">
 <span class="header-section-number">18.1</span> Association Tests</h2>
 <p>We start with the simplest case: assessing whether two categorical variables are associated. These methods were developed before GLMs, but they can be understood as special cases of logistic regression. Once we establish this connection, the general GLM framework will follow naturally.</p>
@@ -546,9 +549,9 @@ window.Quarto = {
 <blockquote class="blockquote">
 <p>results reveal gender bias favoring male applicants over female applicants in the prioritization of their “quality of researcher” (but not “quality of proposal”) evaluations and success rates, as well as in the language use in instructional and evaluation materials.</p>
 </blockquote>
-<p>The main evidence supporting this conclusion is based on a comparison of the percentages which we can compute using the data presented in the paper:</p>
+<p>The main evidence supporting this conclusion is based on a comparison of the percentages that we can compute using the data presented in the paper:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">totals</span> <span class="op">&lt;-</span> <span class="va">research_funding_rates</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">discipline</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise_all.html">summarize_all</a></span><span class="op">(</span><span class="va">sum</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -560,21 +563,21 @@ window.Quarto = {
 <span><span class="va">totals</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>percent_men <span class="op">=</span> <span class="va">yes_men</span><span class="op">/</span><span class="op">(</span><span class="va">yes_men</span> <span class="op">+</span> <span class="va">no_men</span><span class="op">)</span>,</span>
 <span>                    percent_women <span class="op">=</span> <span class="va">yes_women</span><span class="op">/</span><span class="op">(</span><span class="va">yes_women</span> <span class="op">+</span> <span class="va">no_women</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   percent_men percent_women</span></span>
-<span><span class="co">#&gt; 1       0.177         0.149</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1       0.177         0.149</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>But could this be due just to random variability? Here we learn how to perform inference for this type of data.</p>
+<p>But could this be due just to random variability? Here, we learn how to perform inference for this type of data.</p>
 <p>In <a href="#sec-chisq-test" class="quarto-xref"><span>Section 18.1.3</span></a>, we introduce association tests that permit us to answer this question. Before doing so, we present a historically important example that illustrates the need for such methods.</p>
 </section><section id="the-lady-tasting-tea" class="level3"><h3 class="anchored" data-anchor-id="the-lady-tasting-tea">The Lady Tasting Tea</h3>
 <p>The classic motivating example for association tests is the <em>Lady Tasting Tea</em> experiment designed by R. A. Fisher. A colleague at the Rothamsted Experimental Station claimed she could tell whether milk was poured into a cup before or after the tea. Fisher proposed a randomized test and derived the probability of each possible result under the assumption that she was simply guessing. This led to what is now known as <em>Fisher’s exact test</em>, based on the hypergeometric distribution.</p>
 <p>As an example, suppose she correctly identified 3 out of 4 cups:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span>guess <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span><span class="op">)</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span>guess <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span><span class="op">)</span>,</span>
 <span>             actual <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"t"</span>, <span class="st">"m"</span>, <span class="st">"m"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">tab</span></span>
 <span><span class="co">#&gt;      actual</span></span>
 <span><span class="co">#&gt; guess m t</span></span>
 <span><span class="co">#&gt;     m 3 1</span></span>
-<span><span class="co">#&gt;     t 1 3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;     t 1 3</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To evaluate whether this provides evidence of real ability, we consider the <em>null hypothesis</em> that she is guessing. Because she knows there are four of each type, guessing corresponds to randomly drawing 4 cups from an urn containing 4 <em>milk-first</em> and 4 <em>tea-first</em> cups.</p>
 <p>The probability of correctly guessing <span class="math inline">\(k\)</span> cups is given by the hypergeometric formula:</p>
@@ -583,11 +586,11 @@ window.Quarto = {
 \]</span></p>
 <p>The probability of getting 3 or more correct by chance is therefore : <span class="math display">\[
 \frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{16}{70} \approx 0.24.
-\]</span> So correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.</p>
-<p>This calculation is what <em>Fisher’s exact test</em> performs. In R we can type:</p>
+\]</span> So, correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.</p>
+<p>This calculation is what <em>Fisher’s exact test</em> performs. In R, we can type:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/fisher.test.html">fisher.test</a></span><span class="op">(</span><span class="va">tab</span>, alternative <span class="op">=</span> <span class="st">"greater"</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
-<span><span class="co">#&gt; [1] 0.243</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/fisher.test.html">fisher.test</a></span><span class="op">(</span><span class="va">tab</span>, alternative <span class="op">=</span> <span class="st">"greater"</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="co">#&gt; [1] 0.243</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -600,34 +603,38 @@ window.Quarto = {
 </div>
 </div>
 </section><section id="sec-chisq-test" class="level3"><h3 class="anchored" data-anchor-id="sec-chisq-test">Two-by-two tables and the Chi-square test</h3>
-<p>Notice that our funding example is analogous to the Lady Tasting Tea: under the null hypothesis, funding is assigned at random regardless of gender, just as in Fisher’s example cups are guessed at random regardless of when the milk was poured.</p>
+<p>Notice that our funding example is analogous to the Lady Tasting Tea: under the null hypothesis, funding is assigned at random regardless of gender, just as in Fisher’s example, cups are guessed at random regardless of when the milk was poured.</p>
 <p>However, in the Lady Tasting Tea example, we were able to use the hypergeometric distribution because the design <em>fixed</em> both the number of cups of each type and the number of selections for each category. In other words, the row totals and the column totals of <code>tab</code> were predetermined by the experiment.</p>
 <p>In the funding example, and in most real-world data, this is not the case. Neither the number of funded applications nor the number of male and female applicants is fixed in advance; these totals arise from the data we observe. Because the row and column totals are not fixed, the hypergeometric model is no longer appropriate and rarely used in practice.</p>
 <p>In such settings, we instead use the <em>Chi-squared test</em>, which provides a way to test for association between two categorical variables without requiring fixed margins. Let’s apply it to the funding rates example.</p>
 <p>The first step in a Chi-squared test is to create the observed <em>two-by-two table</em>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_men</span>, <span class="va">yes_men</span><span class="op">)</span>, </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">o</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_men</span>, <span class="va">yes_men</span><span class="op">)</span>, </span>
 <span>                             women <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_women</span>, <span class="va">yes_women</span><span class="op">)</span>,</span>
-<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We then estimate the overall funding rate which we will use to determine what we expect to see if successful funding was assigned independent of gender:</p>
+<p>We then estimate the overall funding rate, which we will use to determine what we expect to see if successful funding was assigned independent of gender:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="op">(</span><span class="va">yes_men</span> <span class="op">+</span> <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">totals</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="op">(</span><span class="va">yes_men</span> <span class="op">+</span> <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">totals</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We use this to compute what we expect to see by chance:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="op">(</span><span class="va">no_men</span> <span class="op">+</span> <span class="va">yes_men</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">rate</span>, <span class="va">rate</span><span class="op">)</span>,</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>men <span class="op">=</span> <span class="op">(</span><span class="va">no_men</span> <span class="op">+</span> <span class="va">yes_men</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">rate</span>, <span class="va">rate</span><span class="op">)</span>,</span>
 <span>                             women <span class="op">=</span> <span class="op">(</span><span class="va">no_women</span> <span class="op">+</span> <span class="va">yes_women</span><span class="op">)</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">rate</span>, <span class="va">rate</span><span class="op">)</span>,</span>
-<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>                             row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"no"</span>, <span class="st">"yes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can see that more men than expected and fewer women than expected received funding:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">o</span>, <span class="va">e</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      men women  men women</span></span>
-<span><span class="co">#&gt; no  1345  1011 1365   991</span></span>
-<span><span class="co">#&gt; yes  290   177  270   197</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">o</span>, <span class="va">e</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu"><a href="https://rlang.r-lib.org/reference/set_names.html">set_names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"obs"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste</a></span><span class="op">(</span><span class="st">"expected"</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     obs men obs women expected men expected women</span></span>
+<span><span class="co">#&gt; no     1345      1011         1365            991</span></span>
+<span><span class="co">#&gt; yes     290       177          270            197</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>However, under the null hypothesis these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by:</p>
+<p>However, under the null hypothesis, these observations are random variables. The Chi-square statistic quantifies how much the observed tables deviates from the expected by:</p>
 <ol type="1">
 <li>Taking the difference between each observed and expected cell value.</li>
 <li>Squaring this difference.</li>
@@ -635,18 +642,18 @@ window.Quarto = {
 <li>Summing all these values together to get the final statistic.</li>
 </ol>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="va">e</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 4.01</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">/</span><span class="va">e</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 4.01</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We use this summary statistic because its sampling distribution can be approximated by a known parametric distribution: the Chi-square distribution.</p>
 <p>The R function <code>chisq.test</code> takes a two-by-two table and returns the results from the test:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We see that the p-value is 0.045:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span><span class="op">$</span><span class="va">p.value</span></span>
-<span><span class="co">#&gt; [1] 0.0451</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">chisq_test</span><span class="op">$</span><span class="va">p.value</span></span>
+<span><span class="co">#&gt; [1] 0.0451</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -656,14 +663,14 @@ window.Quarto = {
 <div class="callout-body-container">
 <p>By default, the <code>chisq.test</code> function applies a <em>continuity correction</em>. This correction subtracts 0.5 from the absolute deviation between observed and expected counts:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span> <span class="op">-</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="va">e</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 3.81</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">abs</a></span><span class="op">(</span><span class="va">o</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span> <span class="op">-</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span> <span class="op">/</span> <span class="va">e</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 3.81</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>and this matches the default behavior of:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">$</span><span class="va">statistic</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">$</span><span class="va">statistic</span></span>
 <span><span class="co">#&gt; X-squared </span></span>
-<span><span class="co">#&gt;      3.81</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;      3.81</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The reason for this adjustment is that the chi-square test is based on a <em>continuous</em> probability distribution, while the two-by-two table counts are <em>discrete</em>. When sample sizes are small, the difference between a continuous approximation and the discrete distribution can be noticeable. The continuity correction slightly reduces the test statistic to account for this mismatch, making the approximation more conservative (that is, less likely to produce small p-values by chance).</p>
 <p>We previously used the argument <code>correct = FALSE</code> to avoid this adjustment because, in moderate-to-large samples, the correction is not needed and can slightly reduce the test’s power.</p>
@@ -671,7 +678,7 @@ window.Quarto = {
 </div>
 </div>
 </section><section id="odds-ratios" class="level3"><h3 class="anchored" data-anchor-id="odds-ratios">Odds ratios</h3>
-<p>The Chi-square test provides a p-value but it does not quantify the size of the effect. As discussed in <a href="../inference/hypothesis-testing.html" class="quarto-xref"><span>Chapter 13</span></a>, we generally prefer confidence intervals over p-values because they communicate effect size and uncertainty. So how do we quantify the effect here?</p>
+<p>The Chi-square test provides a p-value, but it does not quantify the size of the effect. As discussed in <a href="../inference/hypothesis-testing.html" class="quarto-xref"><span>Chapter 13</span></a>, we generally prefer confidence intervals over p-values because they communicate effect size and uncertainty. So how do we quantify the effect here?</p>
 <p>For two categorical groups, our data can be summarized in a two-by-two table:</p>
 <table class="caption-top table">
 <thead><tr class="header">
@@ -715,12 +722,12 @@ window.Quarto = {
 \log\left(\frac{ad}{bc}\right)
 \pm 1.96 \sqrt{\frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}}
 \]</span> Once we construct a confidence interval for the log odds ratio, we can obtain a confidence interval for the odds ratio by exponentiating the two endpoints.</p>
-<p>Her we compute the odds ratio for our funding data and construct a 95% confidence interval:</p>
+<p>Here, we compute the odds ratio for our funding data and construct a 95% confidence interval:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">o</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">or</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.662 0.996</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.662 0.996</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This allows us to assess both the magnitude of the association and the uncertainty around it. The estimated odds ratio is less than 1, indicating that women have lower odds of being funded than men in this dataset. The 95% confidence interval does not include 1, which implies the p-value is less than 0.05.</p>
 <div class="callout callout-style-simple callout-note">
@@ -729,7 +736,7 @@ window.Quarto = {
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The log odds ratio is not defined if any of the cells of the two-by-two table is 0. This is because if <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, or <span class="math inline">\(d\)</span> are 0, the <span class="math inline">\(\log(\frac{ad}{bc})\)</span> is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the <em>Haldane-Anscombe correction</em> and has been shown, both in practice and theory, to work well.</p>
+<p>The log odds ratio is not defined if any of the cells of the two-by-two table are 0. This is because if <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, <span class="math inline">\(c\)</span>, or <span class="math inline">\(d\)</span> are 0, the <span class="math inline">\(\log(\frac{ad}{bc})\)</span> is either the log of 0 or has a 0 in the denominator. For this situation, it is common practice to avoid 0s by adding 0.5 to each cell. This is referred to as the <em>Haldane-Anscombe correction</em> and has been shown, both in practice and theory, to work well.</p>
 </div>
 </div>
 </div>
@@ -777,8 +784,8 @@ g(p) = \log\frac{p}{1-p}
 \Pr(Y_i=1) = g^{-1}(g(p_i)) = g^{-1}\left(\beta_0+\beta_1x_i\right) = \frac{e^{\beta_0+\beta_1x_i}}{1 + e^{\beta_0+\beta_1x_i}} = \frac{1}{1 + e^{-\beta_0-\beta_1x_i}}
 \]</span></p>
 <section id="estimation" class="level3"><h3 class="anchored" data-anchor-id="estimation">Estimation</h3>
-<p>Unlike linear regression, least squares is not optimal here because the variance of the outcome depends on its mean and the model for the expected value is nonlinear. Instead, the parameters are estimated using <em>maximum likelihood estimation</em> (MLE). The basic idea of MLE is to choose the parameter values that make the observed data most probable according to the assumed statistical model. For logistic regression, this means finding the values of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> that maximize the probability of observing the particular pattern of zeros and ones in the data.</p>
-<p>Our example analyzing a two-by-two table is a special case in which the estimates can be written directly as functions of the observed proportions. But in general, for logistic regression models, the estimates cannot be written in a simple closed-form expression. Instead, numerical optimization algorithms are used to find the values that maximize the likelihood. Under standard conditions, a version of the central limit theorem applies to these estimates. This implies that for large sample sizes the estimates are approximately normally distributed and that their standard errors can be computed from the curvature of the likelihood function near the maximum. This, in turn, permits the construction of confidence intervals and hypothesis tests.</p>
+<p>Unlike linear regression, least squares is not optimal here because the variance of the outcome depends on its mean, and the model for the expected value is nonlinear. Instead, the parameters are estimated using <em>maximum likelihood estimation</em> (MLE). The basic idea of MLE is to choose the parameter values that make the observed data most probable according to the assumed statistical model. For logistic regression, this means finding the values of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> that maximize the probability of observing the particular pattern of zeros and ones in the data.</p>
+<p>Our example, analyzing a two-by-two table, is a special case in which the estimates can be written directly as functions of the observed proportions. But in general, for logistic regression models, the estimates cannot be written in a simple closed-form expression. Instead, numerical optimization algorithms are used to find the values that maximize the likelihood. Under standard conditions, a version of the central limit theorem applies to these estimates. This implies that for large sample sizes, the estimates are approximately normally distributed and that their standard errors can be computed from the curvature of the likelihood function near the maximum. This, in turn, permits the construction of confidence intervals and hypothesis tests.</p>
 <p>Readers interested in a deeper and more general treatment of MLE and logistic regression can consult the Recommended Reading section, where we point to textbooks that develop the likelihood framework, the asymptotic results, and the numerical algorithms in more detail.</p>
 </section><section id="fitting-the-model-in-r" class="level3"><h3 class="anchored" data-anchor-id="fitting-the-model-in-r">Fitting the model in R</h3>
 <p>We can fit the logistic regression model in R using the <code>glm</code> function with <code>family = binomial</code>.</p>
@@ -792,46 +799,46 @@ g(p) = \log\frac{p}{1-p}
 \]</span></p>
 <p>The <code>glm</code> function can work directly with grouped counts by using a two-column matrix of successes and failures:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">success</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">yes_men</span>, <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">success</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">yes_men</span>, <span class="va">yes_women</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">failure</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">totals</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="va">no_men</span>, <span class="va">no_women</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">success</span>, <span class="va">failure</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html">cbind</a></span><span class="op">(</span><span class="va">success</span>, <span class="va">failure</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>and encoding the group indicator:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"men"</span>, <span class="st">"women"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"men"</span>, <span class="st">"women"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We then fit the model with <code>glm</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html">coefficients</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             Estimate Std. Error z value  Pr(&gt;|z|)</span></span>
 <span><span class="co">#&gt; (Intercept)   -1.534     0.0647   -23.7 3.83e-124</span></span>
-<span><span class="co">#&gt; xwomen        -0.208     0.1041    -2.0  4.54e-02</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; xwomen        -0.208     0.1041    -2.0  4.54e-02</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To obtain the estimated odds ratio, we exponentiate the coefficient:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">coef</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">coef</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; xwomen </span></span>
-<span><span class="co">#&gt;  0.812</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  0.812</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This value represents the multiplicative change in the odds of being funded for women compared to men.</p>
 <p>A 95% confidence interval for this odds ratio is obtained by exponentiating the corresponding confidence interval for <span class="math inline">\(\beta_1\)</span>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  2.5 % 97.5 % </span></span>
-<span><span class="co">#&gt;  0.661  0.995</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  0.661  0.995</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This interval provides both an effect size and a measure of uncertainty.</p>
 </section><section id="relation-to-earlier-methods" class="level3"><h3 class="anchored" data-anchor-id="relation-to-earlier-methods">Relation to earlier methods</h3>
-<p>We can confirm that logistic regression yields the same odds ratio estimate as the simple two-by-two table (saved in <code>o</code>) calculation: and saved in <code>or</code> and <code>se</code>:</p>
+<p>We can confirm that logistic regression yields the same odds ratio estimate as a calculation from the simple two-by-two table (saved in <code>o</code>):</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">or</span> <span class="op">&lt;-</span> <span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">/</span><span class="op">(</span><span class="va">o</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">1</span><span class="op">]</span><span class="op">*</span><span class="va">o</span><span class="op">[</span><span class="fl">1</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="fl">1</span><span class="op">/</span><span class="va">o</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">or</span><span class="op">)</span>,<span class="va">se</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.208  0.104</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -0.208  0.104</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] -0.208  0.104</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
@@ -841,10 +848,10 @@ g(p) = \log\frac{p}{1-p}
 <div class="callout-body-container">
 <p>The p-values obtained from <code>chisq.test</code> and from logistic regression</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
 <span><span class="co">#&gt; [1] 0.0451</span></span>
 <span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span><span class="co">#&gt; [1] 0.0454</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.0454</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>differ slightly because they are based on different approximations.</p>
 </div>
@@ -854,24 +861,24 @@ g(p) = \log\frac{p}{1-p}
 <span class="header-section-number">18.3</span> Generalizing the model</h2>
 <p>At first glance, logistic regression may seem like an unnecessarily complicated way to obtain the same results we derived using the odds ratio and the standard error approximation. So why introduce this more general framework?</p>
 <p>The key advantage becomes clear when the explanatory variables are not just two categories. For example, returning to the question of coronary heart disease, age is a continuous variable. There is no simple way to form a two-by-two table for every possible age value. Similarly, if we wish to adjust for several explanatory variables simultaneously (as we did in <a href="treatment-effect-models.html" class="quarto-xref"><span>Chapter 17</span></a>), we need a model-based approach rather than a table-based one.</p>
-<p>The general strategy is to assumes <span class="math inline">\(Y_i\)</span> follow a known distribution, such as binomial or exponential, and model a <em>transformation</em> of the expected value of the outcome using a linear combination of predictors:</p>
+<p>The general strategy is to assume <span class="math inline">\(Y_i\)</span> follows a known distribution, such as binomial or exponential, and model a <em>transformation</em> of the expected value of the outcome using a linear combination of predictors:</p>
 <p><span class="math display">\[
 g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 \]</span></p>
-<p>Here <span class="math inline">\(x_{ij}\)</span> is the value of the <span class="math inline">\(j\)</span>-th explanatory variable for individual <span class="math inline">\(i\)</span>, and <span class="math inline">\(g(\cdot)\)</span> is called the <em>link function</em>. For binary outcomes we used the logistic function because it maps probabilities (which must lie between 0 and 1) to all real numbers. For count data, which we often model with a Poisson distribution, the expected value <span class="math inline">\(\mathrm{E}[Y_i]\)</span> can exceed 1, so the logit link is not suitable. Instead, the <em>log</em> link is typically used: <span class="math inline">\(g(\lambda) = \log(\lambda)\)</span>. This link maps positive values (such as rates) to the real line and provides an interpretable multiplicative form: if <span class="math inline">\(\exp(\beta_1)= 1.10\)</span>, then a one-unit increase in <span class="math inline">\(x_{i1}\)</span> corresponds to a 10% increase in the rate.</p>
+<p>Here <span class="math inline">\(x_{ij}\)</span> is the value of the <span class="math inline">\(j\)</span>-th explanatory variable for individual <span class="math inline">\(i\)</span>, and <span class="math inline">\(g(\cdot)\)</span> is called the <em>link function</em>. For binary outcomes, we used the logistic function because it maps probabilities (which must lie between 0 and 1) to all real numbers. For count data, which we often model with a Poisson distribution, the expected value <span class="math inline">\(\mathrm{E}[Y_i]\)</span> can exceed 1, so the logit link is not suitable. Instead, the <em>log</em> link is typically used: <span class="math inline">\(g(\lambda) = \log(\lambda)\)</span>. This link maps positive values (such as rates) to the real line and provides an interpretable multiplicative form: if <span class="math inline">\(\exp(\beta_1)= 1.10\)</span>, then a one-unit increase in <span class="math inline">\(x_{i1}\)</span> corresponds to a 10% increase in the rate.</p>
 <p>This framework is known as a <strong>generalized linear model</strong> (GLM). Logistic regression is one special case; Poisson regression is another.</p>
 <section id="logistic-regression-example-coronary-heart-disease" class="level3"><h3 class="anchored" data-anchor-id="logistic-regression-example-coronary-heart-disease">Logistic regression example: Coronary heart disease</h3>
 <p>The <code>SAheart</code> dataset contains observations from a retrospective sample of adult males in a high-risk region of South Africa:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"SAheart"</span>, package <span class="op">=</span> <span class="st">"bestglm"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"SAheart"</span>, package <span class="op">=</span> <span class="st">"bestglm"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>If we compute the proportion of individuals with heart disease at each age and examine the log-odds, the relationship appears approximately linear:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">SAheart</span> <span class="op">|&gt;</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">SAheart</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html">group_by</a></span><span class="op">(</span><span class="va">age</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html">summarize</a></span><span class="op">(</span>chd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">chd</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">age</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">chd</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">chd</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="glm_files/figure-html/heart-study-eda-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -883,34 +890,34 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <p><span class="math display">\[
 \log\left\{\frac{\Pr(Y_i=1)}{1 - \Pr(Y_i=1)}\right\} = \beta_0 + \beta_1 x_i
 \]</span> with <span class="math inline">\(Y_i\)</span> an indicator of coronary heart disease and <span class="math inline">\(x_i\)</span> representing the age of individual <span class="math inline">\(i\)</span>. The estimate for <span class="math inline">\(\beta_1\)</span> converts into an <em>odds ratio</em>. The quantity <span class="math inline">\(\exp(\beta_1)\)</span> represents the multiplicative increase in the odds of heart disease for each one-year increase in age.</p>
-<p>Fitting can fit the model using:</p>
+<p>We can fit the model using:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">chd</span> <span class="op">~</span> <span class="va">age</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">SAheart</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">chd</span> <span class="op">~</span> <span class="va">age</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">SAheart</span><span class="op">)</span></span>
 <span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span></span>
 <span><span class="co">#&gt; # A tibble: 1 × 5</span></span>
 <span><span class="co">#&gt;   term  estimate std.error statistic  p.value</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
-<span><span class="co">#&gt; 1 age     0.0641   0.00853      7.51 5.76e-14</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 1 age     0.0641   0.00853      7.51 5.76e-14</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can then use GLM theory to construct a 95% confidence interval for the odds ratio:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>, <span class="op">]</span></span>
 <span><span class="co">#&gt; Waiting for profiling to be done...</span></span>
 <span><span class="co">#&gt;  2.5 % 97.5 % </span></span>
-<span><span class="co">#&gt;   1.05   1.08</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;   1.05   1.08</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can also use the fitted model to compute predicted probabilities for specific ages:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">80</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span>age <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">80</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      1      2      3      4      5      6      7 </span></span>
-<span><span class="co">#&gt; 0.0963 0.1682 0.2774 0.4216 0.5805 0.7243 0.8330</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; 0.0963 0.1682 0.2774 0.4216 0.5805 0.7243 0.8330</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>When <code>type = respsone</code> the <code>predict</code> function uses the inverse logistic transformation to convert <span class="math inline">\(\hat{\beta}_0 + \hat{\beta}_1 x_i\)</span> to estimated probabilities.</p>
+<p>When <code>type = "response"</code>, the <code>predict</code> function uses the inverse logistic transformation to convert <span class="math inline">\(\hat{\beta}_0 + \hat{\beta}_1 x_i\)</span> to estimated probabilities.</p>
 <p>Note that the <code>SAheart</code> dataset includes several additional explanatory variables that could plausibly relate to heart disease risk, such as tobacco use, cholesterol level, and family history. With the <code>glm</code> function, we can include these predictors in the model simply by adding them to the right-hand side of the formula. However, we must be cautious when interpreting the resulting coefficients. A logistic regression model will always return parameter estimates, p-values, and confidence intervals, but these numbers are only meaningful if the model is a reasonable approximation to the data-generating mechanism. In many biomedical settings, there is no underlying physiological theory guaranteeing that the relationship between predictors and the log-odds of disease is linear. Therefore, model assumptions should be examined critically. This includes exploratory data analysis, consideration of possible confounding variables, and assessment of model fit through diagnostic tools, rather than accepting the fitted model at face value.</p>
 </section><section id="poisson-regression-example-effectiveness-of-insect-sprays" class="level3"><h3 class="anchored" data-anchor-id="poisson-regression-example-effectiveness-of-insect-sprays">Poisson regression example: Effectiveness of insect sprays</h3>
-<p>The <code>InsectSprays</code>dataset records the number of insects found in agricultural field units after treatment with different sprays:</p>
+<p>The <code>InsectSprays</code> dataset records the number of insects found in agricultural field units after treatment with different sprays:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span> <span class="op">|&gt;</span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">spray</span>, <span class="va">count</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html">geom_jitter</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span> <span class="op">|&gt;</span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">spray</span>, <span class="va">count</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_jitter.html">geom_jitter</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="glm_files/figure-html/insect-spray-boxplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -920,12 +927,12 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 </div>
 <p>Spray C appears most effective. We could compare mean insect counts across sprays:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">InsectSprays</span>, <span class="fu"><a href="https://rdrr.io/r/base/tapply.html">tapply</a></span><span class="op">(</span><span class="va">count</span>, <span class="va">spray</span>, <span class="va">mean</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">InsectSprays</span>, <span class="fu"><a href="https://rdrr.io/r/base/tapply.html">tapply</a></span><span class="op">(</span><span class="va">count</span>, <span class="va">spray</span>, <span class="va">mean</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>But how do we assess uncertainty? Can we construct confidence inteverals? Note that counts are small (often under 10), and the sample size per group is only 12, so normal approximations may be unreliable.</p>
-<p>A Poisson regression provides an alternative. First we choose C as the reference group and then we fit the model:</p>
+<p>But how do we assess uncertainty? Can we construct confidence intervals? Note that counts are small (often under 10), and the sample size per group is only 12, so normal approximations may be unreliable.</p>
+<p>A Poisson regression provides an alternative. First, we choose C as the reference group, and then we fit the model:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html">relevel</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span>, ref <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html">relevel</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span>, ref <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span> </span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
 <span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 6 × 7</span></span>
@@ -936,9 +943,9 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <span><span class="co">#&gt; 3 sprayB         2.00      0.213      9.36 7.65e-21   1.60        2.44</span></span>
 <span><span class="co">#&gt; 4 sprayD         0.859     0.239      3.60 3.20e- 4   0.404       1.34</span></span>
 <span><span class="co">#&gt; 5 sprayE         0.519     0.253      2.05 4.00e- 2   0.0315      1.03</span></span>
-<span><span class="co">#&gt; # ℹ 1 more row</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; # ℹ 1 more row</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Here the parameters measure the log of the multiplicative change in the expected count relative to Spray C. If a spray has the same effectiveness as Spray C, its corresponding parameter estimate would be 0. The estimated coefficients and their confidence intervals indicate that several sprays differ substantially from Spray C, and these differences are too large to be explained by Poisson sampling variability alone. In other words, Spray C’s superior performance is unlikely to be due to chance.</p>
+<p>Here, the parameters measure the log of the multiplicative change in the expected count relative to Spray C. If a spray has the same effectiveness as Spray C, its corresponding parameter estimate would be 0. The estimated coefficients and their confidence intervals indicate that several sprays differ substantially from Spray C, and these differences are too large to be explained by Poisson sampling variability alone. In other words, Spray C’s superior performance is unlikely to be due to chance.</p>
 <p>The inference relies on asymptotic approximations similar to the CLT but often performs better than applying the CLT directly to means when counts are small.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -965,11 +972,11 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 </section></section><section id="large-samples-small-p-values" class="level2" data-number="18.4"><h2 data-number="18.4" class="anchored" data-anchor-id="large-samples-small-p-values">
 <span class="header-section-number">18.4</span> Large samples, small p-values</h2>
 <p>As mentioned earlier, reporting only p-values is not always a useful way to report the results of data analysis. In scientific journals, some studies seem to overemphasize p-values. Some of these studies have large sample sizes and report impressively small p-values. Yet by looking closely at the results, we realize that the odds ratios are quite modest: barely bigger than 1. In this case, the difference may not be <em>practically significant</em> or <em>scientifically significant</em>.</p>
-<p>Note that the relationship between odds ratio and p-value is not one-to-one; it depends on the sample size. Therefore, a very small p-value does not necessarily mean a very large odds ratio. Observe what happens to the p-value if we multiply our two-by-two table by 10, which does not change the odds ratio:</p>
+<p>Note that the relationship between the odds ratio and the p-value is not one-to-one; it depends on the sample size. Therefore, a very small p-value does not necessarily mean a very large odds ratio. Observe what happens to the p-value if we multiply our two-by-two table by 10, which does not change the odds ratio:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ox10</span> <span class="op">&lt;-</span> <span class="va">o</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>men <span class="op">=</span> <span class="va">men</span><span class="op">*</span><span class="fl">10</span>, women <span class="op">=</span> <span class="va">women</span><span class="op">*</span><span class="fl">10</span><span class="op">)</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">ox10</span> <span class="op">&lt;-</span> <span class="va">o</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>men <span class="op">=</span> <span class="va">men</span><span class="op">*</span><span class="fl">10</span>, women <span class="op">=</span> <span class="va">women</span><span class="op">*</span><span class="fl">10</span><span class="op">)</span> </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span>, <span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">ox10</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 5.09e-02 2.63e-10</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 5.09e-02 2.63e-10</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="exercises" class="level2" data-number="18.5"><h2 data-number="18.5" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">18.5</span> Exercises</h2>
@@ -978,7 +985,7 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <ol type="a">
 <li>It actually does not matter, since they give the exact same p-value.</li>
 <li>Fisher’s exact and the Chi-square are different names for the same test.</li>
-<li>Because the sum of the rows and columns of the two-by-two table are not fixed so the hypergeometric distribution is not an appropriate assumption for the null hypothesis. For this reason, Fisher’s exact test is rarely applicable with observational data.</li>
+<li>Because the sums of the rows and columns of the two-by-two table are not fixed, the hypergeometric distribution is not an appropriate assumption for the null hypothesis. For this reason, Fisher’s exact test is rarely applicable to observational data.</li>
 <li>Because the Chi-square test runs faster.</li>
 </ol>
 <p>3. Now compute the odds ratio of “losing under pressure” and use the approximation we learned to construct a 95% confidence interval. What do you say to those critiquing the athlete? Is the criticism fair?</p>
@@ -986,21 +993,21 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <p>5. Use the <code>research_funding_rates</code> data to estimate the log odds ratio and standard errors comparing women to men for each discipline. Compute a confidence interval for each discipline. Plot the log odds ratios and use error bars to denote 95% confidence intervals</p>
 <p>6. Report all the disciplines for which one gender appears to be favored over the other.</p>
 <p>7. Divide the log odds ratio estimates by their respective standard errors and generate a qqplot comparing these to a standard normal. Do any of the disciplines clearly deviate from what is expected by chance?</p>
-<p>8. During the 2016 US presidential election, then candidate Donald J. Trump used his twitter account as a way to communicate with potential voters. Todd Vaziri hypothesized that “Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him).” We will test this hypothesis using association tests. The <strong>dslabs</strong> object <code>sentiment_counts</code> provides a table with the counts for several sentiments from each source (Android or iPhone):</p>
+<p>8. During the 2016 US presidential election, then-candidate Donald J. Trump used his Twitter account as a way to communicate with potential voters. Todd Vaziri hypothesized that “Every non-hyperbolic tweet is from iPhone (his staff). Every hyperbolic tweet is from Android (from him).” We will test this hypothesis using association tests. The <strong>dslabs</strong> object <code>sentiment_counts</code> provides a table with the counts for several sentiments from each source (Android or iPhone):</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
-<span><span class="va">sentiment_counts</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">sentiment_counts</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Compute an odds ratio comparing Android to iPhone for each sentiment and add it to the table.</p>
 <p>9. Compute a 95% confidence interval for each odds ratio.</p>
 <p>10. Generate a plot showing the estimated odds ratios along with their confidence intervals.</p>
-<p>11. For each sentiment, test the null hypothesis that there is no difference between tweets from Android and iPhone and report the sentiments with p-values less than 0.05 and more likely to come from Android.</p>
-<p>12. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odd ratio for each, and show a barplot for those with odds ratio larger than 2 or smaller than 1/2.</p>
-<p>13. The <code>titanic_train</code> dataset in the <strong>titanic</strong> package has data for 891 passangers that were on the Titanic:</p>
+<p>11. For each sentiment, test the null hypothesis that there is no difference between tweets from Android and iPhone, and report the sentiments that are more likely to come from Android with p-values less than 0.05.</p>
+<p>12. For each sentiment, find the words assigned to that sentiment, keep words that appear at least 25 times, compute the odds ratio for each, and show a barplot for those with odds ratios larger than 2 or smaller than 1/2.</p>
+<p>13. The <code>titanic_train</code> dataset in the <strong>titanic</strong> package has data for 891 passengers that were on the Titanic:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paulhendricks/titanic">titanic</a></span><span class="op">)</span></span>
-<span><span class="va">titanic_train</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/paulhendricks/titanic">titanic</a></span><span class="op">)</span></span>
+<span><span class="va">titanic_train</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>In this dataset:</p>
 <ul>
@@ -1011,8 +1018,8 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 </ul>
 <p>Fit a logistic regression model with survival as the outcome and sex as the predictor.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_gender</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_gender</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_gender</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_gender</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol type="a">
 <li>Interpret the sign of the coefficient for <code>Sex</code>.</li>
@@ -1021,9 +1028,9 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 </ol>
 <p>14. Now fit a model with both <code>Sex</code> and <code>Class</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="va">titanic_train</span><span class="op">$</span><span class="va">Pclass</span><span class="op">)</span></span>
 <span><span class="va">fit_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span> <span class="op">+</span> <span class="va">Pclass</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_class</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_class</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol type="a">
 <li>Which passenger class has the highest odds of survival, based on the estimates?</li>
@@ -1031,8 +1038,8 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 </ol>
 <p>15. Fit a model with an interaction term:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_interaction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span> <span class="op">*</span> <span class="va">Pclass</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_interaction</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">Survived</span> <span class="op">~</span> <span class="va">Sex</span> <span class="op">*</span> <span class="va">Pclass</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">titanic_train</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_interaction</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol type="a">
 <li>Does the effect of gender vary by class?</li>
@@ -1041,20 +1048,20 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <p>16. The <code>InsectSprays</code> dataset records insect counts for six spray types.</p>
 <p>Recall the Poisson regression model:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_glm</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_glm</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Fit a linear regression model to the log-transformed counts (we have to add 0.5 because some counts are 0):</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">log_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">count</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">log_count</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">count</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="va">fit_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html">lm</a></span><span class="op">(</span><span class="va">log_count</span> <span class="op">~</span> <span class="va">spray</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_lm</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">fit_lm</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol type="a">
 <li>Compare the estimated spray effects from <code>fit_glm</code> and <code>fit_lm</code>.</li>
 <li>Discuss the advantages of one model over the other.</li>
 </ol>
-<p>17. In GLMs there is no separate error term <span class="math inline">\(\varepsilon\)</span>. However, we can still define <em>residuals</em> by comparing the observed outcome <span class="math inline">\(y_i\)</span> to the fitted value <span class="math inline">\(\hat{y}_i\)</span>. However, unlike in standard linear regression, the variance of <span class="math inline">\(Y_i\)</span> is not constant. For instance:</p>
+<p>17. In GLMs, although there is no separate error term <span class="math inline">\(\varepsilon\)</span>, we can still define <em>residuals</em> by comparing the observed outcome <span class="math inline">\(y_i\)</span> to the fitted value <span class="math inline">\(\hat{y}_i\)</span>. However, unlike in standard linear regression, the variance of <span class="math inline">\(Y_i\)</span> is not constant. For instance:</p>
 <ul>
 <li>In logistic regression, <span class="math inline">\(\mathrm{Var}[Y_i] = p_i(1 - p_i)\)</span>, which depends on the fitted probability <span class="math inline">\(p_i=\Pr(Y_i=1)\)</span>.</li>
 <li>In Poisson regression, <span class="math inline">\(\mathrm{Var}[Y_i]= \mathrm{E}[Y_i]\)</span>, so the standard error can be estimated with <span class="math inline">\(\sqrt{\hat{y}_i}\)</span>.</li>
@@ -1070,11 +1077,11 @@ r_i = \frac{y_i - \hat{\mu}_i}{\sqrt{\hat{\mu}_i}}.
 <p>These residuals are scaled so that they are approximately centered at 0 with variance 1, which makes them useful for diagnostic plots.</p>
 <p>You can plot Pearson residuals in R using:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_glm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_glm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To compare this to fitting a linear model to log-transformed counts:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_lm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit_lm</span>, which <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ol type="a">
 <li>Which model appears to better describe the data?</li>
@@ -1142,13 +1149,14 @@ r_i = \frac{y_i - \hat{\mu}_i}{\sqrt{\hat{\mu}_i}}.
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

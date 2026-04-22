@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>29&nbsp; Resampling and Model Assessment – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -493,14 +496,14 @@ window.Quarto = {
   <li><a href="#tuning-parameters" id="toc-tuning-parameters" class="nav-link" data-scroll-target="#tuning-parameters"><span class="header-section-number">29.4</span> Tuning parameters</a></li>
   <li><a href="#mathematical-description-of-resampling-methods" id="toc-mathematical-description-of-resampling-methods" class="nav-link" data-scroll-target="#mathematical-description-of-resampling-methods"><span class="header-section-number">29.5</span> Mathematical description of resampling methods</a></li>
   <li>
-<a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation"><span class="header-section-number">29.6</span> Cross validation</a>
+<a href="#cross-validation" id="toc-cross-validation" class="nav-link" data-scroll-target="#cross-validation"><span class="header-section-number">29.6</span> cross-validation</a>
   <ul class="collapse">
-<li><a href="#k-fold-cross-validation" id="toc-k-fold-cross-validation" class="nav-link" data-scroll-target="#k-fold-cross-validation">K-fold cross validation</a></li>
+<li><a href="#k-fold-cross-validation" id="toc-k-fold-cross-validation" class="nav-link" data-scroll-target="#k-fold-cross-validation">K-fold cross-validation</a></li>
   <li><a href="#how-many-folds" id="toc-how-many-folds" class="nav-link" data-scroll-target="#how-many-folds">How many folds?</a></li>
   <li><a href="#estimate-mse-of-our-optimized-algorithm" id="toc-estimate-mse-of-our-optimized-algorithm" class="nav-link" data-scroll-target="#estimate-mse-of-our-optimized-algorithm">Estimate MSE of our optimized algorithm</a></li>
   </ul>
 </li>
-  <li><a href="#boostrap-resampling" id="toc-boostrap-resampling" class="nav-link" data-scroll-target="#boostrap-resampling"><span class="header-section-number">29.7</span> Boostrap resampling</a></li>
+  <li><a href="#bootstrap-resampling" id="toc-bootstrap-resampling" class="nav-link" data-scroll-target="#bootstrap-resampling"><span class="header-section-number">29.7</span> Bootstrap resampling</a></li>
   <li><a href="#sec-mse-estimates" id="toc-sec-mse-estimates" class="nav-link" data-scroll-target="#sec-mse-estimates"><span class="header-section-number">29.8</span> Comparison of MSE estimates</a></li>
   <li><a href="#exercises" id="toc-exercises" class="nav-link" data-scroll-target="#exercises"><span class="header-section-number">29.9</span> Exercises</a></li>
   <li><a href="#exercises-overfitting-feature-selection-and-resampling" id="toc-exercises-overfitting-feature-selection-and-resampling" class="nav-link" data-scroll-target="#exercises-overfitting-feature-selection-and-resampling"><span class="header-section-number">30</span> <strong>Exercises: Overfitting, Feature Selection, and Resampling</strong></a></li>
@@ -522,7 +525,7 @@ window.Quarto = {
   
 
 
-</header><p>In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here we focus on the conceptual and mathematical aspects. We will describe how to implement resampling methods in practice with the <strong>caret</strong> package later in <a href="ml-in-practice.html#sec-caret" class="quarto-xref"><span>Section 31.2</span></a>. To motivate the concept, we will use the two predictor digits data presented in <a href="conditionals-and-smoothing.html#sec-two-or-seven" class="quarto-xref"><span>Section 28.3.1</span></a> and introduce k-nearest neighbors (kNN), to demonstrate the ideas.</p>
+</header><p>In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here, we focus on the conceptual and mathematical aspects. We will describe how to implement resampling methods in practice with the <strong>caret</strong> package later in <a href="ml-in-practice.html#sec-caret" class="quarto-xref"><span>Section 31.1</span></a>. To motivate the concept, we will use the two predictor digits data presented in <a href="conditionals-and-smoothing.html#sec-two-or-seven" class="quarto-xref"><span>Section 28.3.1</span></a> and introduce k-nearest neighbors (kNN) to demonstrate the ideas.</p>
 <section id="sec-knn-cv-intro" class="level2" data-number="29.1"><h2 data-number="29.1" class="anchored" data-anchor-id="sec-knn-cv-intro">
 <span class="header-section-number">29.1</span> Motivation with k-nearest neighbors</h2>
 <p>We are interested in estimating the conditional probability function:</p>
@@ -530,27 +533,27 @@ window.Quarto = {
 p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 \]</span></p>
 <p>as defined in <a href="conditionals-and-smoothing.html#sec-smoothing-ml-connection" class="quarto-xref"><span>Section 28.5</span></a>.</p>
-<p>With k-nearest neighbors (kNN) we estimate <span class="math inline">\(p(\mathbf{x})\)</span> in a similar way to bin smoothing. First, we define the distance between all observations based on the features. Then, for any point <span class="math inline">\(\mathbf{x}_0\)</span>, we estimate <span class="math inline">\(p(\mathbf{x}_0)\)</span> by identifying the <span class="math inline">\(k\)</span> nearest points to <span class="math inline">\(\mathbf{x}_0\)</span> and taking an average of the <span class="math inline">\(y\)</span>s associated with these points. We refer to the set of points used to compute the average as the <em>neighborhood</em>.</p>
-<p>Due to the connection we described earlier between conditional expectations and conditional probabilities, this gives us <span class="math inline">\(\hat{p}(\mathbf{x}_0)\)</span>, just like the bin smoother gave us an estimate of a trend. As with bin smoothers, we can control the flexibility of our estimate through a parameter, in the case the number o neighbors <span class="math inline">\(k\)</span>: larger <span class="math inline">\(k\)</span>s result in smoother estimates, while smaller <span class="math inline">\(k\)</span>s result in more flexible and wiggly estimates.</p>
+<p>With k-nearest neighbors (kNN), we estimate <span class="math inline">\(p(\mathbf{x})\)</span> in a similar way to bin smoothing. First, we define the distance between all observations based on the features. Then, for any point <span class="math inline">\(\mathbf{x}_0\)</span>, we estimate <span class="math inline">\(p(\mathbf{x}_0)\)</span> by identifying the <span class="math inline">\(k\)</span> nearest points to <span class="math inline">\(\mathbf{x}_0\)</span> and taking an average of the <span class="math inline">\(y\)</span>s associated with these points. We refer to the set of points used to compute the average as the <em>neighborhood</em>.</p>
+<p>Due to the connection we described earlier between conditional expectations and conditional probabilities, this gives us <span class="math inline">\(\hat{p}(\mathbf{x}_0)\)</span>, just like the bin smoother gave us an estimate of a trend. As with bin smoothers, we can control the flexibility of our estimate through a parameter, in this case, the number of neighbors <span class="math inline">\(k\)</span>: larger <span class="math inline">\(k\)</span>s result in smoother estimates, while smaller <span class="math inline">\(k\)</span>s result in more flexible and wiggly estimates.</p>
 <p>To fit a <span class="math inline">\(k\)</span>-nearest neighbors model, we use the <code>knn3</code> function from the <strong>caret</strong> package. The help file shows two ways to call this function; we will use the <em>formula interface</em>, which lets us write the model in the form</p>
 <pre><code>outcome ~ predictor_1 + predictor_2 + ...</code></pre>
 <p>Because our training set is stored in a data frame, we can use the shorthand <code>y ~ .</code> to mean “use <code>y</code> as the outcome and all other columns as predictors.”</p>
 <p>We must also choose the number of neighbors <span class="math inline">\(k\)</span>. The default is <code>k = 5</code>, which we will use here. Putting this together, our call looks like:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: lattice</span></span>
-<span><span class="va">knn_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">knn_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>In this case, since our dataset is balanced and we care just as much about sensitivity as we do about specificity, we will use accuracy to quantify performance.</p>
 <p>The <code>predict</code> function for <code>knn3</code> returns estimes of <span class="math inline">\(p(\mathbf{x})\)</span> (<code>type = "prob"</code>) or the prediction (<code>type = "class"</code>):</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We see that kNN, with the default parameter, already beats GLM:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.815</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.815</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To see why this is the case, we plot <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> and compare it to the true conditional probability <span class="math inline">\(p(\mathbf{x})\)</span>:</p>
 <div class="cell" data-layout-align="center">
@@ -563,30 +566,30 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 <p>We see that kNN adapts better to the non-linear shape of <span class="math inline">\(p(\mathbf{x})\)</span>. However, our estimate has some islands of blue in the red area, which intuitively does not make much sense. We notice that we have higher accuracy in the train set compared to the test set:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.858</span></span>
+<span><span class="co">#&gt; [1] 0.86</span></span>
 <span></span>
 <span><span class="va">y_hat_knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.815</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.815</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>This is due to what we call <em>over-training</em>.</p>
 </section><section id="over-training" class="level2" data-number="29.2"><h2 data-number="29.2" class="anchored" data-anchor-id="over-training">
 <span class="header-section-number">29.2</span> Over-training</h2>
 <p>With kNN, over-training is at its worst when we set <span class="math inline">\(k = 1\)</span>. With <span class="math inline">\(k = 1\)</span>, the estimate for each <span class="math inline">\(\mathbf{x}\)</span> in the training set is obtained with just the <span class="math inline">\(y\)</span> corresponding to that point. In this case, if the <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span> are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself (if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly).</p>
-<p>Here we fit a kNN model with <span class="math inline">\(k = 1\)</span> and confirm we get near perfect accuracy in the training set:</p>
+<p>Here we fit a kNN model with <span class="math inline">\(k = 1\)</span> and confirm we get near-perfect accuracy in the training set:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">y_hat_knn_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn_1</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.994</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.995</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>But in the test set, accuracy is actually worse than what we obtained with regression:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat_knn_1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_1</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn_1</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.81</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.81</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can see the over-fitting problem by plotting the decision rule boundaries produced by <span class="math inline">\(\hat{p}(\mathbf{x})\)</span>:</p>
 <div class="cell" data-layout-align="center">
@@ -597,15 +600,15 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>The estimate <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> follows the training data too closely (left). You can see that, in the training set, boundaries have been drawn to perfectly surround a single red point in a sea of blue. Because most points <span class="math inline">\(\mathbf{x}\)</span> are unique, the prediction is either 1 or 0 and the prediction for that point is the associated label. However, once we introduce the test set (right), we see that many of these small islands now have the opposite color and we end up making several incorrect predictions.</p>
+<p>The estimate <span class="math inline">\(\hat{p}(\mathbf{x})\)</span> follows the training data too closely (left). You can see that, in the training set, boundaries have been drawn to perfectly surround a single red point in a sea of blue. Because most points <span class="math inline">\(\mathbf{x}\)</span> are unique, the prediction is either 1 or 0, and the prediction for that point is the associated label. However, once we introduce the test set (right), we see that many of these small islands now have the opposite color, and we end up making several incorrect predictions.</p>
 </section><section id="over-smoothing" class="level2" data-number="29.3"><h2 data-number="29.3" class="anchored" data-anchor-id="over-smoothing">
 <span class="header-section-number">29.3</span> Over-smoothing</h2>
 <p>Although not as badly as with <span class="math inline">\(k=1\)</span>, we saw that with <span class="math inline">\(k = 5\)</span> we also over-trained. Hence, we should consider a larger <span class="math inline">\(k\)</span>. Let’s try, as an example, a much larger number: <span class="math inline">\(k = 401\)</span>.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_401</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">401</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">knn_fit_401</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/knn3.html">knn3</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, k <span class="op">=</span> <span class="fl">401</span><span class="op">)</span></span>
 <span><span class="va">y_hat_knn_401</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">knn_fit_401</span>, <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">y_hat_knn_401</span> <span class="op">==</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.76</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 0.76</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The estimate turns out to be similar to the one obtained with regression:</p>
 <div class="cell" data-layout-align="center">
@@ -630,7 +633,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>First, note that the estimate obtained from the training set is generally more optimistic, higher accuracy, than the estimate from the test set, with the gap being larger for smaller values of <span class="math inline">\(k\)</span>. This is a classic symptom of <em>overfitting</em>.</p>
+<p>First, note that the estimate obtained from the training set is generally more optimistic, with higher accuracy, than the estimate from the test set, with the gap being larger for smaller values of <span class="math inline">\(k\)</span>. This is a classic symptom of <em>overfitting</em>.</p>
 <p>Should we simply choose the value of <span class="math inline">\(k\)</span> that gives the highest accuracy on the test set and report its accuracy? This approach has two important drawbacks:</p>
 <ol type="1">
 <li><p><strong>The accuracy–versus–(k) curve is noisy.</strong> We do not expect small changes in <span class="math inline">\(k\)</span> to cause large changes in accuracy or MSE. The jagged pattern occurs because each accuracy estimate is based on a finite test sample, so it fluctuates due to random variation. As a result, the “best” <span class="math inline">\(k\)</span> may appear best just by chance.</p></li>
@@ -639,7 +642,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <p><em>Resampling methods</em> provide a principled solution to both problems by reducing variability and ensuring that test data are not used twice, once for evaluation and again for tuning.</p>
 </section><section id="mathematical-description-of-resampling-methods" class="level2" data-number="29.5"><h2 data-number="29.5" class="anchored" data-anchor-id="mathematical-description-of-resampling-methods">
 <span class="header-section-number">29.5</span> Mathematical description of resampling methods</h2>
-<p>In <a href="#sec-knn-cv-intro" class="quarto-xref"><span>Section 29.1</span></a> we introduced <span class="math inline">\(k\)</span>-nearest neighbors (kNN) as a simple example to motivate this chapter. In that setting, the algorithm depends on only one tuning parameter, <span class="math inline">\(k\)</span>, which directly affects performance. More generally, machine learning algorithms often involve <em>multiple</em> tuning parameters. Here we use the notation <span class="math inline">\(\lambda\)</span> to represent the full set of parameters that define the algorithm.</p>
+<p>In <a href="#sec-knn-cv-intro" class="quarto-xref"><span>Section 29.1</span></a>, we introduced <span class="math inline">\(k\)</span>-nearest neighbors (kNN) as a simple example to motivate this chapter. In that setting, the algorithm depends on only one tuning parameter, <span class="math inline">\(k\)</span>, which directly affects performance. More generally, machine learning algorithms often involve <em>multiple</em> tuning parameters. Here we use the notation <span class="math inline">\(\lambda\)</span> to represent the full set of parameters that define the algorithm.</p>
 <p>To keep track of how these choices affect performance, we write the predictions produced by a given parameter set for observation <span class="math inline">\(i\)</span> as <span class="math inline">\(\hat{y}_i(\lambda)\)</span> and the corresponding mean squared error as <span class="math inline">\(\mathrm{MSE}(\lambda)\)</span>. Our goal is to find the value of <span class="math inline">\(\lambda\)</span> that minimizes <span class="math inline">\(\mathrm{MSE}(\lambda)\)</span>.</p>
 <p>Resampling methods provide practical ways to estimate <span class="math inline">\(\mathrm{MSE}(\lambda)\)</span> and therefore guide us toward the best tuning parameters.</p>
 <p>An intuitive first attempt is the apparent error defined in <a href="evaluation-metrics.html#sec-mse" class="quarto-xref"><span>Section 27.8</span></a> and used in the previous section:</p>
@@ -651,11 +654,11 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <p><span class="math display">\[
 \frac{1}{B} \sum_{b=1}^B \frac{1}{N}\sum_{i=1}^N \left\{\hat{y}_i^b(\lambda) - y_i^b\right\}^2
 \]</span></p>
-<p>with <span class="math inline">\(y_i^b\)</span> the <span class="math inline">\(i\)</span>th observation in test sample <span class="math inline">\(b\)</span> and <span class="math inline">\(\hat{y}_{i}^b(\lambda)\)</span> the prediction obtained with the algorithm defined by parameter <span class="math inline">\(\lambda\)</span> and trained on train set <span class="math inline">\(b\)</span>. The law of large numbers tells us that as <span class="math inline">\(B\)</span> becomes larger, this quantity gets closer and closer to <span class="math inline">\(\mbox{MSE}(\lambda)\)</span>. This is of course a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires resampling methods.</p>
-<p>The general idea behind resampling methods is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe <em>cross validation</em>, one of the most widely used resampling methods.</p>
+<p>with <span class="math inline">\(y_i^b\)</span> the <span class="math inline">\(i\)</span>th observation in test sample <span class="math inline">\(b\)</span> and <span class="math inline">\(\hat{y}_{i}^b(\lambda)\)</span> the prediction obtained with the algorithm defined by parameter <span class="math inline">\(\lambda\)</span> and trained on train set <span class="math inline">\(b\)</span>. The law of large numbers tells us that as <span class="math inline">\(B\)</span> becomes larger, this quantity gets closer and closer to <span class="math inline">\(\mbox{MSE}(\lambda)\)</span>. This is, of course, a theoretical consideration as we rarely get access to more than one dataset for algorithm development, but the concept inspires resampling methods.</p>
+<p>The general idea behind resampling methods is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe <em>cross-validation</em>, one of the most widely used resampling methods.</p>
 </section><section id="cross-validation" class="level2" data-number="29.6"><h2 data-number="29.6" class="anchored" data-anchor-id="cross-validation">
-<span class="header-section-number">29.6</span> Cross validation</h2>
-<p>Overall, we are provided a dataset (blue) and we need to build an algorithm, using this dataset, that will eventually be used in completely independent datasets (yellow) that we might not even see.</p>
+<span class="header-section-number">29.6</span> cross-validation</h2>
+<p>Overall, we are provided a dataset (blue), and we need to build an algorithm, using this dataset, that will eventually be used in completely independent datasets (yellow) that we might not even see.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -664,7 +667,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>So to imitate this situation, we start by carving out a piece of our dataset and pretend it is an independent dataset: we divide the dataset into a <em>training set</em> (blue) and a <em>test set</em> (red). We will train the entirety of our algorithm, including the choice of parameter <span class="math inline">\(\lambda\)</span>, exclusively on the training set and use the test set only for evaluation purposes.</p>
+<p>So to imitate this situation, we start by carving out a piece of our dataset and pretending it is an independent dataset: we divide the dataset into a <em>training set</em> (blue) and a <em>test set</em> (red). We will train the entirety of our algorithm, including the choice of parameter <span class="math inline">\(\lambda\)</span>, exclusively on the training set and use the test set only for evaluation purposes.</p>
 <p>We usually try to select a small piece of the dataset so that we have as much data as possible to train. However, we also want the test set to be large so that we obtain a stable estimate of the MSE without fitting an impractical number of models. Typical choices are to use 10%-20% of the data for testing.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -675,7 +678,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 <p>Let’s reiterate that it is indispensable that we not use the test set at all: not for filtering out rows, not for selecting features, not for anything!</p>
-<p>But then how do we optimize <span class="math inline">\(\lambda\)</span>? In cross validation, we achieve this by splitting the training set into two: the training and validation sets.</p>
+<p>But then how do we optimize <span class="math inline">\(\lambda\)</span>? In cross-validation, we achieve this by splitting the training set into two: the training and validation sets.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -684,19 +687,19 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>We will do this many times assuring that the estimates of MSE obtained in each dataset are independent from each other. There are several proposed methods for doing this. Here we describe one of these approaches, K-fold cross validation, in detail to provide the general idea used in all approaches.</p>
-<section id="k-fold-cross-validation" class="level3"><h3 class="anchored" data-anchor-id="k-fold-cross-validation">K-fold cross validation</h3>
+<p>We will do this many times, ensuring that the estimates of MSE obtained in each dataset are independent of each other. There are several proposed methods for doing this. Here, we describe one of these approaches, K-fold cross-validation, in detail to provide the general idea used in all approaches.</p>
+<section id="k-fold-cross-validation" class="level3"><h3 class="anchored" data-anchor-id="k-fold-cross-validation">K-fold cross-validation</h3>
 <p>As a reminder, we are going to imitate the concept used when introducing this version of the MSE:</p>
 <p><span class="math display">\[
 \mbox{MSE}(\lambda) \approx\frac{1}{B} \sum_{b = 1}^B \frac{1}{N}\sum_{i = 1}^N \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2
 \]</span></p>
-<p>We want to generate a dataset that can be thought of as independent random sample, and do this <span class="math inline">\(B\)</span> times. The K in K-fold cross validation, represents the number of time <span class="math inline">\(B\)</span>. In the illustrations below we show an example that uses <span class="math inline">\(B = 5\)</span>.</p>
+<p>We want to generate a dataset that can be thought of as an independent random sample, and do this <span class="math inline">\(B\)</span> times. The K in K-fold cross-validation represents the number of times <span class="math inline">\(B\)</span>. In the illustrations below, we show an example that uses <span class="math inline">\(B = 5\)</span>.</p>
 <p>We will eventually end up with <span class="math inline">\(B\)</span> samples, but let’s start by describing how to construct the first: we simply pick <span class="math inline">\(M = N/B\)</span> observations at random (we round if <span class="math inline">\(M\)</span> is not a round number) and think of these as a random sample <span class="math inline">\(y_1^b, \dots, y_M^b\)</span>, with <span class="math inline">\(b = 1\)</span>. We call this the validation set.</p>
 <p>Now we can fit the model in the training set, then compute the apparent error on the independent set:</p>
 <p><span class="math display">\[
 \hat{\mbox{MSE}}_b(\lambda) = \frac{1}{M}\sum_{i = 1}^M \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2
 \]</span></p>
-<p>As a reminder, this is just one sample and will therefore return a noisy estimate of the true error. In K-fold cross validation, we randomly split the observations into <span class="math inline">\(B\)</span> non-overlapping sets:</p>
+<p>As a reminder, this is just one sample and will therefore return a noisy estimate of the true error. In K-fold cross-validation, we randomly split the observations into <span class="math inline">\(B\)</span> non-overlapping sets:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -711,9 +714,9 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 \]</span></p>
 <p>and obtain an estimate of our loss. A final step would be to select the <span class="math inline">\(\lambda\)</span> that minimizes the MSE.</p>
 </section><section id="how-many-folds" class="level3"><h3 class="anchored" data-anchor-id="how-many-folds">How many folds?</h3>
-<p>Now how do we pick the cross validation fold? Large values of <span class="math inline">\(B\)</span> are preferable because the training data better imitates the original dataset. However, larger values of <span class="math inline">\(B\)</span> will have much slower computation time: for example, 100-fold cross validation will be 10 times slower than 10-fold cross validation. For this reason, the choices of <span class="math inline">\(B = 5\)</span> and <span class="math inline">\(B = 10\)</span> are popular.</p>
+<p>Now, how do we pick the cross-validation fold? Large values of <span class="math inline">\(B\)</span> are preferable because the training data better imitate the original dataset. However, larger values of <span class="math inline">\(B\)</span> will have much slower computation time: for example, 100-fold cross-validation will be 10 times slower than 10-fold cross-validation. For this reason, the choices of <span class="math inline">\(B = 5\)</span> and <span class="math inline">\(B = 10\)</span> are popular.</p>
 </section><section id="estimate-mse-of-our-optimized-algorithm" class="level3"><h3 class="anchored" data-anchor-id="estimate-mse-of-our-optimized-algorithm">Estimate MSE of our optimized algorithm</h3>
-<p>We have described how to use cross validation to optimize parameters. However, we now have to take into account the fact that the optimization occurred on the training data and we therefore need an estimate of our final algorithm based on data that was not used to optimize the choice. Here is where we use the test set we separated early on:</p>
+<p>We have described how to use cross-validation to optimize parameters. However, we now have to take into account the fact that the optimization occurred on the training data, and we therefore need an estimate of our final algorithm based on data that was not used to optimize the choice. Here is where we use the test set we separated early on:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -722,7 +725,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>We can actually do cross validation again, say five times:</p>
+<p>We can actually do cross-validation again, say five times:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -731,7 +734,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-<p>and obtain a final estimate of our expected loss by averaging the five MSE estimates. However, note that last cross validation iteration means that our entire compute time gets multiplied by the number of repetitions. You will soon learn that fitting each algorithm takes time because we are performing many complex computations. As a result, we are always looking for ways to reduce this time. For the final evaluation, we often just use the one test set.</p>
+<p>and obtain a final estimate of our expected loss by averaging the five MSE estimates. However, note that the last cross-validation iteration means that our entire compute time gets multiplied by the number of repetitions. You will soon learn that fitting each algorithm takes time because we are performing many complex computations. As a result, we are always looking for ways to reduce this time. For the final evaluation, we often just use the one test set.</p>
 <p>Once we are satisfied with this model and want to make it available to others, we could refit the model on the entire dataset, without changing the optimized parameters.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -741,16 +744,24 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 </div>
 </div>
 </div>
-</section></section><section id="boostrap-resampling" class="level2" data-number="29.7"><h2 data-number="29.7" class="anchored" data-anchor-id="boostrap-resampling">
-<span class="header-section-number">29.7</span> Boostrap resampling</h2>
+</section></section><section id="bootstrap-resampling" class="level2" data-number="29.7"><h2 data-number="29.7" class="anchored" data-anchor-id="bootstrap-resampling">
+<span class="header-section-number">29.7</span> Bootstrap resampling</h2>
 <p>Typically, cross-validation involves partitioning the original dataset into a training set to train the model and a testing set to evaluate it. With the bootstrap approach, based on the ideas described in <a href="../inference/bootstrap.html" class="quarto-xref"><span>Chapter 14</span></a>, you can create multiple different training datasets via bootstrapping. This method is sometimes called bootstrap aggregating or bagging.</p>
 <p>In bootstrap resampling, we create a large number of bootstrap samples from the original training dataset. Each bootstrap sample is created by randomly selecting observations with replacement, usually the same size as the original training dataset. For each bootstrap sample, we fit the model and compute the MSE estimate on the observations not selected in the random sampling, referred to as the <em>out-of-bag observations</em>. These out-of-bag observations serve a similar role to a validation set in standard cross-validation.</p>
 <p>We then average the MSEs obtained in the out-of-bag observations from each bootstrap sample to estimate the model’s performance.</p>
 <p>This approach is actually the default approach in the <strong>caret</strong> package. We describe how to implement resampling methods with the <strong>caret</strong> package in <a href="ml-in-practice.html" class="quarto-xref"><span>Chapter 31</span></a>.</p>
 </section><section id="sec-mse-estimates" class="level2" data-number="29.8"><h2 data-number="29.8" class="anchored" data-anchor-id="sec-mse-estimates">
 <span class="header-section-number">29.8</span> Comparison of MSE estimates</h2>
-<p>In <a href="#sec-knn-cv-intro" class="quarto-xref"><span>Section 29.1</span></a>, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of applying K-fold cross validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of a 10 fold increase in computation time.</p>
+<p>In <a href="#sec-knn-cv-intro" class="quarto-xref"><span>Section 29.1</span></a>, we computed an estimate of MSE based just on the provided test set (shown in red in the plot below). Here we show how the cross-validation techniques described above help reduce variability. The green curve below shows the results of applying K-fold cross-validation with 10 folds, leaving out 10% of the data for validation. We can see that the variance is reduced substantially. The blue curve is the result of using 100 bootstrap samples to estimate MSE. The variability is reduced even further, but at the cost of a 10-fold increase in computation time.</p>
 <div class="cell" data-layout-align="center">
+<pre><code>#&gt; Loading required package: foreach
+#&gt; 
+#&gt; Attaching package: 'foreach'
+#&gt; The following objects are masked from 'package:purrr':
+#&gt; 
+#&gt;     accumulate, when
+#&gt; Loading required package: iterators
+#&gt; Loading required package: parallel</code></pre>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="resampling-methods_files/figure-html/k-fold-versus-bootstrap-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -775,7 +786,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <p>We will work with a dataset in which <strong>the predictors and the outcome are entirely unrelated</strong>. This setting helps us understand how misleading results can arise when we accidentally “peek” at the test set or use the full dataset to perform feature selection.</p>
 <p>Generate the dataset:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1996</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1996</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">10000</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="va">p</span><span class="op">)</span>, <span class="va">n</span>, <span class="va">p</span><span class="op">)</span></span>
@@ -783,7 +794,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span>   <span class="co"># completely random binary outcome</span></span>
 <span></span>
 <span><span class="co"># smaller subset for initial exercises</span></span>
-<span><span class="va">x_subset</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">p</span>, <span class="fl">100</span><span class="op">)</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">x_subset</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="va">p</span>, <span class="fl">100</span><span class="op">)</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Because <code>x</code> and <code>y</code> are independent, no classifier should achieve an accuracy much larger than 0.5.</p>
 <p>1. Using only <code>x_subset</code>, randomly split the data into 80% training and 20% test.</p>
@@ -791,12 +802,12 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <p>Repeat this entire procedure <strong>five times</strong> with new random splits and report the <strong>average test accuracy</strong>.</p>
 <p>2. We now pick predictors using t-tests, even though all predictors are noise. For each column of <code>x</code>, compute a t-test comparing values in the <code>y = 1</code> group to <code>y = 0</code>, and extract p-values:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pvals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">col</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/t.test.html">t.test</a></span><span class="op">(</span><span class="va">col</span> <span class="op">~</span> <span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">pvals</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html">apply</a></span><span class="op">(</span><span class="va">x</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">col</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/t.test.html">t.test</a></span><span class="op">(</span><span class="va">col</span> <span class="op">~</span> <span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Create an index <code>ind</code> with the predictors whose p-values are &lt; 0.01. How many predictors survive this cutoff?</p>
 <p>3. Define:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x_subset</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>, <span class="va">ind</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x_subset</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span>, <span class="va">ind</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Repeat Exercise 1 but using this new <code>x_subset</code>.</p>
 <p>What is the <strong>average test accuracy</strong> now? Is it above 0.5?</p>
@@ -834,8 +845,8 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
 <p>Is the accuracy much worse, much better, or roughly the same as what you observed on the validation sets? Explain why this comparison matters.</p>
 <p>8. We can create bootstrap samples using <code>createResample</code>.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1995</span><span class="op">)</span></span>
-<span><span class="va">indexes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html">createResample</a></span><span class="op">(</span><span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span>, <span class="fl">10</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">1995</span><span class="op">)</span></span>
+<span><span class="va">indexes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html">createResample</a></span><span class="op">(</span><span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">$</span><span class="va">y</span>, <span class="fl">10</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>In the first bootstrap sample, how many times do the indices 3, 4, and 7 appear?</p>
 <p>9. Repeat the previous exercise for all 10 bootstrap samples.</p>
@@ -900,13 +911,14 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1 \mid X_1 = x_1 , X_2 = x_2).
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
