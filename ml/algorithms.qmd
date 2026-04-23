@@ -151,7 +151,7 @@ grid.arrange(p2, p1, nrow = 1)
 
 
 :::{.callout-note}
-You are ready to do exercises 1 - 13.
+You are ready to do exercises 1 - 11.
 :::
 
 ## Probabilistic classification models
@@ -230,7 +230,7 @@ tmp |>
 ```
 
 
-In fact, we can show that the Naive Bayes approach is similar to the logistic regression prediction mathematically. However, we leave the demonstration to a more advanced text, such as the Elements of Statistical Learning^[https://web.stanford.edu/~hastie/Papers/ESLII.pdf]. We can see that they are similar empirically by comparing the two resulting curves.
+In fact, we can show that the Naive Bayes approach is similar to the logistic regression prediction mathematically. However, we leave the demonstration to a more advanced text, such as the Elements of Statistical Learning^[https://web.stanford.edu/~hastie/Papers/ESLII.pdf].
 
 
 ### Controlling prevalence
@@ -347,12 +347,12 @@ mnist_27$train |> mutate(y = factor(y)) |>
   facet_wrap(~y)
 ```
 
-QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is $p(p-1)/2$ for each class, which gets big fast. Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.
+QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is $p(p-1)/2$ for each class, which grows quickly Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.
 
 
 ### Linear discriminant analysis
 
-A relatively simple solution to QDA's problem of having too many parameters is to assume that the correlation structure is the same for all classes, which reduces the number of parameters we need to estimate.  In this case, the distributions looks like this:
+A relatively simple solution to QDA's problem of having too many parameters is to assume that the correlation structure is the same for all classes, which reduces the number of parameters we need to estimate.  In this case, the distributions look like this:
 
 ```{r lda-explained, echo = FALSE}
 param <- mnist_27$train |> 
@@ -430,15 +430,15 @@ This generalization requires no new ideas beyond the two-class case. The only di
 
 ### Connection to distance
 
-In LDA and QDA, we model each class as coming from a multivariate normal distribution estimated from the *training data*. When we classify a new observation $\mathbf{x}$, the algorithm computes, for each class $k$, we compute 
+In LDA and QDA, we model each class as coming from a multivariate normal distribution estimated from the *training data*. When we classify a new observation $\mathbf{x}$, the algorithm computes, for each class $k$, 
 
 $$
-f_{\mathbf{X}\mid Y=k}(\mathbf{x}),\Pr(Y=k)
+p_k(\mathbf x) = f_{\mathbf{X}\mid Y=k}(\mathbf{x})\,\Pr(Y=k)
 $$
 
 and predicts the class with the largest value.
 
-So understanding how the normal density behaves helps explain why LDA and QDA behave like distance-based classifiers. For simplicity we consider the case in which classes are balanced: $\Pr(Y=k) = 1/K$ for all $k$:
+Understanding how the normal density behaves helps explain why LDA and QDA behave like distance-based classifiers. For simplicity we consider the case in which classes are balanced, that is, $\Pr(Y=k) = 1/K$ for all $k$.
 
 Let’s first examine the one-dimensional normal density and 
 
@@ -457,12 +457,12 @@ The key point is:
 
 $$
 \log f(x)
-\text{ decreases as }
+\text{ increases as }
 (x-\mu)^2
-\text{ increases.}
+\text{ decreases.}
 $$
 
-In other words, the class with the highest density is simply the class whose mean is closest to (x) (after scaling by $\sigma$, the within-class standard deviation).
+In other words, the class with the highest density is simply the class whose mean is closest to $x$ (after scaling by $\sigma$, the within-class standard deviation).
 
 For multivariate Gaussian classes, the same idea holds but with a more general notion of distance.
 The log density becomes:
@@ -481,7 +481,7 @@ Thus, LDA and QDA can both be viewed as distance-based classifiers: a new observ
 
 
 :::{.callout-note}
-You are now ready to do exercises 14–17.
+You are now ready to do exercises 12–17.
 :::
 
 
@@ -511,7 +511,7 @@ points(x, y, cex = 0.25)
 text(x[c(20, 30)], y[c(20, 30)], c("[","]"))
 ```
 
-Now, for two predictors, if we decide to keep the neighborhood just as small, 10% for each dimension, we include only 1 point. If we want to include 10% of the data, then we need to increase the size of each side of the square to $\sqrt{.10} \approx .316$:
+Now, for two predictors, if we decide to keep the neighborhood just as small, 10% for each dimension, we include only a square with sides of size $0.1$. But if we want to include 10% of the data, then we need to increase the size of each side of the square to $\sqrt{.10} \approx 0.316$:
 
 ```{r curse-of-dim-2, echo = FALSE, fig.width = 7, fig.height = 3.5, out.width = "50%"}
 rafalib::mypar(1,2)
@@ -546,7 +546,7 @@ Here, we look at a set of elegant and versatile methods that adapt to higher dim
 
 ### CART motivation
 
-To motivate this section, we will use a new dataset that includes the breakdown of the composition of olive oil into 8 fatty acids:
+To motivate this section, we will use a new dataset that includes the breakdown of the composition of different olive oils into 8 fatty acids:
 
 ```{r}
 names(olive)
@@ -608,18 +608,17 @@ text(train_rpart$finalModel, cex = 0.75)
 
 Decision trees like this are often used in practice. For example, to decide on a person's risk of poor outcome after having a heart attack, doctors use the following:
 
-![](img/Decision-Tree-for-Heart-Attack-Victim-adapted-from-Gigerenzer-et-al-1999-4.png){width=50% fig-align="center"}
-
-
-(Source: Walton 2010 Informal Logic, Vol. 30, No. 2, pp. 159-184[^trees-1].)
+![Source: Walton 2010 Informal Logic, Vol. 30, No. 2, pp. 159-184[^trees-1]](img/Decision-Tree-for-Heart-Attack-Victim-adapted-from-Gigerenzer-et-al-1999-4.png){width=50% fig-align="center"}
 
 [^trees-1]: https://papers.ssrn.com/sol3/Delivery.cfm/SSRN_ID1759289_code1486039.pdf?abstractid = 1759289&mirid = 1&type = 2
 
 A tree is basically a flow chart of yes or no questions. The general idea of the methods we are describing is to define an algorithm that uses data to create these trees with predictions at the ends, referred to as *nodes*. Regression and decision trees operate by predicting an outcome variable $y$ by partitioning the predictors.
 
+Although this motivating example is a classification problem, it is easier to first explain the mechanics of recursive partitioning in the regression setting, and then return to classification trees.
+
 ### Regression trees
 
-When using trees, and the outcome is continuous, we call the approach a *regression* tree. To introduce regression trees, we will use the 2008 poll data used in @ec-smoothing to describe the basic idea of how we build these algorithms. As with other machine learning algorithms, we will try to estimate the conditional expectation $f(x) = \mathrm{E}(Y | X = x)$ with $Y$ the poll margin and $x$ the day.
+When using trees, and the outcome is continuous, we call the approach a *regression* tree. To introduce regression trees, we will use the 2008 poll data used in @sec-smoothing to describe the basic idea of how we build these algorithms. As with other machine learning algorithms, we will try to estimate the conditional expectation $f(x) = \mathrm{E}(Y | X = x)$ with $Y$ the poll margin and $x$ the day.
 
 ```{r polls-2008-again, echo=FALSE}
 ggplot(data = polls_2008, aes(day, margin)) + geom_point()
@@ -627,17 +626,15 @@ ggplot(data = polls_2008, aes(day, margin)) + geom_point()
 
 The general idea here is to build a decision tree and, at the end of each *node*, obtain a predictor $\hat{y}$. A mathematical way to describe this is: we are partitioning the predictor space into $J$ non-overlapping regions, $R_1, R_2, \ldots, R_J$, and then for any predictor $x$ that falls within region $R_j$, estimate $f(x)$ with the average of the training observations $y_i$ for which the associated predictor $x_i$ is also in $R_j$.
 
-But how do we decide on the partition $R_1, R_2, \ldots, R_J$ and how do we choose $J$? Here is where the algorithm gets a bit complicated.
+Regression trees create partitions recursively. We start the algorithm with one partition: the entire predictor space. In this simple example, this is the interval \[-155, 1\]. In the first step, we will split the predictor space into two partitions. In the second step, we will split one of these partitions into two and will have three partitions, then four, and so on. 
 
-Regression trees create partitions recursively. We start the algorithm with one partition, the entire predictor space. In our simple first example, this space is the interval \[-155, 1\]. But after the first step, we will have two partitions. After the second step, we will split one of these partitions into two and will have three partitions, then four, and so on. Later, we describe how we pick the partition and when to stop.
-
-For each existing partition, we find a predictor $j$ and value $s$ that define two new partitions, which we will call $R_1(j,s)$ and $R_2(j,s)$, that split our observations in the current partition by asking if $x_j$ is bigger than $s$:
+First, how do we pick the partition? For each existing partition, we find a predictor $j$ and value $s$ that define two new partitions, which we will call $R_1(j,s)$ and $R_2(j,s)$, that split our observations in the current partition by asking if $x_j$ is bigger than $s$:
 
 $$
 R_1(j,s) = \{\mathbf{x} \mid x_j < s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x} \mid x_j \geq s\}
 $$
 
-In our current example, we only have one predictor, so we will always choose $j = 1$, but in general, this will not be the case. Now, after we define the new partitions $R_1$ and $R_2$, and we decide to stop the partitioning, we compute predictors by taking the average of all the observations $y$ for which the associated $\mathbf{x}$ is in $R_1$ or $R_2$. We refer to these two as $\hat{y}_{R_1}$ and $\hat{y}_{R_2}$ respectively.
+In our current example, we only have one predictor, so we will always choose $j = 1$, but in general, this will not be the case. Here, $\hat{y}_{R_1}$ and $\hat{y}_{R_2}$ are the averages of the observations $y$ for which the associated $\mathbf{x}$ is in $R_1$ or $R_2$, respectively.
 
 But how do we pick $j$ and $s$? Basically, we find the pair that minimizes the residual sum of squares (RSS): 
 
@@ -646,7 +643,7 @@ $$
 \sum_{i:\, x_i \in R_2(j,s)} (y_i - \hat{y}_{R_2})^2
 $$
 
-This is then applied recursively to the new regions $R_1$ and $R_2$. We describe how we stop later, but once we are done partitioning the predictor space into regions, in each region, a prediction is made using the observations in that region.
+This is then applied recursively to the new regions $R_1$ and $R_2$. Once we are done partitioning the predictor space into regions, a prediction is made for each region.
 
 Let's take a look at what this algorithm does on the 2008 presidential election poll data. We will use the `rpart` function in the **rpart** package.
 
@@ -655,7 +652,7 @@ library(rpart)
 fit <- rpart(margin ~ ., data = polls_2008)
 ```
 
-In this case, there is only one predictor. Thus, we do not have to decide which predictor $j$ to split by. We simply have to decide what value $s$ we use to split. We can visually see where the splits were made:
+We can visualize the splits:
 
 
 ```{r polls-2008-tree, fig.height = 5, out.width = "60%", echo = -1}
@@ -683,7 +680,7 @@ polls_2008 |>
   geom_step(aes(day, y_hat), col = "red")
 ```
 
-Note that the algorithm stopped partitioning at 8 nodes. This decision is based on a measure called the complexity parameter (cp). Every time the data is split into two new partitions, the training set RSS decreases because the model gains flexibility to adapt to the data. If splitting continued until every observation was isolated in its own partition, the RSS would eventually reach 0, since the average of a single value is the value itself. To prevent such overfitting, the algorithm requires that each new split reduce the RSS by at least a factor of cp. Larger values of cp therefore stop the algorithm earlier, leading to fewer nodes.
+Now that we know how partitions are chosen, when does partitioning stop? Note that the fit algorithm above stopped partitioning at 8 nodes. This decision is based on a measure called the complexity parameter (cp). Every time the data is split into two new partitions, the training set RSS decreases because the model gains flexibility to adapt to the data. If splitting continued until every observation was isolated in its own partition, the RSS would eventually reach 0. To prevent such overfitting, the algorithm requires that each new split reduce the RSS by at least a factor of cp. Larger values of cp therefore stop the algorithm earlier, leading to fewer nodes.
 
 However, cp is not the only factor that controls partitioning. Another important parameter is the minimum number of observations required in a node before it can be split, set by the minsplit argument in rpart (default: 20). In addition, rpart allows users to specify the minimum number of observations allowed in a terminal node (leaf), controlled by the `minbucket` argument. By default, `minbucket = round(minsplit / 3)`.
 
@@ -699,8 +696,7 @@ polls_2008 |>
   geom_step(aes(day, y_hat), col = "red")
 ```
 
-Intuitively, we know that this is not a good approach as it will generally result in over-training. These `cp`, `minsplit`, and `minbucket` parameters can be used to control the variability of the final predictors. The larger these values are, the more data is averaged to compute a predictor and thus reduce variability. The drawback is that it restricts flexibility.
-
+Intuitively, we know that this is not a good approach as it will generally result in over-fitting. The `cp`, `minsplit`, and `minbucket` parameters can be used to control the variability of the final predictors: larger values reduce variability but restrict flexibility.
 
 ```{r polls-2008-tree-train, echo=FALSE}
 library(caret)
@@ -775,7 +771,7 @@ grid.arrange(p2, p1, nrow = 1)
 
 Note that with decision trees, it is difficult to make the boundaries smooth since each partition creates a discontinuity.
 
-Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are also easy to visualize (if small enough). Finally, they can model human decision processes and don't require the use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-train and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.
+Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are also easy to visualize (if small enough). Finally, they can model human decision processes and don't require the use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-fit and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.
 
 ## Random forests
 
