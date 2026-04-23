@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>1&nbsp; Distributions – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -525,37 +528,36 @@ window.Quarto = {
 
 
 </header><p>Before we begin, we clarify that this chapter will not cover distributions in the context of probability, which is the mathematical framework used to model uncertainty. We postpone that discussion until the next part of the book, where we will use it throughout. Here, we focus on <em>distributions</em> as a way to describe and summarize data we’ve already collected. Our goal is to understand the variation and patterns present in a dataset, without yet making probabilistic claims or predictions. The concepts introduced in this chapter will later serve as the foundation for understanding probability distributions, where similar tools are used to describe the likely outcomes of random processes.</p>
-<p>To illustrate the concepts needed to understand distribution and how they relate to summary statistics, we will pretend that we have to describe the heights of our classmates to ET, an extraterrestrial that has never seen humans. As a first step, we need to collect data. To do this, we ask students to report their heights in inches. We ask them to provide sex information because we know there are two different distributions by sex. We collect the data and save it in the <code>heights</code> data frame included in the <strong>dslabs</strong> package.</p>
+<p>To illustrate the concepts needed to understand distributions and how they relate to summary statistics, we will pretend that we have to describe the heights of our classmates to ET, an extraterrestrial that has never seen humans. As a first step, we need to collect data. To do this, we ask students to report their heights in inches. We ask them to provide sex information because we know that height has different distributions across sexes. We collect the data and save it in the <code>heights</code> data frame included in the <strong>dslabs</strong> package.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/str.html">str</a></span><span class="op">(</span><span class="va">heights</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 'data.frame':    1050 obs. of  2 variables:</span></span>
 <span><span class="co">#&gt;  $ sex   : Factor w/ 2 levels "Female","Male": 2 2 2 2 2 1 1 1 1 2 ...</span></span>
-<span><span class="co">#&gt;  $ height: num  75 70 68 74 61 65 66 62 66 67 ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  $ height: num  75 70 68 74 61 65 66 62 66 67 ...</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>One way to convey the heights to ET is to simply send him a list with all the heights. However, there are much more effective ways to convey this information, and understanding the concept of a distribution will help. To simplify the explanation, we first focus on male heights. We examine the female height data in <a href="comparing-groups.html#sec-stratification" class="quarto-xref"><span>Section 3.3</span></a>.</p>
-<p>At this stage, we are thinking of distributions purely as tools for summarizing and describing data. In the next part of the book, we will connect these same ideas to probability, where distributions help us model uncertainty. For now, our goal is simply to explore the patterns and variation present in the data we do have.</p>
+<p>One way to convey the heights to ET is to simply send the entire dataset of heights. However, there are much more effective ways to convey this information, and understanding the concept of a distribution will help. To simplify the explanation, we first focus on male heights. We examine the female height data in <a href="comparing-groups.html#sec-stratification" class="quarto-xref"><span>Section 3.3</span></a>.</p>
 <p>It turns out that, in some cases, the two summary statistics introduced in the next chapter, the average and the standard deviation, are all we need to understand the data. We will learn data visualization techniques that will help us determine when this two-number summary is appropriate. These same techniques will serve as an alternative for when two numbers are not enough.</p>
 <section id="variable-types" class="level2" data-number="1.1"><h2 data-number="1.1" class="anchored" data-anchor-id="variable-types">
 <span class="header-section-number">1.1</span> Variable types</h2>
-<p>Knowing what variable type we are working with is important because it will help us determining the most effective way to summarize our data and display its distribution.</p>
+<p>Knowing what variable type we are working with is important because it will help us determine the most effective way to summarize our data and display its distribution.</p>
 <p>We will be working with two types of variables: categorical and numeric. Each can be divided into two other groups: categorical can be ordinal or not, whereas numerical variables can be discrete or continuous.</p>
 <p>When data values represent groups instead of numbers, we refer to the data as <em>categorical</em>. Two simple examples are sex (male or female) and US regions (Northeast, South, North Central, West). Some categorical data can be ordered even if they are not numbers, such as spiciness (mild, medium, hot). These ordered categorical data are referred to as <em>ordinal</em> data.</p>
-<p>Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be a whole number. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes a day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.</p>
+<p>Numerical data can be continuous or discrete. A continuous variable can take on any value within a range. For example, if measured with sufficient precision, height is continuous because the difference between two individuals (even identical twins) can be an arbitrarily small fraction. However, if height is rounded to the nearest inch, it becomes discrete since values must be whole numbers. Other examples of discrete data are the number of heads when tossing 10 coins, the number of cigarettes a person smokes per day, or the number of customers visiting a store in an hour. In these cases, the values are countable and cannot take on fractional values. Unlike continuous data, which can be measured with increasing precision, discrete data are limited to distinct, separate values.</p>
 <p>In practice, there are occasions in which discrete variables are treated as continuous. For example, a digital measuring instrument might record data as 16-bit integers. However, because it is rare to obtain exactly the same reading more than once, it is convenient to treat the data as continuous. Another example is country population size. Although population counts are always whole numbers, it is uncommon for two jurisdictions to have exactly the same population. For this reason, population size is also commonly treated as continuous.</p>
 </section><section id="sec-pmf-intro" class="level2" data-number="1.2"><h2 data-number="1.2" class="anchored" data-anchor-id="sec-pmf-intro">
 <span class="header-section-number">1.2</span> Relative frequency distribution</h2>
-<p>The most basic statistical summary of a list of numbers or categories is its <em>distribution</em>. The simplest way to think of a distribution is as a compact description of values with many entries. This concept should not be new for readers of this book. For example, with categorical data, the <em>relative frequency distribution</em> simply describes the proportion of each unique category:</p>
+<p>The most basic statistical summary of a list of numbers or categories is its <em>distribution</em>. By a <em>list</em>, we simply mean a collection of observed values, such as a column in a dataset. The order of the values does not matter, but repeated values are allowed. The simplest way to think of a distribution is as a compact description of how values are spread across observations. This concept should not be new for readers of this book. For example, with categorical data, the <em>relative frequency distribution</em> simply describes the proportion of each unique category:</p>
 <p><span class="math display">\[
 p_k = \frac{\mbox{number of times category }k \mbox{ appears in the list}}{n}
 \]</span></p>
-<p>with <span class="math inline">\(n\)</span> the length of the list.</p>
+<p>with <span class="math inline">\(n\)</span> as the length of the list.</p>
 <p>Here is an example with US state regions:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">state.region</span><span class="op">)</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/proportions.html">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">state.region</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; state.region</span></span>
 <span><span class="co">#&gt;     Northeast         South North Central          West </span></span>
-<span><span class="co">#&gt;          0.18          0.32          0.24          0.26</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;          0.18          0.32          0.24          0.26</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>When the data are discrete numerical values, the relative frequency distribution is defined in the same way, except it is more common to use the following notation since the frequency can be considered a function of numerical values:</p>
 <p><span class="math display">\[
@@ -573,7 +575,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </section><section id="sec-ecdf-intro" class="level2" data-number="1.3"><h2 data-number="1.3" class="anchored" data-anchor-id="sec-ecdf-intro">
 <span class="header-section-number">1.3</span> Empirical cumulative distribution functions</h2>
 <p>When the data is continuous, the task of constructing a summary based on a distribution is more challenging because reporting the frequency of each entry is not an effective summary: most entries are unique so the relative frequency distribution does not summarize much.</p>
-<p>Here are the relative frequencies of US state populations:</p>
+<p>Here are the relative frequencies of US state populations, no longer rounded:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -583,7 +585,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 <p>Since there are 50 states, each with a unique population value <span class="math inline">\(x\)</span>, the plot shows <span class="math inline">\(f(x) = \frac{1}{50} = 0.02\)</span> for each state.</p>
-<p>To define a distribution for continuous numeric data we define a function that reports the proportion of the data entries <span class="math inline">\(x\)</span> that are below <span class="math inline">\(a\)</span>, for all possible values of <span class="math inline">\(a\)</span>. This function is called the empirical cumulative distribution function (eCDF) and often denoted with <span class="math inline">\(F\)</span>:</p>
+<p>To define a distribution for continuous numeric data, we define a function that reports the proportion of the data entries <span class="math inline">\(x\)</span> that are below a threshold <span class="math inline">\(a\)</span>, for all possible values of <span class="math inline">\(a\)</span>. This function is called the empirical cumulative distribution function (eCDF) and often denoted with <span class="math inline">\(F\)</span>:</p>
 <p><span class="math display">\[ F(a) = \mbox{Proportion of data points that are less than or equal to }a\]</span></p>
 <p>Here is the eCDF for state population data above:</p>
 <div class="cell" data-layout-align="center">
@@ -594,7 +596,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 </div>
-<p>Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us quickly identify medians, ranges, and other important distributional features.</p>
+<p>Similar to how a frequency table summarizes categorical data, the empirical cumulative distribution function (eCDF) summarizes continuous data. The eCDF provides a clear picture of how the values are distributed and highlights key characteristics of the dataset. For instance, in the population data, we can see that about half of the states have populations greater than 5,000,000, while most states fall below 20,000,000. This type of summary helps us to quickly identify medians, ranges, and other important distributional features.</p>
 <p>In our heights case study, most students reported heights rounded to the nearest inch. However, some did not. For example, one student reported a height of <code>68.503937007874</code> inches, and another reported <code>68.8976377952756</code> inches. These values correspond to 174 cm and 175 cm converted to inches, respectively, suggesting that some students knew their heights to the closest centimeter and reported this number divided by 2.54.</p>
 <p>As a result the data is continuous and the relative frequency distribution is somewhat confusing:</p>
 <div class="cell" data-layout-align="center">
@@ -634,11 +636,11 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 <p><span class="math display">\[(49.5, 50.5], (50.5, 51.5], (51.5, 52.5], (52.5, 53.5], \dots, (82.5, 83.5]\]</span></p>
 <p>We can do this with the following <strong>ggplot2</strong> code:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>height <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html">round</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html">count</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>f <span class="op">=</span> <span class="va">n</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">height</span>, <span class="va">f</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">height</span>, <span class="va">f</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html">geom_col</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="distributions_files/figure-html/frequency-distribution-rounded-heights-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -646,9 +648,9 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 </div>
-<p>The R base <code>hist</code> function also allows us quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:</p>
+<p>The R base <code>hist</code> function also allows us to quickly construct a histogram. We can define custom bin intervals which is particularly useful for grouping extreme values and avoiding empty bins:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="fu"><a href="https://rdrr.io/r/graphics/hist.html">hist</a></span><span class="op">(</span><span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="distributions_files/figure-html/hist-custom-bin-example-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -656,7 +658,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 </div>
-<p>If we were to send either of these plots to an extraterrestrial unfamiliar with human height distributions, they would immediately gain key insights about the data. First, the height values range from 50 to 84 inches, with over 95% of observations falling between 63 and 75 inches. Second, the distribution is approximately symmetric around 69 inches. Additionally, by summing bin counts, one could estimate the proportion of data falling within any given interval. Thus, a histogram provides an intuitive summary that preserves most of the information from the original 812 height measurements using only about 30 bin counts.</p>
+<p>If we were to send either of these plots to an extraterrestrial unfamiliar with human height distributions, they would immediately gain key insights about the data. First, the male height values range from 50 to 84 inches, with over 95% of observations falling between 63 and 75 inches. Second, the distribution is approximately symmetric around 69 inches. Additionally, by summing bin counts, one could estimate the proportion of data falling within any given interval. Thus, a histogram provides an intuitive summary that preserves most of the information from the original 812 height measurements using only about 30 bin counts.</p>
 <p>What information is lost? A histogram treats all values within a bin as if they were the same when computing bar heights. For instance, values of 64.0, 64.1, and 64.2 inches are grouped together. However, since these differences are barely perceptible, the practical impact is negligible, and we achieve a meaningful summary using just 23 numbers.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -666,8 +668,8 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 <div class="callout-body-container">
 <p>By default, histograms often display frequency on the y-axis instead of relative frequency. The <strong>ggplot2</strong> package follows this convention:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="distributions_files/figure-html/summaries-height-histogram-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -675,12 +677,12 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 </div>
-<p>Note we use <code>fill</code> and <code>color</code> to mimic the behavior or <code>hist</code>.</p>
+<p>Note we use <code>fill</code> and <code>color</code> to mimic the behavior of <code>hist</code>.</p>
 <p>When displaying frequencies, it is important to use equally spaced bins, as larger bins will naturally contain more observations and may distort the visual representation of the data. To instead display <strong>relative</strong> frequency, you can modify the code by setting <code>y = after_stat(density)</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">height</span>, y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html">after_stat</a></span><span class="op">(</span><span class="va">density</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html">geom_histogram</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">50</span>, <span class="fl">55</span>, <span class="fl">60</span><span class="op">:</span><span class="fl">80</span>, <span class="fl">85</span><span class="op">)</span>, fill <span class="op">=</span> <span class="st">"grey"</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="distributions_files/figure-html/summaries-height-histogram-ggplot2-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -692,13 +694,11 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 <section id="choosing-bin-widths" class="level3"><h3 class="anchored" data-anchor-id="choosing-bin-widths">Choosing bin widths</h3>
-<p>The appearance and interpretation of a histogram depend on the choice of bins, and in the case of equally sized bins, their width. Different bin widths can make the same data look quite different, too narrow, and the histogram may appear noisy or fragmented; too wide, and important features of the distribution may be hidden. The choice of bin width should be guided by the context of the data. For example, in the case of height, most people report values rounded to the nearest half inch, so using bins smaller than that does not make sense. At the same time, because height differences of more than an inch are noticeable in real life, bins larger than about two inches would obscure meaningful variation. For the extreme regions of the distribution, such as below 60 inches or above 80 inches, where there are few observations, it is reasonable to use wider bins to keep the summary clear. Every dataset requires a context-specific decision: the goal is to choose bins that reveal structure without introducing noise, maximizing the information conveyed by a single figure.</p>
+<p>The appearance and interpretation of a histogram depend on the choice of bins, and in the case of equally sized bins, their width. Different bin widths can make the same data look quite different: too narrow, and the histogram may appear noisy or fragmented; too wide, and important features of the distribution may be hidden. The choice of bin width should be guided by the context of the data. For example, in the case of height, most people report values rounded to the nearest half inch, so using bins smaller than that does not make sense. At the same time, because height differences of more than an inch are noticeable in real life, bins larger than about two inches would obscure meaningful variation. For the extreme regions of the distribution, such as below 60 inches or above 80 inches, where there are few observations, it is reasonable to use wider bins to keep the summary clear. Every dataset requires a context-specific decision: the goal is to choose bins that reveal structure without introducing noise, maximizing the information conveyed by a single figure.</p>
 </section></section><section id="smoothed-density-plots" class="level2" data-number="1.5"><h2 data-number="1.5" class="anchored" data-anchor-id="smoothed-density-plots">
 <span class="header-section-number">1.5</span> Smoothed density plots</h2>
 <p>Smooth density plots are similar to histograms, but the data is not divided into bins. Here is what a smooth density plot looks like for our heights data:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a></span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">0.2</span>, fill <span class="op">=</span> <span class="st">"#00BFC4"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="distributions_files/figure-html/summaries-example-of-smoothed-density-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -708,8 +708,8 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 <p>In this plot, we no longer have sharp edges at the interval boundaries and many of the local peaks have been removed.</p>
 <p>To understand smooth densities, we have to understand <em>estimates</em>, a topic we don’t cover until later. However, we provide a heuristic explanation to help you understand the basics.</p>
-<p>The main new concept you must understand is that we assume that our list of observed values is a subset of a much larger list of unobserved values. In the case of heights, you can imagine that our list of 812 male students comes from a hypothetical list containing all the heights of all the male students in all the world measured very precisely. Let’s say there are 1,000,000 of these measurements. This list of values has a distribution, like any other list of values, and what we truly want to report to ET is this larger distribution, as it is much more general. Unfortunately, we don’t get to see it.</p>
-<p>However, we make an assumption that helps us perhaps approximate it. If we had 1,000,000 values, measured very precisely, we could make a histogram with very, very small bins. The assumption is that if we show this, the height of consecutive bins will be similar. This is what we mean by smooth: we don’t have big jumps in the heights of consecutive bins. Below, we present histograms for this hypothetical data with bins of size 1, 0.5, and 0.25. To make the curve not depend on the hypothetical size of the hypothetical list, we compute the curve on frequencies rather than counts. The smaller we make the bins, the smoother the histogram becomes:</p>
+<p>The main new concept is the assumption that our list of observed values is a subset of an unobserved, much larger list of values. In the case of heights, you can imagine that our list of 812 male students comes from a hypothetical list containing all the heights of all the male students in all the world measured very precisely. Let’s say there are 1,000,000 of these measurements. This list of values has a distribution, like any other list of values, and what we truly want to report to ET is this larger distribution, as it is much more general. Unfortunately, we don’t get to see it.</p>
+<p>However, we may be able to approximate it. If we had 1,000,000 values, measured very precisely, we could make a histogram with very, very small bins. The assumption is that if we show this, the height of consecutive bins will be similar. This is what we mean by smooth: we don’t have big jumps in the heights of consecutive bins. Below, we present histograms for this hypothetical data with bins of size 1, 0.5, and 0.25. To make the curve not depend on the hypothetical size of the hypothetical list, we compute the curve on frequencies rather than counts. The smaller we make the bins, the smoother the histogram becomes:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -730,7 +730,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 <section id="choosing-the-bandwidth" class="level3"><h3 class="anchored" data-anchor-id="choosing-the-bandwidth">Choosing the bandwidth</h3>
-<p><em>Smooth</em> is a relative term. The degree of smoothness in a density curve is not fixed, it depends on a parameter, often called the bandwidth, that controls how much we smooth the curve. Most functions that compute smooth densities include an option to adjust this bandwidth. The examples below show the same histogram with two different bandwidth choices, illustrating how the amount of smoothing can change the appearance of the density curve.</p>
+<p><em>Smooth</em> is a relative term. The degree of smoothness in a density curve is not fixed, it depends on a parameter, often called the bandwidth, that controls how much we smooth the curve. We say more about this in <a href="../ml/conditionals-and-smoothing.html" class="quarto-xref"><span>Chapter 28</span></a>. Most functions that compute smooth densities include an option to adjust this bandwidth. The examples below show the same histogram with two different bandwidth choices, illustrating how the amount of smoothing can change the appearance of the density curve.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -739,7 +739,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </div>
 </div>
-<p>Just as a histogram’s appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it’s reasonable to expect nearby values, within an inch, to occur with similar frequency, the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.</p>
+<p>Just as a histogram’s appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it’s reasonable to expect nearby values, within an inch, to occur with similar frequency: the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.</p>
 </section><section id="interpreting-the-y-axis" class="level3"><h3 class="anchored" data-anchor-id="interpreting-the-y-axis">Interpreting the y-axis</h3>
 <p>Interpreting the y-axis of a smooth density plot is not straightforward. It is scaled so that the area under the density curve adds up to 1. If you imagine that we form a bin with a base 1 unit in length, the y-axis value tells us the proportion of values in that bin. However, this is only true for bins of size 1. For other size intervals, the best way to determine the proportion of data in that interval is by computing the proportion of the total area contained in that interval. For example, here are the proportion of values between 65 and 68:</p>
 <div class="cell" data-layout-align="center">
@@ -774,11 +774,11 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 <span class="header-section-number">1.6</span> Describing distributions</h2>
 <p>When visualizing data with a histogram or density plot, we often describe the shape of a distribution using a few key terms and concepts. In this section, our goal is simply to familiarize you with this vocabulary, terms that you’ll encounter in most discussions of data analysis.</p>
 <p>A <em>mode</em> is a value or region where the data are most concentrated, the peak of the distribution. Some distributions have one peak (unimodal), while others have two or more (bimodal or multimodal), which can indicate distinct subgroups within the data.</p>
-<p>A symmetric distribution has as many data points to both sides of the mode. A distribution is skewed if it is asymmetric.</p>
+<p>A <em>symmetric</em> distribution has as many data points to both sides of the mode. A distribution is <em>skewed</em> if it is asymmetric.</p>
 <p>The <em>tails</em> of a distribution are the regions that extend toward the smallest and largest values.</p>
 <p>A <em>right-skewed</em> (positively skewed) distribution has a long tail toward larger values, for example, income, where most people earn modest amounts but a few earn much more.</p>
 <p>A <em>left-skewed</em> (negatively skewed) distribution has a longer tail toward smaller values, such as test scores on an easy exam where most students score high but a few perform poorly.</p>
-<p>In the next chapter, we introduce the normal distribution, a symmetric, bell-shaped distribution that serves as a useful reference point. Distributions with heavy tails contain more extreme observations than the normal distribution, while light-tailed distributions contain fewer.</p>
+<p>In the next chapter, we introduce the normal distribution, a symmetric, <em>bell-shaped</em> distribution that serves as a useful reference point. Distributions with <em>heavy tails</em> contain more extreme observations than the normal distribution, while light-tailed distributions contain fewer.</p>
 <p>Here are some simulated examples illustrating the terms described above:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -790,7 +790,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 </div>
 </section><section id="from-visual-to-numerical-summaries" class="level2" data-number="1.7"><h2 data-number="1.7" class="anchored" data-anchor-id="from-visual-to-numerical-summaries">
 <span class="header-section-number">1.7</span> From visual to numerical summaries</h2>
-<p>As we’ve seen, visual tools such as histograms, density plots, and qqplots help us understand the shape of a distribution, its center, spread, symmetry, and tails. However, graphical summaries are often complemented by numerical summaries, which distill much of this information into just a few key numbers. In the next chapter, we introduce two of the most useful numerical summaries, the average and the standard deviation, which provide all the information you need when the data are approximately normal. We will also explore alternative measures that are more appropriate when distributions deviate from normality. The visualization techniques introduced here will guide us in deciding when simple numerical summaries are sufficient and when more detailed descriptions are needed.</p>
+<p>As we’ve seen, visual tools such as histograms and density plots help us understand the shape of a distribution, its center, spread, symmetry, and tails. However, graphical summaries are often complemented by numerical summaries, which distill much of this information into just a few key numbers. In the next chapter, we introduce two of the most useful numerical summaries, the average and the standard deviation, which provide all the information you need when the data are approximately normal. We will also explore alternative measures that are more appropriate when distributions deviate from normality. The visualization techniques introduced here will guide us in deciding when simple numerical summaries are sufficient and when more detailed descriptions are needed.</p>
 </section><section id="exercises" class="level2" data-number="1.8"><h2 data-number="1.8" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">1.8</span> Exercises</h2>
 <p>1. In the <code>murders</code> dataset, the region is a categorical variable and the following is its distribution:</p>
@@ -826,7 +826,7 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
 <li>80%</li>
 <li>72 inches</li>
 </ol>
-<p>4. To the closest inch, what height <code>m</code> has the property that 1/2 of the male students are taller than <code>m</code> and 1/2 are shorter?</p>
+<p>4. To the closest inch, what height <span class="math inline">\(m\)</span> has the property that 1/2 of the male students are taller than <span class="math inline">\(m\)</span> and 1/2 are shorter?</p>
 <ol type="a">
 <li>61 inches</li>
 <li>64 inches</li>
@@ -963,13 +963,14 @@ f(x) = \frac{\mbox{number of times value } x \mbox{ appears in the list}}{n}
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

@@ -1,19 +1,185 @@
 #  Building Machine Learning Models {#sec-ml-in-practice}
 
+Building machine learning models requires more than understanding the underlying mathematics. While theory helps avoid conceptual mistakes and guides the choice of methods, translating these ideas into effective, real-world models involves a series of practical decisions. These include how to preprocess and transform features, incorporate domain knowledge to select relevant predictors, manage computational constraints, and systematically tune and compare algorithms. In many cases, we also combine models through ensembling to improve predictive performance. 
+
+In this chapter, we bring these elements together through a case study based on the MNIST handwritten-digit dataset. Using this example, we illustrate how the concepts developed in earlier chapters, particularly model evaluation, selection, and tuning, fit into a coherent machine learning workflow.
+
+Before turning to the case study, we introduce the **caret** package, which provides a unified interface to a wide range of machine learning algorithms. By standardizing syntax and workflow, **caret** makes code more consistent, readable, and easier to maintain. Although we use **caret** throughout this chapter, similar frameworks exist in both R and Python, including **tidymodels** and **mlr3** in R, and **scikit-learn** and **PyTorch** in Python. Our goal is not to cover any one framework exhaustively, but to illustrate how such tools structure the modeling process so that you can readily adapt to others.
+
+## The caret package {#sec-caret}
+
+We have already learned about several machine learning algorithms. Many of these algorithms are implemented in R. However, they are distributed via different packages, developed by different authors, and often use different syntax. The __caret__ package tries to consolidate these differences and provide consistency. It currently includes over 200 different methods which are summarized in the __caret__ package manual^[https://topepo.github.io/caret/available-models.html]. Keep in mind that __caret__ does not include the packages needed to run each possible algorithm. To apply a machine learning method through __caret__ you still need to install the library that implement the method. The required packages for each method are described in the package manual.
+
+To illustrate the __caret__ package and its key functions, we will first use the `mnist_27` dataset introduced in @sec-mnist that contains only images of 2s and 7s and two predictors. This smaller dataset allows us to run code quickly while focusing on learning the package. Once we are comfortable with the package, we will use the full MNIST dataset for realistic performance evaluation and demonstrate how the concepts scale to larger datasets.
+
+### The `train` function 
+
+The R functions that fit machine algorithms are all slightly different. Functions such as `lm`, `glm`, `qda`, `lda`, `knn3`, `rpart` and `randomForest` use different syntax, have different argument names and produce objects of different types.
+
+The __caret__ `train` function lets us train different algorithms using similar syntax. So, for example, we can type the following to train three different models:
+
 ```{r}
-#| echo: false
+#| message: false
+#| warning: false
 #| cache: false
 library(dslabs)
+library(caret)
+```
+```{r}
+#| message: false
+#| warning: false
+train_glm <- train(y ~ ., method = "glm", data = mnist_27$train)
+train_qda <- train(y ~ ., method = "qda", data = mnist_27$train)
+train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
 ```
 
-Building machine learning models requires more than understanding the underlying mathematics.
-The theory helps us avoid conceptual mistakes and choose appropriate methods, but turning these ideas into effective, real-world models involves additional practical considerations. We must decide how to preprocess and transform features, incorporate contextual knowledge to select relevant predictors, manage computational constraints, tune and compare algorithms, and often combine multiple models through techniques such as ensembling to boost predictive performance.
+As we explain in more detail in @sec-caret-cv, the `train` function selects parameters for you using a resampling method to estimate the MSE, with bootstrap as the default.
 
-In this chapter, we bring these pieces together by walking through a complete case study using the MNIST handwritten-digit dataset, illustrating how the conceptual tools developed in earlier chapters translate into a practical machine learning workflow.
+### The `predict` function
+
+The predict function is one of the most useful tools in R for machine learning and statistical modeling in general. It takes a fitted model object and a data frame containing the features $\mathbf{x}$ for which we want to make predictions, then returns the corresponding predicted values.
+
+Here is an example with logistic regression:
+
+```{r}
+fit <- glm(y ~ ., family = "binomial", data = mnist_27$train)
+p_hat <- predict(fit, newdata = mnist_27$test)
+```
+
+In this case, `predict` is simply computing 
+
+$$
+\hat{p}(\mathbf{x}) = g^{-1}\left(\hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2 \right) \text{ with } g(p) = \log\frac{p}{1-p} \implies g^{-1}(\mu) = \frac{1}{1-e^{-\mu}}
+$$
+
+for the `x_1` and `x_2` in the test set `mnist_27$test`. With these estimates in place, we can make our predictions and compute our accuracy:
+
+```{r}
+y_hat <- factor(ifelse(p_hat > 0.5, 7, 2))
+```
+
+However, note that `predict` does not always return objects of the same type; it depends on what type of object it is applied to. To learn about the specifics, you need to look at the help file specific for the type of fit object that is being used. 
+
+`predict` is actually a special type of function in R called a _generic function_. Generic functions call other functions depending on what kind of object it receives. So if `predict` receives an object coming out of the `lm` function, it will call `predict.lm`. If it receives an object coming out of `glm`, it calls `predict.glm`. If the fit is from `knn3`, it calls `predict.knn3`, and so on. These functions are similar but not exactly. You can learn more about the differences by reading the help files:
+
+```{r, eval = FALSE}
+?predict.glm
+?predict.qda
+?predict.knn3
+```
+
+There are many other versions of `predict` and many machine learning algorithms define their own version.
+
+As with `train`, the **caret** packages unifies the use of `predict` with the function `predict.train`. This function takes the output of `train` and produces prediction of categories using `type = "raw"` (default) or estimates of $p(\mathbf{x})$ using `type = "prob"`.
+
+The code looks the same for all methods:
+
+```{r}
+y_hat_glm <- predict(train_glm, mnist_27$test, type = "raw")
+y_hat_qda <- predict(train_qda, mnist_27$test, type = "raw")
+y_hat_knn <- predict(train_knn, mnist_27$test, type = "raw")
+```
+
+This permits us to quickly compare the algorithms. For example, we can compare the accuracy like this:
+
+```{r}
+fits <- list(glm = train_glm, qda = train_qda, knn = train_knn)
+sapply(fits, function(fit) {
+  mean(predict(fit, mnist_27$test) == mnist_27$test$y)
+})
+```
+
+
+### Resampling {#sec-caret-cv}
+
+When an algorithm includes a tuning parameter, `train` automatically uses a resampling method to estimate MSE and decide among a few default candidate values. To find out what parameter or parameters are optimized, you can read the **caret** manual^[http://topepo.github.io/caret/available-models.html] or study the output of: 
+
+```{r, eval=FALSE}
+modelLookup("knn")
+```
+
+To obtain all the details of how **caret** implements kNN you can use:
+
+```{r, eval=FALSE}
+getModelInfo("knn")
+```
+
+If we run it with default values: 
+
+```{r}
+train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
+```
+
+you can quickly see the estimated MSEs using the `ggplot` function. The argument `highlight` highlights the max:
+
+```{r caret-highlight}
+#| warning: false
+ggplot(train_knn, highlight = TRUE)
+```
+
+We see that the accuracy is estimated to be around 0.81, which is not much higher than the 0.775 we obtained with logistic regression and QDA. However, for the `knn` method, the default is to try $k=5,7,9$ and it is possible that we can do better by trying out more values. We change this using the `tuneGrid` argument. The grid of values must be supplied by a data frame with the parameter names as specified in the `modelLookup` output.  Here we present an example where we try out values between 1 and 149. To do this with __caret__, we need to define a column named `k`, so we use this:  `data.frame(k = seq(1, 149, 2))`. 
+
+:::{.callout-note}
+### Limitations of Bootstrapping for kNN
+
+By default, the **caret** `train` function uses bootstrap resampling. However, bootstrapping can be problematic when estimating mean squared error (MSE) for k-nearest neighbors (kNN), particularly for small values of $k$.
+
+Because bootstrap samples are drawn with replacement, the same observation can appear multiple times in a training set. For kNN, this can artificially inflate the influence of duplicated points, since identical observations may be treated as distinct neighbors. As a result, the model can achieve unrealistically low error estimates, leading to overly optimistic performance.
+
+To avoid this issue, we use cross-validation instead. For example, we can specify:
+
+```{r}
+cv20_ctrl <- trainControl(method = "cv", number = 20)
+```
+
+which performs 20-fold cross-validation, using 95% of the data for training in each split.
+:::
+
+Here is an example of running `train` with cross-validation and a custom grid of $k$ values. Note that when running this code, we are fitting 75 versions of kNN to 25 bootstrapped samples. Since we are fitting $75 \times 25$ = 1,875 kNN models, running this code might take several seconds.
+
+```{r train-knn-plot}
+#| warning: false
+set.seed(2001)
+train_knn <- train(y ~ ., method = "knn", data = mnist_27$train,
+  tuneGrid = data.frame(k = seq(1, 149, 2)),
+  trControl = cv20_ctrl
+)
+ggplot(train_knn, highlight = TRUE)
+```
+
+Resampling methods involve random sampling steps, so repeated runs of the same code can produce different outcomes. To ensure results can be reproduced exactly, we set the random seed at the start of the analysis. 
+
+The `results` component of the `train` output includes several summary statistics related to the variability of the cross validation estimates:
+
+```{r}
+names(train_knn$results)
+```
+You can learn many more details about the **caret** package, from the manual^[https://topepo.github.io/caret/available-models.html].
+
+To access the parameter that maximized the accuracy, you can use this:
+
+```{r}
+train_knn$bestTune
+```
+
+and the best performing model like this:
+
+```{r}
+#| eval: false
+train_knn$finalModel
+```
+
+The function `predict` will use this best performing model. Here is the accuracy of the best model when applied to the test set, which we have not yet used because the cross validation was done on the training set:
+
+```{r}
+mean(predict(train_knn, mnist_27$test, type = "raw") == mnist_27$test$y)
+```
 
 ## Case study: handwritten digit recognition
 
-We will use the MNIST dataset was introduced in @sec-mnist. We can load this data using the following **dslabs** package function:
+We are now ready to apply these ideas to a real-world example. Throughout this section, we use the MNIST dataset, introduced in @sec-mnist, as a case study to illustrate the full modeling workflow.
+
+We load the data using the following function from the **dslabs** package:
 
 ```{r, message=FALSE, warning=FALSE}
 library(dslabs)
@@ -44,10 +210,10 @@ Because we want this example to run on a laptop and in less than one hour, we wi
 ```{r}
 set.seed(1990)
 index <- sample(nrow(mnist$train$images), 10000)
-x <- mnist$train$images[index,]
+x <- mnist$train$images[index, ]
 y <- factor(mnist$train$labels[index])
 index <- sample(nrow(mnist$test$images), 1000)
-x_test <- mnist$test$images[index,]
+x_test <- mnist$test$images[index, ]
 y_test <- factor(mnist$test$labels[index])
 ```
 
@@ -59,188 +225,15 @@ When fitting models to large datasets, we recommend using matrices instead of da
 colnames(x) <- 1:ncol(mnist$train$images)
 colnames(x_test) <- colnames(x)
 ```
-
-## The caret package {#sec-caret}
-
-
-```{r}
-#| echo: false
-#| cache: false
-library(dslabs)
-```
-
-We have already learned about several machine learning algorithms. Many of these algorithms are implemented in R. However, they are distributed via different packages, developed by different authors, and often use different syntax. The __caret__ package tries to consolidate these differences and provide consistency. It currently includes over 200 different methods which are summarized in the __caret__ package manual^[https://topepo.github.io/caret/available-models.html]. Keep in mind that __caret__ does not include the packages needed to run each possible algorithm. To apply a machine learning method through __caret__ you still need to install the library that implement the method. The required packages for each method are described in the package manual. 
-
-The __caret__ package also provides a function that performs cross validation for us. Here we provide some examples showing how we use this helpful package. We will first use the 2 or 7 example to illustrate and, in later sections, we use the package to run algorithms on the larger MNIST dataset.
-
-### The `train` function 
-
-The R functions that fit machine algorithms are all slightly different. Functions such as `lm`, `glm`, `qda`, `lda`, `knn3`, `rpart` and `randomForest` use different syntax, have different argument names and produce objects of different types.
-
-The __caret__ `train` function lets us train different algorithms using similar syntax. So, for example, we can type the following to train three different models:
-
-```{r}
-#| cache: false
-#| include: false  
-library(caret)
-```
-
-```{r}
-#| message: false
-#| warning: false
-library(caret)
-train_glm <- train(y ~ ., method = "glm", data = mnist_27$train)
-train_qda <- train(y ~ ., method = "qda", data = mnist_27$train)
-train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
-```
-
-As we explain in more detail in @sec-caret-cv, the `train` function selects parameters for you using a resampling method to estimate the MSE, with bootstrap as the default.
-
-### The `predict` function
-
-The predict function is one of the most useful tools in R for machine learning and statistical modeling in general. It takes a fitted model object and a data frame containing the features $\mathbf{x}$ for which we want to make predictions, then returns the corresponding predicted values.
-
-Here is an example with logistic regression:
-
-```{r}
-fit <- glm(y ~ ., family = "binomial", data = mnist_27$train)
-p_hat <- predict(fit, newdata = mnist_27$test)
-```
-
-In this case, the function is simply computing 
-
-$$
-\hat{p}(\mathbf{x}) = g^{-1}\left(\hat{\beta}_0 + \hat{\beta}_1 x_1 + \hat{\beta}_2 x_2 \right) \text{ with } g(p) = \log\frac{p}{1-p} \implies g^{-1}(\mu) = \frac{1}{1-e^{-\mu}}
-$$
-
-for the `x_1` and `x_2` in the test set `mnist_27$test`. With these estimates in place, we can make our predictions and compute our accuracy:
-
-```{r}
-y_hat <- factor(ifelse(p_hat > 0.5, 7, 2))
-```
-
-However, note that `predict` does not always return objects of the same type; it depends on what type of object it is applied to. To learn about the specifics, you need to look at the help file specific for the type of fit object that is being used. 
-
-`predict` is actually a special type of function in R called a _generic function_. Generic functions call other functions depending on what kind of object it receives. So if `predict` receives an object coming out of the `lm` function, it will call `predict.lm`. If it receives an object coming out of `glm`, it calls `predict.glm`. If the fit is from `knn3`, it calls `predict.knn3`, and so on. These functions are similar but not exactly. You can learn more about the differences by reading the help files:
-
-```{r, eval = FALSE}
-?predict.glm
-?predict.qda
-?predict.knn3
-```
-
-There are many other versions of `predict` and many machine learning algorithms define their own `predict` function.
-
-As with `train`, the **caret** packages unifies the use of `predict` with the function `predict.train`. This function takes the output of `train` and produces prediction of categories or estimates of $p(\mathbf{x})$.
-
-The code looks the same for all methods:
-
-```{r}
-y_hat_glm <- predict(train_glm, mnist_27$test, type = "raw")
-y_hat_qda <- predict(train_qda, mnist_27$test, type = "raw")
-y_hat_knn <- predict(train_knn, mnist_27$test, type = "raw")
-```
-
-This permits us to quickly compare the algorithms. For example, we can compare the accuracy like this:
-
-```{r}
-fits <- list(glm = train_glm, qda = train_qda, knn = train_knn)
-sapply(fits, function(fit) 
-  mean(predict(fit, mnist_27$test, type = "raw") == mnist_27$test$y))
-```
-
-
-### Resampling {#sec-caret-cv}
-
-When an algorithm includes a tuning parameter, `train` automatically uses a resampling method to estimate MSE and decide among a few default candidate values. To find out what parameter or parameters are optimized, you can read the **caret** manual^[http://topepo.github.io/caret/available-models.html] or study the output of: 
-
-```{r, eval=FALSE}
-modelLookup("knn")
-```
-
-To obtain all the details of how **caret** implements kNN you can use:
-
-```{r, eval=FALSE}
-getModelInfo("knn")
-```
-
-If we run it with default values: 
-
-```{r}
-train_knn <- train(y ~ ., method = "knn", data = mnist_27$train)
-```
-
-you can quickly see the results of the cross validation using the `ggplot` function. The argument `highlight` highlights the max:
-
-```{r caret-highlight}
-#| warning: false
-ggplot(train_knn, highlight = TRUE)
-```
-
-By default, the resampling is performed by taking 25 bootstrap samples, each comprised of 25% of the observations. 
-
-For the `knn` method, the default is to try $k=5,7,9$. We change this using the `tuneGrid` argument. The grid of values must be supplied by a data frame with the parameter names as specified in the `modelLookup` output. 
-
-Here we present an example where we try out 38 values between 1 and 75. To do this with __caret__, we need to define a column named `k`, so we use this:  `data.frame(k = seq(11, 105, 2))`. Note that when running this code, we are fitting 38 versions of kNN to 25 bootstrapped samples. Since we are fitting $38 \times 25 = 950$ kNN models, running this code will take several seconds.
-
-
-```{r train-knn-plot}
-train_knn <- train(y ~ ., method = "knn", 
-                   data = mnist_27$train,
-                   tuneGrid = data.frame(k = seq(11, 105, 4)))
-ggplot(train_knn, highlight = TRUE)
-```
-
-:::{.callout-note}
-Resampling methods involve random sampling steps, so repeated runs of the same code can produce different outcomes. To ensure that your results can be reproduced exactly, always set the random seed at the start of the analysis, as we did at the beginning of this chapter.
-:::
-
-To access the parameter that maximized the accuracy, you can use this:
-
-```{r}
-train_knn$bestTune
-```
-
-and the best performing model like this:
-
-```{r}
-#| eval: false
-train_knn$finalModel
-```
-
-The function `predict` will use this best performing model. Here is the accuracy of the best model when applied to the test set, which we have not yet used because the cross validation was done on the training set:
-
-```{r}
-mean(predict(train_knn, mnist_27$test, type = "raw") == mnist_27$test$y)
-```
-
-Bootstrapping is not always the best approach to resampling (see @sec-knn-in-practice, for an example). If we want to change our resampling method, we can use the `trainControl` function. For example, the code below runs 10-fold cross validation. This means we have 10 samples using 90% of the observations to train in each sample. We accomplish this using the following code:
-
-```{r cv-10-fold-accuracy-estimate}
-control <- trainControl(method = "cv", number = 10, p = .9)
-train_knn_cv <- train(y ~ ., method = "knn", 
-                   data = mnist_27$train,
-                   tuneGrid = data.frame(k = seq(11, 105, 4)),
-                   trControl = control)
-```
-
-:::{.callout-note}
-The `results` component of the `train` output includes several summary statistics related to the variability of the cross validation estimates:
-
-```{r}
-names(train_knn$results)
-```
-
-You can learn many more details about the **caret** package, from the manual^[https://topepo.github.io/caret/available-models.html].
-:::
-
 ## Preprocessing
 
-We often transform predictors before running the machine algorithm. We also remove predictors that are clearly not useful. We call these steps *preprocessing*.
+We often transform predictors before running machine algorithms. We also remove predictors that are clearly not useful. We call these steps *preprocessing*.
 
-Examples of preprocessing include standardizing the predictors, taking the log transform of some predictors, removing predictors that are highly correlated with others, and removing predictors with very few non-unique values or close to zero variation. 
+Examples of preprocessing steps include standardizing predictors, applying transformations such as the logarithm, reducing the dimensionality of the feature space, removing highly correlated predictors, and excluding predictors with little variability, for example, those with near-zero variance.
 
-For example, we can run the `nearZeroVar` function from the **caret** package to see that several features do not vary much from observation to observation. We can see that there is a large number of features with close to 0 variability:
+### Feature Filtering
+
+As a first example, we focus on this last type of preprocessing by examining the variability of each predictor. Specifically, we compute the standard deviation of each feature and observe that many have values close to zero, indicating minimal variation:
 
 ```{r pixel-sds, message=FALSE, warning=FALSE, cache=FALSE, echo = -1}
 rafalib::mypar()
@@ -263,7 +256,12 @@ rafalib::mypar()
 image(matrix(1:784 %in% nzv, 28, 28))
 ```
 
-So we end up removing `length(nzv)` = `r length(nzv)` predictors.
+If we use `nearZeroVar` we end up removing `length(nzv)` = `r length(nzv)` predictors. We can see that the accuracy of kNN is about the same even after removing all these predictors:
+
+```{r}
+mean(predict(knn3(x, y), newdata = x_test) == y_test)
+mean(predict(knn3(x[, -nzv], y), newdata = x_test[, -nzv]) == y_test)
+```
 
 The **caret** package features the `preProcess` function, which allows users to establish a predefined set of preprocessing operations based on a training set. This function is designed to apply these operations to new datasets without recalculating anything on the validation set, ensuring that all preprocessing steps are consistent and derived solely from the training data.
 
@@ -272,77 +270,20 @@ Below is an example demonstrating how to remove predictors with near-zero varian
 ```{r}
 pp <- preProcess(x, method = c("nzv", "center"))
 centered_subsetted_x_test <- predict(pp, newdata = x_test)
-dim(centered_subsetted_x_test)
 ```
 
-Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. We will explore this functionality further in the context of a k-Nearest Neighbors model in @sec-knn-in-practice.
-
-## Parallelization 
-
-During cross-validation or bootstrapping, the process of fitting models to different samples or using varying parameters can be performed independently. Imagine you are fitting 100 models; if you had access to 100 computers, you could theoretically speed up the process by a factor of 100 by fitting each model on a separate computer and then aggregating the results. In reality, most modern computers, including many personal computers, are equipped with multiple processors that allow for such parallel execution. This method, known as parallelization, leverages these multiple processors to conduct several computational tasks simultaneously, significantly accelerating the model training process. By distributing the workload across different processors, parallelization makes it feasible to manage large datasets and complex modeling procedures efficiently.
-
-
-The **caret** package is designed to take advantage of parallel processing, but you need to explicitly tell R to run tasks in parallel. To do this, we use the **doParallel** package:
+Additionally, the `train` function in caret includes a `preProcess` argument that allows users to specify which preprocessing steps to apply automatically during model training. Here is an example of how to use it to remove near-zero variance predictors. Because this is an illustrative example, we consider only one $k$ and use five-fold cross-validation to estimate the MSE to reduce runtime. As we see in @sec-knn-in-practice, in practice you would want to optimize $k$ and use more thorough resampling:
 
 ```{r}
-#| message: false
-#| warning: false
-library(doParallel)
-nc <- detectCores() - 1   # it is convention to leave 1 core for the OS
-cl <- makeCluster(nc)
-registerDoParallel(cl)
-```
-
-If you do use parallelization, once you are finished fitting your models, make sure to let R know you are done with the following lines of code:
-
-```{r}
-#| eval: false
-stopCluster(cl)
-stopImplicitCluster()
-```
-
-:::{.callout-warning}
-When parallelizing tasks across multiple processors, it is important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
-:::
-
-## k-nearest neighbors {#sec-knn-in-practice}
-
-In Section @sec-knn-cv-intro, we introduced the k-nearest neighbors (kNN) algorithm and described its intuition and mathematical formulation. Here, we focus on the practical aspects of applying kNN to real data. We will explore how to train and test kNN models in R, select an appropriate value of k, and evaluate performance using cross-validation and tuning techniques.
-
-:::{.callout-warning}
-Before starting this section, note that the first two calls to the `train` function in the code below can take several hours to run. This is a common challenge when training machine learning algorithms since we have to run the algorithm for each cross validation split and each set of tuning parameters being considered. In the next section, we will provide some suggestions on how to predict the duration of the process and ways to reduce. 
-:::
-
-### Limitations of Bootstrapping for kNN
-
-As we will see soon, the optimal $k$ for the MNIST data is between 1 and 7. For small values of $k$, bootstrapping can be problematic for estimating MSE for a k-Nearest Neighbors (kNN). This is because bootstrapping involves sampling with replacement from the original dataset which implies the closest neighbor will often appear twice but considered two independent observations by kNN. This is a unrealistic scenario that can distort the estimate MSE when, for example, $k=3$. We therefore use cross-validation to estimate our MSE.
-
-### Optimizing $k$
-
-The first step is to optimize for $k$.
-
-```{r mnist-knn-fit}
-train_knn <- train(x, y, method = "knn", 
-                   preProcess = "nzv",
-                   trControl = trainControl("cv", number = 20, p = 0.95),
-                   tuneGrid = data.frame(k = seq(1, 7, 2)))
-```
-
-Once we optimize our algorithm, the `predict` function defaults to using the best performing algorithm fit with the entire training data:
-
-```{r}
-y_hat_knn <- predict(train_knn, x_test, type = "raw")
-```
-
-We achieve relatively high accuracy:
-
-```{r}
-mean(y_hat_knn == y_test)
+knn_nzv <- train(x, y, method = "knn", preProcess = "nzv", 
+  trControl = trainControl(method = "cv", number = 5),
+  tuneGrid = data.frame(k = 5))
+mean(predict(knn_nzv, x_test, type = "raw") == y_test)
 ```
 
 ### Dimension reduction with PCA
 
-An alternative to removing low‐variance columns directly is to reduce the dimension of the feature matrix using Principal Component Analysis (PCA). For this dataset, a large fraction of the total variability in the predictors can be captured using only a small number of principal components (PCs).
+An alternative to filtering features directly is to reduce the dimension of the feature matrix using Principal Component Analysis (PCA). For this dataset, a large fraction of the total variability in the predictors can be captured using only a small number of principal components (PCs).
 
 As an example, suppose we want to retain the smallest number of PCs that explain at least 90% of the variability:
 
@@ -351,10 +292,10 @@ pca <- prcomp(x)
 p <- which(cumsum(pca$sdev^2) / sum(pca$sdev^2) >= 0.9)[1]
 ```
 
-We can now re-run our algorithm using only these `r p` transformed features:
+We can run an algorithm using only these `r p` transformed features. We will use `knn3` from the caret package as an example with the default `k`
 
 ```{r}
-fit_knn_pca <- knn3(pca$x[, 1:p], y, k = train_knn$bestTune)
+knn_pca <- knn3(pca$x[, 1:p], y)
 ```
 
 A critical point when using PCA for prediction is that the PCA transformation must be learned only from the training set. If we use the validation or test set to compute principal components, or even to compute the means used for centering, we inadvertently leak information from those sets into the training process, leading to overtraining.
@@ -363,16 +304,15 @@ To avoid this, we compute the necessary centering and rotation matrices on the t
 
 ```{r}
 newdata <- sweep(x_test, 2, colMeans(x)) %*% pca$rotation[, 1:p]
-y_hat_knn_pca <- predict(fit_knn_pca, newdata, type = "class")
 ```
 
 The resulting accuracy is similar to what we obtained with the full feature set, but using only `r p` dimensions:
 
 ```{r}
-mean(y_hat_knn_pca == y_test)
+mean(predict(knn_pca, newdata, type = "class") == y_test)
 ```
 
-In this example, we used the value of $k$ optimized for the raw data, not the PCA-transformed data. To obtain an unbiased MSE estimate when using PCA, we must recompute the PCA inside each cross-validation split and apply the resulting transformation to the corresponding validation fold.
+To obtain an unbiased MSE estimate when training with PCA, we must recompute the PCA inside each cross-validation split and apply the resulting transformation to the corresponding validation fold.
 
 Fortunately, the **caret** package can automate this. The `train` function includes PCA as one of its available preprocessing steps. We can request PCA with a fixed number of components using
 
@@ -385,44 +325,148 @@ or ask caret to pick the number of components that explain a fixed fraction of v
 Here is how we modify our earlier code to let caret perform PCA during preprocessing:
 
 ```{r}
-train_knn_pca <- train(x, y, method = "knn", 
-                       preProcess = c("nzv", "pca"),
-                       trControl = trainControl("cv", number = 20, p = 0.95,
-                                                preProcOptions = list(thresh = 0.9)),
-                       tuneGrid = data.frame(k = seq(1, 7, 2)))
-y_hat_knn_pca <- predict(train_knn_pca, x_test, type = "raw")
-mean(y_hat_knn_pca == y_test)
+#| eval: false
+knn_pca <- train(x, y, method = "knn", preProcess = c("nzv", "pca"),
+  trControl = trainControl("cv", n = 20, preProcOptions = list(thresh = 0.9)))
 ```
 
 This raises a natural question: why did we choose 0.9? Could another threshold lead to better performance?
 
 One limitation of this approach is that caret does **not** automatically optimize the number of PCs. To tune this quantity directly, just like we tune parameters such as $k$, we would need to define our own model interface. The caret manual^[[https://topepo.github.io/caret/using-your-own-model-in-train.html](https://topepo.github.io/caret/using-your-own-model-in-train.html)] describes how to build custom models that allow full optimization of the PCA dimension.
 
+## Parallelization 
 
-## Random Forest
+By default, the `train` function estimates model accuracy using 25 bootstrap resamples. This can lead to substantial computation time. For example, if we evaluate 75 different values of a tuning parameter, the model is fit 25 $\times$ 75 = 1,875 times. For algorithms that take several minutes per fit, the total runtime can extend to many hours or even days.
+
+A simple way to approximate the total computation time is to measure how long a single model fit takes using the `system.time` function, and then multiply by the total number of fits. For example, with kNN we can run:
+
+```{r}
+system.time(predict(knn3(x[, -nzv], y), newdata = x_test[, -nzv]))
+```
+
+On a typical laptop, this call takes about 2 seconds. This suggests that the full training process could take over an hour.
+
+In practice, this cost can be reduced substantially by using parallel computing.
+
+Imagine you are fitting 100 models; if you had access to 100 computers, you could theoretically speed up the process by a factor of 100 by fitting each model on a separate computer and then aggregating the results. In reality, most modern computers, including many personal computers, are equipped with multiple processors that allow for such parallel execution. This method, known as parallelization, leverages these multiple processors to conduct several computational tasks simultaneously, significantly accelerating the model training process. By distributing the workload across different processors, parallelization makes it feasible to manage large datasets and complex modeling procedures efficiently.
+
+The **caret** package is designed to take advantage of parallel processing, but you need to explicitly tell R to run tasks in parallel. To do this, we use the **doParallel** package. We will see how to set up parallelization for the kNN example in the next section, but the same approach can be applied to any algorithm that uses the `train` function.
+
+:::{.callout-warning}
+When parallelizing tasks across multiple processors, it is important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
+:::
+
+## Model tuning and diagnostics {#sec-knn-in-practice}
+
+In Sections [-@sec-knn-cv-intro] and [-@sec-random-forests], we introduced the k-nearest neighbors (kNN) and random forest algorithms, along with their intuition and formulation. In this section, we use these two methods as working examples to illustrate the process of model selection and tuning. Specifically, we demonstrate how to train and evaluate models in R, choose appropriate hyperparameters, such as $k$ for kNN and tree-related parameters for random forests, and assess performance using cross-validation.
+
+
+### Optimizing tuning parameters
+
+We start by demonstrating how we select the tuning parameter $k$ in the kNN algorithm. In **caret**, this is done using the `tuneGrid` argument in the `train` function. The grid of candidate values must be provided as a data frame, with column names matching those returned by `modelLookup`. For kNN, this means a column named `k`. The default values are 5, 7, and 9, which is a very limited range.
+
+In practice, selecting the grid and resampling strategy involves a tradeoff. Using fewer cross-validation folds reduces computation time but yields noisier estimates of prediction error, while more folds provide more precise estimates at greater runtime cost.
+
+Because of this tradeoff, it is inefficient to search over a fine grid from the start. Instead, we begin with a coarse grid over a broad range and a faster resampling scheme to identify a promising region. Once we have a rough idea of where the optimal $k$ lies, we refine the search with a finer grid and more thorough resampling.
+
+Throughout this process, we use parallel computation to reduce runtime, since each combination of tuning parameters and resamples can be evaluated independently.
+
+```{r mnist-knn-fit}
+#| message: false
+#| warning: false
+library(doParallel)
+nc <- detectCores() - 1   # it is convention to leave 1 core for the OS
+cl <- makeCluster(nc)
+registerDoParallel(cl)
+set.seed(1991)
+knn <- train(x, y, method = "knn", preProcess = c("nzv", "pca"),
+                   trControl = trainControl(method = "cv", number = 5,
+                           preProcOptions = list(thresh = 0.9)),
+                   tuneGrid = data.frame(k = seq(1, 25, 4)))
+plot(knn, highlight = TRUE)
+```
+
+Based on these results we can infer that the best $k$ is between 1 and 5. We now refine the search with a finer grid and 20-fold cross-validation:
+
+```{r}
+set.seed(1992)
+knn <- train(x, y, method = "knn", preProcess = c("nzv", "pca"),
+                   trControl =  trainControl(method = "cv", number = 20,
+                           preProcOptions = list(thresh = 0.9)),
+                   tuneGrid = data.frame(k = seq(1, 7, 2)))
+knn$bestTune
+```
+
+Once we optimize our algorithm, the `predict` function defaults to using the best performing model fit with the entire training data:
+
+```{r}
+y_hat_knn <- predict(knn, x_test, type = "raw")
+```
+
+We achieve relatively high accuracy:
+
+```{r}
+mean(y_hat_knn == y_test)
+```
+
+Once done with parallelization, it is good practice to stop the cluster:
+
+```{r}
+stopCluster(cl)
+stopImplicitCluster()
+```
+
+
+## Improving computational efficiency
 
 With the random forest algorithm several parameters can be optimized, but the main one is `mtry`, the number of predictors that are randomly selected for each tree. This is also the only tuning parameter that the **caret** function `train` permits when using the default implementation from the **randomForest** package.
 
-```{r, eval=FALSE}
-library(randomForest)
-train_rf <- train(x, y, method = "rf", 
-                  preProcess = "nzv",
-                  tuneGrid = data.frame(mtry = seq(5, 15)))
-y_hat_rf <- predict(train_rf, x_test, type = "raw")
-```
-
-Now that we have optimized our algorithm, we are ready to fit our final model:
-
-```{r, eval=FALSE}
-y_hat_rf <- predict(train_rf, x_test, type = "raw")
-```
-
-
 ```{r}
-#| include: false
 #| cache: false
 library(randomForest)
 ```
+
+The random forest algorithm is computationally more intensive than kNN and can require substantially longer training times. As a result, tuning its hyperparameters requires a more deliberate strategy. In this example, we adopt several approaches to reduce computation time: we use parallelization, decrease the number of bootstrap resamples, limit the number of trees grown in each fit, and perform an initial search over a coarse grid before refining the search in a narrower region.
+
+We start by fitting the default model and checking 
+
+
+```{r accuracy-versus-ntree, echo=-1}
+rafalib::mypar()
+rf <- randomForest(x[, -nzv], y)
+plot(rf)
+```
+We see that accuracy begins to level off at around 200 trees. So for our coarse search we limit the number of trees to 200, use five-fold cross validation instead of 25 bootstrap samples, and consider a coarse grid of `mtry` values. This reduction in the number of trees and the size of the resampling, we reduce the runtime by a factor of 10, which allows us to identify a promising region for `mtry` relatively quickly:
+
+```{r rf-coarse}
+#| warning: false
+library(doParallel)
+cl <- makeCluster(detectCores() - 1)
+registerDoParallel(cl)
+set.seed(1993)
+rf <- train(x, y, method = "rf", ntree = 250, preProcess = "nzv",
+  trControl = trainControl(method = "cv", n = 5), 
+  tuneGrid = data.frame(mtry = seq(3, 53, 10)))
+ggplot(rf, highlight = TRUE)
+```
+
+We see that the optimal `mtry` is between 5 and 20. 
+
+::: {.callout-note}
+Note that with smaller values of `mtry`, individual trees tend to be weaker because each split considers fewer predictors. As a result, more trees are typically required for performance to stabilize. In contrast, larger values of `mtry` produce stronger but more correlated trees, so fewer trees may suffice. 
+
+When reducing the number of trees to speed up tuning, keep this tradeoff in mind: using too few trees can bias comparisons across `mtry` values, particularly disadvantaging smaller `mtry`. It is therefore advisable to use enough trees to obtain stable performance when selecting the range of `mtry`.
+:::
+
+We now refine the search using a finer grid and the default resampling settings. Note that the code below uses 500 trees and 25 bootstrap resamples, so it may take several minutes to run.
+
+```{r, eval=FALSE}
+set.seed(1994)
+rf <- train(x, y, method = "rf", preProcess = "nzv", 
+  tuneGrid = data.frame(mtry = 5:20))
+```
+
+Now that we have optimized our algorithm, we are ready to predict outcomes with our final model:
 
 ```{r}
 #| echo: false
@@ -431,9 +475,16 @@ library(randomForest)
 ## we ran previous code once to determine 9 was the best
 library(randomForest)
 nzv <- nearZeroVar(x)
-fit_rf <- randomForest(x[, -nzv], y,  mtry = 9)
-y_hat_rf <- predict(fit_rf, x_test[,-nzv])
+fit_rf <- randomForest(x[, -nzv], y, mtry = 6)
+y_hat_rf <- predict(fit_rf, x_test[, -nzv])
 ```
+
+
+```{r}
+#| eval: false
+y_hat_rf <- predict(train_rf, x_test, type = "raw")
+```
+
 
 As with kNN, we also achieve high accuracy:
 
@@ -443,37 +494,25 @@ mean(y_hat_rf == y_test)
 
 By optimizing some of the other algorithm parameters, we can achieve even higher accuracy.
 
-
-### Testing and improving computation time
-
-The default method for estimating accuracy used by the `train` function is to test prediction on 25 bootstrap samples. This can result in long compute times. For example, if we are considering several values, say 10, of the tuning parameters, we will fit the algorithm 250 times. We can use the `system.time` function to estimate how long it takes to run the algorithm once:
+To end, we turn off the use parallel:
 
 ```{r}
-nzv <- nearZeroVar(x)
-system.time({fit_rf <- randomForest(x[, -nzv], y,  mtry = 9)})
+stopCluster(cl)
+stopImplicitCluster()
 ```
 
-and use this to estimate the total time for the 250 iterations. In this case it will be several hours.
-
-One way to reduce run time is to use k-fold cross validation with a smaller number of test sets. A popular choice is leaving out 5 test sets with 20% of the data. To use this we set the `trControl` argument in train to `trainControl(method = "cv", number = 5, p = .8)`.
-
-For random forest, we can also speed up the training step by running less trees per fit. After running the algorithm once, we can use the `plot` function to see how the error rate changes as the number of trees grows. 
-
-Here we can see that error rate stabilizes after about 200 trees:
-
-```{r error-versus-number-of-trees, echo=-1}
-rafalib::mypar()
-plot(fit_rf)
-```
-
-We can use this finding to speed up the cross validation procedure. Specifically, because the default is 500, by adding the argument `ntree = 200` to the call to `train` above, the procedure will finish 2.5 times faster.
-
-### Variable importance
+:::{.callout-note}
+## Variable importance
 
 We described variable importance in @sec-variable-importance. The following function computes the importance of each feature:
 
 ```{r}
-imp <- varImp(fit_rf)
+#| eval: false
+imp <- varImp(rf)$importance[,1]
+```
+```{r}
+#| echo: false
+imp <- varImp(fit_rf)$Overall
 ```
 
 We can see which features are being used most by plotting an image:
@@ -481,28 +520,29 @@ We can see which features are being used most by plotting an image:
 ```{r importance-image, echo=-1, fig.width = 4, fig.height = 4, out.width="50%"}
 rafalib::mypar()
 mat <- rep(0, ncol(x))
-mat[-nzv] <- imp$Overall
+mat[-nzv] <- imp
 image(matrix(mat, 28, 28))
 ```
-
+:::
 
 ## Diagnostics
 
 An important part of data analysis is visualizing results to determine why we are failing. How we do this depends on the application. Below we show the images of digits for which we made an incorrect prediction. Here are some errors for the random forest:
 
-```{r rf-images,, echo=FALSE, out.width="100%", fig.width=6, fig.height=1.65}
-p_max <- predict(fit_rf, x_test[,-nzv], type = "prob") 
+```{r rf-images, echo=FALSE, out.width="100%", fig.width=6, fig.height=1.65}
+p_max <- predict(rf, x_test[, -nzv], type = "prob")
 p_max <- p_max / rowSums(p_max)
 p_max <- apply(p_max, 1, max)
 
-ind  <- which(y_hat_rf != y_test)
+ind <- which(y_hat_rf != y_test)
 ind <- ind[order(p_max[ind], decreasing = TRUE)]
 
-rafalib::mypar(1,4)
+rafalib::mypar(1, 4)
 for (i in ind[1:4]) {
-  image(matrix(x_test[i,], 28, 28)[, 28:1], 
-        main = paste0("Pr(",y_hat_rf[i],")=",round(p_max[i], 2), " but is a ",y_test[i]),
-        xaxt = "n", yaxt = "n")
+  image(
+    matrix(x_test[i, ], 28, 28)[, 28:1], 
+      main = paste0("Pr(", y_hat_rf[i], ")=", round(p_max[i], 2), " but is a ", y_test[i]),
+    xaxt = "n", yaxt = "n")
 }
 ```
 
@@ -514,26 +554,21 @@ The idea of an ensemble is similar to the idea of combining data from different 
 
 In machine learning, one can usually greatly improve the final results by combining the results of different algorithms.
 
-Here is a simple example where we compute new class probabilities by taking the average of random forest and kNN. We can see that the accuracy improves:
+Here is a simple example where we compute new class probabilities by taking the average of the previously fitte random forest (saved in `rf`) and kNN (saved in `knn`). We can see that the accuracy improves:
 
 ```{r}
-p_rf <- predict(fit_rf, x_test[,-nzv], type = "prob")  
+p_rf <- predict(rf, x_test[, -nzv], type = "prob")
 p_rf <- p_rf / rowSums(p_rf)
-p_knn_pca  <- predict(train_knn_pca, x_test, type = "prob")
-p <- (p_rf + p_knn_pca)/2
+p_knn <- predict(knn, x_test, type = "prob")
+p <- (p_rf + p_knn) / 2
 y_pred <- factor(apply(p, 1, which.max) - 1)
 mean(y_pred == y_test)
 ```
 
 We have just built an ensemble with just two algorithms. By combing more similarly performing, but uncorrelated, algorithms we can improve accuracy further.
 
-```{r}
-#| echo: false
-stopCluster(cl)
-stopImplicitCluster()
-```
-
 ## Exercises
+
 
 1\. Create a simple dataset where the outcome grows 0.75 units on average for every increase in a predictor: 
 
@@ -632,7 +667,7 @@ Use the `train` function to estimate the accuracy. Try out `cp` values of `seq(0
 
 ```{r, eval = FALSE}
 ind <- !(fit_rpart$finalModel$frame$var == "<leaf>")
-tree_terms <- 
+tree_terms <-
   fit_rpart$finalModel$frame$var[ind] |>
   unique() |>
   as.character()
@@ -648,7 +683,7 @@ What is the variable importance in the random forest call for these predictors? 
 
 ```{r}
 #| eval: false
-plot_cond_prob <- function(x_1, x_2, p){
+plot_cond_prob <- function(x_1, x_2, p) {
   data.frame(x_1 = x_1, x_2 = x_2, p = p) |>
     ggplot(aes(x_1, x_2)) +
     geom_raster(aes(fill = p), show.legend = FALSE) +
@@ -685,10 +720,29 @@ Here is a vector of model names you can try:
 
 ```{r}
 models <- c(
-  "glm", "lda", "naive_bayes", "svmLinear", "gamboost",
-  "gamLoess", "qda", "knn", "kknn", "loclda", "gam", "rf",
-  "ranger", "wsrf", "Rborist", "avNNet", "mlp", "monmlp",
-  "gbm", "adaboost", "svmRadial", "svmRadialCost", "svmRadialSigma"
+  "glm",
+  "lda",
+  "naive_bayes",
+  "svmLinear",
+  "gamboost",
+  "gamLoess",
+  "qda",
+  "knn",
+  "kknn",
+  "loclda",
+  "gam",
+  "rf",
+  "ranger",
+  "wsrf",
+  "Rborist",
+  "avNNet",
+  "mlp",
+  "monmlp",
+  "gbm",
+  "adaboost",
+  "svmRadial",
+  "svmRadialCost",
+  "svmRadialSigma"
 )
 ```
 
@@ -712,8 +766,19 @@ You may need to install additional packages depending on which models you try, a
 32\. Note that each method can also produce an estimated conditional probability. Instead of majority vote, we can take the average of these estimated conditional probabilities. For most methods, we can the use the `type = "prob"` in the train function. Note that some of the methods require you to use the argument `trControl=trainControl(classProbs=TRUE)` when calling train. Also, these methods do not work if classes have numbers as names. Hint: change the levels like this:
 
 ```{r, eval = FALSE}
-dat$train$y <- recode_factor(dat$train$y, "2"="two", "7"="seven")
-dat$test$y <- recode_factor(dat$test$y, "2"="two", "7"="seven")
+dat$train$y <- recode_factor(dat$train$y, "2" = "two", "7" = "seven")
+dat$test$y <- recode_factor(dat$test$y, "2" = "two", "7" = "seven")
 ```
 
 33\. In this chapter, we illustrated a couple of machine learning algorithms on a subset of the MNIST dataset. Try fitting a model to the entire dataset.
+
+34\. We fit the following kNN model to the MNIST data:
+
+```{r}
+#| eval: false
+knn_nzv <- train(x, y, method = "knn", preProcess = "nzv", 
+  trControl = trainControl(method = "cv", number = 5),
+  tuneGrid = data.frame(k = 5))
+```
+
+Fit it again but this time use 20-fold cross-validation instead of 5-fold and search over a wider range of $k$ values, for example, `tuneGrid = data.frame(k = seq(3, 7, 2))`. Do this with and without `preProcess = "nzv"` and compare the results.

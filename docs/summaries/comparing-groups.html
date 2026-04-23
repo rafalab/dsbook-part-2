@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>3&nbsp; Comparing Groups – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -488,7 +491,7 @@ window.Quarto = {
    
   <ul>
 <li>
-<a href="#quantile-quantile-plots" id="toc-quantile-quantile-plots" class="nav-link active" data-scroll-target="#quantile-quantile-plots"><span class="header-section-number">3.1</span> Quantile-quantile plots</a>
+<a href="#sec-def-qqplots" id="toc-sec-def-qqplots" class="nav-link active" data-scroll-target="#sec-def-qqplots"><span class="header-section-number">3.1</span> Quantile-quantile plots</a>
   <ul class="collapse">
 <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
   <li><a href="#percentiles" id="toc-percentiles" class="nav-link" data-scroll-target="#percentiles">Percentiles</a></li>
@@ -518,16 +521,16 @@ window.Quarto = {
 
 
 </header><p>So far, we have focused on summarizing the distribution of a single variable, describing its center, spread, and shape. In practice, however, one of the most common goals of data analysis is <strong>comparison</strong>: we want to know how one group differs from another, how a treatment compares to a control, or how outcomes vary across conditions. Comparing groups is often the first step toward uncovering relationships and understanding sources of variation.</p>
-<p>The tools we developed for describing distributions, histograms, boxplots, and numerical summaries such as the mean and median, extend naturally to comparisons. By examining these summaries <strong>within subgroups</strong> or by comparing <strong>quantiles across distributions</strong>, we can reveal patterns that a single summary might conceal.</p>
+<p>The tools we developed for describing distributions—histograms, boxplots, and numerical summaries such as the mean and median—extend naturally to comparisons. By examining these summaries <strong>within subgroups</strong> or by comparing <strong>quantiles across distributions</strong>, we can reveal patterns that a single summary might conceal.</p>
 <p>In this chapter, we explore two key techniques for comparing distributions:</p>
 <ul>
 <li>
-<strong>Quantile–quantile</strong>, which provide a systematic way to compare the shapes of two distributions, including how observed data differ from theoretical models such as the normal distribution.</li>
+<strong>Quantile–quantile plots</strong>, which provide a systematic way to compare the shapes of two distributions, including how observed data differ from theoretical models such as the normal distribution.</li>
 <li>
 <strong>Stratification</strong>, which involves dividing data into meaningful subgroups and examining each distribution separately.</li>
 </ul>
 <p>Together, these methods complete our descriptive toolkit, bridging the transition from exploring single variables to analyzing relationships between variables.</p>
-<section id="quantile-quantile-plots" class="level2" data-number="3.1"><h2 data-number="3.1" class="anchored" data-anchor-id="quantile-quantile-plots">
+<section id="sec-def-qqplots" class="level2" data-number="3.1"><h2 data-number="3.1" class="anchored" data-anchor-id="sec-def-qqplots">
 <span class="header-section-number">3.1</span> Quantile-quantile plots</h2>
 <p>A systematic way to compare two distributions is to compare their cumulative distribution functions (CDFs). A practical way to do this is through their <em>quantiles</em>.</p>
 <p>For a proportion <span class="math inline">\(0 \leq p \leq 1\)</span>, the <em><span class="math inline">\(p\)</span>-th quantile</em> of a distribution <span class="math inline">\(F(x)\)</span> is the value <span class="math inline">\(q\)</span> such that <span class="math inline">\(F(q) = p\)</span>, or <span class="math inline">\(q = F^{-1}(p)\)</span>. For example, <span class="math inline">\(p = 0\)</span> gives the minimum, <span class="math inline">\(p = 0.5\)</span> gives the median, and <span class="math inline">\(p = 1\)</span> gives the maximum.</p>
@@ -540,16 +543,16 @@ Q_2(p_i) = F_2^{-1}(p_i)
 \{Q_1(p_i),\, Q_2(p_i)\}, \quad i = 1, \dots, m.
 \]</span> A common choice for these probabilities is <span class="math display">\[
 p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
-\]</span> where <span class="math inline">\(n\)</span> is the sample size of the smaller dataset. Subtracting <span class="math inline">\(0.5\)</span> prevents evaluating quantiles at <span class="math inline">\(p = 0\)</span> or <span class="math inline">\(p = 1\)</span>, which for some theoretical distributions, such as the normal, would correspond to <span class="math inline">\(-\infty\)</span> or <span class="math inline">\(+\infty\)</span>.</p>
+\]</span> where <span class="math inline">\(n\)</span> is the size of the smaller dataset. Subtracting <span class="math inline">\(0.5\)</span> prevents evaluating quantiles at <span class="math inline">\(p = 0\)</span> or <span class="math inline">\(p = 1,\)</span> which for some theoretical distributions, such as the normal, would correspond to <span class="math inline">\(-\infty\)</span> or <span class="math inline">\(+\infty\)</span>.</p>
 <p>The most common use of qqplots is to assess whether two distributions, <span class="math inline">\(F_1(x)\)</span> and <span class="math inline">\(F_2(x)\)</span>, are similar. If the points in the qqplot fall approximately along the identity line, it suggests that the two distributions have a similar shape.</p>
 <section id="example" class="level3"><h3 class="anchored" data-anchor-id="example">Example</h3>
-<p>Up to now we have only examined the distribution of heights for males. We expect that the distribution for females to be similar except for 2-3 inch shift due to males being taller than females, on average. A qqplot confirms this:</p>
+<p>Up to now we have only examined the distribution of heights for males. We expect that the distribution for females to be similar except for 2-3 inch shift due to males being taller than females, on average. A qqplot confirms this after shifting both distributions to have the same average height:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Female"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="va">m</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html">qqplot</a></span><span class="op">(</span><span class="va">f</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">f</span><span class="op">)</span>, <span class="va">m</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">m</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="comparing-groups_files/figure-html/male-vs-female-qqplot-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
@@ -557,33 +560,34 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 </div>
 </div>
 </div>
-<p>We see that in the middle of the plot the points are on the identiy line, confirming the distirbutiosn are similar except for the shift. However, for the smaller and larger quantiles we see a deviation from the line. We come back to this observation in <a href="#sec-stratification" class="quarto-xref"><span>Section 3.3</span></a>.</p>
+<p>We see that in the middle of the plot the points are on the identity line, confirming the distributions are similar except for the shift. However, for the smaller and larger quantiles we see a deviation from the line. We come back to this observation in <a href="#sec-stratification" class="quarto-xref"><span>Section 3.3</span></a>.</p>
 </section><section id="percentiles" class="level3"><h3 class="anchored" data-anchor-id="percentiles">Percentiles</h3>
-<p><em>Percentiles</em> are special cases of <em>quantiles</em> that are commonly used. The percentiles are the quantiles you obtain when setting the <span class="math inline">\(p\)</span> at <span class="math inline">\(0.01, 0.02, ..., 0.99\)</span>. For example, we refer to the case of <span class="math inline">\(p = 0.25\)</span> as the 25th percentile, representing a value below which 25% of the data falls. The most famous percentile is the 50th, also known as the <em>median</em>. Another special case that receives a name are the <em>quartiles</em>, which are obtained when setting <span class="math inline">\(p = 0.25,0.50\)</span>, and <span class="math inline">\(0.75\)</span>.</p>
+<p><em>Percentiles</em> are special cases of <em>quantiles</em> where the probability <span class="math inline">\(p\)</span> is expressed as a percentage. For example, we refer to the case of <span class="math inline">\(p = 0.25\)</span> as the 25th percentile, representing a value below which 25% of the data falls. The most famous percentile is the 50th, also known as the <em>median</em>.</p>
+<p>Another special case is the <em>quartiles</em>, defined as the quantiles at <span class="math inline">\(p = 0.25,0.50\)</span>, and <span class="math inline">\(0.75\)</span>. Quartiles divide the data into four regions, each containing 25% of the observations. Quartiles are visualized by boxplots as seen in <a href="numerical-summaries.html#sec-boxplots" class="quarto-xref"><span>Section 2.5</span></a>.</p>
 </section></section><section id="sec-qqplots" class="level2" data-number="3.2"><h2 data-number="3.2" class="anchored" data-anchor-id="sec-qqplots">
 <span class="header-section-number">3.2</span> Assessing normality with QQ plots</h2>
 <p>A common use of qqplots is to assess whether data follow a normal distribution.</p>
-<p>The cumulative distribution function (CDF) of the standard normal is written as <span class="math inline">\(\Phi(x)\)</span>, giving the probability that a normal random variable is less than <span class="math inline">\(x\)</span>. For example, <span class="math inline">\(\Phi(-1.96) = 0.025\)</span> and <span class="math inline">\(\Phi(1.96) = 0.975\)</span>. In R, this is computed with <code>pnorm</code>:</p>
+<p>The cumulative distribution function (CDF) of the standard normal is written as <span class="math inline">\(\Phi(x)\)</span>, giving the probability that a standard normal random variable is less than <span class="math inline">\(x\)</span>. For example, <span class="math inline">\(\Phi(-1.96) = 0.025\)</span> and <span class="math inline">\(\Phi(1.96) = 0.975\)</span>. In R, this is computed with <code>pnorm</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.96</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.025</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1.96</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.025</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The inverse of <span class="math inline">\(\Phi\)</span>, denoted <span class="math inline">\(\Phi^{-1}(p)\)</span>, provides the <strong>theoretical quantiles</strong>. For instance, <span class="math inline">\(\Phi^{-1}(0.975) = 1.96\)</span> which we compute with <code>qnorm</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1.96</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1.96</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>By default, <code>pnorm</code> and <code>qnorm</code> assume the <strong>standard normal</strong> distribution (mean 0, SD 1). You can specify different parameters with the <code>mean</code> and <code>sd</code> arguments:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span>, mean <span class="op">=</span> <span class="fl">69</span>, sd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 74.9</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="fl">0.975</span>, mean <span class="op">=</span> <span class="fl">69</span>, sd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 74.9</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>For observed data, we can compute sample quantiles using the <code>quantile</code> function. For example, here are the quartiles of male heights:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">heights</span>, <span class="va">height</span><span class="op">[</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.25</span>, <span class="fl">0.50</span>, <span class="fl">0.75</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 25% 50% 75% </span></span>
-<span><span class="co">#&gt;  67  69  72</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt;  67  69  72</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>To check whether these data are approximately normal, we can construct a QQ plot following these steps:</p>
 <ol type="1">
@@ -594,11 +598,11 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 </ol>
 <p>Example:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span>, <span class="fl">0.05</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.05</span>, <span class="fl">0.95</span>, <span class="fl">0.05</span><span class="op">)</span></span>
 <span><span class="va">sample_quantiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">p</span><span class="op">)</span></span>
 <span><span class="va">theoretical_quantiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="va">p</span>, mean <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, sd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">theoretical_quantiles</span>, <span class="va">sample_quantiles</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="comparing-groups_files/figure-html/qqplot-example-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
@@ -606,32 +610,40 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 </div>
 </div>
 </div>
+<p>Recall that the qqplot in <a href="#sec-def-qqplots" class="quarto-xref"><span>Section 3.1</span></a> compared quantiles from two sets of observations, where points along the identity line indicated similar distributions. In this case, the theoretical quantiles along the x-axis are computed using the sample mean and standard deviation. Here, the identity line marks where we expect points to lie if the data really came from this theoretical distribution.</p>
 <p>Because the points fall close to the identity line, we conclude that the normal distribution provides a good approximation for this dataset.</p>
 <p>The code becomes simpler if we standardize the data first:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">p</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html">quantile</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">p</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">qnorm</a></span><span class="op">(</span><span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html">abline</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>, b <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>R provides built-in functions for generating qqplots that compare observed data to a normal distribution:</p>
+<p>And similarly with <strong>ggplot2</strong>, which uses a different vector of probabilities than our <code>p</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html">qqnorm</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html">qqline</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>These functions use the average and standard deviation of the data <code>x</code> to define the theoretical normal distribution used for the x-axis values. In other words, the plotted line represents what we would expect if the data were normally distributed with the same mean and spread as the observed sample.</p>
-<p>And equivalently with <strong>ggplot2</strong>:</p>
-<div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org">ggplot2</a></span><span class="op">)</span></span>
 <span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/scale.html">scale</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html">geom_qq</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_abline</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html">geom_abline</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
+<p>R provides built-in functions for generating qqplots that compare observed data to a normal distribution:</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html">qqnorm</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/qqnorm.html">qqline</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure"><p><img src="comparing-groups_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The function <code><a href="https://rdrr.io/r/stats/qqnorm.html">qqnorm()</a></code> plots the sample quantiles of the data <code>x</code> against theoretical quantiles from a standard normal distribution. The function <code><a href="https://rdrr.io/r/stats/qqnorm.html">qqline()</a></code> adds a reference line representing where we would expect points to lie if the data were normally distributed with the same mean and standard deviation as the observed sample. Because the sample and theoretical quantiles are not on the same scale, this reference is no longer the identity line.</p>
 <div class="callout callout-style-simple callout-warning">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>By default, both <code>qqnorm</code> and <code>geom_qq</code> use all <span class="math inline">\(n\)</span> quantiles, with <span class="math inline">\(p_i = (i - 0.5)/n\)</span>. Because of this default behavior, large datasets can produce thousands of overlapping points that appear as a solid line. In such cases, it’s better to compute and plot a smaller, representative set of quantiles manually rather than relying on the defaults in <code>qqplot</code> or <code>qqnorm</code>.</p>
+<p>By default, both <code>qqnorm</code> and <code>geom_qq</code> use all <span class="math inline">\(n\)</span> quantiles, with <span class="math inline">\(p_i = (i - 0.5)/n\)</span>. Because of this default behavior, large datasets can produce thousands of overlapping points that appear as a solid line. In such cases, it’s better to compute and plot a smaller, representative set of quantiles manually rather than relying on the defaults in <code>qqplot</code> or <code>geom_qq</code>.</p>
 </div>
 </div>
 </div>
@@ -640,11 +652,11 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 <p>In data analysis, we often divide observations into groups based on the values of one or more variables associated with those observations. For example, we can divide the height values into groups based on a sex variable: females and males. We call this procedure <em>stratification</em> and refer to the resulting groups as <em>strata</em>.</p>
 <p>Stratification is common in data visualization because we are often interested in how the distribution of variables differs across different subgroups.</p>
 <p>Using the histogram, density plots, and qqplots, we have become convinced that the male height data is well approximated with a normal distribution. In this case, we report back to ET a very succinct summary: male heights follow a normal distribution with an average of 69.3 inches and a SD of 3.6 inches. With this information, ET will have a good idea of what to expect when he meets our male students. However, to provide a complete picture we need to also provide a summary of the female heights.</p>
-<p>We learned that boxplots are useful when we want to quickly compare two or more distributions. Here are the heights for females and males:</p>
+<p>Boxplots are useful when we want to quickly compare two or more distributions. Here are the heights for females and males:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
-<span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">sex</span>, <span class="va">height</span>, fill <span class="op">=</span> <span class="va">sex</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">sex</span>, <span class="va">height</span>, fill <span class="op">=</span> <span class="va">sex</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="comparing-groups_files/figure-html/summaries-female-male-boxplots-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -661,14 +673,12 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 </div>
 </div>
 </div>
-<p>We see something we did not see for the males: the density plot has a second <em>bump</em>. Also, the qqplot shows that the highest points tend to be taller than expected by the normal distribution. Finally, we also see five points in the qqplot that suggest shorter than expected heights for a normal distribution. When reporting back to ET, we might need to provide a histogram rather than just the average and standard deviation for the female heights.</p>
-<p>We have noticed what we didn’t expect to see. If we look at other female height distributions, we do find that they are well approximated with a normal distribution. So why are our female students different? Is our class a requirement for the female basketball team? Are small proportions of females claiming to be taller than they are? Another, perhaps more likely, explanation is that in the form students used to enter their heights, <code>Female</code> was the default sex and some males entered their heights, but forgot to change the sex variable. In any case, data visualization has helped discover a potential flaw in our data.</p>
+<p>We see something we did not see for the males: the density plot has a second <em>bump</em> near a height of 52 inches. This is reflected in the qqplot with five points that suggest shorter than expected heights for a normal distribution. The qqplot also shows that the highest points tend to be taller than expected by the normal distribution. When reporting back to ET, we might need to provide a histogram rather than just the average and standard deviation for the female heights.</p>
+<p>This is unexpected—studies of other female height distributions find they are well approximated by a normal distribution. What explains the five unusually short heights and the excess of very tall students? One possibility is that some males entered their heights without changing the default sex selection of Female in the form. Whatever the cause, data visualization has uncovered a potential flaw in the data.</p>
 <p>Regarding the five smallest values, note that these are:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">heights</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Female"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/top_n.html">top_n</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html">desc</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html">pull</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 51 53 55 52 52</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">heights</span>, <span class="va">sex</span> <span class="op">==</span> <span class="st">"Female"</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/top_n.html">top_n</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fu"><a href="https://dplyr.tidyverse.org/reference/desc.html">desc</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html">pull</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 51 53 55 52 52</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Because these are reported heights, a possibility is that the student meant to enter <code>5'1"</code>, <code>5'2"</code>, <code>5'3"</code> or <code>5'5"</code>.</p>
 </section><section id="exercises" class="level2" data-number="3.4"><h2 data-number="3.4" class="anchored" data-anchor-id="exercises">
@@ -692,19 +702,18 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
 <li>0.50</li>
 <li>0.25</li>
 </ol>
-<p>5. If we use a log transformation, which continent shown above has the largest interquartile range?</p>
+<p>5. On the displayed log scale, which continent has the largest interquartile range (IQR)? Hint: IQR was defined in <a href="numerical-summaries.html#sec-boxplots" class="quarto-xref"><span>Section 2.5</span></a>.</p>
 <p>6. Define variables containing the heights of males and females as follows:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">male</span> <span class="op">&lt;-</span> <span class="va">heights</span><span class="op">$</span><span class="va">height</span><span class="op">[</span><span class="va">heights</span><span class="op">$</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Male"</span><span class="op">]</span></span>
-<span><span class="va">female</span> <span class="op">&lt;-</span> <span class="va">heights</span><span class="op">$</span><span class="va">height</span><span class="op">[</span><span class="va">heights</span><span class="op">$</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Female"</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">female</span> <span class="op">&lt;-</span> <span class="va">heights</span><span class="op">$</span><span class="va">height</span><span class="op">[</span><span class="va">heights</span><span class="op">$</span><span class="va">sex</span> <span class="op">==</span> <span class="st">"Female"</span><span class="op">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>How many measurements do we have for each?</p>
-<p>7. Suppose we can’t make a plot and want to compare the distributions side by side. We can’t just list all the numbers. Instead, we will look at the percentiles. Create a five row table showing <code>female_percentiles</code> and <code>male_percentiles</code> with the 10th, 30th, 50th, 70th, &amp; 90th percentiles for each sex. Then create a data frame with these two as columns.</p>
-<p>8. Use a qqplot to demonstrate that murder rates</p>
-<ol start="10" type="1">
-<li>Remove DC, then generate qqplot to see if the rate follow a normal distribution within each of the four region.</li>
-</ol>
+<p>7. Suppose we can’t make a plot and want to compare the distributions side by side. We can’t just list all the numbers. Instead, we will look at the percentiles. Create a table for each sex with 10th, 30th, 50th, 70th, &amp; 90th percentiles. Then create a data frame with a column for each sex, and 5 rows as these percentiles.</p>
+<p>8. Use a qqplot to demonstrate that murder rates do not follow a normal distribution.</p>
+<p>9. Remove the data for the District of Columbia (DC), then strarify the data into the four regions and generate a qqplot for each to see if the murder rates follow a normal distribution within each of the four regions.</p>
+<p>10. Calculate the mean and standard deviation of murder rates for each region. Perform the analysis twice: once including all observations and once excluding Washington, DC. Discuss which comparison is more informative and explain your reasoning.</p>
 
 
 </section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
@@ -758,13 +767,14 @@ p_i = \frac{i - 0.5}{n}, \quad i = 1, \dots, n,
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

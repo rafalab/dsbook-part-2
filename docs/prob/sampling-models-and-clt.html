@@ -2,11 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.9.36">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>8&nbsp; Sampling Models and the Central Limit Theorem – Introduction to Data Science</title>
 <style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
 div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -70,10 +73,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-8f18353b6674da201bf96e4b700cba6a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -99,7 +102,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -110,7 +113,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -490,7 +493,7 @@ window.Quarto = {
 <li>
 <a href="#sec-sampling-models" id="toc-sec-sampling-models" class="nav-link active" data-scroll-target="#sec-sampling-models"><span class="header-section-number">8.1</span> Sampling models</a>
   <ul class="collapse">
-<li><a href="#roullete-example" id="toc-roullete-example" class="nav-link" data-scroll-target="#roullete-example">Roullete example</a></li>
+<li><a href="#roulette-example" id="toc-roulette-example" class="nav-link" data-scroll-target="#roulette-example">Roulette example</a></li>
   <li><a href="#connecting-sampling-models-to-real-data" id="toc-connecting-sampling-models-to-real-data" class="nav-link" data-scroll-target="#connecting-sampling-models-to-real-data">Connecting sampling models to real data</a></li>
   </ul>
 </li>
@@ -518,33 +521,33 @@ window.Quarto = {
   
 
 
-</header><p>In the previous chapter, we introduced random variables and saw how their distributions, expected values, and standard errors describe uncertainty. In this chapter, we build on those ideas by introducing <em>sampling models</em>, which are mathematical abstractions of how data are generated. We then use the Central Limit Theorem (CLT) to approximate the distribution of sums and averages of independent draws. Through a concrete example based on playing roulette in a casino, we show how the CLT can be used to answer practical questions such as “What is the chance of losing money?”</p>
+</header><p>In the previous chapter, we introduced random variables and saw how their distributions, expected values, and standard deviations describe uncertainty. In this chapter, we build on those ideas by introducing <em>sampling models</em>, which are mathematical abstractions of how data are generated. We then use the Central Limit Theorem (CLT) to approximate the distribution of sums and averages of independent draws. Through a concrete example based on playing roulette in a casino, we show how the CLT can be used to answer practical questions such as “What is the chance of losing money?”</p>
 <section id="sec-sampling-models" class="level2" data-number="8.1"><h2 data-number="8.1" class="anchored" data-anchor-id="sec-sampling-models">
 <span class="header-section-number">8.1</span> Sampling models</h2>
-<p>Many data-generating processes can be effectively modeled as <em>draws from an urn</em>. For example, polling likely voters can be viewed as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the preferences of the entire population. In epidemiology, we often assume that individuals in a study are random draws from a larger population, where each draw corresponds to an individual’s outcome. Similarly, in experimental research, we treat subjects (worms, flies, mice, or humans, for exmaple) as random draws from a broader population. Randomized experiments follow the same logic: each participant’s assignment to treatment or control can be seen as a random draw from an urn.</p>
-<p>Because random sampling and random assignment are fundamental to data analysis, <em>sampling models</em> appear everywhere in statistics. To build intuition, we start with <em>games of chance</em>, where randomness is explicit and the link between probability and real outcomes is perfectly clear. We now define a specific example.</p>
-<section id="roullete-example" class="level3"><h3 class="anchored" data-anchor-id="roullete-example">Roullete example</h3>
+<p>Many data-generating processes can be effectively modeled as <em>draws from an urn</em>. For example, polling likely voters can be viewed as drawing 0s (Republicans) and 1s (Democrats) from an urn containing the preferences of the entire population. In epidemiology, we often assume that individuals in a study are random draws from a larger population, where each draw corresponds to an individual’s outcome. Similarly, in experimental research, we treat subjects (worms, flies, mice, or humans, for example) as random draws from a broader population. Randomized experiments follow the same logic: each participant’s assignment to treatment or control can be seen as a random draw from an urn.</p>
+<p>Because random sampling and random assignment are fundamental to data analysis, <em>sampling models</em> appear everywhere in statistics. To build intuition, we start with <em>games of chance</em>, where randomness is explicit, and the link between probability and real outcomes is perfectly clear. We now define a specific example.</p>
+<section id="roulette-example" class="level3"><h3 class="anchored" data-anchor-id="roulette-example">Roulette example</h3>
 <p>Suppose a small casino hires you to decide whether it should install roulette wheels. To keep things simple, imagine 1,000 people each place a single bet on black. The casino wants you to estimate how much money it can expect to make, or lose, and, most importantly, the probability of losing money. If that probability is too high, they’ll skip installing the wheels.</p>
 <p>We define a random variable <span class="math inline">\(S_n\)</span> to represent the casino’s total winnings after <span class="math inline">\(n\)</span> games. A roulette wheel has 18 red pockets, 18 black pockets, and 2 green ones. The outcome is equivalent to drawing a ball from this urn:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">color</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Black"</span>, <span class="st">"Red"</span>, <span class="st">"Green"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">18</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">color</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Black"</span>, <span class="st">"Red"</span>, <span class="st">"Green"</span><span class="op">)</span>, times <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">18</span>, <span class="fl">18</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>Each of the 1,000 outcomes is an independent draw from this urn. If black comes up, the gambler wins and the casino loses $1 (recorded as −1). Otherwise, the casino wins $1.</p>
+<p>Each of the 1,000 outcomes is an independent draw from this urn. If black comes up, the gambler wins, and the casino loses $1 (recorded as −1). Otherwise, the casino wins $1.</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">color</span> <span class="op">==</span> <span class="st">"Black"</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html">ifelse</a></span><span class="op">(</span><span class="va">color</span> <span class="op">==</span> <span class="st">"Black"</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Since we already know the proportions of 1s and −1s, we can simplify:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We call this a <em>sampling model</em> because it represents random behavior through repeated sampling from an urn. The casino’s total winnings, define it as <span class="math inline">\(S_n\)</span>, are simply the sum of these independent draws:</p>
+<p>We call this a <em>sampling model</em> because it represents random behavior through repeated sampling from an urn. The casino’s total winnings, defined as <span class="math inline">\(S_n\)</span>, are simply the sum of these independent draws:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Before deriving the distribution of total winnings <span class="math inline">\(S_n\)</span>, it’s worth pausing to ask <em>why</em> we study problems like roulette in the first place.</p>
 </section><section id="connecting-sampling-models-to-real-data" class="level3"><h3 class="anchored" data-anchor-id="connecting-sampling-models-to-real-data">Connecting sampling models to real data</h3>
-<p>Thinking in terms of a sampling model is central to data analysis under uncertainty. It connects the random variables we study in probability to the datasets we analyze in practice. By imagining data as random draws, from an urn, a population, or a randomization procedure, we clarify what our models represent and what assumptions they rely on.</p>
+<p>Thinking in terms of a sampling model is central to data analysis under uncertainty. It connects the random variables we study in probability to the datasets we analyze in practice. By imagining data as random draws from an urn, a population, or a randomization procedure, we clarify what our models represent and what assumptions they rely on.</p>
 <p>This perspective also underpins much of modern statistics. Tools like confidence intervals, hypothesis tests, and regression all depend on assumptions derived from sampling models. Understanding these assumptions helps us apply these methods thoughtfully and recognize their limits.</p>
 <p>Casino games make these ideas tangible because their sampling models are fully known. The probabilities, such as the number of red, black, and green pockets, are explicit and easy to simulate. In contrast, real-world data come from more complex “urns”, such as populations of individuals with varying heights, incomes, or health outcomes. When we collect data, we are effectively drawing a random sample from such a population.</p>
 <p>This way of thinking builds statistical intuition: every dataset represents a sample from some underlying process, and the validity of our conclusions depends on how well our assumptions about that process hold.</p>
@@ -553,23 +556,23 @@ window.Quarto = {
 <p>To find the probability that the casino loses money, we need to estimate the distribution of <span class="math inline">\(S_n\)</span>. In the language of probability, this is <span class="math inline">\(\Pr(S_n &lt; 0)\)</span>. If we define the distribution function <span class="math inline">\(F(a) = \Pr(S_n \leq a)\)</span>, we can answer any question about probabilities involving <span class="math inline">\(S_n\)</span>.</p>
 <p>We can estimate <span class="math inline">\(F(a)\)</span> with a Monte Carlo simulation, generating many realizations of <span class="math inline">\(S_n\)</span>. The following code simulates 1,000 people playing roulette and repeats the process 100,000 times:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">roulette_winnings</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span>, prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">9</span><span class="op">/</span><span class="fl">19</span>, <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/sum.html">sum</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fu">roulette_winnings</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html">replicate</a></span><span class="op">(</span><span class="fl">100000</span>, <span class="fu">roulette_winnings</span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The fraction of simulations in which <span class="math inline">\(S_n \leq a\)</span> approximates <span class="math inline">\(F(a)\)</span>:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;=</span> <span class="va">a</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;=</span> <span class="va">a</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>For instance, the probability of losing money is:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.0453</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0449</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>A histogram and qqplot of <span class="math inline">\(S_n\)</span> shows that the distribution is approximately normal, an observation that the <strong>Central Limit Theorem</strong> will soon explain.</p>
+<p>A histogram and qqplot of <span class="math inline">\(S_n\)</span> show that the distribution is approximately normal, an observation that the <strong>Central Limit Theorem</strong> will soon explain.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -594,14 +597,14 @@ window.Quarto = {
 \mathrm{E}[S_n] = n\,\mathrm{E}[X].
 \]</span></p>
 <p>So if 1,000 people play, the casino expects to win about $50 on average.</p>
-<p>To quantify uncertainty, we compute the standard error, which measures how much <span class="math inline">\(S_n\)</span> varies around its expected value. For an urn with two outcomes <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span>, the standard deviation can be shown to be:</p>
+<p>To quantify uncertainty, we compute the standard error, which measures how much <span class="math inline">\(S_n\)</span> varies around its expected value. For an urn with two outcomes <span class="math inline">\(a\)</span> and <span class="math inline">\(b\)</span> with probabilities <span class="math inline">\(p\)</span> and <span class="math inline">\((1-p)\)</span>, the standard deviation can be shown to be:</p>
 <p><span class="math display">\[
 \mathrm{SE}[X] = |b - a|\sqrt{p(1-p)}.
 \]</span></p>
-<p>In the roulette example we obtain:</p>
+<p>In the roulette example, we obtain:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
-<span><span class="co">#&gt; [1] 0.999</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
+<span><span class="co">#&gt; [1] 0.999</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Thus, the standard error of the sum is:</p>
 <p><span class="math display">\[
@@ -609,25 +612,25 @@ window.Quarto = {
 \]</span></p>
 <p>which in this case is:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
-<span><span class="co">#&gt; [1] 31.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span></span>
+<span><span class="co">#&gt; [1] 31.6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>These theoretical values agree closely with the Monte Carlo results:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 52.5</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">s</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 31.6</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="co">#&gt; [1] 31.6</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Using the CLT, we can now compute the probability that the casino loses money without simulation:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">n</span><span class="op">*</span><span class="op">(</span><span class="fl">20</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">/</span><span class="fl">38</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.0478</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">pnorm</a></span><span class="op">(</span><span class="fl">0</span>, <span class="va">n</span><span class="op">*</span><span class="op">(</span><span class="fl">20</span> <span class="op">-</span> <span class="fl">18</span><span class="op">)</span><span class="op">/</span><span class="fl">38</span>, <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="fl">90</span><span class="op">)</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0478</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>which matches our earlier estimate:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.0453</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">s</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0449</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -637,8 +640,8 @@ window.Quarto = {
 <div class="callout-body-container">
 <p>The quantity <span class="math inline">\((S_n + n)/2\)</span> represents the number of wins for the casino and follows a <em>binomial distribution</em>. Thus, the probability <span class="math inline">\(\Pr(S_n &lt; 0)\)</span> can also be computed directly:</p>
 <div class="cell" data-layout-align="center">
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">pbinom</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="va">n</span>, prob <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.0448</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">pbinom</a></span><span class="op">(</span><span class="va">n</span><span class="op">/</span><span class="fl">2</span> <span class="op">-</span> <span class="fl">1</span>, size <span class="op">=</span> <span class="va">n</span>, prob <span class="op">=</span> <span class="fl">10</span><span class="op">/</span><span class="fl">19</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.0448</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>However, the binomial result applies only to Bernoulli trials. In many real-world settings, data are not binomial, yet we still want to approximate the distribution of sums or averages. For those cases, the CLT provides a general framework that extends far beyond Bernoulli trials.</p>
 </div>
@@ -646,53 +649,53 @@ window.Quarto = {
 </div>
 </section><section id="how-large-is-large" class="level2" data-number="8.4"><h2 data-number="8.4" class="anchored" data-anchor-id="how-large-is-large">
 <span class="header-section-number">8.4</span> How large is large?</h2>
-<p>The CLT applies when the number of draws is “large”, but <em>large</em> depends on context. In many cases, 30 draws are enough for a good approximation, sometimes even fewer. In the roullette example, when the probabilities of success is very small, much larger samples may be required.</p>
+<p>The CLT applies when the number of draws is “large”, but <em>large</em> depends on context. In many cases, 30 draws are enough for a good approximation, sometimes even fewer. In the roulette example, when the probability of success is very small, much larger samples may be required.</p>
 <p>For example, in a lottery where the chance of winning is less than one in a million, even millions of tickets result in only a few winners. In such highly skewed cases, the <em>Poisson distribution</em> offers a better approximation than the normal. While we do not cover its theory here, it is discussed in most probability textbooks and on <a href="https://en.wikipedia.org/wiki/Poisson_distribution">Wikipedia</a>. You can explore the Poisson distribution in R with <code>dpois</code>, <code>ppois</code>, and <code>rpois</code>.</p>
-<p>In summary, the CLT explains why the normal distribution appears so often in statistics and why many methods work well in practice. But it has limits: when probabilities are extremely small or distributions are highly skewed, other models, such as the Poisson or binomial, are more appropriate. Developing intuition for when the CLT applies is essential for principled, thoughtful data analysis.</p>
+<p>In summary, the CLT explains why the normal distribution appears so often in statistics and why many methods work well in practice. But it has limits: when probabilities are extremely small, or distributions are highly skewed, other models, such as the Poisson or binomial, are more appropriate. Developing intuition for when the CLT applies is essential for principled, thoughtful data analysis.</p>
 </section><section id="exercises" class="level2" data-number="8.5"><h2 data-number="8.5" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">8.5</span> Exercises</h2>
 <p>1. In American Roulette, you can also bet on green. There are 18 reds, 18 blacks, and 2 greens (0 and 00). Create a random variable <span class="math inline">\(S_n\)</span> that is the sum of your winnings after betting on green 1,000 times.</p>
-<p>2. Compute the expected value of <span class="math inline">\(S_n\)</span>?</p>
-<p>3. Compute the standard error of <span class="math inline">\(S_n\)</span>?</p>
-<p>4. Use the CLT to estimate the probability that you end up winning money? Hint: Use the CLT.</p>
+<p>2. Compute the expected value of <span class="math inline">\(S_n\)</span>.</p>
+<p>3. Compute the standard error of <span class="math inline">\(S_n\)</span>.</p>
+<p>4. Use the CLT to estimate the probability that you end up winning money.</p>
 <p>5. Create a Monte Carlo simulation that generates 10,000 outcomes of <span class="math inline">\(S_n\)</span>. Compute the average and standard deviation of the resulting list to confirm the results of 2 and 3. Start your code by setting the seed to 1 with <code>set.seed(1)</code>.</p>
 <p>6. Now check your answer to 4 using the Monte Carlo result.</p>
 <p>7. The Monte Carlo result and the CLT approximation are close, but not that close. What could account for this?</p>
 <ol type="a">
-<li>10,000 simulations is not enough. If we do more, they match.</li>
+<li>10,000 simulations are not enough. If we do more, they match.</li>
 <li>The CLT does not work as well when the probability of success is small. In this case, it was 1/19. If we make the number of roulette plays bigger, they will match better.</li>
 <li>The difference is within rounding error.</li>
 <li>The CLT only works for averages.</li>
 </ol>
-<p>Now create a random variable <span class="math inline">\(\bar{X}_n\)</span> that is your average winnings per bet defined as <span class="math inline">\(X_n = S_n/n\)</span>. Keep <span class="math inline">\(n\)</span> = 1,000.</p>
+<p>Now create a random variable <span class="math inline">\(\bar{X}_n\)</span> that is your average winnings per bet, defined as <span class="math inline">\(\bar{X}_n = S_n/n\)</span>. Keep <span class="math inline">\(n\)</span> = 1,000.</p>
 <p>8. What is the expected value of <span class="math inline">\(\bar{X}_n\)</span>?</p>
 <p>9. What is the standard error of <span class="math inline">\(\bar{X}_n\)</span>?</p>
 <p>10. What is the probability that you end up with winnings per game that are positive? Hint: Use the CLT.</p>
-<p>11. Create a Monte Carlo simulation that generates 25,000 outcomes of <span class="math inline">\(\bar{X}_n\)</span>, instead of <span class="math inline">\(1,000\)</span>. Compute the average and standard deviation of the resulting list to confirm the results of 13 and 14. Start your code by setting the seed to 1 with <code>set.seed(1)</code>.</p>
-<p>12. Now compare your answer to 14 using the Monte Carlo result. What can you say about the CLT approximation for <span class="math inline">\(\mathrm{Pr}(\bar{X}_n&gt;0)\)</span> compared for <span class="math inline">\(\mathrm{Pr}(S_n&gt;0)\)</span>.</p>
+<p>11. Create a Monte Carlo simulation that generates 25,000 outcomes of <span class="math inline">\(\bar{X}_n\)</span>, instead of <span class="math inline">\(10,000\)</span>. Compute the average and standard deviation of the resulting list to confirm the results of 8, 9, and 10. Start your code by setting the seed to 1 with <code>set.seed(1)</code>.</p>
+<p>12. Now compare your Monte Carlo estimates of <span class="math inline">\(\mathrm{Pr}(S_n&gt;0)\)</span> (exercise 6) and <span class="math inline">\(\mathrm{Pr}(\bar{X}_n&gt;0)\)</span> (exercise 11) and their corresponding CLT approximations (exercises 4 and 10). Which of the following is true:</p>
 <ol type="a">
-<li>We are now computing averages instead of sums so they are very different.</li>
-<li>25,000 Monte Carlo simulations is not better than 10,000 and provides a much closer estimate.</li>
-<li>The CLT works better when the sample size is larger. We increased from 10,000 to 25,000.</li>
-<li>The difference is within rounding error.</li>
+<li>The probabilities are different because <span class="math inline">\(\mathrm{Pr}(\bar{X}_n&gt;0)\)</span> uses averages while <span class="math inline">\(\mathrm{Pr}(S_n&gt;0)\)</span> uses sums.</li>
+<li>25,000 Monte Carlo simulations are better than 10,000 and provide a much more precise estimate.</li>
+<li>The CLT works better when the sample size is larger, and we increased from 10,000 to 25,000.</li>
+<li>All differences between the Monte Carlo estimates are within rounding error.</li>
 </ol>
 <p>The following exercises are inspired by the events surrounding the financial crisis of 2007-2008<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. This financial crisis was in part caused by underestimating the risk of certain securities<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a> sold by financial institutions. Specifically, the risks of mortgage-backed securities (MBS) and collateralized debt obligations (CDO) were grossly underestimated. These assets were sold at prices that assumed most homeowners would make their monthly payments, and the probability of this not occurring was calculated as being low. A combination of factors resulted in many more defaults than were expected, which led to a price crash of these securities. As a consequence, banks lost so much money that they required government bailouts to avoid complete closure.</p>
-<p>13. More complex versions of the sampling models we have discussed are also used by banks to determine interest rates and insurance companies to determine premiums. To understand this, suppose you run a small bank that has a history of identifying potential homeowners that can be trusted to make payments. In fact, historically, only 2% of your customers default in a given year, meaning that they don’t pay back the money that you lent them. Suppose your bank will give out <span class="math inline">\(n\)</span> = 1,000 loans for $180,000 this year. Also, after adding up all costs, suppose your bank loses <span class="math inline">\(l\)</span>= $200,000 per foreclosure. For simplicity, we assume this includes all operational costs. What is the expected profit <span class="math inline">\(S_n\)</span> for you bank under this scenario?</p>
-<p>14. Note that the total loss defined by the final sum in the previous exercise is a random variable. Every time you run the sampling model code, you obtain a different number of people defaulting which results in a different loss. Code a sampling model for the random variable representing your banks profit <span class="math inline">\(S_n\)</span> under scenario described in 13.</p>
-<p>15. The previous exercise demonstrates that if you simply loan money to everybody without interest, you will end up losing money due to the 2% that defaults. Although you know 2% of your clients will probably default, you don’t know which ones, so you can’t remove them. Yet by charging everybody just a bit extra in interest, you can make up the losses incurred due to that 2%, and also cover your operating costs. What quantity <span class="math inline">\(x\)</span> would you have to charge each borrower so that your bank’s expected profit is 0? Assume that you don’t get <span class="math inline">\(x\)</span> from the borrowers that default. Also, note <span class="math inline">\(x\)</span> is not the interest rate, but the total you add meaning <span class="math inline">\(x/180000\)</span> is the <em>interest rate</em>.</p>
+<p>13. More complex versions of the sampling models we have discussed are also used by banks to determine interest rates and by insurance companies to determine premiums. To understand this, suppose you run a small bank that has a history of identifying potential homeowners who can be trusted to make payments. In fact, historically, only 2% of your customers default in a given year, meaning that they don’t pay back the money that you lent them, while all other customers pay back the loan in full (assuming no interest for now). Suppose your bank will give out <span class="math inline">\(n\)</span> = 1,000 loans for $180,000 this year. Also, after adding up all costs, suppose your bank loses <span class="math inline">\(l\)</span> = $200,000 per foreclosure, which happens whenever a customer defaults. For simplicity, we assume this includes all operational costs. What is the expected profit <span class="math inline">\(S_n\)</span> for your bank under this scenario?</p>
+<p>14. Note that the total profit <span class="math inline">\(S_n\)</span> defined in the previous exercise is a random variable. Code a sampling model for <span class="math inline">\(S_n\)</span>. Every time you run the sampling model code, you will obtain a different number of customers defaulting, which results in a different profit or loss.</p>
+<p>15. The expected value demonstrates that if you simply loan money to everybody without interest, you will end up losing money due to the 2% that defaults. Although you know 2% of your clients will probably default, you don’t know which ones, so you can’t remove them. Yet by charging everybody just a bit extra in interest, you can make up the losses incurred due to that 2%, and also cover your operating costs. What quantity <span class="math inline">\(x\)</span> would you have to charge each borrower so that your bank’s expected profit is 0? Assume that you don’t get <span class="math inline">\(x\)</span> from the borrowers that default. Also, note <span class="math inline">\(x\)</span> is not the interest rate, but the total you add, meaning <span class="math inline">\(x/180000\)</span> is the <em>interest rate</em>.</p>
 <p>16. Rewrite the sample model from exercise 14 to account for the interest you are charging and run a Monte Carlo simulation to get an idea of the distribution of your profit when you charge interest rates.</p>
-<p>17. We don’t actually need a Monte Carlo simulation. Based on what we have learned, the CLT informs us that, since our losses are a sum of independent draws, its distribution is approximately normal. What are the expected value and standard errors of the profit <span class="math inline">\(S_n\)</span>? Write these as functions of the probability of foreclosure <span class="math inline">\(p\)</span>, the number of loans <span class="math inline">\(n\)</span>, the loss per foreclosure <span class="math inline">\(l\)</span>, and the quantity you charge each borrower <span class="math inline">\(x\)</span>.</p>
+<p>17. We don’t actually need a Monte Carlo simulation. Based on what we have learned, the CLT informs us that, since our profit is a sum of independent draws, its distribution is approximately normal. What is the expected value and standard deviation of the profit <span class="math inline">\(S_n\)</span>? Write these as functions of the probability of foreclosure <span class="math inline">\(p\)</span>, the number of loans <span class="math inline">\(n\)</span>, the loss per foreclosure <span class="math inline">\(l\)</span>, and the quantity you charge each borrower <span class="math inline">\(x\)</span>.</p>
 <p>18. If you set <span class="math inline">\(x\)</span> to assure your bank breaks even (expected profit is 0), what is the probability that your bank loses money?</p>
-<p>19. Suppose that if your bank has negative profit, it has to close. Therefore, you need to increase <span class="math inline">\(x\)</span> to minimize this risk. However, setting the interest rates too high may lead your clients to choose another bank. So, let’s say that we want our chances of losing money to be 1 in 100. What does the <span class="math inline">\(x\)</span> quantity need to be now? Hint: We want <span class="math inline">\(\mathrm{Pr}(S_n&lt;0) = 0.01\)</span>. Note that you can add subtract constants to both side of an inequality, and the probability does not change: <span class="math inline">\(\mathrm{Pr}(S_n&lt;0) = \mathrm{Pr}(S_n+k&lt;0+k)\)</span>, Similarly, with division of positive constants: <span class="math inline">\(\mathrm{Pr}(S_n+k&lt;0+k) = \mathrm{Pr}((S_n+k)/m &lt;k/m)\)</span>. Use this fact and the CLT to transform the left side of the inequality in <span class="math inline">\(\mathrm{Pr}(S_n&lt;0)\)</span> into a standard normal.</p>
-<p>20. Our interest rate now increases. But it is still a very competitive interest rate. For the <span class="math inline">\(x\)</span> you obtained in exercise 20, what is expected profit per loan and the expected total profit?</p>
-<p>21. Run run a Monte Carlo simulation to double check the theoretical approximation used in 19 and 20.</p>
+<p>19. Suppose that if your bank has a negative profit, it has to close. Therefore, you need to increase <span class="math inline">\(x\)</span> to minimize this risk. However, setting the interest rates too high may lead your clients to choose another bank. So, let’s say that we want our chances of losing money to be 1 in 100. What does the <span class="math inline">\(x\)</span> quantity need to be now? Hint: We want <span class="math inline">\(\mathrm{Pr}(S_n&lt;0) = 0.01\)</span>. Note that you can add and subtract constants to both sides of an inequality, and the probability does not change: <span class="math inline">\(\mathrm{Pr}(S_n&lt;0) = \mathrm{Pr}(S_n+k&lt;0+k)\)</span>, Similarly, with division of positive constants: <span class="math inline">\(\mathrm{Pr}(S_n+k&lt;0+k) = \mathrm{Pr}((S_n+k)/m &lt;k/m)\)</span>. Use this fact and the CLT to transform the left side of the inequality in <span class="math inline">\(\mathrm{Pr}(S_n&lt;0)\)</span> into a standard normal.</p>
+<p>20. Our interest rate now increases. But it is still a very competitive interest rate. For the <span class="math inline">\(x\)</span> you obtained in exercise 19, what are the expected profit per loan and the expected total profit?</p>
+<p>21. Run a Monte Carlo simulation to confirm the theoretical approximation used in 19 and 20.</p>
 <p>22. One of your employees points out that, since the bank is making a profit per loan, the bank should give out more loans! Why limit it to just <span class="math inline">\(n\)</span>? You explain that finding those <span class="math inline">\(n\)</span> clients was work. You need a group that is predictable and that keeps the chances of defaults low. The employee then points out that even if the probability of default is higher, as long as our expected value is positive, you can minimize your chances of losses by increasing <span class="math inline">\(n\)</span> and relying on the law of large numbers. Suppose the default probability is twice as high, or 4%, and you set the interest rate to 5%, or <span class="math inline">\(x\)</span> = $9,000, what is your expected profit per loan?</p>
-<p>23. How much do we have to increase <span class="math inline">\(n\)</span> by to assure the probability of losing money is still less than 0.01?</p>
+<p>23. How much do we have to increase <span class="math inline">\(n\)</span> by to ensure the probability of losing money is still less than 0.01?</p>
 <p>24. Confirm the result in exercise 23 with a Monte Carlo simulation.</p>
-<p>25. According to this equation, giving out more loans increases your expected profit and lowers the chances of losing money! Giving out more loans seems like a no-brainier. As a result, your colleague decides to leave your bank and start his own high-risk mortgage company. A few months later, your colleague’s bank has gone bankrupt. A book is written, and eventually, the movies “The Big Short” and “Margin Call” are made, recounting the mistake your friend, and many others, made. What happened?</p>
+<p>25. According to this equation, giving out more loans increases your expected profit and lowers the chances of losing money! Giving out more loans seems like a no-brainer. As a result, your colleague decides to leave your bank and start his own high-risk mortgage company. A few months later, your colleague’s bank has gone bankrupt. A book is written, and eventually, the movies “The Big Short” and “Margin Call” are made, recounting the mistakes your friend and many others made. What happened?</p>
 <p>Your colleague’s scheme was mainly based on this mathematical formula <span class="math inline">\(\mathrm{SE}[\bar{X}]= \sigma_X / \sqrt{n}\)</span>. By making <span class="math inline">\(n\)</span> large, we minimize the standard error of our per-loan profit. However, for this rule to hold, the <span class="math inline">\(X\)</span>s must be independent draws: one person defaulting must be independent of others defaulting.</p>
-<p>To construct a more realistic simulation than the original one your colleague ran, let’s assume there is a global event affecting everybody with high-risk mortgages and altering their probability simultaneously. We will assume that with a 50-50 chance all the default probabilities slightly increase or decrease to somewhere between 0.03 and 0.05. However, this change occurs universally, impacting everybody at once, not just one person. As these draws are no longer independent, our equation for the standard error of the sum of random variables does not apply. Write a Monte Carlo simulation for your total profit with this model.</p>
-<p>26. Use the simulation results of exercise 25 to report the expected profit, the probability of losing money, and the probability of losing more than $10,000,000. Study the distribution of profit and discuss how making the wrong assumption lead to a catastrophic result.</p>
+<p>To construct a more realistic simulation than the original one your colleague ran, let’s assume there is a global event affecting everybody with high-risk mortgages and altering their probability simultaneously. We will assume that with a 50-50 chance, all the default probabilities slightly increase or decrease to somewhere between 0.03 and 0.05. However, this change occurs universally, impacting everybody at once, not just one person. As these draws are no longer independent, our equation for the standard error of the sum of random variables does not apply. Write a Monte Carlo simulation for your total profit <span class="math inline">\(S_n\)</span> with this model.</p>
+<p>26. Use the simulation results of exercise 25 to report the expected profit, the probability of losing money, and the probability of losing more than $10,000,000. Study the distribution of profit and discuss how making the wrong assumption led to a catastrophic result.</p>
 
 
 </section><section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes"><hr>
@@ -750,13 +753,14 @@ window.Quarto = {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-        const codeEl = trigger.previousElementSibling.cloneNode(true);
-        for (const childEl of codeEl.children) {
-          if (isCodeAnnotation(childEl)) {
-            childEl.remove();
-          }
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
         }
-        return codeEl.innerText;
+      }
+      return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy
