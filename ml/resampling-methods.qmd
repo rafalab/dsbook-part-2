@@ -1,6 +1,6 @@
 # Resampling and Model Assessment {#sec-cross-validation}
 
-In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here, we focus on the conceptual and mathematical aspects. We will describe how to implement resampling methods in practice with the **caret** package later in [@sec-caret]. To motivate the concept, we will use the two predictor digits data presented in [@sec-two-or-seven] and introduce k-nearest neighbors (kNN) to demonstrate the ideas.
+In this chapter, we introduce resampling, one of the most important ideas in machine learning. Here, we focus on the conceptual and mathematical aspects. To motivate the concept, we will use the two predictor digits data presented in [@sec-two-or-seven] and introduce k-nearest neighbors (kNN) to demonstrate the ideas. We will describe how to implement resampling methods in practice with the **caret** package later in [@sec-caret]. 
 
 ## Motivation with k-nearest neighbors {#sec-knn-cv-intro}
 
@@ -83,13 +83,13 @@ y_hat_knn <- predict(knn_fit, mnist_27$test, type = "class")
 mean(y_hat_knn == mnist_27$test$y)
 ```
 
-This is due to what we call *over-training*.
+This is due to what we call *over-fitting*.
 
-## Over-training
+## Over-fitting
 
-With kNN, over-training is at its worst when we set $k = 1$. With $k = 1$, the estimate for each $\mathbf{x}$ in the training set is obtained with just the $y$ corresponding to that point. In this case, if the $x_1$ and $x_2$ are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself (if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly).
+With kNN, over-fitting is at its worst when we set $k = 1$. With $k = 1$, the estimate for each $\mathbf{x}$ in the training set is obtained with just the $y$ corresponding to that point. In this case, if the $x_1$ and $x_2$ are unique, we will obtain perfect accuracy in the training set because each point is used to predict itself (if the predictors are not unique and have different outcomes for at least one set of predictors, then it is impossible to predict perfectly).
 
-Here we fit a kNN model with $k = 1$ and confirm we get near-perfect accuracy in the training set:
+Here we fit a kNN modelx with $k = 1$ and confirm we get near-perfect accuracy in the training set:
 
 ```{r}
 knn_fit_1 <- knn3(y ~ ., data = mnist_27$train, k = 1)
@@ -134,7 +134,7 @@ The estimate $\hat{p}(\mathbf{x})$ follows the training data too closely (left).
 
 ## Over-smoothing
 
-Although not as badly as with $k=1$, we saw that with $k = 5$ we also over-trained. Hence, we should consider a larger $k$. Let's try, as an example, a much larger number: $k = 401$.
+Although not as badly as with $k=1$, we saw that with $k = 5$ was also over-fitted. Hence, we should consider a larger $k$. Let's try, as an example, a much larger number: $k = 401$.
 
 ```{r}
 knn_fit_401 <- knn3(y ~ ., data = mnist_27$train, k = 401)
@@ -219,7 +219,7 @@ Resampling methods provide practical ways to estimate $\mathrm{MSE}(\lambda)$ an
 An intuitive first attempt is the apparent error defined in @sec-mse and used in the previous section:
 
 $$
-\hat{\mbox{MSE}}(\lambda) = \frac{1}{N}\sum_{i = 1}^N \left\{\hat{y}_i(\lambda) - y_i\right\}^2
+\widehat{\mbox{MSE}}(\lambda) = \frac{1}{N}\sum_{i = 1}^N \left\{\hat{y}_i(\lambda) - y_i\right\}^2
 $$
 
 As noted in the previous section, this estimate is a random variable, based on just one test set, with enough variability to affect the choice of the best $\lambda$ substantially.
@@ -234,7 +234,7 @@ with $y_i^b$ the $i$th observation in test sample $b$ and $\hat{y}_{i}^b(\lambda
 
 The general idea behind resampling methods is to generate a series of different random samples from the data at hand. There are several approaches to doing this, but all randomly generate several smaller datasets that are not used for training, and instead are used to estimate MSE. Next, we describe _cross-validation_, one of the most widely used resampling methods.
 
-## cross-validation 
+## Cross-validation 
 
 ```{r, include = FALSE}
 if (knitr::is_html_output()) {
@@ -245,7 +245,7 @@ if (knitr::is_html_output()) {
 }
 ```
 
-Overall, we are provided a dataset (blue), and we need to build an algorithm, using this dataset, that will eventually be used in completely independent datasets (yellow) that we might not even see.
+Overall, we are provided a dataset (blue), and we need to build an algorithm, using this dataset, that will eventually be used in completely independent datasets (orange) that we might not even see.
 
 ```{r, echo = FALSE}
 knitr::include_graphics("img/cv-1.png")
@@ -285,7 +285,7 @@ We will eventually end up with $B$ samples, but let's start by describing how to
 Now we can fit the model in the training set, then compute the apparent error on the independent set:
 
 $$
-\hat{\mbox{MSE}}_b(\lambda) = \frac{1}{M}\sum_{i = 1}^M \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
+\widehat{\mbox{MSE}}_b(\lambda) = \frac{1}{M}\sum_{i = 1}^M \left(\hat{y}_i^b(\lambda) - y_i^b\right)^2 
 $$
 
 As a reminder, this is just one sample and will therefore return a noisy estimate of the true error.  In K-fold cross-validation, we randomly split the observations into $B$ non-overlapping sets:
@@ -294,10 +294,10 @@ As a reminder, this is just one sample and will therefore return a noisy estimat
 knitr::include_graphics("img/cv-5.png")
 ```
 
-Now we repeat the calculation above for each of these sets $b = 1,\dots,B$ and obtain $\hat{\mbox{MSE}}_1(\lambda),\dots, \hat{\mbox{MSE}}_B(\lambda)$. Then, for our final estimate, we compute the average:
+Now we repeat the calculation above for each of these sets $b = 1,\dots,B$ and obtain $\widehat{\mbox{MSE}}_1(\lambda),\dots, \widehat{\mbox{MSE}}_B(\lambda)$. Then, for our final estimate, we compute the average:
 
 $$
-\hat{\mbox{MSE}}(\lambda) = \frac{1}{B} \sum_{b = 1}^B \hat{\mbox{MSE}}_b(\lambda)
+\widehat{\mbox{MSE}}(\lambda) = \frac{1}{B} \sum_{b = 1}^B \widehat{\mbox{MSE}}_b(\lambda)
 $$
 
 and obtain an estimate of our loss. A final step would be to select the $\lambda$ that minimizes the MSE.
@@ -381,13 +381,6 @@ These differences highlight an important point: your choice of $\lambda$ is only
 
 
 ## Exercises
-Below is a **cleaner, clearer, student-friendly version** of the exercise set, expanded to a total of **10 exercises**, with tightened wording, improved motivation, and careful explanations of what students are expected to do.
-
-I also added one more exercise (now Exercise 7) so that the set flows logically and reaches 10 total.
-
----
-
-# **Exercises: Overfitting, Feature Selection, and Resampling**
 
 We will work with a dataset in which **the predictors and the outcome are entirely unrelated**. This setting helps us understand how misleading results can arise when we accidentally “peek” at the test set or use the full dataset to perform feature selection.
 
