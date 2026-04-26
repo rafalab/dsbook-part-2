@@ -171,7 +171,7 @@ confint(fit, "father", level = 0.95)
 ```
 
 
-Although we do not show examples in this book, hypothesis testing with regression models is commonly used in epidemiology and economics to make statements such as "the effect of A on B was statistically significant after adjusting for X, Y, and Z". However, several assumptions have to hold for these statements to be true.
+Although we do not show examples in this book, hypothesis testing with regression models is commonly used in epidemiology and economics to make statements such as "the effect of A on B was statistically significant after adjusting for X, Y, and Z". However, several assumptions have to hold for these statements to be useful.
 
 ### Predicted values are random variables
 
@@ -368,6 +368,32 @@ Is this a linear model?
 5\. Run diagnostic plots for the fitted model and describe the results.
 
 
-9\. Fit a regression model to each of the datasets in the Anscombe quartet introduced in the previous chapter (`anscombe` dataset) and examine the diagnostic plots.
+6\. Fit a regression model to each of the datasets in the Anscombe quartet introduced in the previous chapter (`anscombe` dataset) and examine the diagnostic plots.
+
+10\. In a previous chapter, we computed the correlation between heights of mothers and daughters, mothers and sons, fathers and daughters, and fathers and sons. We can compute these correlations using:
+
+```{r, eval=FALSE}
+library(HistData)
+set.seed(1)
+galton <- GaltonFamilies |>
+  group_by(family, gender) |>
+  sample_n(1) |>
+  ungroup()
+
+cors <- galton |> 
+  pivot_longer(father:mother, names_to = "parent", values_to = "parentHeight") |>
+  mutate(child = ifelse(gender == "female", "daughter", "son")) |>
+  unite(pair, c("parent", "child")) |> 
+  group_by(pair) |>
+  summarize(cor = cor(parentHeight, childHeight))
+```
+
+We noticed differneces. Are these differences statistically significant? To answer this, we will compute the slopes of the regression lines along with their standard errors. Start by using `lm` to compute the slopes LSE and the standard errors.
+
+11\. Repeat exercise 10, but compute a confidence interval as well.
+
+12\. Plot the confidence intervals and notice that they overlap, which implies that the data are consistent with the inheritance of height being independent of sex.
+
+13\. In the code above, we used `sample_n(1)` to randomly select a child of each sex from each family. Because this step introduces randomness, the correlations we compute will vary if we rerun this code chunk. Repeat the computation of correlations 100 times, taking a different sample each time. Examine how much the resulting correlations vary across these repetitions. Hint: Use an approach similar to what we have done for simulations.
 
 

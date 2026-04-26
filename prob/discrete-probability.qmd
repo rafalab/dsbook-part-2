@@ -6,7 +6,7 @@ We begin by covering some basic principles related to categorical data. The spec
 
 The term *probability* is used in everyday language. Yet answering questions about probability is often hard, if not impossible. In this section, we discuss a mathematical definition of *probability* that allows us to give precise answers to certain questions.
 
-For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-probability-1] (most probability books use this archaic term, so we do too) and I pick one at random, what is the probability of picking a red one? Our intuition tells us that the answer is 2/5 or 40%---this is the proportion of beads in the urn that are red, referred to as the *relative frequency* of that category. A precise definition can be given by noting that there are five possible outcomes, of which two satisfy the condition necessary for the event "pick a red bead". Since each of the five outcomes has an equal chance of occurring, we conclude that the probability is 0.4 for red and 0.6 for blue.
+For example, if I have 2 red beads and 3 blue beads inside an urn[^discrete-probability-1] (most probability books use this archaic term, so we do too) and I pick one at random, what is the probability of picking a red one? Our intuition tells us that the answer is 2/5 or 40%---this is the proportion of beads in the urn that are red, referred to as the *relative frequency* of that category. A precise definition can be given by noting that there are five possible outcomes, of which two satisfy the condition necessary for the event _pick a red bead_. Since each of the five outcomes has an equal chance of occurring, we conclude that the probability is 0.4 for red and 0.6 for blue.
 
 [^discrete-probability-1]: https://en.wikipedia.org/wiki/Urn_problem
 
@@ -22,7 +22,7 @@ For example, if we are randomly calling likely voters from a population that is 
 
 ## Monte Carlo {#sec-monte-carlo}
 
-Computers provide a way to actually perform the simple random long-run experiment described earlier: for many independent and identical trials, pick a bead at random from a bag that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
+Computers provide a way to actually perform the simple random long-run experiment described earlier: for many independent and identical trials, pick a bead at random from an urn that contains three blue beads and two red ones. Random number generators permit us to mimic the process of picking at random.
 
 An example is the `sample` function in R. We demonstrate its use in the code below. First, we use the function `rep` to generate the urn:
 
@@ -38,9 +38,9 @@ sample(beads, 1)
 
 This line of code produces a single random outcome. We want to repeat this experiment an infinite number of times, but it is impossible to repeat indefinitely. Instead, we repeat the experiment a large enough number of times to make the results _practically equivalent_ to repeating indefinitely. This is an example of a *Monte Carlo* simulation.
 
-Much of what mathematical and theoretical statisticians study relates to providing rigorous definitions of "practically equivalent" (topics that we do not cover in this book). Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this chapter, we provide a practical approach to determining what is "large enough".
+Much of what mathematical and theoretical statisticians study relates to providing rigorous definitions of _practically equivalent_ (topics that we do not cover in this book). Additionally, they explore how close a large number of experiments brings us to what happens in the limit. Later in this chapter, we provide a practical approach to determining what is _large enough_.
 
-To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event $B =$ 10,000 times:
+To perform our first Monte Carlo simulation, we use the `replicate` function, which allows us to repeat the same task any number of times. Here, we repeat the random event 10,000 times:
 
 ```{r}
 set.seed(1986) 
@@ -64,7 +64,7 @@ We can now verify if our definition actually is in agreement with this Monte Car
 prop.table(table(events))
 ```
 
-The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory tells us that as the number of repetitions $B$ gets larger, the estimates get closer to 3/5=0.6 and 2/5=0.4.
+The numbers above represent the estimated probabilities obtained by this Monte Carlo simulation. Statistical theory tells us that as the number of repetitions the number of experiments gets larger, the estimates get closer to 3/5=0.6 and 2/5=0.4.
 
 This is a simple and not very useful example, since we can easily compute the probabilities mathematically. Monte Carlo simulations are useful when it is hard or impossible to compute the exact probabilities mathematically. Before delving into more complex examples, we use simple ones to demonstrate the computing tools available in R.
 
@@ -76,7 +76,7 @@ Before we continue, we will briefly explain the following important line of code
 set.seed(1986) 
 ```
 
-Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when you run the presented code. This is actually fine, given that the results are random and should change by chance. However, if you want to ensure that results are consistent with each run, you can set R's random number generation seed to a specific number. Above, we set it to 1986. We want to avoid using the same seed every time and we used a popular way to pick the seed which is year - month - day. For example, we chose 1986 based on the date December 20, 2018: $2018 - 12 - 20 = 1986$.
+Throughout this book, we use random number generators. This implies that many of the results presented can potentially change by chance, indicating that a static version of the book may show a different result than what you obtain when you run the presented code. This is actually fine, given that the results are random and should change by chance. However, if you want to ensure that results are the same with each run, you can set R's random number generation seed to a specific number. Above, we set it to 1986. We want to avoid using the same seed every time and used a popular way to pick the seed which is to use the date we write the code to compute one number: year - month - day. For example, we chose 1986 based on the date December 20, 2018: $2018 - 12 - 20 = 1986$.
 
 You can learn more about setting the seed by looking at the documentation:
 
@@ -88,7 +88,7 @@ In the exercises, we may ask you to set the seed to ensure that the results you 
 
 ### With and without replacement
 
-The function `sample` has an argument that allows us to pick more than one element from the urn. However, by default, this selection occurs *without replacement*: after a bead is selected, it is not returned to the bag. Notice what happens when we ask to randomly select five beads:
+The function `sample` has an argument that allows us to pick more than one element from the urn. However, by default, this selection occurs *without replacement*: after a bead is selected, it is not returned to the urn. Notice what happens when we ask to randomly select five beads:
 
 ```{r}
 sample(beads, 5)
@@ -97,7 +97,7 @@ sample(beads, 5)
 
 This results in rearrangements that consistently comprise three blue and two red beads. If we ask that six beads be selected, we get an error.
 
-However, the `sample` function can be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`, to `replace = TRUE`:
+However, the `sample` function can be used directly, without the use of `replicate`, to repeat the same experiment of picking 1 out of the 5 beads, continually, under the same conditions. To do this, we sample *with replacement*: return the bead back to the urn after selecting it. We can tell `sample` to do this by changing the `replace` argument, which defaults to `FALSE`:
 
 ```{r}
 #| eval: false
@@ -165,13 +165,42 @@ blackjack <- function(){
    x <- sample(deck, 2)
    (x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
 }
-
 results <- replicate(10000, blackjack())
 mean(results)
 ```
 
 Both approaches yield nearly the same result. The combinatoric functions give the exact probability, while the Monte Carlo simulation provides an approximation that converges to the same value as the number of repetitions increases.
 
+## Conditional probability {#sec-conditional-probability}
+
+So far, we have discussed the probability of events without taking into account any additional information from other events. In many applications, however, we want to update probabilities after learning that some other event has occurred. This leads to the idea of *conditional probability*.
+
+If $A$ and $B$ are events and $\Pr(B) > 0$, the conditional probability of $A$ given $B$ is defined as
+
+$$
+\Pr(A \mid B) = \frac{\Pr(A \cap B)}{\Pr(B)}.
+$$
+
+This quantity tells us how likely $A$ is when we restrict attention to outcomes for which $B$ occurs.
+
+As a simple example related to cards, suppose we draw two cards *without replacement* from a standard deck. Let $A$ be the event that the second card is a face card (Jack, Queen, or King), and let $B$ be the event that the first card is an Ace.
+
+We first note that there are 12 face cards in a 52-card deck and 
+if the first card is an Ace, then 51 cards remain, still including all 12 face cards.
+
+Therefore,
+$$
+\Pr(A \mid B) = \frac{12}{51}.
+$$
+
+For comparison, the unconditional probability that a randomly drawn card is a face card is
+$$
+\Pr(A) = \frac{12}{52}.
+$$
+
+Thus, knowing that the first card is an Ace slightly increases the probability that the second card is a face card. This example illustrates how conditional probability updates our assessment once additional information is available.
+
+Conditional probability is fundamental in data science because it formalizes how probabilities change when new information becomes available. We will use this notation repeatedly in later chapters, especially when introducing Bayesian thinking, linear regression, and machine learning models.
 
 ## Examples
 
@@ -253,7 +282,7 @@ rafalib::mypar(1,1)
 plot(n, prob)
 ```
 
-Now let's compute the exact probabilities rather than relying on Monte Carlo approximations. Using math gives the precise answer and is much faster since we don't need to simulate experiments. We apply a common probability trick: instead of finding the probability that at least two people share a birthday, we compute the probability that no one does. By the multiplication rule, person 1 can have any birthday, person 2 must choose from the remaining 364 out of 365 days, and so on, giving the probability that all $n$ birthdays are unique as:
+Now let's compute the exact probabilities rather than relying on Monte Carlo approximations. Using math gives the precise answer and is much faster since we don't need to simulate experiments. We apply a common probability trick: instead of finding the probability that at least two people share a birthday, we compute the probability that no one does and subtract it from one. By the multiplication rule, person 1 can have any birthday, person 2 must choose from the remaining 364 out of 365 days, and so on, giving the probability that all $n$ birthdays are unique as:
 
 $$
 1 \times \frac{364}{365}\times\frac{363}{365} \dots \frac{365-n + 1}{365}
@@ -273,9 +302,9 @@ This plot shows that the Monte Carlo simulation provided a very good estimate of
 
 ## Infinity in practice
 
-Theoretically, obtaining a Monte Carlo estimate that equals the exact probability requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used $B=10,000$ Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Moreover, for some calculations, 10,000 experiments might not be computationally feasible. 
+Theoretically, obtaining a Monte Carlo estimate that equals the exact probability requires repeating experiments over and over indefinitely. In practice, we can't do this. In the examples above, we used 10,000 Monte Carlo experiments, yielding accurate estimates. The larger this number, the more accurate the estimate becomes, until the approximation is so good that your computer can't tell the difference. However, in more complex calculations, 10,000 may not be nearly enough. Horeover, for some calculations, 10,000 experiments might not be computationally feasible. 
 
-One practical approach is to check for the stability of the estimate. The following example illustrates the birthday problem for a group of 25 people.
+We know that the larger the number of replicates, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training. One practical approach that does not requiere theory is to check the stability of the estimate as the number of experiments increases. The following example illustrates the birthday problem for a group of 25 people.
 
 ```{r monte-carlo-convergence, echo=-1}
 rafalib::mypar()
@@ -286,9 +315,9 @@ plot(log10(B), prob)
 abline(h = eprob[25], lty = 2)
 ```
 
-In this plot, we can see that the values start to stabilize at around $10^3 = 1000$. 
+Although in this case we know the exact probability is `r eprob[25]`, in practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. However, we can explore when it starts stabilizing.
+In this plot, we can see that the values start to stabilize at around $10^{3.5} \approx 3000$. 
 
-Although in this case we know the exact probability is `r eprob[25]`, in practical scenarios, we won't know what the answer is beforehand, so we won't know if our Monte Carlo estimate is accurate. We know that the larger the $B$, the better the approximation. But how large do we need it to be? This is actually a challenging question, and answering it often requires advanced theoretical statistics training.
 
 ## Exercises
 

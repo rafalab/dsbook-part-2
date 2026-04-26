@@ -43,7 +43,7 @@ library(tidyverse)
 mice_weights |> group_by(diet) |> summarize(average = mean(body_weight))
 ```
 
-However, this is a random sample of mice, and the assignment to the diet group is also done randomly. So is this difference due to chance? We will use hypothesis testing, first described in @sec-hypothesis-testing, to answer this question.
+We now use hypothesis testing, first described in @sec-hypothesis-testing, to assess whether this difference is statistically significant.
 
 Let $\mu_1$ and $\sigma_1$ represent the weight average and standard deviation, respectively, that we would observe if the entire population of mice were on the high-fat diet. Define $\mu_0$ and $\sigma_0$ similarly, but for the chow diet. Define $N_1$ and $N_0$ as the sample sizes, and $\bar{X}_1$ and $\bar{X}_0$ the sample averages, for the high-fat and chow diets, respectively. 
 
@@ -79,7 +79,6 @@ We can also use the R function to perform the calculation in one line:
 
 ```{r}
 #| eval: false
-
 with(mice_weights, t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]))
 ```
 
@@ -143,7 +142,7 @@ rafalib::mypar(1,1)
 boxplot(fit$residuals ~ mice_weights$sex)
 ```
 
-This misspecification can have real implications; for instance, if more male mice received the high-fat diet, then this could explain the increase. Conversely, if fewer received it, we might underestimate the diet effect. Sex could be a confounder, indicating that our model can certainly be improved. 
+This misspecification can have real implications; for instance, if for some reason more male mice received the high-fat diet (this should not happen with random samples), then this could explain the increase. Conversely, if fewer received it, we might underestimate the diet effect. Sex could be a confounder, indicating that our model can certainly be improved. 
 
 From examining the data:
 
@@ -342,8 +341,12 @@ Once a linear model is fit using one or more factors, the `aov` function can be 
 summary(aov(fit))
 ```
 
-Keep in mind that if given a model formula, `aov` will fit the model:
+Keep in mind that `aov` can take the output of a fitted `lm` model or, alternatively, a model formula directly. When given a formula, `aov` will fit the model itself, so the results above can be obtained directly like this:
 
+```{r}
+#| eval: false
+summary(aov(body_weight ~ gen, data = mice_weights))
+```
 ```{r}
 #| eval: false
 summary(aov(body_weight ~ gen, data = mice_weights))
