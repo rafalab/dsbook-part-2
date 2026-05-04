@@ -27,7 +27,6 @@ the winners were announced[^reg-1]. In this chapter, we will demonstrate how reg
 The Netflix data is not publicly available, but the GroupLens research lab^[https://grouplens.org/] generated their own database with over 20 million ratings for over 27,000 movies by more than 138,000 users. We make a small subset of this data available via the __dslabs__ package:
 
 ```{r, warning=FALSE, message=FALSE, cache=FALSE}
-library(data.table)
 library(dslabs)
 movielens |> tibble:::tibble() |> head(5)
 ```
@@ -37,6 +36,7 @@ Each row represents a rating given by one user to one movie.
 Because we are working with a relatively large dataset, we will convert the data frame to a `data.table` object to take advantage of more efficient data wrangling.
 
 ```{r}
+library(data.table)
 dt <- as.data.table(movielens)
 ```
 
@@ -52,7 +52,7 @@ If we multiply those two numbers, we get a figure exceeding 5 million, yet our d
 
 Let's look at some of the general properties of the data to better understand the challenges by examining histograms of the number of ratings given to movies and the number of ratings given by users:
 
-```{r movie-id-and-user-hists, echo=-1, fig.width=6, fig.height=3}
+```{r movie-id-and-user-hists, echo=-1, fig.width=6, fig.height=3, echo=FALSE}
 rafalib::mypar(1,2)
 hist(log2(table(dt$movieId)), 0:9, xlab = "# Ratings (log 2)", main = "Movies")
 hist(table(dt$userId), seq(0, 2400, 50), xlab = "# Ratings", main = "Users")
@@ -74,7 +74,7 @@ We begin by focusing on users who have provided enough information for us to lea
 dt <- as.data.table(movielens)[, if (.N >= 100) .SD, by = userId]
 ```
 
-For convenience, we convert both `userId` and `movieId` to character strings. This will let us use them as names in vectors later. We also keep only the columns relevant to this analysis to keep printed output manageable:
+For convenience, we convert both `userId` and `movieId` to character strings. This will let us use them as names for vectors later. We also keep only the columns relevant to this analysis to keep printed output manageable:
 
 ```{r}
 dt[, `:=`(userId = as.character(userId), movieId = as.character(movieId))]
@@ -89,6 +89,8 @@ To evaluate our model, we split the data into two parts:
 
 * a *training set*, used to estimate the parameters
 * a *test set*, used only to assess prediction accuracy
+
+We will say much more about the importance of this split in @sec-cross-validation. For now, we simply want to ensure that our test set contains ratings that are not used in the training set.
 
 We create the split at the user level, assigning 80% of each user's ratings to the training set and 20% to the test set:
 
@@ -468,7 +470,7 @@ fit_als <- function(lambda, tol = 1e-6, max_iter = 100) {
     delta <- max(c(abs(fit$a - a_old), abs(fit$b - b_old)))
     if (delta < tol) break
   }
-  return(with(fit, list(mu = mu, a = setNames(a, userId), b = setNames(b, movieId))))
+  with(fit, list(mu = mu, a = setNames(a, userId), b = setNames(b, movieId)))
 }
 ```
 
@@ -534,7 +536,8 @@ We consider 100 values between 0 and 0.0002:
 lambdas <- seq(0, 0.0002, length.out = 100)
 rmses <- sapply(lambdas, function(lambda) { 
   fit <- fit_als(lambda)
-  resid <- with(test_set, rating - clamp(fit$mu + fit$a[userId] + fit$b[movieId]))
+  fitted <- with(test_set, clamp(fit$mu + fit$a[userId] + fit$b[movieId])) 
+  resid <- test_set$rating - fitted
   rmse(resid)
 })
 ```
@@ -562,7 +565,8 @@ fit <- fit_als(best_lambda)
 and compute the final RMSE:
 
 ```{r}
-resid <- with(test_set, rating - clamp(fit$mu + fit$a[userId] + fit$b[movieId]))
+fitted <- with(test_set, clamp(fit$mu + fit$a[userId] + fit$b[movieId])) 
+resid <- test_set$rating - fitted
 rmse(resid)
 ```
 

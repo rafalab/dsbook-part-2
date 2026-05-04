@@ -50,7 +50,6 @@ As described in @sec-regularization, many of the entries are missing because not
 Our second example uses the `tissue_gene_expression` dataset from **dslabs**. This dataset contains gene-expression measurements for `r length(tissue_gene_expression$y)` tissue samples. The predictors, stored in the component `x`, form a matrix with 500 columns, one for each gene, so each row represents the expression profile of a single tissue sample. The outcome labels, saved in the component `y`, indicate which of seven tissue types each sample comes from.
 
 Although clustering is typically applied when labels are *unknown*, this dataset is pedagogically useful because we *do* know the true tissue types. This lets us examine how well the clusters we find reflect the underlying biological structure: different tissues have distinct patterns of gene expression, even though all cells share the same genome. Different genes play different functional roles in different tissues, and these patterns should be detectable through clustering.
-From a biological perspective, all these tissues share the same genome; every cell contains the same DNA. What makes tissues different is which genes are turned on or off, and by how much. These tissue-specific expression patterns reflect the distinct functions of each cell type. Because of this, we expect that tissue samples with similar biological roles will show similar gene-expression profiles.
 
 Before clustering, we create a centered version of the gene-expression matrix by subtracting each gene's mean expression level. This ensures we focus on *relative differences* in gene expression rather than absolute magnitude:
 
@@ -136,7 +135,7 @@ Now we can use the results of this clustering to order the rows and columns:
 image(genex[h_1$order, h_2$order])
 ```
 
-The `heatmap` function that does all this for us:
+The `heatmap` function does all this for us:
 
 ```{r heatmap-2, eval=FALSE}
 heatmap(genex)
@@ -149,15 +148,14 @@ If only a few features are different between clusters, including all the feature
 Here we show how to restrict the heatmap to only the most variable genes, which often reveal the strongest biological patterns. We first compute the standard deviation for each gene, select the top 25 most variable genes, and then plot a heatmap using a more suitable divergent color palette:
 
 ```{r heatmap-3, fig.height=5, fig.width=6, message=FALSE, warning=FALSE}
-library(matrixStats)
-sds <- colSds(genex, na.rm = TRUE)
+sds <- matrixStats::colSds(genex, na.rm = TRUE)
 o <- order(sds, decreasing = TRUE)[1:25]
 heatmap(genex[,o], col = rev(RColorBrewer::brewer.pal(11, "Spectral")))
 ```
 
 We see clear patterns in the heatmap: observations cluster into groups that largely correspond to tissue type, and genes also form clusters that reflect biologically meaningful structure. For example, genes such as SV2B, GPM6B, LRP4, and DOCK4 cluster together because they are all associated with neuronal function.
 
-Note there are several other heatmap functions in R. A popular example is the `heatmap.2` in the **gplots** package.
+Note there are several other heatmap functions in R. Popular example are the `heatmap.2` in the **gplots** package and `Heatmap` in the **ComplexHeatmap** package.
 
 ## k-means
 

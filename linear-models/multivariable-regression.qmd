@@ -10,6 +10,12 @@ Since Galton's original development, regression has become one of the most widel
 
 When we are unable to randomly assign each individual to a treatment or control group, confounding becomes particularly prevalent. For instance, consider estimating the effect of eating fast food on life expectancy using data collected from a random sample of people in New York City. Fast food consumers are more likely to be smokers, drinkers, and have lower incomes. Consequently, a naive regression model may lead to an overestimate of the negative health effects of fast food. So, how do we account for confounding in practice? In this chapter, we learn how _multivariable regression_ can help with such situations and can be used to describe how one or more variables affect an outcome variable. We illustrate with a real-world example in which data was used to help pick underappreciated players to improve a resource-limited sports team.
 
+:::{.callout-note}
+## Connection to Treatment Effects
+
+In @sec-treatment-effect-models, we introduced multivariable regression in the context of binary covariates (treatment groups and confounders). Here, we extend that framework to continuous predictors.
+:::
+
 ## Case study: Moneyball
 
 *Moneyball: The Art of Winning an Unfair Game* by Michael Lewis focuses on the Oakland Athletics (A's) baseball team and its general manager, Billy Beane, the person tasked with building the team.
@@ -340,11 +346,11 @@ Now let's apply the model to players. The `Batting` data frame includes player-s
 We prepare the data so that we save the same per-PA rates the model was fit to. Because players' abilities change through time, we only use data close to 2002, but to improve the precision of our estimates, we use data from the three years before 2002, rather than just 2001. We also remove players with less than 100 PA to avoid imprecise summaries:
 
 ```{r}
-players <- Batting |> 
-  filter(yearID %in% 1999:2001) |> 
+players <- Batting |> filter(yearID %in% 1999:2001) |> 
   group_by(playerID) |>
-  summarize(XB = sum(X2B + X3B), PA = sum(AB + BB), HR = sum(HR), H = sum(H), 
-            singles = H - XB - HR, BB = sum(BB), AVG = sum(H)/sum(AB)) |>
+  summarize(PA = sum(AB+BB), H = sum(H), HR = sum(HR),  
+            XB = sum(X2B + X3B),  singles = H - XB - HR, BB = sum(BB),
+            AVG = sum(H)/sum(AB)) |>
   filter(PA >= 100) |>
   mutate(across(-c(playerID, PA, AVG), ~ ./PA)) 
 ```
@@ -353,9 +359,10 @@ players <- Batting |>
 Now that statistics are in per-PA rates, we can use the model fitted to team-level data to predict how many runs per plate appearance each player will produce:
 
 ```{r}
-players$R_hat <- predict(fit, players)
+players$R_hat <- predict(fit, players)*37.5
 ```
 
+Because each team has, on average, 37.5 plate appearances a game, we covert the predicted runs per plate appearance to predicted runs per game by multiplying by 37.5. This allows us to compare players' contributions on a per-game basis, which is more intuitive and relevant for team-building decisions.
 
 ### Moneyball in practice
 
@@ -402,7 +409,7 @@ players |> select(nameFirst, nameLast, R_hat, salary) |>
   arrange(desc(R_hat)) |> head()
 ```
 
-Note that because each team has, on average, 37.5 plate appearances a game, a rate of 0.24 runs per plate appearance translates to 9 runs a game, almost double the league average!
+Note that 9 runs a game is almost double the league average!
 
 If we plot predicted runs produced versus salary, we can see that there is substantial variation across players in predicted runs produced and that, not surprisingly, players who produce runs garner higher salaries. 
 
@@ -412,9 +419,8 @@ library(ggrepel)
 league_avg <- Teams |> filter(yearID == 2002) |> summarize(a = sum(R)/sum(G)) |> pull(a)
 lost <- filter(players, playerID %in% c("damonjo01", "giambja01"))
 added <- filter(players, playerID %in% c("justida01", "hattesc01"))
-players |> 
-  filter(debut <= 1996) |>
-  ggplot(aes(salary/10^6, R_hat*37.5)) +
+players |> filter(debut <= 1996) |>
+  ggplot(aes(salary/10^6, R_hat)) +
   geom_point(alpha = 0.35) +
   geom_point(data = added, color = "darkgreen") +
   geom_point(data = lost, color = "darkred") +
@@ -427,13 +433,15 @@ players |>
 The plot also highlights four players. Before the 2002 season, Oakland lost their best run producer, Jason Giambi, because it could not compete with the New York Yankees offer of over \$10 million in salary. Johnny Damon, another above-average run producer (the dashed line shows the average), also left as Oakland was not willing to pay the 7.25 million salary the Boston Red Sox offered him. Oakland had to make up for this run production, but with a very limited budget. To do this, their first addition was Scott Hatterberg, whose salary was only $900,000, one of the lowest in the league, yet he was predicted to produce more than average runs. Note that among the players in our data frame, Hatterberg, while having a below league average AVG, ranked near the top 10% in BB per plate appearance. Similarly, David Justice had a near league average AVG, but ranked near the top 5% in terms of BB per plate appearance. These savings permitted the A's to upgrade one of their current players, Frank Menechino, for Ray Durham. 
 
 
-```{r}
-filter(players, playerID %in% c("damonjo01", "giambja01", "menecfr01")) |> 
-  bind_rows(filter(players, playerID %in% c("justida01", "durhara01", "hattesc01"))) |> 
-  select(nameFirst, nameLast, AVG, BB,  R_hat) 
+```{r, echo=-c(1,5)}
+local({options(tibble.print_max = Inf, tibble.width = Inf)
+t1 <- filter(players, playerID %in% c("damonjo01", "giambja01", "menecfr01"))
+t2 <- filter(players, playerID %in% c("justida01", "durhara01", "hattesc01"))
+bind_rows(t1, t2) |> select(nameFirst, nameLast, AVG, BB,  R_hat) 
+})
 ```
 
-Despite losing two star players, the A's predicted runs per game (`R_hat`) dropped only slightly, from 0.482 to 0.431, and the savings allowed them to acquire pitcher Billy Koch, who helped reduce opponents' scoring.
+Despite losing two star players, the A's predicted runs per game (`R_hat`) dropped only slightly and the savings allowed them to acquire pitcher Billy Koch, who helped reduce opponents' scoring.
 
 
 ### Summary

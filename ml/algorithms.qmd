@@ -3,9 +3,7 @@
 Machine learning includes a vast collection of algorithms, well over a hundred commonly used methods, each with its own strengths, assumptions, and tuning parameters. In this chapter, we introduce a small but representative set of algorithms that illustrate the major ideas behind supervised learning. Rather than aiming for exhaustive coverage, our goal is to build intuition for *how* different approaches learn from data and *why* they make different kinds of predictions.
 
 
-To keep the examples concrete and accessible, we use the two-predictor digit dataset introduced in @sec-two-or-seven as our running example. This dataset is small enough to visualize, yet rich enough to reveal the behavior of real algorithms. All code examples rely on functions from the **dslabs** package.
-Later, in @sec-ml-in-practice, we will show how to implement these ideas efficiently using the **caret** package, which provides a unified interface for fitting and tuning many different machine learning methods.
-
+To keep the examples concrete and accessible, we use the two-predictor digit dataset introduced in @sec-two-or-seven as our running example. This dataset is small enough to visualize, yet rich enough to reveal the behavior of real algorithms. We use functions from the **caret** package for these examples; later, in @sec-ml-in-practice, we show how to implement these ideas more efficiently using the same package, which provides a unified interface for fitting and tuning many different machine learning methods.
 
 ```{r warning = FALSE, message = FALSE, cache=FALSE}
 library(caret)
@@ -192,7 +190,8 @@ test_set <- heights[-train_index,]
 In this case, the Naive Bayes approach is particularly appropriate because we know that the normal distribution is a good approximation for the conditional distributions of height given sex for both classes $Y = 1$ (female) and $Y = 0$ (male). This implies that we can approximate the conditional distributions $f_{X|Y = 1}$ and $f_{X|Y = 0}$ by simply estimating averages and standard deviations from the data:
 
 ```{r}
-param <- train_set |> group_by(sex) |> summarize(m = mean(height), s = sd(height))
+param <- train_set |> group_by(sex) |> 
+  summarize(m = mean(height), s = sd(height))
 ```
 
 The prevalence, which we will denote with $\pi = \mathrm{Pr}(Y = 1)$, can be estimated from the data with: 
@@ -347,7 +346,7 @@ mnist_27$train |> mutate(y = factor(y)) |>
   facet_wrap(~y)
 ```
 
-QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is $p(p-1)/2$ for each class, which grows quickly Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.
+QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is $p(p-1)/2$ for each class, which grows quickly. Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.
 
 
 ### Linear discriminant analysis
@@ -419,7 +418,7 @@ $$
 To construct a classifier, we simply estimate the quantities in this expression from the training data.
 For Naive Bayes, LDA, or QDA:
 
-* we estimate the class-conditional densities $f_{\mathbf{X}\mid Y=k}(\mathbf{x})$ using the assumed model (independence for Naive Bayes, a normal distribution with shared covariance for LDA, or a normal distribution with class-specific covariances for QDA), and
+* we estimate the class-conditional densities $f_{\mathbf{X}\mid Y=k}(\mathbf{x})$ using the assumed model (a normal distribution with shared covariance for LDA, or a normal distribution with class-specific covariances for QDA), and
 * we estimate the class proportions $\Pr(Y = k)$ with the empirical prevalence
   $\hat{\pi}_k = \frac{1}{n}\sum_{i=1}^n \mathbf{1}(y_i = k)$.
 
@@ -471,7 +470,7 @@ $$
 \log f(\mathbf{x}) \propto (\mathbf{x} - \boldsymbol{\mu})^\top\Sigma^{-1}(\mathbf{x} - \boldsymbol{\mu}),
 $$
 
-which is the negative of the *Mahalanobis distance* squared.
+with $\Sigma$ representing the covariance matrix of the class. This quantity is larger when $\mathbf{x}$ is closer to the class mean $\boldsymbol{\mu}$ in a _Mahalanobis_ distance sense.
 
 * In LDA, all classes use the same covariance $\Sigma$. So each class scores $\mathbf{x}$ by its (scaled) squared distance to the class mean.
 
@@ -481,7 +480,7 @@ Thus, LDA and QDA can both be viewed as distance-based classifiers: a new observ
 
 
 :::{.callout-note}
-You are now ready to do exercises 12–17.
+You are now ready to do exercises 12–18.
 :::
 
 
@@ -673,6 +672,7 @@ summary(fit)
 The final estimate $\hat{f}(x)$ looks like this:
 
 ```{r polls-2008-tree-fit}
+#| echo: false
 polls_2008 |> 
   mutate(y_hat = predict(fit)) |> 
   ggplot() +
@@ -746,16 +746,13 @@ $$
 \mbox{entropy}(j) = -\sum_{k = 1}^K \hat{p}_{j,k}\log(\hat{p}_{j,k}), \mbox{ with } 0 \times \log(0) \mbox{ defined as }0
 $$
 
+If we use a classification tree on the 2 or 7 example, 
 
-```{r, echo=FALSE}
-train_rpart <- train(y ~ .,
-                     method = "rpart",
-                     tuneGrid = data.frame(cp = seq(0.0, 0.1, len = 25)),
-                     data = mnist_27$train)
-y_hat <- predict(train_rpart, mnist_27$test)
+```{r}
+fit_rpart <- rpart(y ~ ., data = mnist_27$train, method = "class")
+y_hat <- predict(fit_rpart, newdata = mnist_27$test, type = "class")
 ```
-
-If we use a classification tree on the 2 or 7 example, we achieve an accuracy of `r confusionMatrix(y_hat, mnist_27$test$y)$overall["Accuracy"]` which is better than regression, but is not as good as what we achieved with kernel methods.
+we achieve an accuracy of `r confusionMatrix(y_hat, mnist_27$test$y)$overall["Accuracy"]` which is better than regression, but is not as good as what we achieved with kernel methods. We don't show the code here as we first need to cover the **caret** package, which we introduce in the next chapter.
 
 The plot of the estimated conditional probability shows us the limitations of classification trees:
 
@@ -763,7 +760,7 @@ The plot of the estimated conditional probability shows us the limitations of cl
 library(gridExtra)
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")
 
-p2 <- plot_cond_prob(predict(train_rpart, newdata = mnist_27$true_p, type = "prob")[,2]) +
+p2 <- plot_cond_prob(predict(fit_rpart, newdata = mnist_27$true_p, type = "prob")[,2]) +
   ggtitle("Decision Tree")
 
 grid.arrange(p2, p1, nrow = 1)
@@ -794,6 +791,7 @@ So how do we get different decision trees from a single training set? For this, 
 To illustrate how the first steps can result in smoother estimates, we will fit a random forest to the 2008 polls data. We will use the `randomForest` function in the **randomForest** package:
 
 ```{r polls-2008-rf, message = FALSE, warning = FALSE}
+#| echo: false
 library(randomForest)
 fit <- randomForest(margin ~ ., data = polls_2008) 
 ```
@@ -924,12 +922,12 @@ if(knitr::is_html_output()){
 library(randomForest)
 ```
 
+If we use a random forest on the 2 or 7 example, 
 ```{r mnits-27-rf-fit}
 library(randomForest)
 train_rf <- randomForest(y ~ ., data = mnist_27$train)
 ```
-
-The accuracy for the random forest fit for our 2 or 7 examples is 
+the accuracy is 
 `r confusionMatrix(predict(train_rf, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. Here is what the conditional probabilities look like:
 
 ```{r cond-prob-rf, echo = FALSE, fig.asp = 0.5}
@@ -946,7 +944,7 @@ grid.arrange(p2, p1, nrow = 1)
 train_rf_2 <- randomForest(y ~ ., data = mnist_27$train, nodesize = 65)
 ```
 
-Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 65, the number of neighbors we used with kNN, we get an accuracy of `r confusionMatrix(predict(train_rf_2, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. The selected model improves accuracy and provides a smoother estimate:
+Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 65, the number of neighbors we used with kNN, we get an accuracy of `r confusionMatrix(predict(train_rf_2, mnist_27$test), mnist_27$test$y)$overall["Accuracy"]`. The selected model provides similar accuracy and a smoother estimate:
 
 ```{r cond-prob-final-rf, echo = FALSE, fig.asp=0.5}
 p1 <- plot_cond_prob() + ggtitle("True conditional probability")
@@ -964,6 +962,17 @@ The **caret** package includes the function `varImp` that extracts variable impo
 
 [^trees-3]: https://web.stanford.edu/\~hastie/Papers/ESLII.pdf
 
+:::{.callout-note}
+You are ready to do exercises 19 - 25.
+:::
+
+## A note on Deep Learning 
+
+The methods we have covered—linear regression, logistic regression, kNN, trees, and random forests, represent the statistical foundations of machine learning. They are interpretable, efficient, and effective for many real-world problems.
+
+Modern deep learning methods take a different approach. Rather than assuming a specific functional form (like the linear models) or using explicit partitioning strategies (like trees), deep neural networks stack multiple layers of simple nonlinear transformations. Conceptually, this is a clever way to do smoothing: by composing many simple functions, deep networks can learn extremely flexible decision boundaries and automatically discover interactions between features. In the language of this book, deep networks allow features to interact in ways that are explicitly built into the model itself, rather than relying on methods like random forests that implicitly find interactions through partitioning.
+
+We do not cover deep learning in this book. The statistical perspective we emphasize—focusing on bias-variance tradeoffs, regularization, and learning from data—remains relevant to deep learning, but the practice is quite different, involving specialized software, hardware acceleration, and techniques specific to training very large models. For those interested in deep learning, generative models, and large language models, there are dedicated textbooks and courses that build on the foundational concepts introduced here.
 
 ## Exercises 
 

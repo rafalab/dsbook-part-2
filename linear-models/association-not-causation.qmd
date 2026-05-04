@@ -51,7 +51,7 @@ library(data.table)
 library(ggplot2)
 N <- 25
 g <- 1000000
-sim_data <- data.table(group = rep(1:g, each = N), x = rnorm(N*g), y = rnorm(N*g))
+sim<- data.table(group = rep(1:g, each = N), x = rnorm(N*g), y = rnorm(N*g))
 ```
 
 Note we created `r cat(prettyNum(g, big.mark=",", scientific=FALSE))` groups and for each we generated a pair of independent vectors, $X$ and $Y$, with `r N` observations each. Because we constructed the simulation, we know that $X$ and $Y$ are not correlated.
@@ -59,7 +59,7 @@ Note we created `r cat(prettyNum(g, big.mark=",", scientific=FALSE))` groups and
 Next, we compute the correlation between `X` and `Y` for each group and look for the maximum:
 
 ```{r}
-res <- sim_data[, .(r = cor(x, y)), by = group][order(-r)]
+res <- sim[, .(r = cor(x, y)), by = group][order(-r)]
 max(res$r)
 ```
 
@@ -69,7 +69,7 @@ We see a maximum correlation of `r round(max(res$r), 2)`. If you just plot the d
 #| message: false
 #| warning: false
 
-sim_data[group == res[which.max(r), group]] |>
+sim[group == res[which.max(r), group]] |>
   ggplot(aes(x, y)) +
   geom_point() + 
   geom_smooth(formula = 'y ~ x', method = "lm")
@@ -87,7 +87,7 @@ If we performed regression on this group and interpreted the p-value, we would i
 
 ```{r, message=FALSE, warning=FALSE}
 library(broom)
-sim_data[group == res[which.max(r), group], broom::tidy(lm(y ~ x))][2,]
+sim[group == res[which.max(r), group], broom::tidy(lm(y ~ x))][2,]
 ```
 
 This practice, known as p-hacking, is widely discussed because it may undermine the reliability of scientific findings. Since journals often favor statistically significant results over null findings, researchers have an incentive to highlight significance. In fields such as epidemiology and the social sciences, for instance, an analyst might explore associations between an outcome and many exposures, but only report the one with a small p-value. Similarly, they might try several model specifications to adjust for confounding and select the one that gives the strongest result. In experimental settings, a study could be repeated multiple times, with only the "successful" run reported. Such practices are not always intentional misconduct; they often stem from limited statistical understanding or wishful thinking. More advanced statistics courses cover methods for adjusting analyses to account for these multiple comparisons.

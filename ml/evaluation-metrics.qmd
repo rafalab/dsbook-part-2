@@ -11,7 +11,7 @@ library(caret)
 library(dslabs)
 ```
 
-We start by noting that `heights$sex` provides the outcomes (Y) and `heights$height` is our predictor (X). To simplify the code used throughout this chapter, we rename the variables:
+We start by noting that `heights$sex` provides the outcomes $Y$ and `heights$height` is our predictor $X$. To simplify the code used throughout this chapter, we rename the variables:
 
 ```{r}
 names(heights) <- c("y", "x")
@@ -67,7 +67,7 @@ mean(y_hat == test_set$y)
 
 Not surprisingly, our accuracy is about 50%. We are guessing!
 
-Can we do better? Exploratory data analysis suggests we can because, on average, males are slightly taller than females. But how do we make use of this insight? Let's try another simple approach: predict 1 (`Female`) if height is less than two standard deviations from the average male height:
+Can we do better? Exploratory data analysis suggests we can because, on average, males are taller than females. But how do we make use of this insight? Let's try another simple approach: predict 1 (`Female`) if height is less than two standard deviations from the average male height:
 
 ```{r}
 cutoff <- with(train_set, mean(x) - 2*sd(x))
@@ -82,7 +82,7 @@ mean(test_set$y == y_hat)
 
 But can we do even better? In the example above, we used a cutoff of 62, but we can examine the accuracy obtained for other cutoffs and then pick the value that provides the best results. But remember, **it is important that we optimize the cutoff using only the training set**: the test set is only for evaluation.
 
-Later we will learn that evaluating an algorithm on the training set can lead to _overfitting_, which often results in over-optimistic assessments, but for this simplistic example it is not much of a problem.
+In @sec-cross-validation we will learn that evaluating an algorithm on the training set can lead to _overfitting_, which often results in over-optimistic assessments, but for this simplistic example it is not much of a problem.
 
 Here we examine the accuracy of 10 different cutoffs and pick the one yielding the best result:
 
@@ -145,7 +145,7 @@ cm$byClass[c("Sensitivity", "Specificity")]
 ```
 
 
-We notice an imbalance: too many females are predicted to be male. We are calling almost half of the females male! How can our overall accuracy be so high then? This is because the _prevalence_, defined as the proportion of $Y=1$ in our data, is low. These heights were collected from three data sciences courses, two of which had higher male enrollment:
+We notice an imbalance: too many females are predicted to be male. We are calling almost half of the females male! How can our overall accuracy be so high then? This is because the _prevalence_, defined as the proportion of $Y=1$ in our data, is substantially lower than 0.5. These heights were collected from three data sciences courses, two of which had higher male enrollment:
 
 
 ```{r}
@@ -456,6 +456,7 @@ $$
 \text{MSE} \equiv \mathrm{E}[(\hat{Y} - Y)^2 ]
 $$
 
+where $Y$ represents a new outcome drawn independently from the same distribution as the training data, and $\hat{Y}$ is the corresponding prediction based on the model fitted to the training sample. The expectation is taken over both the randomness in the new observation $Y$ and the randomness in the training data used to construct $\hat{Y}$.
 
 Consider that if the outcomes are binary, the MSE is equivalent to one minus expected accuracy, since $(\hat{y} - y)^2$ is 0 if the prediction was correct and 1 otherwise. 
 
@@ -467,12 +468,12 @@ $$
 \widehat{\mbox{MSE}} = \frac{1}{N}\sum_{i=1}^N (\hat{y}_i - y_i)^2
 $$
 
-with the $\hat{y}_i$ generated completely independently from the the $y_i$s. 
+with the $\hat{y}_i$ generated completely independently from the $y_i$s. 
 
 However, the estimate $\widehat{\text{MSE}}$ is a random variable. In fact, $\text{MSE}$ and $\widehat{\text{MSE}}$ are often referred to as the true error and apparent error, respectively.
 Due to the complexity of some machine learning algorithms, it is difficult to derive the statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation, an approach to estimating the MSE. 
 
-We conclude this chapter by noting that squared loss is not the only possible choice of loss function. For instance, the *mean absolute error (MAE)* replaces squared errors $(\hat{Y}_i - Y_i)^2$ with their absolute values $|\hat{Y}_i - Y_i|$. Other loss functions are also possible, depending on the context and goals of the analysis. In this book, however, we focus on squared loss, since it is by far the most widely used and provides important mathematical conveniences that simplify both theory and computation.
+We conclude this chapter by noting that squared loss is not the only possible choice of loss function. For instance, the *mean absolute error (MAE)* replaces squared errors $(\hat{y}_i - y_i)^2$ with their absolute values $|\hat{y}_i - y_i|$. Other loss functions are also possible, depending on the context and goals of the analysis. In this book, however, we focus on squared loss, since it is by far the most widely used and provides important mathematical conveniences that simplify both theory and computation.
 
 :::{.callout-note}
 In practice, we often report the root mean squared error (RMSE), which is simply $\sqrt{\mbox{MSE}}$, because it is in the same units as the outcomes.
@@ -489,8 +490,7 @@ In the following exercises, we use the Titanic dataset to explore evaluation met
 library(tidyverse)
 library(caret)
 library(titanic)
-
-titanic <- titanic_train |> select(Survived, Pclass, Sex, Age, Fare) |> drop_na() |>
+titanic <- select(titanic_train, Survived, Pclass, Sex, Age, Fare) |> drop_na() |>
   mutate(Survived = factor(Survived, levels = c(1,0)), 
          Pclass = factor(Pclass), Sex = factor(Sex))
 ```
@@ -543,7 +543,7 @@ p_hat_test <- predict(fit, newdata = test_set, type = "response")
 
 Classify passengers as survived if this probability is larger than 0.5. How does the accuracy compare when computed on training and test sets? Comment on why the difference is larger than in our previous comparison in exercises 2 and 3.
 
-9\. Consider different cutoffs for `cutoffs <- seq(0.05, 0.95, 0.05)` for this probability and generate an ROC curve based on the test set. Based on this ROC curve and the one computed in exercise 7, which method would you say performs better?
+9\. Consider `cutoffs <- seq(0.05, 0.95, 0.05)` for this probability and generate an ROC curve based on the test set. Based on this ROC curve and the one computed in exercise 7, which method would you say performs better?
 
 10\. The overall prevalence of survival in this dataset is:
 

@@ -159,7 +159,7 @@ This model misspecification led to an overconfident interval that ended up not i
 
 ```{r}
 one_poll_per_pollster <- polls |> group_by(pollster) |> 
-  filter(enddate == max(enddate)) |> ungroup()
+  slice_max(enddate, n = 1, with_ties = FALSE) |> ungroup()
 ```
 
 Here is a histogram of the calculated spread for these `r nrow(one_poll_per_pollster)` pollsters' final polls:
@@ -265,14 +265,15 @@ Using the t-distribution and the t-statistic is the basis for *t-tests*, a widel
 :::
 
 
-To construct a 95% confidence interval, we simply use `qt` instead of `qnorm`:
+To construct a 95% confidence interval, we simply use `qt` instead of `qnorm`.
 This results in a slightly larger confidence interval than we obtained before:
 
 ```{r}
 n <- length(one_poll_per_pollster$spread)
+t_crit <- qt(0.975, n - 1)
 ttest_ci <- one_poll_per_pollster |> 
   summarize(avg = mean(spread), se = sd(spread)/sqrt(length(spread))) |> 
-  mutate(start = avg - qt(0.975, n - 1)*se, end = avg + qt(0.975, n - 1)*se) |>
+  mutate(start = avg - t_crit*se, end = avg + t_crit*se) |>
   select(start, end)
 round(ttest_ci*100, 2)
 ```
@@ -301,12 +302,16 @@ In short, normality is not required, but strong skew or heavy tails can break th
 The t-distribution can also be used to model errors in bigger deviations that are more likely than with the normal distribution. In their Monte Carlo simulations, FiveThirtyEight uses the t-distribution to generate errors that better model the deviations we see in election data. For example, in Wisconsin, the average of six high-quality polls was 7% in favor of Clinton with a standard deviation of 3%, but Trump won by 0.8%. Even after taking into account the overall bias, this 7.7% residual is more in line with t-distributed data than the normal distribution.
 
 ```{r}
+#| echo: false
+#| eval: false
 polls_us_election_2016 |>
   filter(state == "Wisconsin" & enddate > "2016-11-01" & 
             population == "lv" & grade %in% c("A+","A","A-","B+","B")) |>
   left_join(results_us_election_2016, by = "state") |>
-  mutate(spread = rawpoll_clinton - rawpoll_trump, actual = clinton - trump) |>
-  summarize(actual = first(actual), estimate = mean(spread), sd = sd(spread)) 
+  mutate(spread = rawpoll_clinton - rawpoll_trump, 
+    actual = clinton - trump) |>
+  summarize(actual = first(actual), estimate = mean(spread), 
+    sd = sd(spread)) 
 ```
 
 

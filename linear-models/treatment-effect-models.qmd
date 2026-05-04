@@ -85,7 +85,14 @@ with(mice_weights, t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]
 Here $t$ is well over 3, so we don't really need to compute the p-value `1-pnorm(t_stat)` as we know it will be very small.
 
 Note that when $N_0$ and $N_1$ are not large enough, the CLT does not apply. However, as we explained in @sec-t-dist,
-if the outcome data, in this case weight, follows an approximately normal distribution, then the $t$, defined above, follows a t-distribution with $N_0+N_1-2$ degrees of freedom. So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`. Specifically, we use `1-pt(t_stat, with(stats, n[2]+n[1]-2))`. 
+if the outcome data, in this case weight, follows an approximately normal distribution, then the $t$, defined above, follows a t-distribution.
+So the calculation of the p-value is the same except that we use `pt` instead of `pnorm`.
+
+::: {.callout-note}
+For the two-sample *t*-test used in this chapter, the appropriate degrees of freedom are not straightforward to compute when the two groups have different variances. In this setting, standard statistical texts derive an approximation based on the Welch–Satterthwaite equation. 
+
+In practice, there is no need to carry out this calculation by hand. The `t.test` function in R automatically uses this approximation  and computes the appropriate degrees of freedom and p-value for us.
+:::
 
 Differences in means are commonly examined in scientific studies. As a result, this _t-statistic_ is one of the most widely reported summaries. When used to determine if an observed difference is _statistically significant_, we refer to the procedure as "performing a _t-test_". 
 
@@ -189,7 +196,7 @@ $$
 \mbox{female on chow diet} \implies x_{1i} = 0, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 \\
 \mbox{female on high fat diet} \implies x_{1i} = 1, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_1\\
 \mbox{male on chow diet} \implies x_{1i} = 0, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_2\\
-\mbox{male on chow diet} \implies x_{1i} = 1, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 +\beta_1 + \beta_2\\
+\mbox{male on high diet} \implies x_{1i} = 1, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 +\beta_1 + \beta_2 + \beta_3\\
 \end{aligned}
 $$
 
@@ -425,8 +432,9 @@ Compute the estimate of $\sigma$ using both the model that includes only diet an
 2\. One of the assumptions of the linear model fit by `lm` is that the standard deviation of the errors $\varepsilon_i$ is equal for all $i$. This implies that it does not depend on the expected value. Group the mice by their weight like this:
 
 ```{r}
-breaks <- with(mice_weights, seq(min(body_weight), max(body_weight), 1))
-dat <- mutate(mice_weights, group = cut(body_weight, breaks, include_lowest=TRUE))
+dat <- mice_weights
+breaks <- with(dat, seq(min(body_weight), max(body_weight), 1))
+dat <- mutate(dat, group = cut(body_weight, breaks, include.lowest=TRUE))
 ```
 
 Compute the average and standard deviation of `body_weight` for groups with more than 10 observations and use data exploration to verify if this assumption holds.

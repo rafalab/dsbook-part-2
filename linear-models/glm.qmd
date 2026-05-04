@@ -49,7 +49,7 @@ In @sec-chisq-test, we introduce association tests that permit us to answer this
 
 ### The Lady Tasting Tea
 
-The classic motivating example for association tests is the *Lady Tasting Tea* experiment designed by R. A. Fisher. A colleague at the Rothamsted Experimental Station claimed she could tell whether milk was poured into a cup before or after the tea. Fisher proposed a randomized test and derived the probability of each possible result under the assumption that she was simply guessing. This led to what is now known as *Fisher's exact test*, based on the hypergeometric distribution.
+The classic motivating example for association tests is the *Lady Tasting Tea* experiment designed by R. A. Fisher. A colleague at the Rothamsted Experimental Station claimed she could tell whether milk was poured into a cup before or after the tea. Fisher proposed a randomized test and derived the probability of each possible result under the assumption that she was simply guessing. This led to what is now known as *Fisher's exact test*.
 
 As an example, suppose she correctly identified 3 out of 4 cups:
 
@@ -60,20 +60,21 @@ tab
 ```
 
 To evaluate whether this provides evidence of real ability, we consider the *null hypothesis* that she is guessing. Because she knows there are four of each type, guessing corresponds to randomly drawing 4 cups from an urn containing 4 *milk-first* and 4 *tea-first* cups.
-
-The probability of correctly guessing $k$ cups is given by the hypergeometric formula:
+Using basic combinatorics, covered in most discrete probability textbooks, we can compute the probability of correctly identifying $k$ cups out of 4 by chance. Under random guessing, this probability is
 
 $$
 \frac{\binom{4}{k}\binom{4}{4-k}}{\binom{8}{4}}.
 $$
 
-The probability of getting 3 or more correct by chance is therefore :
+To assess how surprising the result is, we compute the probability of getting **3 or more correct** by chance:
+
 $$
 \frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{16}{70} \approx 0.24.
 $$
-So, correctly identifying 3 cups could easily occur by chance and is not compelling evidence of the claimed ability.
 
-This calculation is what *Fisher’s exact test* performs. In R, we can type:
+This shows that correctly identifying 3 cups could easily occur by chance and does not provide strong evidence for the claimed ability.
+
+This calculation is exactly what *Fisher’s exact test* performs. In R, we can compute the corresponding p-value with:
 
 ```{r}
 fisher.test(tab, alternative = "greater")$p.value
@@ -274,7 +275,7 @@ $$
 is called the *logistic function* or *logit transformation*.
 :::
 
-Note that we can write the probability $p_i = Pr(Y_i = 1)$ as a function of the paremeters $\beta_0+\beta_1x_i$ for any $x_i$ by using the inverse of the logit transformation:
+Note that we can write the probability $p_i = Pr(Y_i = 1)$ as a function of the parameters $\beta_0+\beta_1x_i$ for any $x_i$ by using the inverse of the logit transformation:
 
 $$
 \Pr(Y_i=1) = g^{-1}(g(p_i)) = g^{-1}\left(\beta_0+\beta_1x_i\right) = \frac{e^{\beta_0+\beta_1x_i}}{1 + e^{\beta_0+\beta_1x_i}} = \frac{1}{1 + e^{-\beta_0-\beta_1x_i}}
@@ -549,8 +550,8 @@ Fit a logistic regression model with survival as the outcome and sex as the pred
 
 ```{r}
 #| eval: false
-fit_gender <- glm(Survived ~ Sex, family = binomial, data = titanic_train)
-summary(fit_gender)
+fit <- glm(Survived ~ Sex, family = binomial, data = titanic_train)
+summary(fit)
 ```
 
 a. Interpret the sign of the coefficient for `Sex`.
@@ -562,8 +563,8 @@ c. Construct a 95% confidence interval for the odds ratio.
 ```{r}
 #| eval: false
 titanic_train$Pclass <- factor(titanic_train$Pclass)
-fit_class <- glm(Survived ~ Sex + Pclass, family = binomial, data = titanic_train)
-summary(fit_class)
+fit <- glm(Survived ~ Sex + Pclass, family = binomial, data = titanic_train)
+summary(fit)
 ```
 
 a. Which passenger class has the highest odds of survival, based on the estimates?
@@ -573,8 +574,8 @@ b. How does the estimated effect of gender change after adjusting for class? Exp
 
 ```{r}
 #| eval: false
-fit_interaction <- glm(Survived ~ Sex * Pclass, family = binomial, data = titanic_train)
-summary(fit_interaction)
+fit <- glm(Survived ~ Sex * Pclass, family = binomial, data = titanic_train)
+summary(fit)
 ```
 
 a. Does the effect of gender vary by class?
