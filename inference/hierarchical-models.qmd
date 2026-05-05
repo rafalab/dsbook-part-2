@@ -156,9 +156,9 @@ Failing to include a term like $b$, the election-level bias, led many forecaster
 
 Now, let's fit a model like the above to data. We will use `one_poll_per_pollster` data defined in @sec-models:
   
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE}  
 one_poll_per_pollster <- polls |> group_by(pollster) |> 
-  filter(enddate == max(enddate)) |>
+  slice_max(enddate, n = 1, with_ties = FALSE) |>
   ungroup()
 ```
 
@@ -325,8 +325,8 @@ With the prior distribution established, we can calculate the posterior distribu
 ```{r}
 results <- results |>
   mutate(B = sd^2/n_eff/((sd^2/n_eff) + tau^2),
-         posterior_mean = if_else(is.na(avg), theta, B*theta_0 + (1 - B)*avg),
-         posterior_se = if_else(is.na(avg), tau, sqrt(1/(n_eff/sd^2 + 1/tau^2))))
+    posterior_mean = if_else(is.na(avg), theta, B*theta_0 + (1 - B)*avg),
+    posterior_se = if_else(is.na(avg), tau, sqrt(1/(n_eff/sd^2 + 1/tau^2))))
 ```
 
 ### Monte Carlo simulation
@@ -544,7 +544,7 @@ Now, determine how often the 95% confidence interval includes the election night
 
 10\. In April 2013, José Iglesias, a professional baseball player, was starting his career. He was performing exceptionally well, with an excellent _batting average_ (AVG) of .450. The batting average statistic is one way of measuring success. Roughly speaking, it tells us the success rate when batting. José had 9 successes out of 20 tries. An AVG of .450 means José has been successful 45% of the times he has batted, which is rather high, historically speaking. In fact, no one has finished a season with an `AVG` of .400 or more since Ted Williams did it in 1941! We want to predict José's batting average at the end of the season after players have had about 500 tries or _at-bats_. With the frequentist techniques, we have no choice but to predict that his AVG will be .450 at the end of the season. Compute a confidence interval for the success rate.
 
-12\. Despite the frequentist prediction of .450, not a single baseball enthusiast would make this prediction. Why is this? One reason is that they know the estimate has much uncertainty. However, the main reason is that they are implicitly using a hierarchical model that factors in information from years of following baseball. Use the following code to explore the distribution of batting averages in the three seasons prior to 2013, and describe what this tells us.
+11\. Despite the frequentist prediction of .450, not a single baseball enthusiast would make this prediction. Why is this? One reason is that they know the estimate has much uncertainty. However, the main reason is that they are implicitly using a hierarchical model that factors in information from years of following baseball. Use the following code to explore the distribution of batting averages in the three seasons prior to 2013, and describe what this tells us.
 
 ```{r batting-averages-histogram, out.width="100%", fig.height=3, message=FALSE, warning=FALSE, eval=FALSE}
 library(tidyverse)
@@ -558,20 +558,20 @@ filter(Batting, yearID %in% 2010:2012) |>
 ```
 
 
-13\. So is José lucky, or is he the best batter seen in the last 50 years? Perhaps it's a combination of both luck and talent. But how much of each? If we become convinced that he is lucky, we should trade him to a team that trusts the .450 observation and is maybe overestimating his potential. 
+12\. So is José lucky, or is he the best batter seen in the last 50 years? Perhaps it's a combination of both luck and talent. But how much of each? If we become convinced that he is lucky, we should trade him to a team that trusts the .450 observation and is maybe overestimating his potential. 
 The hierarchical model provides a mathematical description of how we came to see the observation of .450. First, we pick a player at random with an intrinsic ability summarized by, for example, $\theta$. Then, we see 20 random outcomes with success probability $\theta$. What model would you use for the first level of your hierarchical model?
   
-  14\. Describe the second level of the hierarchical model.
+13\. Describe the second level of the hierarchical model.
 
-15\. Apply the hierarchical model to José's data. Suppose we want to predict his innate ability in the form of his *true* batting average $\theta$. Write down the distributions of the hierarchical model.
-
-
-16\. We are now ready to compute the distribution of $\theta$ conditioned on the observed data $\bar{Y}$. Compute the expected value of $\theta$ given the current average $\bar{Y}$, and provide an intuitive explanation for the mathematical formula.
+14\. Apply the hierarchical model to José's data. Suppose we want to predict his innate ability in the form of his *true* batting average $\theta$. Write down the distributions of the hierarchical model.
 
 
-17\. We started with a frequentist 95% confidence interval that ignored data from other players and summarized just José's data: .450 $\pm$ 0.220. Construct a credible interval for $\theta$ based on the hierarchical model.
+15\. We are now ready to compute the distribution of $\theta$ conditioned on the observed data $\bar{Y}$. Compute the expected value of $\theta$ given the current average $\bar{Y}$, and provide an intuitive explanation for the mathematical formula.
 
-18\. The credible interval suggests that if another team is impressed by the .450 observation, we should consider trading José, as we are predicting he will be just slightly above average. Interestingly, the Red Sox traded José to the Detroit Tigers in July. Here are José Iglesias' batting averages for the next five months:
+
+16\. We started with a frequentist 95% confidence interval that ignored data from other players and summarized just José's data: .450 $\pm$ 0.220. Construct a credible interval for $\theta$ based on the hierarchical model.
+
+17\. The credible interval suggests that if another team is impressed by the .450 observation, we should consider trading José, as we are predicting he will be just slightly above average. Interestingly, the Red Sox traded José to the Detroit Tigers in July. Here are José Iglesias' batting averages for the next five months:
 
 | Month           | At Bat | Hits | AVG  |
 |-----------------|--------|------|------|

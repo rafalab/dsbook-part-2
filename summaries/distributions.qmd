@@ -170,7 +170,7 @@ By default, histograms often display frequency on the y-axis instead of relative
 
 ```{r summaries-height-histogram}
 heights |> filter(sex == "Male") |> ggplot(aes(x = height)) + 
-  geom_histogram(breaks = c(50, 55, 60:80, 85), fill = "grey", color = "black")
+  geom_histogram(breaks = c(50, 55, 60:80, 85), color = "black")
 ```
 
 Note we use `fill` and `color` to mimic the behavior of `hist`.
@@ -181,7 +181,7 @@ When displaying frequencies, it is important to use equally spaced bins, as larg
 #| eval: false
 heights |> filter(sex == "Male") |> 
   ggplot(aes(x = height, y = after_stat(density))) + 
-  geom_histogram(breaks = c(50, 55, 60:80, 85), fill = "grey", color = "black")
+  geom_histogram(breaks = c(50, 55, 60:80, 85), color = "black")
 ```
 
 
@@ -191,7 +191,7 @@ The appearance and interpretation of a histogram depend on the choice of bins, a
 
 ## Smoothed density plots
 
-Smooth density plots are similar to histograms, but the data is not divided into bins. Here is what a smooth density plot looks like for our heights data:
+Smooth density plots are similar to histograms, but without bins. Instead of sharp edges, they produce a continuous curve:
 
 ```{r summaries-example-of-smoothed-density}
 #| echo: false
@@ -199,13 +199,7 @@ heights |> filter(sex == "Male") |>
   ggplot(aes(height)) + geom_density(alpha = 0.2, fill = "#00BFC4")
 ```
 
-In this plot, we no longer have sharp edges at the interval boundaries and many of the local peaks have been removed. 
-
-To understand smooth densities, we have to understand *estimates*, a topic we don't cover until later. However, we provide a heuristic explanation to help you understand the basics.
-
-The main new concept is the assumption that our list of observed values is a subset of an unobserved, much larger list of values. In the case of heights, you can imagine that our list of `r sum(heights$sex=="Male")` male students comes from a hypothetical list containing all the heights of all the male students in all the world measured very precisely. Let's say there are 1,000,000 of these measurements. This list of values has a distribution, like any other list of values, and what we truly want to report to ET is this larger distribution, as it is much more general. Unfortunately, we don't get to see it.
-
-However, we may be able to approximate it. If we had 1,000,000 values, measured very precisely, we could make a histogram with very, very small bins. The assumption is that if we show this, the height of consecutive bins will be similar. This is what we mean by smooth: we don't have big jumps in the heights of consecutive bins. Below, we present histograms for this hypothetical data with bins of size 1, 0.5, and 0.25. To make the curve not depend on the hypothetical size of the hypothetical list, we compute the curve on frequencies rather than counts. The smaller we make the bins, the smoother the histogram becomes:
+To understand smooth densities, think of our sample as coming from a much larger, unobserved population. If we had many more observations, we could build a histogram with very small bins. As bin width decreases, the histogram becomes smoother and approaches a continuous curve:
 
 ```{r summaries-simulated-data-histogram-2, fig.width = 9, fig.height = 3,  out.width = "100%",echo = FALSE, message = FALSE}
 set.seed(1988)
@@ -226,11 +220,9 @@ library(gridExtra)
 grid.arrange(p1, p2, p3, nrow = 1)
 ```
 
-The smooth density is basically the curve that goes through the top of the histogram bars when the bins are very, very small. 
+A smooth density can be viewed as the curve tracing the tops of these increasingly fine histogram bars.
 
-Now, back to reality. We don't have millions of measurements. Instead, we have `r sum(heights$sex=="Male")` and we can't make a histogram with very small bins.
-
-Therefore, we make a histogram using bin sizes appropriate for our data, computing frequencies rather than counts. Additionally, we draw a smooth curve that passes through the tops of the histogram bars. The following plots demonstrate the steps that lead to a smooth density:
+In practice, we have limited data, so we use a histogram with reasonable bin width and overlay a smooth curve. The following steps illustrate how this curve is constructed:
 
 ```{r summaries-smooth-density-2, echo = FALSE, out.width = "100%"}
 hist1 <- heights |> 
@@ -261,7 +253,7 @@ grid.arrange(hist1, hist3, hist4, hist5, hist2, hist6, nrow = 2)
 
 ### Choosing the bandwidth
 
-*Smooth* is a relative term. The degree of smoothness in a density curve is not fixed, it depends on a parameter, often called the bandwidth, that controls how much we smooth the curve. We say more about this in @sec-ml-conditionals. Most functions that compute smooth densities include an option to adjust this bandwidth. The examples below show the same histogram with two different bandwidth choices, illustrating how the amount of smoothing can change the appearance of the density curve.
+The smoothness of a density curve is controlled by a parameter called the *bandwidth*. Smaller values produce more detail (and noise), while larger values produce smoother curves:
 
 ```{r summaries-densities-different-smoothness, out.width = "100%", fig.width = 6, fig.height = 3, echo=FALSE,cache=FALSE, message=FALSE}
 p <- heights |> filter(sex == "Male") |> 
@@ -275,11 +267,11 @@ library(gridExtra)
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-Just as a histogram's appearance depends on the chosen bin width, a smoothed density depends on the bandwidth, the smoothing parameter. Different bandwidths can make the same data look noisy (too small) or overly smooth (too large). We should pick a bandwidth that reflects the context and what we believe about the underlying distribution. For heights, for example, it's reasonable to expect nearby values, within an inch, to occur with similar frequency: the proportion at 72 inches should be closer to that at 71 than to that at 65 or 78, so a moderate level of smoothing is justified. The aim is the same as with bin width: reveal structure without adding noise or hiding meaningful features.
+As with bin width in histograms, the goal is to balance noise and smoothness.
 
 ### Interpreting the y-axis
 
-Interpreting the y-axis of a smooth density plot is not straightforward. It is scaled so that the area under the density curve adds up to 1. If you imagine that we form a bin with a base 1 unit in length, the y-axis value tells us the proportion of values in that bin. However, this is only true for bins of size 1. For other size intervals, the best way to determine the proportion of data in that interval is by computing the proportion of the total area contained in that interval. For example, here are the proportion of values between 65 and 68:
+The y-axis is scaled so the total area under the curve equals 1. Probabilities are represented by areas under the curve. For example, the proportion of values between 65 and 68 is the area over that interval:
 
 ```{r summaries-area-under-curve, echo = FALSE}
 d <- with(heights, density(height[sex == "Male"]))
@@ -288,9 +280,9 @@ tmp |> ggplot(aes(height,density)) + geom_line() +
   geom_area(aes(x = height, y = density), data = filter(tmp, between(height, 65, 68)), alpha = 0.2, fill = "#00BFC4")
 ```
 
-The proportion of this area is about `r round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)`, meaning that about `r noquote(paste0(round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)*100, '%'))` of male heights are between 65 and 68 inches.
+This proportion is about `r round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)`, meaning roughly `r noquote(paste0(round(mean(dplyr::between(heights$height[heights$sex=="Male"], 65, 68)), 2)*100, '%'))` of male heights fall in this range.
 
-By understanding this, we are ready to use the smooth density as a summary. For this dataset, we would feel quite comfortable with the smoothness assumption, and therefore with sharing this aesthetically pleasing figure with ET, which he could use to understand our male heights data:
+With this interpretation, smooth densities provide a useful and visually appealing summary of the data:
 
 ```{r summaries-example-of-smoothed-density-2, echo = FALSE}
 heights |> 

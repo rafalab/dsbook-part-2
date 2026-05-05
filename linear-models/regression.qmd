@@ -23,7 +23,7 @@ galton <- galton[, .(father, son = childHeight)]
 Suppose we were asked to summarize the father and son data. Since both distributions are well approximated by the normal distribution, we could use the two averages and two standard deviations as summaries:
 
 ```{r, message=FALSE, warning=FALSE}
-galton[, .(f_avg=mean(father), f_sd=sd(father), s_avg=mean(son), s_sd=sd(son))]
+galton[, .(mean(father), sd(father), mean(son), sd(son))]
 ```
 
 However, this summary fails to describe an important characteristic of the data: the trend that the taller the father, the taller the son.
@@ -229,7 +229,7 @@ Conditional expectations are not only useful when the relationship between varia
 
 ## The regression line
 
-If we are predicting a random variable $Y$ knowing the value of another $X=x$ using a regression line, then we predict that for every standard deviation, $\sigma_X$, that $x$ increases above the average $\mu_X$, our prediction $\hat{y}$ increase $\rho$ standard deviations $\sigma_Y$ above the average $\mu_Y$ with $\rho$ the correlation between $X$ and $Y$. The formula for the regression is therefore:
+If we are predicting a random variable $Y$ knowing the value of another $X=x$ using a regression line, then we predict that for every standard deviation, $\sigma_X$, that $x$ increases above the average $\mu_X$, our prediction $\hat{y}$ increases $\rho$ standard deviations $\sigma_Y$ above the average $\mu_Y$ with $\rho$ the correlation between $X$ and $Y$. The formula for the regression is therefore:
 
 $$ 
 \left( \frac{\hat{y}-\mu_Y}{\sigma_Y} \right) = \rho \left( \frac{x-\mu_X}{\sigma_X} \right)
@@ -245,7 +245,7 @@ If there is a perfect correlation, the regression line predicts an increase that
 
 Note that if the correlation is positive and lower than 1, our prediction is closer, in standard units, to the average height than the value used to predict, $x$, is to the average of the $x$s. This is why we call it *regression*: the sons regress to the average height. In fact, the title of Galton's paper was: *Regression toward mediocrity in hereditary stature*. 
 
-We can add regression lines to plots by converting the formula above to the form $\hat{y} = m + bx$, which gives us a slope $m = \rho \frac{\sigma_y}{\sigma_x}$ and 
+We can add regression lines to plots by converting the formula above to the form $\hat{y} = mx + b$, which gives us a slope $m = \rho \frac{\sigma_y}{\sigma_x}$ and 
 intercept $b = \mu_y - m \mu_x$:
 
 ```{r regression-line, fig.height = 3, fig.width = 3, out.width="40%"}
@@ -263,7 +263,8 @@ With **ggplot**, we don't need to calculate all these summaries and can easily a
 
 ```{r}
 #| eval: false
-galton |> ggplot(aes(father, son)) + geom_point() + geom_smooth(method = "lm") 
+galton |> ggplot(aes(father, son)) + geom_point() +
+  geom_smooth(method = "lm") 
 ```
 
 In @sec-lm-function, we explain what `lm` means here.
@@ -297,7 +298,7 @@ conditional_avg <- replicate(B, {
 
 linear_regression_prediction <- replicate(B, {
   dat <- galton[sample(.N, N, replace = TRUE)]
-  dat[, mean(son) + cor(father, son)*(72 - mean(father))/sd(son)*sd(father)]
+  dat[, mean(son) + cor(father, son)*(72 - mean(father))/sd(father)*sd(son)]
 })
 ```
 

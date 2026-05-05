@@ -52,7 +52,7 @@ If we multiply those two numbers, we get a figure exceeding 5 million, yet our d
 
 Let's look at some of the general properties of the data to better understand the challenges by examining histograms of the number of ratings given to movies and the number of ratings given by users:
 
-```{r movie-id-and-user-hists, echo=-1, fig.width=6, fig.height=3, echo=FALSE}
+```{r movie-id-and-user-hists, fig.width=6, fig.height=3, echo=FALSE}
 rafalib::mypar(1,2)
 hist(log2(table(dt$movieId)), 0:9, xlab = "# Ratings (log 2)", main = "Movies")
 hist(table(dt$userId), seq(0, 2400, 50), xlab = "# Ratings", main = "Users")
@@ -191,7 +191,8 @@ A natural question is whether all users rate movies in the same way. Some users 
 
 ```{r user-effect-hist, echo=-1}
 rafalib::mypar(1,1)
-hist(with(dt, tapply(rating, userId, mean)), nclass = 30, main = "User averages")
+with(dt, tapply(rating, userId, mean)) |>
+  hist(nclass = 30, main = "User averages", xlab = "Average rating")
 ```
 
 The histogram shows substantial variation. This suggests that some of the differences between ratings can be explained simply by how generous or harsh the user is, regardless of which movie is being rated.
@@ -464,13 +465,14 @@ fit_als <- function(lambda, tol = 1e-6, max_iter = 100) {
     a_old <- copy(fit$a)
     b_old <- copy(fit$b)
     
-    fit[, a := sum(rating - mu - b)/(.N + N*lambda) , by = userId]
+    fit[, a := sum(rating - mu - b)/(.N + N*lambda), by = userId]
     fit[, b := sum(rating - mu - a)/(.N + N*lambda), by = movieId]
     
     delta <- max(c(abs(fit$a - a_old), abs(fit$b - b_old)))
     if (delta < tol) break
   }
-  with(fit, list(mu = mu, a = setNames(a, userId), b = setNames(b, movieId)))
+  with(fit,
+    list(mu = mu, a = setNames(a, userId), b = setNames(b, movieId)))
 }
 ```
 

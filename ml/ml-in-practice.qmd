@@ -335,26 +335,22 @@ One limitation of this approach using **caret** is that we do not automatically 
 
 ## Parallelization 
 
-By default, the `train` function estimates model accuracy using 25 bootstrap resamples. This can lead to substantial computation time. For example, if we evaluate 75 different values of a tuning parameter, the model is fit 25 $\times$ 75 = 1,875 times. For algorithms that take several minutes per fit, the total runtime can extend to many hours or even days.
+By default, the `train` function estimates model accuracy using 25 bootstrap resamples. This can be computationally expensive. For example, evaluating 75 values of a tuning parameter requires 25 × 75 = 1,875 model fits, which can take hours for slower algorithms.
 
-A simple way to approximate the total computation time is to measure how long a single model fit takes using the `system.time` function, and then multiply by the total number of fits. For example, with kNN, we can run:
+A simple way to approximate runtime is to time a single fit and multiply by the total number of fits. For example, with kNN:
 
 ```{r}
 system.time(predict(knn3(x[, -nzv], y), newdata = x_test[, -nzv]))
 ```
 
-On a typical laptop, this call takes a few seconds. This suggests that the full training process could take over an hour.
+On a typical laptop, this takes a few seconds, suggesting the full process could take over an hour.
 
-In practice, this cost can be reduced substantially by using parallel computing.
-
-Imagine you are fitting 100 models; if you had access to 100 computers, you could theoretically speed up the process by a factor of 100 by fitting each model on a separate computer and then aggregating the results. In reality, most modern computers, including many personal computers, are equipped with multiple processors that allow for such parallel execution. Cloud computing services also provide access to large clusters of processors, permitting even greater parallel execution.
-This method, known as parallelization, leverages these multiple processors to conduct several computational tasks simultaneously, significantly accelerating the model training process. By distributing the workload across different processors, parallelization makes it possible to manage large datasets and complex modeling procedures efficiently.
-
-The **caret** package is designed to take advantage of parallel processing, but you need to explicitly tell R to run tasks in parallel. To do this, we use the **doParallel** package. We will see how to set up parallelization for the kNN example in the next section, but the same approach can be applied to any algorithm that uses the `train` function.
+This cost can be reduced substantially using parallel computing. Modern computers have multiple processors that allow tasks to run simultaneously, and the **caret** package can take advantage of this. To enable parallelization, we use the **doParallel** package. We will demonstrate this setup in the next section.
 
 :::{.callout-warning}
-When parallelizing tasks across multiple processors, it is important to consider the risk of running out of memory. Each processor might require a copy of the data or substantial portions of it, which can multiply overall memory demands. This is especially challenging if the data or models are large.
+Parallelization can increase memory usage, since each processor may require its own copy of the data. This can be a limitation for large datasets.
 :::
+
 
 ## Model tuning and diagnostics {#sec-knn-in-practice}
 
@@ -369,7 +365,7 @@ In practice, selecting the grid and resampling strategy involves a tradeoff. Usi
 
 Because of this tradeoff, it is inefficient to search over a fine grid from the start. Instead, we begin with a coarse grid over a broad range and a faster resampling scheme to identify a promising region. Once we have a rough idea of where the optimal $k$ lies, we refine the search with a finer grid and more thorough resampling.
 
-Throughout this process, we use parallel computation to reduce runtime, since each combination of tuning parameters and resamples can be evaluated independently.
+Throughout this process, we use parallel computation to reduce runtime, since each combination of tuning parameters and resamples can be evaluated independently. Note that once clusters are registered, the `train` function automatically uses them for parallel processing, so we do not need to modify our code to take advantage of parallelization.
 
 ```{r mnist-knn-fit}
 #| message: false
@@ -397,7 +393,7 @@ knn <- train(x, y, method = "knn", preProcess = c("nzv", "pca"),
 knn$bestTune
 ```
 
-to choose $k$ = `r knn$bestTune$k`. Now that we've optimize our algorithm, the `predict` function defaults to using the best-performing model fit with the entire training data:
+to choose $k$ = `r knn$bestTune$k`. Now that we have optimized our algorithm, the `predict` function defaults to using the best-performing model fit with the entire training data:
 
 ```{r}
 y_hat_knn <- predict(knn, x_test, type = "raw")
@@ -416,8 +412,8 @@ stopCluster(cl)
 stopImplicitCluster()
 ```
 
-:::{.callout-note}
-To verify that parallel processing is active, you can check your system’s process monitor. Open Activity Monitor (macOS), Task Manager (Windows), or use `top`/`htop` (Linux or Mac terminal), and look for multiple R-related processes (such as `R`, `Rscript`, or `rsession`). You should also see CPU usage spread across several cores. If only one core is active or a single R process appears, parallel execution is likely not being used.
+::: {.callout-note}
+To verify that parallel processing is active, you can check your system’s process monitor (Activity Monitor, Task Manager, or `top`) and confirm that multiple R processes are using CPU.
 :::
 
 ## Improving computational efficiency
@@ -518,7 +514,9 @@ imp <- varImp(rf)$importance[,1]
 ```
 ```{r}
 #| echo: false
-# we need this becuase to accelate book complitaion we ran randomForest directly rather than though caret's train function, which means the output is different and we need to adjust how we extract importance.
+# We use this because, to speed up book completion, we ran randomForest directly
+# rather than through caret’s train() function. As a result, the output format
+# differs and we need to adjust how we extract variable importance.
 imp <- varImp(rf)$Overall
 ```
 
@@ -587,7 +585,7 @@ dat <- data.frame(x = x, y = y)
 
 In the exercises in @sec-example-algorithms, we saw that changing `maxnodes` or `nodesize` in the `randomForest` function improved our estimate in this dataset. Let's use the `train` function to help us pick these values. From the **caret** manual, we see that we can't tune the `maxnodes` parameter or the `nodesize` argument with `randomForest`, so we will use the **Rborist** package and tune the `minNode` argument. Use the `train` function to try values `minNode <- seq(5, 250, 25)`. See which value minimizes the estimated RMSE.
 
-2\. Make a scatterplot of `x` and `y` and add  the prediction from the best-fitted model in exercise 1.
+2\. Make a scatterplot of `x` and `y` and the prediction from the best-fitted model in exercise 1.
 
 3\. This **dslabs** `tissue_gene_expression` dataset includes a matrix `x`:
 
@@ -715,56 +713,19 @@ modelLookup("gamLoess")
 
 Use resampling to pick a span between 0.15 and 0.75. Keep `degree = 1`. What span is selected?
 
-
 23\. Show an image plot of the estimate $\hat{p}(x,y)$ resulting from the model fit in exercise 22. How does the accuracy compare to that of kNN? Comment on the difference between the estimate obtained with kNN. 
 
-24\. Use the `mnist_27` training set to fit a variety of models available through the **caret** package.
-Your goal is simply to *try many different algorithms* and compare their performance, even if we have not explained them yet.
+24\. Fit and compare several machine learning models using the `mnist_27` training set.  
+Rather than trying a large number of methods, select a small, diverse subset (for example: `knn`, `gbm`,  `Rborist`, `svmLinear`, `avNNet`).
 
-Here is a vector of model names you can try:
+Fit each model using `train()` with default tuning parameters. Compute the accuracy of each model on the test set and compare their performance.
 
-```{r}
-models <- c("glm", "lda", "naive_bayes", "svmLinear",
-  "gamboost", "gamLoess", "qda", "knn", "kknn", "loclda", "gam",
-  "rf", "ranger", "wsrf", "Rborist", "avNNet", "mlp", "monmlp",
-  "gbm", "adaboost", "svmRadial", "svmRadialCost", "svmRadialSigma")
-```
 
-Fit each model using `train()` with default tuning parameters and store the fitted model objects in a list.
-You may need to install additional packages depending on which models you try, and some models will produce warnings—that’s expected.
+25\. Using the models from the previous exercise, build an ensemble prediction based on **majority vote**.  
+Compare the ensemble’s accuracy to that of the individual models. Does the ensemble improve performance?
 
-25\. Now that you have all the trained models in a list, use `sapply` or `map` to create a matrix of predictions for the test set. You should end up with a matrix with `length(mnist_27$test$y)` rows and `length(models)` columns.
 
-26\. Compute accuracy for each model on the test set.
+26\. Many methods can also produce estimated class probabilities (using `type = "prob"` in `predict`).  
+Construct an ensemble by averaging predicted probabilities across models, then classify using a 0.5 cutoff.  
+Compare this approach to majority voting. Which performs better?
 
-27\. Build an ensemble prediction by majority vote and compute the accuracy of the ensemble.
-
-28\. Earlier, we computed the accuracy of each method on the training set and noticed that they varied. Which individual methods do better than the ensemble?
-
-29\. It is tempting to remove the methods that do not perform well and redo the ensemble. The problem with this approach is that we are using the test data to make a decision. However, we could use the accuracy estimates obtained from cross-validation with the training data. Obtain these estimates and save them in an object.
-
-30\. Now, let's only consider the methods with an estimated accuracy of 0.8 when constructing the ensemble. What is the accuracy of the ensemble now?
-
-31\. Note that if two machine learning algorithms predict the same exact outcome, ensembling them will not change the prediction. For each pair of algorithms, compare the percent of observations for which they make the same prediction. Use the `heatmap` function to visualize the results. Hint: use the `method = "binary"` argument in the `dist` function.
-
-32\. Note that each method can also produce an estimated conditional probability. For most methods, we can use `type = "prob"` in the predict function. Note that some of the methods require you to use the argument `trControl = trainControl(classProbs=TRUE)` when calling train. Also, these methods do not work if classes have numbers as names. Hint: change the levels like this:
-
-```{r, eval = FALSE}
-dat$train$y <- recode_factor(dat$train$y, "2" = "two", "7" = "seven")
-dat$test$y <- recode_factor(dat$test$y, "2" = "two", "7" = "seven")
-```
-
-Build an ensemble predicted conditional probabilities by taking the average of these estimated conditional probabilities instead of a majority vote. Determine class predictions with a conditional probability cutoff of 0.5. What is the accuracy of this new ensemble?
-
-33\. In this chapter, we illustrated a couple of machine learning algorithms on a subset of the MNIST dataset. Try fitting a model to the entire dataset.
-
-34\. We fit the following kNN model to the MNIST data:
-
-```{r}
-#| eval: false
-knn_nzv <- train(x, y, method = "knn", preProcess = "nzv", 
-  trControl = trainControl(method = "cv", number = 5),
-  tuneGrid = data.frame(k = 5))
-```
-
-Fit it again, but this time use 20-fold cross-validation instead of 5-fold and search over a wider range of $k$ values, for example, `tuneGrid = data.frame(k = seq(3, 7, 2))`. Do this with and without `preProcess = "nzv"` and compare the results.

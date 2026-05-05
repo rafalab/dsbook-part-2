@@ -68,7 +68,8 @@ library(data.table)
 library(HistData)
 
 set.seed(1983)
-galton <- as.data.table(GaltonFamilies)[gender == "male", .SD[sample(.N, 1)], by = family]
+galton <- as.data.table(GaltonFamilies)
+galton <- galton[gender == "male", .SD[sample(.N, 1)], by = family]
 galton <- galton[, .(father, son = childHeight)]
 ```
 
@@ -195,7 +196,8 @@ In fact, the **ggplot2** layer `geom_smooth(method = "lm")` surrounds the regres
 
 ```{r father-son-regression}
 #| message: false
-galton |> ggplot(aes(son, father)) + geom_point() + geom_smooth(method = "lm")
+galton |> ggplot(aes(son, father)) + geom_point() + 
+  geom_smooth(method = "lm")
 ```
 
 ## Model diagnostics {#sec-diagnostic-plots}
@@ -207,7 +209,7 @@ For this reason, checking model assumptions is a **critical requirement** in sta
 Visually inspecting residuals, defined as the difference between observed values and predicted values:
 
 $$
-r = y - \hat{y} = y- \left(\hat{\beta}_0 + \hat{\beta}_1 x_i\right),
+r_i = y_i - \hat{y}_i = y_i - \left(\hat{\beta}_0 + \hat{\beta}_1 x_i\right), \mbox{ for } i=1,\dots,N,
 $$
 and summaries of the residuals, is a powerful way to diagnose if the model is useful. Note that the residuals can be thought of as estimates of the errors since:
 
@@ -381,14 +383,14 @@ galton <- GaltonFamilies |>
   ungroup()
 
 cors <- galton |> 
-  pivot_longer(father:mother, names_to = "parent", values_to = "parentHeight") |>
+  pivot_longer(father:mother) |>
   mutate(child = ifelse(gender == "female", "daughter", "son")) |>
-  unite(pair, c("parent", "child")) |> 
+  unite(pair, c("name", "child")) |> 
   group_by(pair) |>
-  summarize(cor = cor(parentHeight, childHeight))
+  summarize(cor = cor(value, childHeight))
 ```
 
-We noticed differneces. Are these differences statistically significant? To answer this, we will compute the slopes of the regression lines along with their standard errors. Start by using `lm` to compute the slopes LSE and the standard errors.
+We noticed differences. Are these differences statistically significant? To answer this, we will compute the slopes of the regression lines along with their standard errors. Start by using `lm` to compute the LSE of the slopes and the standard errors.
 
 11\. Repeat exercise 10, but compute a confidence interval as well.
 

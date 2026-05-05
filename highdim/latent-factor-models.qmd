@@ -1,6 +1,6 @@
 # Latent Factor Models {#sec-latent-factor-models}
 
-```{r, echo=FALSE, message=FALSE, echo=FALSE, cache=FALSE}
+```{r, message=FALSE, echo=FALSE, cache=FALSE}
 ## Generate the train_set data frame created in the previous chapter
 library(data.table)
 library(dslabs)
@@ -125,10 +125,26 @@ dim(y)
 If we examine the correlation between movies based on user ratings, we notice a pattern:
 
 :::{.small-code}
-```{r echo=c(-1,-3), size="small"}
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\tiny\n")
+}
+```
+
+```{r echo=c(-1,-3)}
 ow <- options(width = 200)
 cor(y)
 options(ow)
+```
+
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\normalsize\n")
+}
 ```
 :::
 
@@ -174,10 +190,25 @@ The points fall roughly along the diagonal, which means the model captures a goo
 However, there is still substantial unexplained variation. Even after removing the "mob vs. romance" effect, we still see correlation patterns:
 
 :::{.small-code}
-```{r echo=c(-1,-3), size = "small"}
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\tiny\n")
+}
+```
+
+```{r echo=c(-1,-3)}
 ow <- options(width = 200)
 cor(y - p %*% t(q))
 options(ow)
+```
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\normalsize\n")
+}
 ```
 :::
 Looking more closely, this structure appears to come from whether or not Al Pacino is in the movie. This suggests we can improve the model by adding a second latent factor, one that distinguishes Pacino films from non-Pacino films. We do this by adding a second column to `q`:
@@ -213,10 +244,24 @@ plot(p %*% t(q), y)
 And now, if we look at the residual correlation 
 
 :::{.small-code}
-```{r echo=c(-1,-3), size = "small"}
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\tiny\n")
+}
+```
+```{r echo=c(-1,-3)}
 ow <- options(width = 200)
 cor(y - p %*% t(q))
 options(ow)
+```
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\normalsize\n")
+}
 ```
 :::
 
@@ -355,7 +400,14 @@ We now move back from the small simulated example to the real Movielens dataset.
 Starting from the residuals of our regularized user + movie model (introduced in @sec-regularization), we can examine how movie ratings correlate after accounting for overall averages and user and movie effects. Focusing on a small set of well-known titles, we compute the correlation matrix of these residuals:
 
 :::{.small-code}
-```{r, size="small"}
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\tiny\n")
+}
+```
+```{r}
 #| echo: false
 ow <- options(width = 200)
 ms <- c("Godfather, The", "Godfather: Part II, The", "Goodfellas", 
@@ -370,8 +422,14 @@ colnames(r) <- with(movie_map, title[match(colnames(r), movieId)]) |>
 round(cor(r, use = "pairwise.complete.obs"), 2)
 options(ow)
 ```
+```{r}
+#| echo: false
+#| output: asis
+if (knitr::is_latex_output()) {
+  cat("\\normalsize\n")
+}
+```
 :::
-
 As in the simulated example, we see clear correlation patterns. For instance, *The Godfather*, *The Godfather Part II*, and *Goodfellas* share similar residuals, while romantic comedies show different behavior. This suggests that ratings are influenced by *latent characteristics* that group movies and users in meaningful ways.
 
 
@@ -427,7 +485,8 @@ The **dslabs** package provides the `fit_recommender_model` function, which impl
 
 ```{r}
 #| warning: false
-fit <- with(train_set, fit_recommender_model(rating, userId, movieId, reltol=1e-6))
+fit <- with(train_set, 
+  fit_recommender_model(rating, userId, movieId, reltol=1e-6))
 ```
 
 You can learn more about the function by running `?fit_recommender_model` or by examining the source code.
@@ -616,9 +675,9 @@ s <- 64*matrix(c(1, .85, .5,
                  .85, 1, .5,
                  .5, .5, 1), 3, 3) 
 m <- MASS::mvrnorm(n, rep(0, 3), s)
-m <- m[order(rowMeans(m), decreasing = TRUE), ] %x% matrix(rep(1, k), nrow = 1)
+m <- m[order(rowMeans(m)),] %x% matrix(rep(1,k), nrow = 1)
 y <- m + matrix(rnorm(n * k * 3, 0, 3), n, k * 3)
-colnames(y) <- paste(rep(c("Math", "Science", "Arts"), each = k), 1:k, sep = "_")
+colnames(y) <- paste(rep(c("Math", "Science", "Arts"), each = k), 1:k)
 ```
 
 We want to summarize these 24 test scores per student as simply as possible. Are students equally good in all subjects, or do we see patterns? Does being strong in one subject predict being strong in another? How can SVD help us see this structure?
@@ -702,12 +761,12 @@ Comment on what you see. Does the variation across columns become more concentra
 
 12\. The columns of $\mathbf{Z} = \mathbf{Y}\mathbf{V} = \mathbf{U}\mathbf{D}$ are the principal components (PCs) of $\mathbf{Y}$. The diagonal of $\mathbf{D}$ tells us how much variability each PC explains.
 
-Compute the SVD and plot the percentage of variance explained by each PC:
+Compute the SVD and plot the proportion of variance explained by each PC:
 
 ```{r}
 #| eval: false
 s <- svd(y)
-plot(1:ncol(y), s$d^2/sum(s$d^2)*100, xlab = "PC", ylab = "% var explained")
+plot(1:ncol(y), s$d^2/sum(s$d^2), xlab = "PC", ylab = "Var. explained")
 ```
 
 You should see that the first PC explains over 60% of the variability.

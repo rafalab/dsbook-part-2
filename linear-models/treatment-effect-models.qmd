@@ -47,7 +47,7 @@ We now use hypothesis testing, first described in @sec-hypothesis-testing, to as
 
 Let $\mu_1$ and $\sigma_1$ represent the weight average and standard deviation, respectively, that we would observe if the entire population of mice were on the high-fat diet. Define $\mu_0$ and $\sigma_0$ similarly, but for the chow diet. Define $N_1$ and $N_0$ as the sample sizes, and $\bar{X}_1$ and $\bar{X}_0$ the sample averages, for the high-fat and chow diets, respectively. 
 
-Since the data comes from a random sample, the central limit theorem tells us that, if the sample is large enough, the distribution of the difference in averages $\bar{X}_1 - \bar{X}_0$ can be approximated by a standard normal distribution, with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{\sigma_1^2}{N_1} + \frac{\sigma_0^2}{N_0}}$. 
+Since the data come from a random sample, the central limit theorem tells us that, if the sample is large enough, the distribution of the difference in averages $\bar{X}_1 - \bar{X}_0$ can be approximated by a standard normal distribution, with expected value $\mu_1-\mu_0$ and standard error $\sqrt{\frac{\sigma_1^2}{N_1} + \frac{\sigma_0^2}{N_0}}$. 
 
 If we define the null hypothesis as the high-fat diet having no effect, or $\mu_1 - \mu_0 = 0$, this implies that 
 
@@ -79,7 +79,8 @@ We can also use the R function to perform the calculation in one line:
 
 ```{r}
 #| eval: false
-with(mice_weights, t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]))
+with(mice_weights, 
+  t.test(body_weight[diet == "hf"], body_weight[diet == "chow"]))
 ```
 
 Here $t$ is well over 3, so we don't really need to compute the p-value `1-pnorm(t_stat)` as we know it will be very small.
@@ -154,7 +155,8 @@ This misspecification can have real implications; for instance, if for some reas
 From examining the data:
 
 ```{r weight-by-sex-diet-boxplots}
-mice_weights |> ggplot(aes(diet, log2(body_weight), fill = sex)) + geom_boxplot()
+mice_weights |> ggplot(aes(diet, log2(body_weight), fill = sex)) + 
+  geom_boxplot()
 ```
 
 we see that the diet effect is observed for both sexes and that males are heavier than females. Although not nearly as obvious, it also appears that the diet effect is stronger in males. 
@@ -194,9 +196,9 @@ To see why this works, let's examine plugging in the four options for $x_{1i}$ a
 $$
 \begin{aligned}
 \mbox{female on chow diet} \implies x_{1i} = 0, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 \\
-\mbox{female on high fat diet} \implies x_{1i} = 1, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_1\\
+\mbox{female on high-fat diet} \implies x_{1i} = 1, \,x_{2i} = 0 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_1\\
 \mbox{male on chow diet} \implies x_{1i} = 0, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_2\\
-\mbox{male on high diet} \implies x_{1i} = 1, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 +\beta_1 + \beta_2 + \beta_3\\
+\mbox{male on high-fat diet} \implies x_{1i} = 1, \,x_{2i} = 1 \implies \mathrm{E}[Y_i] &= \beta_0 + \beta_1 + \beta_2 + \beta_3\\
 \end{aligned}
 $$
 
@@ -242,8 +244,8 @@ abline(h = 0, lty = 2)
 
 Scientific studies, particularly within epidemiology and social sciences, frequently omit interaction terms from models due to the high number of variables. Adding interactions necessitates numerous parameters, which in extreme cases may prevent the model from fitting. However, leaving interactions out implicitly assumes that they are 0, which can lead to models that do not describe the data well and hence are not suitable for use. Conversely, when we can defend the assumption that there are no interaction effects, models excluding interactions are simpler to interpret, as parameters are typically viewed as the extent to which the outcome increases with the assigned treatment.
 
-:::{.callout-tip}
-Linear models are highly flexible and applicable in many contexts. For example, we can include many more factors than just 2. We have only just scratched the surface of how linear models can be used to estimate treatment effects. We highly recommend learning more about this by exploring linear model textbooks and R manuals that cover the use of functions such as `lm`, `contrasts`, and `model.matrix`.
+::: {.callout-tip}
+Linear models are flexible and widely applicable. See the recommended reading section for further resources, including material on `lm`, `contrasts`, and `model.matrix`.
 :::
 
 ## Contrasts
@@ -287,7 +289,8 @@ Keep in mind that this is not the only constraint that permits estimation of the
 
 
 ```{r}
-fit <- lm(body_weight ~ sex, data = mice_weights, contrasts = list(sex=contr.sum))
+fit <- lm(body_weight ~ sex, data = mice_weights, 
+  contrasts = list(sex=contr.sum))
 coefficients(fit)
 ```
 
@@ -329,7 +332,8 @@ $$
 We can see the estimated coefficients using the following:
 
 ```{r}
-fit <- lm(body_weight ~ gen,  data = mice_weights, contrasts = list(gen=contr.sum))
+fit <- lm(body_weight ~ gen,  data = mice_weights, 
+  contrasts = list(gen=contr.sum))
 contrast(emmeans(fit, ~gen)) 
 ```
 

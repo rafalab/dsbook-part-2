@@ -33,16 +33,16 @@ A standard way of generating the training and test sets is by randomly splitting
 
 ```{r}
 set.seed(2010)
-train_index <- createDataPartition(heights$y, times = 1, p = 0.5, list = FALSE)
+train_ind <- createDataPartition(heights$y, p = 0.5, list = FALSE)
 ```
 
-The argument `times` is used to define how many random samples of indexes to return, the argument `p` is used to define what proportion of the data is represented by the index, and the argument `list` is used to decide if we want the indexes returned as a list or not.
+The argument `times` is used to define how many random samples of indexes to return and it defaults to 1, the argument `p` is used to define what proportion of the data is represented by the index, and the argument `list` is used to decide if we want the indexes returned as a list or not.
 
 We can use the result of the `createDataPartition` function call to define the training and test sets as follows:
 
 ```{r}
-train_set <- heights[train_index, ]
-test_set <- heights[-train_index, ]
+train_set <- heights[train_ind, ]
+test_set <- heights[-train_ind, ]
 ```
 
 We will now develop an algorithm using **only** the training set. Once we are done developing the algorithm, we will _freeze_ it and evaluate it using the test set. The simplest way to evaluate the algorithm when the outcomes are categorical is by simply reporting the proportion of cases that were correctly predicted **in the test set**. This metric is usually referred to as _overall accuracy_.
@@ -470,8 +470,9 @@ $$
 
 with the $\hat{y}_i$ generated completely independently from the $y_i$s. 
 
-However, the estimate $\widehat{\text{MSE}}$ is a random variable. In fact, $\text{MSE}$ and $\widehat{\text{MSE}}$ are often referred to as the true error and apparent error, respectively.
-Due to the complexity of some machine learning algorithms, it is difficult to derive the statistical properties of how well the apparent error estimates the true error. In @sec-cross-validation, we introduce cross-validation, an approach to estimating the MSE. 
+However, the estimate $\widehat{\text{MSE}}$ is itself a random variable, since it depends on the particular sample used to compute it. The quantity $\text{MSE}$ refers to the *true* (theoretical) prediction error, defined as an expectation over the data-generating distribution, while $\widehat{\text{MSE}}$ is the corresponding sample-based estimate computed from observed data.
+
+For many machine learning algorithms, it is difficult to derive how well $\widehat{\text{MSE}}$ approximates $\text{MSE}$. In @sec-cross-validation, we introduce cross-validation, a general approach for estimating the MSE more reliably.
 
 We conclude this chapter by noting that squared loss is not the only possible choice of loss function. For instance, the *mean absolute error (MAE)* replaces squared errors $(\hat{y}_i - y_i)^2$ with their absolute values $|\hat{y}_i - y_i|$. Other loss functions are also possible, depending on the context and goals of the analysis. In this book, however, we focus on squared loss, since it is by far the most widely used and provides important mathematical conveniences that simplify both theory and computation.
 
@@ -490,7 +491,8 @@ In the following exercises, we use the Titanic dataset to explore evaluation met
 library(tidyverse)
 library(caret)
 library(titanic)
-titanic <- select(titanic_train, Survived, Pclass, Sex, Age, Fare) |> drop_na() |>
+titanic <- select(titanic_train, Survived, Pclass, Sex, Age, Fare) |> 
+  drop_na() |>
   mutate(Survived = factor(Survived, levels = c(1,0)), 
          Pclass = factor(Pclass), Sex = factor(Sex))
 ```

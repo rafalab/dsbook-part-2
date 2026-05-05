@@ -149,7 +149,7 @@ Let's use these tools to compute the probability of a *Natural 21* in Blackjack,
 
 ```{r}
 aces <- paste("Ace", suits)
-facecard <- expand.grid(number = c("King", "Queen", "Jack", "Ten"), suit = suits)
+facecard <- expand.grid(number = numbers[10:13], suit = suits)
 facecard <- paste(facecard$number, facecard$suit)
 hands <- combinations(52, 2, v = deck)
 mean((hands[,1] %in% aces & hands[,2] %in% facecard) |
@@ -163,7 +163,7 @@ We can obtain the same result through simulation. Instead of enumerating all com
 ```{r}
 blackjack <- function(){
    x <- sample(deck, 2)
-   (x[1] %in% aces & x[2] %in% facecard) | (x[2] %in% aces & x[1] %in% facecard)
+   (x[1]%in%aces & x[2]%in%facecard) | (x[2]%in%aces & x[1]%in%facecard)
 }
 results <- replicate(10000, blackjack())
 mean(results)
@@ -183,29 +183,15 @@ $$
 
 This quantity tells us how likely $A$ is when we restrict attention to outcomes for which $B$ occurs.
 
-As a simple example related to cards, suppose we draw two cards *without replacement* from a standard deck. Let $A$ be the event that the second card is a face card (Jack, Queen, or King), and let $B$ be the event that the first card is an Ace.
-
-We first note that there are 12 face cards in a 52-card deck and if the first card is an Ace, then 51 cards remain, still including all 12 face cards.
-
-Therefore,
-$$
-\Pr(A \mid B) = \frac{12}{51}.
-$$
-
-For comparison, the unconditional probability that a randomly drawn card is a face card is
-$$
-\Pr(A) = \frac{12}{52}.
-$$
-
-Thus, knowing that the first card is an Ace slightly increases the probability that the second card is a face card. This example illustrates how conditional probability updates our assessment once additional information is available.
-
-Conditional probability is a important probability theorytopic. Readers interested in a rigorous treatment of this concept should consult the probability textbooks listed in the Recommended Reading section. In this book, conditional probability becomes particularly important when we analyze relationships between two or more variables in the regression and linear models chapters, and when we work with multiple predictors in the machine learning chapters. In those sections, we provide detailed explanations and examples in context. Here, we offered a brief introduction to establish the fundamental concept.
+Conditional probability is a important probability theorytopic. Readers interested in a rigorous treatment of this concept should consult the probability textbooks listed in the Recommended Reading section. In this book, conditional probability becomes particularly important when we analyze relationships between two or more variables in the regression and linear models chapters, and when we work with multiple predictors in the machine learning chapters. In those sections, we provide detailed explanations and examples in context. 
 
 A related concept that will be important later in this book is the *law of total probability*. This law provides a way to break down probabilities into parts by conditioning on different events. Intuitively, if you want to know the probability of an event, you can condition on different scenarios and then combine those conditional probabilities, weighted by how likely each scenario is. Mathematically, if $B_1, B_2, \ldots, B_k$ are mutually exclusive and exhaustive events, then:
 
-$$\Pr(A) = \sum_{i=1}^{k} \Pr(A \mid B_i) \Pr(B_i)$$
+$$
+\Pr(A) = \sum_{i=1}^{k} \Pr(A \mid B_i) \Pr(B_i)
+$$
 
-For example, if you want the probability that it rains tomorrow, you might condition on different weather patterns and combine the probabilities for each pattern. For a rigorous treatment, consult the probability textbooks listed in the Recommended Reading section.
+For a rigorous treatment, consult the probability textbooks listed in the Recommended Reading section.
 
 ## Examples
 
@@ -226,9 +212,9 @@ monty_hall <- function(strategy = c("stick", "switch")) {
   strategy <- match.arg(strategy)
   doors <- c("1", "2", "3")
   prize_door <- sample(doors, 1)
-  my_pick <- sample(doors, 1)
-  show <- sample(setdiff(doors, c(my_pick, prize_door)), 1)
-  final <- if (strategy == "stick") my_pick else setdiff(doors, c(my_pick, show))
+  pick <- sample(doors, 1)
+  show <- sample(setdiff(doors, c(pick, prize_door)), 1)
+  final <- if(strategy == "stick") pick else setdiff(doors, c(pick, show))
   final == prize_door
 }
 B <- 10000
@@ -236,7 +222,7 @@ mean(replicate(B, monty_hall("stick")))
 mean(replicate(B, monty_hall("switch")))
 ```
 
-As we examine the code, we notice that when we stick with our original choice, the line of code defining `show` does not affect `final`. Winning depends only on whether `my_pick` equals `prize_door`, and the host's reveal (`show`) plays no role. This confirms that our winning probability in that case is 1 in 3, as expected. When we switch, `final` now depends on the `show` line, which removes a door that is guaranteed not to be the winner, effectively transferring its probability to the remaining unopened door. We win by switching if our initial choice was incorrect, which occurs two-thirds of the time. The Monte Carlo simulation verifies this 2/3 probability.
+As we examine the code, we notice that when we stick with our original choice, the line of code defining `show` does not affect `final`. Winning depends only on whether `pick` equals `prize_door`, and the host's reveal (`show`) plays no role. This confirms that our winning probability in that case is 1 in 3, as expected. When we switch, `final` now depends on the `show` line, which removes a door that is guaranteed not to be the winner, effectively transferring its probability to the remaining unopened door. We win by switching if our initial choice was incorrect, which occurs two-thirds of the time. The Monte Carlo simulation verifies this 2/3 probability.
 
 ### Birthday problem
 
