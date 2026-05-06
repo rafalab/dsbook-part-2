@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.36">
+<meta name="generator" content="quarto-1.9.37">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>13&nbsp; Hypothesis Testing – Introduction to Data Science</title>
@@ -73,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
@@ -514,7 +514,7 @@ window.Quarto = {
 </header><p>In scientific studies, you’ll often see phrases like “the results are statistically significant”. This points to a technique called hypothesis testing, where we use <em>p-values</em>, a type of probability, to test our initial assumption or hypothesis.</p>
 <p>In hypothesis testing, rather than providing an estimate of the parameter we’re studying, we provide a probability that serves as evidence supporting or contradicting a specific hypothesis. The hypothesis usually involves whether a parameter is different from a predetermined value (often 0).</p>
 <p>Hypothesis testing is used when you can phrase your research question in terms of whether a parameter differs from this predetermined value. It’s applied in various fields, asking questions such as: Does a medication extend the lives of cancer patients? Does an increase in gun sales correlate with more gun violence? Does class size affect test scores?</p>
-<p>Take, for instance, the previously used example with colored beads. We might not be concerned about the exact proportion of blue beads, but instead ask: Are there more blue beads than red ones? This could be rephrased as asking if the proportion of blue beads is more than 0.5.</p>
+<p>Take, for instance, the previously used example with colored beads. We might not be concerned about the exact proportion of blue beads, but instead ask: Is the proportion of blue beads different from 0.5? We could also ask if there are more blue beads than red, which would be a <em>one-sided test</em>, but we focus on more commonly used two-sided tests here.</p>
 <p>The initial hypothesis that the parameter equals the predetermined value is called the <em>null hypothesis</em>. It’s popular because it allows us to focus on the data’s properties under this null scenario. Once data is collected, we estimate the parameter and calculate the p-value, which is the probability of the estimate being as or more extreme as observed if the null hypothesis is true. If the p-value is small, it indicates the null hypothesis is unlikely, providing evidence against it.</p>
 <p>We will see more examples of hypothesis testing in <a href="../linear-models/treatment-effect-models.html" class="quarto-xref"><span>Chapter 17</span></a>.</p>
 <section id="p-values" class="level2" data-number="13.1"><h2 data-number="13.1" class="anchored" data-anchor-id="p-values">
@@ -542,13 +542,17 @@ window.Quarto = {
 </div>
 </div>
 <p>To obtain a p-value for our example, we write:</p>
-<p><span class="math display">\[\mathrm{Pr}(\mid \bar{X} - 0.5 \mid &gt; 0.02 ) \]</span></p>
-<p>assuming the <span class="math inline">\(\pi=0.5\)</span>. Under the null hypothesis, we know that:</p>
+<p><span class="math display">\[
+\Pr(| \bar{X} - 0.5 | &gt; 0.02 )
+\]</span></p>
+<p>assuming <span class="math inline">\(\pi=0.5\)</span>. Under the null hypothesis, we know that:</p>
 <p><span class="math display">\[
 \sqrt{N}\frac{\bar{X} - 0.5}{\sqrt{0.5(1-0.5)}}
 \]</span></p>
 <p>is standard normal. We, therefore, can compute the probability above, which is the p-value.</p>
-<p><span class="math display">\[\mathrm{Pr}\left(\sqrt{N}\frac{\mid \bar{X} - 0.5\mid}{\sqrt{0.5(1-0.5)}} &gt; \sqrt{N} \frac{0.02}{ \sqrt{0.5(1-0.5)}}\right)\]</span></p>
+<p><span class="math display">\[
+\Pr\left(\sqrt{N}\frac{| \bar{X} - 0.5|}{\sqrt{0.5(1-0.5)}} &gt; \sqrt{N} \frac{0.02}{ \sqrt{0.5(1-0.5)}}\right)
+\]</span></p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">N</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html">sqrt</a></span><span class="op">(</span><span class="va">N</span><span class="op">)</span><span class="op">*</span><span class="fl">0.02</span><span class="op">/</span><span class="fl">0.5</span></span>
@@ -609,7 +613,7 @@ p = 2\left[1 - \Phi(|z|)\right],
 <p>Compute a p-value to test if <span class="math inline">\(\pi=0.5\)</span>. Repeat this 10,000 times and report how often the p-value is larger than 0.05? Note that you are computing 1 - power.</p>
 <p>5. Repeat exercise 4 but for the following values:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, pi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.51</span> ,<span class="fl">0.75</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span>N <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">25</span>, <span class="fl">50</span>, <span class="fl">100</span>, <span class="fl">500</span>, <span class="fl">1000</span><span class="op">)</span>, pi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fl">0.51</span> ,<span class="fl">0.75</span>, <span class="fl">0.01</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Plot power as a function of <span class="math inline">\(N\)</span> with a different color curve for each value of <code>pi0</code>.</p>
 

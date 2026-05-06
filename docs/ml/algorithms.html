@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.36">
+<meta name="generator" content="quarto-1.9.37">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>30&nbsp; Supervised Learning Methods – Introduction to Data Science</title>
@@ -73,7 +73,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-845c23b38eaddc0f92fda52bfe77a8c8.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
@@ -544,7 +544,7 @@ window.Quarto = {
 
 
 </header><p>Machine learning includes a vast collection of algorithms, well over a hundred commonly used methods, each with its own strengths, assumptions, and tuning parameters. In this chapter, we introduce a small but representative set of algorithms that illustrate the major ideas behind supervised learning. Rather than aiming for exhaustive coverage, our goal is to build intuition for <em>how</em> different approaches learn from data and <em>why</em> they make different kinds of predictions.</p>
-<p>To keep the examples concrete and accessible, we use the two-predictor digit dataset introduced in <a href="conditionals-and-smoothing.html#sec-two-or-seven" class="quarto-xref"><span>Section 28.3.1</span></a> as our running example. This dataset is small enough to visualize, yet rich enough to reveal the behavior of real algorithms. All code examples rely on functions from the <strong>dslabs</strong> package. Later, in <a href="ml-in-practice.html" class="quarto-xref"><span>Chapter 31</span></a>, we will show how to implement these ideas efficiently using the <strong>caret</strong> package, which provides a unified interface for fitting and tuning many different machine learning methods.</p>
+<p>To keep the examples concrete and accessible, we use the two-predictor digit dataset introduced in <a href="conditionals-and-smoothing.html#sec-two-or-seven" class="quarto-xref"><span>Section 28.3.1</span></a> as our running example. This dataset is small enough to visualize, yet rich enough to reveal the behavior of real algorithms. We use functions from the <strong>caret</strong> package for these examples; later, in <a href="ml-in-practice.html" class="quarto-xref"><span>Chapter 31</span></a>, we show how to implement these ideas more efficiently using the same package, which provides a unified interface for fitting and tuning many different machine learning methods.</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -623,7 +623,7 @@ p_k(\mathbf{x}) =
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>You are ready to do exercises 1 - 13.</p>
+<p>You are ready to do exercises 1 - 11.</p>
 </div>
 </div>
 </div>
@@ -653,7 +653,8 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1|\mathbf{X}=\mathbf{x}) = \frac{f_{\mathbf{X}|Y
 </div>
 <p>In this case, the Naive Bayes approach is particularly appropriate because we know that the normal distribution is a good approximation for the conditional distributions of height given sex for both classes <span class="math inline">\(Y = 1\)</span> (female) and <span class="math inline">\(Y = 0\)</span> (male). This implies that we can approximate the conditional distributions <span class="math inline">\(f_{X|Y = 1}\)</span> and <span class="math inline">\(f_{X|Y = 0}\)</span> by simply estimating averages and standard deviations from the data:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">param</span> <span class="op">&lt;-</span> <span class="va">train_set</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">sex</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">summarize</span><span class="op">(</span>m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span>, s <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">param</span> <span class="op">&lt;-</span> <span class="va">train_set</span> <span class="op">|&gt;</span> <span class="fu">group_by</span><span class="op">(</span><span class="va">sex</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu">summarize</span><span class="op">(</span>m <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html">mean</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span>, s <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/sd.html">sd</a></span><span class="op">(</span><span class="va">height</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>The prevalence, which we will denote with <span class="math inline">\(\pi = \mathrm{Pr}(Y = 1)\)</span>, can be estimated from the data with:</p>
 <div class="cell" data-layout-align="center">
@@ -675,7 +676,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1|\mathbf{X}=\mathbf{x}) = \frac{f_{\mathbf{X}|Y
 </div>
 </div>
 </div>
-<p>In fact, we can show that the Naive Bayes approach is similar to the logistic regression prediction mathematically. However, we leave the demonstration to a more advanced text, such as the Elements of Statistical Learning<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>. We can see that they are similar empirically by comparing the two resulting curves.</p>
+<p>In fact, we can show that the Naive Bayes approach is similar to the logistic regression prediction mathematically. However, we leave the demonstration to a more advanced text, such as the Elements of Statistical Learning<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>.</p>
 </section><section id="controlling-prevalence" class="level3"><h3 class="anchored" data-anchor-id="controlling-prevalence">Controlling prevalence</h3>
 <p>One useful feature of the Naive Bayes approach is that it includes a parameter to account for differences in prevalence. Using our sample, we estimated <span class="math inline">\(f_{X|Y = 1}\)</span>, <span class="math inline">\(f_{X|Y = 0}\)</span> and <span class="math inline">\(\pi\)</span>. If we use hats to denote the estimates, we can write <span class="math inline">\(\hat{p}(x)\)</span> as:</p>
 <p><span class="math display">\[
@@ -742,7 +743,7 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1|\mathbf{X}=\mathbf{x}) = \frac{f_{\mathbf{X}|Y
 <span><span class="co">#&gt; Accuracy </span></span>
 <span><span class="co">#&gt;    0.815</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The conditional probability looks relatively good, although it does not fit as well as the kernel smoothers:</p>
+<p>The conditional probability looks relatively good:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -760,9 +761,9 @@ p(\mathbf{x}) = \mathrm{Pr}(Y = 1|\mathbf{X}=\mathbf{x}) = \frac{f_{\mathbf{X}|Y
 </div>
 </div>
 </div>
-<p>QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is <span class="math inline">\(p(p-1)/2\)</span> for each class, which gets big fast. Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.</p>
+<p>QDA can work ok here, but it becomes harder to use as the number of predictors increases. Here we have 2 predictors and had to compute 4 means, 4 SDs, and 2 correlations. Notice that if we have 10 predictors, we need to estimate 45 correlations for each class. In general, the formula for the number of correlations we have to estimate is <span class="math inline">\(p(p-1)/2\)</span> for each class, which grows quickly. Once the number of parameters approaches the size of our data, the method becomes impractical due to overfitting.</p>
 </section><section id="linear-discriminant-analysis" class="level3"><h3 class="anchored" data-anchor-id="linear-discriminant-analysis">Linear discriminant analysis</h3>
-<p>A relatively simple solution to QDA’s problem of having too many parameters is to assume that the correlation structure is the same for all classes, which reduces the number of parameters we need to estimate. In this case, the distributions looks like this:</p>
+<p>A relatively simple solution to QDA’s problem of having too many parameters is to assume that the correlation structure is the same for all classes, which reduces the number of parameters we need to estimate. In this case, the distributions look like this:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -803,18 +804,18 @@ p_k(\mathbf{x}) = \Pr(Y = k \mid \mathbf{X} = \mathbf{x}) =
 \]</span></p>
 <p>To construct a classifier, we simply estimate the quantities in this expression from the training data. For Naive Bayes, LDA, or QDA:</p>
 <ul>
-<li>we estimate the class-conditional densities <span class="math inline">\(f_{\mathbf{X}\mid Y=k}(\mathbf{x})\)</span> using the assumed model (independence for Naive Bayes, a normal distribution with shared covariance for LDA, or a normal distribution with class-specific covariances for QDA), and</li>
+<li>we estimate the class-conditional densities <span class="math inline">\(f_{\mathbf{X}\mid Y=k}(\mathbf{x})\)</span> using the assumed model (a normal distribution with shared covariance for LDA, or a normal distribution with class-specific covariances for QDA), and</li>
 <li>we estimate the class proportions <span class="math inline">\(\Pr(Y = k)\)</span> with the empirical prevalence <span class="math inline">\(\hat{\pi}_k = \frac{1}{n}\sum_{i=1}^n \mathbf{1}(y_i = k)\)</span>.</li>
 </ul>
 <p>Once these components are estimated, we compute <span class="math inline">\(\hat{p}_k(\mathbf{x})\)</span> for all <span class="math inline">\(k\)</span>, and assign <span class="math inline">\(\mathbf{x}\)</span> to the class with the largest posterior probability.</p>
 <p>This generalization requires no new ideas beyond the two-class case. The only difference is that we repeat the same estimation for all <span class="math inline">\(K\)</span> classes.</p>
 </section><section id="connection-to-distance" class="level3"><h3 class="anchored" data-anchor-id="connection-to-distance">Connection to distance</h3>
-<p>In LDA and QDA, we model each class as coming from a multivariate normal distribution estimated from the <em>training data</em>. When we classify a new observation <span class="math inline">\(\mathbf{x}\)</span>, the algorithm computes, for each class <span class="math inline">\(k\)</span>, we compute</p>
+<p>In LDA and QDA, we model each class as coming from a multivariate normal distribution estimated from the <em>training data</em>. When we classify a new observation <span class="math inline">\(\mathbf{x}\)</span>, the algorithm computes, for each class <span class="math inline">\(k\)</span>,</p>
 <p><span class="math display">\[
-f_{\mathbf{X}\mid Y=k}(\mathbf{x}),\Pr(Y=k)
+p_k(\mathbf x) = f_{\mathbf{X}\mid Y=k}(\mathbf{x})\,\Pr(Y=k)
 \]</span></p>
 <p>and predicts the class with the largest value.</p>
-<p>So understanding how the normal density behaves helps explain why LDA and QDA behave like distance-based classifiers. For simplicity we consider the case in which classes are balanced: <span class="math inline">\(\Pr(Y=k) = 1/K\)</span> for all <span class="math inline">\(k\)</span>:</p>
+<p>Understanding how the normal density behaves helps explain why LDA and QDA behave like distance-based classifiers. For simplicity we consider the case in which classes are balanced, that is, <span class="math inline">\(\Pr(Y=k) = 1/K\)</span> for all <span class="math inline">\(k\)</span>.</p>
 <p>Let’s first examine the one-dimensional normal density and</p>
 <p><span class="math display">\[
 f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2\right\}.
@@ -827,16 +828,16 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 <p>The key point is:</p>
 <p><span class="math display">\[
 \log f(x)
-\text{ decreases as }
+\text{ increases as }
 (x-\mu)^2
-\text{ increases.}
+\text{ decreases.}
 \]</span></p>
-<p>In other words, the class with the highest density is simply the class whose mean is closest to (x) (after scaling by <span class="math inline">\(\sigma\)</span>, the within-class standard deviation).</p>
+<p>In other words, the class with the highest density is simply the class whose mean is closest to <span class="math inline">\(x\)</span> (after scaling by <span class="math inline">\(\sigma\)</span>, the within-class standard deviation).</p>
 <p>For multivariate Gaussian classes, the same idea holds but with a more general notion of distance. The log density becomes:</p>
 <p><span class="math display">\[
 \log f(\mathbf{x}) \propto (\mathbf{x} - \boldsymbol{\mu})^\top\Sigma^{-1}(\mathbf{x} - \boldsymbol{\mu}),
 \]</span></p>
-<p>which is the negative of the <em>Mahalanobis distance</em> squared.</p>
+<p>with <span class="math inline">\(\Sigma\)</span> representing the covariance matrix of the class. This quantity is larger when <span class="math inline">\(\mathbf{x}\)</span> is closer to the class mean <span class="math inline">\(\boldsymbol{\mu}\)</span> in a <em>Mahalanobis</em> distance sense.</p>
 <ul>
 <li><p>In LDA, all classes use the same covariance <span class="math inline">\(\Sigma\)</span>. So each class scores <span class="math inline">\(\mathbf{x}\)</span> by its (scaled) squared distance to the class mean.</p></li>
 <li><p>In QDA, each class has its own covariance, so each class uses a different distance metric.</p></li>
@@ -848,7 +849,7 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>You are now ready to do exercises 14–17.</p>
+<p>You are now ready to do exercises 12–18.</p>
 </div>
 </div>
 </div>
@@ -867,7 +868,7 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 </div>
 </div>
 </div>
-<p>Now, for two predictors, if we decide to keep the neighborhood just as small, 10% for each dimension, we include only 1 point. If we want to include 10% of the data, then we need to increase the size of each side of the square to <span class="math inline">\(\sqrt{.10} \approx .316\)</span>:</p>
+<p>Now, for two predictors, if we decide to keep the neighborhood just as small, 10% for each dimension, we include only a square with sides of size <span class="math inline">\(0.1\)</span>. But if we want to include 10% of the data, then we need to increase the size of each side of the square to <span class="math inline">\(\sqrt{.10} \approx 0.316\)</span>:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -888,7 +889,7 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 <p>By the time we reach 100 predictors, the neighborhood is no longer very local, as each side covers almost the entire dataset.</p>
 <p>Here, we look at a set of elegant and versatile methods that adapt to higher dimensions and also allow these regions to take more complex shapes while still producing models that are interpretable. These are very popular, well-known, and studied methods. We will concentrate on regression and decision trees and their extension to random forests.</p>
 </section><section id="cart-motivation" class="level3"><h3 class="anchored" data-anchor-id="cart-motivation">CART motivation</h3>
-<p>To motivate this section, we will use a new dataset that includes the breakdown of the composition of olive oil into 8 fatty acids:</p>
+<p>To motivate this section, we will use a new dataset that includes the breakdown of the composition of different olive oils into 8 fatty acids:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">olive</span><span class="op">)</span></span>
 <span><span class="co">#&gt;  [1] "region"      "area"        "palmitic"    "palmitoleic"</span></span>
@@ -936,13 +937,13 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 </div>
 <p>Decision trees like this are often used in practice. For example, to decide on a person’s risk of poor outcome after having a heart attack, doctors use the following:</p>
 <div class="quarto-figure quarto-figure-center">
-<figure class="figure"><p><img src="img/Decision-Tree-for-Heart-Attack-Victim-adapted-from-Gigerenzer-et-al-1999-4.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
-</figure>
+<figure class="figure"><p><img src="img/Decision-Tree-for-Heart-Attack-Victim-adapted-from-Gigerenzer-et-al-1999-4.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption>Source: Walton 2010 Informal Logic, Vol. 30, No.&nbsp;2, pp.&nbsp;159-184<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a></figcaption></figure>
 </div>
-<p>(Source: Walton 2010 Informal Logic, Vol. 30, No.&nbsp;2, pp.&nbsp;159-184<a href="#fn2" class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>.)</p>
 <p>A tree is basically a flow chart of yes or no questions. The general idea of the methods we are describing is to define an algorithm that uses data to create these trees with predictions at the ends, referred to as <em>nodes</em>. Regression and decision trees operate by predicting an outcome variable <span class="math inline">\(y\)</span> by partitioning the predictors.</p>
+<p>Although this motivating example is a classification problem, it is easier to first explain the mechanics of recursive partitioning in the regression setting, and then return to classification trees.</p>
 </section><section id="regression-trees" class="level3"><h3 class="anchored" data-anchor-id="regression-trees">Regression trees</h3>
-<p>When using trees, and the outcome is continuous, we call the approach a <em>regression</em> tree. To introduce regression trees, we will use the 2008 poll data used in <span class="citation" data-cites="ec-smoothing">@ec-smoothing</span> to describe the basic idea of how we build these algorithms. As with other machine learning algorithms, we will try to estimate the conditional expectation <span class="math inline">\(f(x) = \mathrm{E}(Y | X = x)\)</span> with <span class="math inline">\(Y\)</span> the poll margin and <span class="math inline">\(x\)</span> the day.</p>
+<p>When using trees, and the outcome is continuous, we call the approach a <em>regression</em> tree. To introduce regression trees, we will use the 2008 poll data used in <a href="conditionals-and-smoothing.html#sec-smoothing" class="quarto-xref"><span>Section 28.3</span></a> to describe the basic idea of how we build these algorithms. As with other machine learning algorithms, we will try to estimate the conditional expectation <span class="math inline">\(f(x) = \mathrm{E}(Y | X = x)\)</span> with <span class="math inline">\(Y\)</span> the poll margin and <span class="math inline">\(x\)</span> the day.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -952,25 +953,24 @@ f(x) = \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{-\frac{1}{2}\left(\frac{x-\mu}{\si
 </div>
 </div>
 <p>The general idea here is to build a decision tree and, at the end of each <em>node</em>, obtain a predictor <span class="math inline">\(\hat{y}\)</span>. A mathematical way to describe this is: we are partitioning the predictor space into <span class="math inline">\(J\)</span> non-overlapping regions, <span class="math inline">\(R_1, R_2, \ldots, R_J\)</span>, and then for any predictor <span class="math inline">\(x\)</span> that falls within region <span class="math inline">\(R_j\)</span>, estimate <span class="math inline">\(f(x)\)</span> with the average of the training observations <span class="math inline">\(y_i\)</span> for which the associated predictor <span class="math inline">\(x_i\)</span> is also in <span class="math inline">\(R_j\)</span>.</p>
-<p>But how do we decide on the partition <span class="math inline">\(R_1, R_2, \ldots, R_J\)</span> and how do we choose <span class="math inline">\(J\)</span>? Here is where the algorithm gets a bit complicated.</p>
-<p>Regression trees create partitions recursively. We start the algorithm with one partition, the entire predictor space. In our simple first example, this space is the interval [-155, 1]. But after the first step, we will have two partitions. After the second step, we will split one of these partitions into two and will have three partitions, then four, and so on. Later, we describe how we pick the partition and when to stop.</p>
-<p>For each existing partition, we find a predictor <span class="math inline">\(j\)</span> and value <span class="math inline">\(s\)</span> that define two new partitions, which we will call <span class="math inline">\(R_1(j,s)\)</span> and <span class="math inline">\(R_2(j,s)\)</span>, that split our observations in the current partition by asking if <span class="math inline">\(x_j\)</span> is bigger than <span class="math inline">\(s\)</span>:</p>
+<p>Regression trees create partitions recursively. We start the algorithm with one partition: the entire predictor space. In this simple example, this is the interval [-155, 1]. In the first step, we will split the predictor space into two partitions. In the second step, we will split one of these partitions into two and will have three partitions, then four, and so on.</p>
+<p>First, how do we pick the partition? For each existing partition, we find a predictor <span class="math inline">\(j\)</span> and value <span class="math inline">\(s\)</span> that define two new partitions, which we will call <span class="math inline">\(R_1(j,s)\)</span> and <span class="math inline">\(R_2(j,s)\)</span>, that split our observations in the current partition by asking if <span class="math inline">\(x_j\)</span> is bigger than <span class="math inline">\(s\)</span>:</p>
 <p><span class="math display">\[
 R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x} \mid x_j \geq s\}
 \]</span></p>
-<p>In our current example, we only have one predictor, so we will always choose <span class="math inline">\(j = 1\)</span>, but in general, this will not be the case. Now, after we define the new partitions <span class="math inline">\(R_1\)</span> and <span class="math inline">\(R_2\)</span>, and we decide to stop the partitioning, we compute predictors by taking the average of all the observations <span class="math inline">\(y\)</span> for which the associated <span class="math inline">\(\mathbf{x}\)</span> is in <span class="math inline">\(R_1\)</span> or <span class="math inline">\(R_2\)</span>. We refer to these two as <span class="math inline">\(\hat{y}_{R_1}\)</span> and <span class="math inline">\(\hat{y}_{R_2}\)</span> respectively.</p>
+<p>In our current example, we only have one predictor, so we will always choose <span class="math inline">\(j = 1\)</span>, but in general, this will not be the case. Here, <span class="math inline">\(\hat{y}_{R_1}\)</span> and <span class="math inline">\(\hat{y}_{R_2}\)</span> are the averages of the observations <span class="math inline">\(y\)</span> for which the associated <span class="math inline">\(\mathbf{x}\)</span> is in <span class="math inline">\(R_1\)</span> or <span class="math inline">\(R_2\)</span>, respectively.</p>
 <p>But how do we pick <span class="math inline">\(j\)</span> and <span class="math inline">\(s\)</span>? Basically, we find the pair that minimizes the residual sum of squares (RSS):</p>
 <p><span class="math display">\[
 \sum_{i:\, x_i \in R_1(j,s)} (y_i - \hat{y}_{R_1})^2 +
 \sum_{i:\, x_i \in R_2(j,s)} (y_i - \hat{y}_{R_2})^2
 \]</span></p>
-<p>This is then applied recursively to the new regions <span class="math inline">\(R_1\)</span> and <span class="math inline">\(R_2\)</span>. We describe how we stop later, but once we are done partitioning the predictor space into regions, in each region, a prediction is made using the observations in that region.</p>
+<p>This is then applied recursively to the new regions <span class="math inline">\(R_1\)</span> and <span class="math inline">\(R_2\)</span>. Once we are done partitioning the predictor space into regions, a prediction is made for each region.</p>
 <p>Let’s take a look at what this algorithm does on the 2008 presidential election poll data. We will use the <code>rpart</code> function in the <strong>rpart</strong> package.</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/bethatkinson/rpart">rpart</a></span><span class="op">)</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>In this case, there is only one predictor. Thus, we do not have to decide which predictor <span class="math inline">\(j\)</span> to split by. We simply have to decide what value <span class="math inline">\(s\)</span> we use to split. We can visually see where the splits were made:</p>
+<p>We can visualize the splits:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit</span>, margin <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/text.html">text</a></span><span class="op">(</span><span class="va">fit</span>, cex <span class="op">=</span> <span class="fl">0.75</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -988,11 +988,6 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 <p>The final estimate <span class="math inline">\(\hat{f}(x)\)</span> looks like this:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">polls_2008</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu">mutate</span><span class="op">(</span>y_hat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">margin</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html">geom_step</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">day</span>, <span class="va">y_hat</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure"><p><img src="algorithms_files/figure-html/polls-2008-tree-fit-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
@@ -1000,7 +995,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 </div>
 </div>
-<p>Note that the algorithm stopped partitioning at 8 nodes. This decision is based on a measure called the complexity parameter (cp). Every time the data is split into two new partitions, the training set RSS decreases because the model gains flexibility to adapt to the data. If splitting continued until every observation was isolated in its own partition, the RSS would eventually reach 0, since the average of a single value is the value itself. To prevent such overfitting, the algorithm requires that each new split reduce the RSS by at least a factor of cp.&nbsp;Larger values of cp therefore stop the algorithm earlier, leading to fewer nodes.</p>
+<p>Now that we know how partitions are chosen, when does partitioning stop? Note that the fit algorithm above stopped partitioning at 8 nodes. This decision is based on a measure called the complexity parameter (cp). Every time the data is split into two new partitions, the training set RSS decreases because the model gains flexibility to adapt to the data. If splitting continued until every observation was isolated in its own partition, the RSS would eventually reach 0. To prevent such overfitting, the algorithm requires that each new split reduce the RSS by at least a factor of cp.&nbsp;Larger values of cp therefore stop the algorithm earlier, leading to fewer nodes.</p>
 <p>However, cp is not the only factor that controls partitioning. Another important parameter is the minimum number of observations required in a node before it can be split, set by the minsplit argument in rpart (default: 20). In addition, rpart allows users to specify the minimum number of observations allowed in a terminal node (leaf), controlled by the <code>minbucket</code> argument. By default, <code>minbucket = round(minsplit / 3)</code>.</p>
 <p>As expected, if we set <code>cp = 0</code> and <code>minsplit = 2</code>, then our prediction is as flexible as possible, and our predictor is our original data:</p>
 <div class="cell" data-layout-align="center">
@@ -1011,7 +1006,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 </div>
 </div>
-<p>Intuitively, we know that this is not a good approach as it will generally result in over-training. These <code>cp</code>, <code>minsplit</code>, and <code>minbucket</code> parameters can be used to control the variability of the final predictors. The larger these values are, the more data is averaged to compute a predictor and thus reduce variability. The drawback is that it restricts flexibility.</p>
+<p>Intuitively, we know that this is not a good approach as it will generally result in over-fitting. The <code>cp</code>, <code>minsplit</code>, and <code>minbucket</code> parameters can be used to control the variability of the final predictors: larger values reduce variability but restrict flexibility.</p>
 <p>So how do we pick these parameters? We can use cross-validation, just like with any tuning parameter. Here is the resulting tree when we use cross-validation to choose cp:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -1023,7 +1018,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 <p>Note that if we already have a tree and want to apply a higher cp value, we can use the <code>prune</code> function. We call this <em>pruning</em> a tree because we are snipping off partitions that do not meet a <code>cp</code> criterion. Here is an example where we create a tree that uses a <code>cp = 0</code>, and then we prune it back:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">polls_2008</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.control.html">rpart.control</a></span><span class="op">(</span>cp <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">polls_2008</span>, control <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.control.html">rpart.control</a></span><span class="op">(</span>cp <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">pruned_fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/prune.rpart.html">prune</a></span><span class="op">(</span><span class="va">fit</span>, cp <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section><section id="classification-decision-trees" class="level3"><h3 class="anchored" data-anchor-id="classification-decision-trees">Classification (decision) trees</h3>
@@ -1039,7 +1034,12 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 <p><span class="math display">\[
 \mbox{entropy}(j) = -\sum_{k = 1}^K \hat{p}_{j,k}\log(\hat{p}_{j,k}), \mbox{ with } 0 \times \log(0) \mbox{ defined as }0
 \]</span></p>
-<p>If we use a classification tree on the 2 or 7 example, we achieve an accuracy of 0.81 which is better than regression, but is not as good as what we achieved with kernel methods.</p>
+<p>If we use a classification tree on the 2 or 7 example,</p>
+<div class="cell" data-layout-align="center">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit_rpart</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/rpart/man/rpart.html">rpart</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span>, method <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span>
+<span><span class="va">y_hat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit_rpart</span>, newdata <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">test</span>, type <span class="op">=</span> <span class="st">"class"</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>we achieve an accuracy of 0.81 which is better than regression, but is not as good as what we achieved with kernel methods. We don’t show the code here as we first need to cover the <strong>caret</strong> package, which we introduce in the next chapter.</p>
 <p>The plot of the estimated conditional probability shows us the limitations of classification trees:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -1050,7 +1050,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 </div>
 <p>Note that with decision trees, it is difficult to make the boundaries smooth since each partition creates a discontinuity.</p>
-<p>Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are also easy to visualize (if small enough). Finally, they can model human decision processes and don’t require the use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-train and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.</p>
+<p>Classification trees have certain advantages that make them very useful. They are highly interpretable, even more so than linear models. They are also easy to visualize (if small enough). Finally, they can model human decision processes and don’t require the use of dummy predictors for categorical variables. On the other hand, the approach via recursive partitioning can easily over-fit and is therefore a bit harder to train than, for example, linear regression or kNN. Furthermore, in terms of accuracy, it is rarely the best performing method since it is not very flexible and is highly unstable to changes in training data. Random forests, explained next, improve on several of these shortcomings.</p>
 </section></section><section id="sec-random-forests" class="level2" data-number="30.5"><h2 data-number="30.5" class="anchored" data-anchor-id="sec-random-forests">
 <span class="header-section-number">30.5</span> Random forests</h2>
 <p>Random forests are a <strong>very popular</strong> machine learning approach that addresses the shortcomings of decision trees using a clever idea. The goal is to improve prediction performance and reduce instability by <em>averaging</em> multiple decision trees: a <em>forest</em> of trees constructed with <em>randomness</em>. It has two features that help accomplish this.</p>
@@ -1062,13 +1062,9 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 <p>1. Create a bootstrap training set by sampling <span class="math inline">\(N\)</span> observations from the training set <strong>with replacement</strong>. This is the first way to induce randomness.</p>
 <p>2. A large number of features is typical in machine learning challenges. Often, many features can be informative, but including them all in the model may result in overfitting. The second way random forests induce randomness is by randomly selecting features to be included in the building of each tree. A different random subset is selected for each tree. This reduces correlation between trees in the forest, thereby improving prediction accuracy.</p>
 <p>To illustrate how the first steps can result in smoother estimates, we will fit a random forest to the 2008 polls data. We will use the <code>randomForest</code> function in the <strong>randomForest</strong> package:</p>
-<div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span><span class="va">margin</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
 <p>Note that if we apply the function <code>plot</code> to the resulting object, we see how the error rate of our algorithm changes as we add trees:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -1081,7 +1077,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 <p>In this case, the accuracy improves as we add more trees until we have used about 300 trees, after which the accuracy stabilizes.</p>
 <p>The resulting estimate for this random forest, obtained with</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, newdata <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">y_hat</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">fit</span>, newdata <span class="op">=</span> <span class="va">polls_2008</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>is shown with the red curve below:</p>
 <div class="cell" data-layout-align="center">
@@ -1101,11 +1097,12 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 </div>
 </div>
+<p>If we use a random forest on the 2 or 7 example,</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://www.stat.berkeley.edu/~breiman/RandomForests/">randomForest</a></span><span class="op">)</span></span>
 <span><span class="va">train_rf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/randomForest/man/randomForest.html">randomForest</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mnist_27</span><span class="op">$</span><span class="va">train</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The accuracy for the random forest fit for our 2 or 7 examples is 0.825. Here is what the conditional probabilities look like:</p>
+<p>the accuracy is 0.825. Here is what the conditional probabilities look like:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -1114,7 +1111,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 </div>
 </div>
-<p>Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 65, the number of neighbors we used with kNN, we get an accuracy of 0.815. The selected model improves accuracy and provides a smoother estimate:</p>
+<p>Visualizing the estimate shows that, although we obtain high accuracy, it appears that there is room for improvement by making the estimate smoother. This could be achieved by changing the parameter that controls the minimum number of data points in the nodes of the tree. The larger this minimum, the smoother the final estimate will be. If we use a node size of 65, the number of neighbors we used with kNN, we get an accuracy of 0.815. The selected model provides similar accuracy and a smoother estimate:</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
@@ -1125,18 +1122,28 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 <section id="sec-variable-importance" class="level3"><h3 class="anchored" data-anchor-id="sec-variable-importance">Variable importance</h3>
 <p>Random forest performs better than trees in all the examples we have considered. However, a disadvantage of random forests is that we lose interpretability. An approach that helps with interpretability is to examine <em>variable importance</em>. To define <em>variable importance</em>, we count how often a predictor is used in the individual trees. You can learn more about <em>variable importance</em> in an advanced machine learning book<a href="#fn3" class="footnote-ref" id="fnref3" role="doc-noteref"><sup>3</sup></a>. The <strong>randomForest</strong> package includes the function <code>importance</code> to extract variable importance from a fitted random forest model. The <strong>caret</strong> package includes the function <code>varImp</code> that extracts variable importance from any model in which the calculation is implemented. We give an example of how we use variable importance in the next section.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>You are ready to do exercises 19 - 25.</p>
+</div>
+</div>
+</div>
 </section></section><section id="exercises" class="level2" data-number="30.6"><h2 data-number="30.6" class="anchored" data-anchor-id="exercises">
 <span class="header-section-number">30.6</span> Exercises</h2>
 <p>1. Create a dataset using the following code:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fl">9</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="fl">0.5</span>, <span class="fl">1.0</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">69</span>, <span class="fl">69</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Use the <strong>caret</strong> package to partition into a test and training set of equal size. Train a linear model and report the RMSE. Repeat this exercise 100 times and make a histogram of the RMSEs and report the average and standard deviation. Hint: adapt the code shown earlier like this:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/topepo/caret/">caret</a></span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">$</span><span class="va">y</span></span>
 <span><span class="va">test_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/createDataPartition.html">createDataPartition</a></span><span class="op">(</span><span class="va">y</span>, times <span class="op">=</span> <span class="fl">1</span>, p <span class="op">=</span> <span class="fl">0.5</span>, list <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">train_set</span> <span class="op">&lt;-</span> <span class="va">dat</span><span class="op">[</span><span class="va">train_index</span>,<span class="op">]</span></span>
@@ -1157,7 +1164,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </ol>
 <p>4. Now repeat exercise 1, but this time make the correlation between <code>x</code> and <code>y</code> larger by changing <code>Sigma</code> like this:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
 <span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fl">9</span><span class="op">*</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.95</span>, <span class="fl">0.95</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">69</span>, <span class="fl">69</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1172,19 +1179,19 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </ol>
 <p>6. Create a dataset using the following code:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">/</span><span class="fl">4</span>, <span class="fl">3</span><span class="op">/</span><span class="fl">4</span>, <span class="fl">3</span><span class="op">/</span><span class="fl">4</span>, <span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">3</span><span class="op">/</span><span class="fl">4</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"y"</span>, <span class="st">"x_1"</span>, <span class="st">"x_2"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Note that <code>y</code> is correlated with both <code>x_1</code> and <code>x_2</code>, but the two predictors are independent of each other.</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html">cor</a></span><span class="op">(</span><span class="va">dat</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Use the <strong>caret</strong> package to partition into a test and training set of equal size. Compare the RMSE when using just <code>x_1</code>, just <code>x_2</code>, and both <code>x_1</code> and <code>x_2</code>. Train a linear model and report the RMSE.</p>
 <p>7. Repeat exercise 6, but now create an example in which <code>x_1</code> and <code>x_2</code> are highly correlated:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">Sigma</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.75</span>, <span class="fl">0.75</span>, <span class="fl">0.75</span>, <span class="fl">1.0</span>, <span class="fl">0.95</span>, <span class="fl">0.75</span>, <span class="fl">0.95</span>, <span class="fl">1.0</span><span class="op">)</span>, <span class="fl">3</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/mvrnorm.html">mvrnorm</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">100</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>, <span class="va">Sigma</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html">data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"y"</span>, <span class="st">"x_1"</span>, <span class="st">"x_2"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1199,7 +1206,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </ol>
 <p>9. Define the following dataset:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">make_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">1000</span>, <span class="va">p</span> <span class="op">=</span> <span class="fl">0.5</span>, </span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">make_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">1000</span>, <span class="va">p</span> <span class="op">=</span> <span class="fl">0.5</span>, </span>
 <span>                      <span class="va">mu_0</span> <span class="op">=</span> <span class="fl">0</span>, <span class="va">mu_1</span> <span class="op">=</span> <span class="fl">2</span>, </span>
 <span>                      <span class="va">sigma_0</span> <span class="op">=</span> <span class="fl">1</span>,  <span class="va">sigma_1</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="va">p</span><span class="op">)</span></span>
@@ -1215,14 +1222,14 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </div>
 <p>Note that we have defined a variable <code>x</code> that is predictive of a binary outcome <code>y</code>.</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, color <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dat</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x</span>, color <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Fit a linear regression model by treating (Y) as a continuous outcome, then classify observations by predicting class 1 whenever the fitted value exceeds 0.5. Next, fit a logistic regression model to the same data and compare the classification accuracy of these two approaches.</p>
 <p>10. Repeat the simulation from exercise 9 100 times and compare the average accuracy for each method, and notice that they give practically the same answer.</p>
 <p>11. Generate 25 different datasets changing the difference between the two classes: <code>delta &lt;- seq(0, 3, len = 25)</code>. Plot accuracy versus <code>delta</code>.</p>
 <p>12. The <strong>dslabs</strong> package contains an example dataset similar to <code>mnist_27</code>, but that also includes 1. You can load it and explore it like this:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">mnist_127</span><span class="op">$</span><span class="va">train</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html">aes</a></span><span class="op">(</span><span class="va">x_1</span>, <span class="va">x_2</span>, color <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html">geom_point</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Fit QDA using the <code>qda</code> function in the <strong>MASS</strong> package, then create a confusion matrix for predictions on the test. Which of the following best describes the confusion matrix:</p>
@@ -1241,7 +1248,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 </ol>
 <p>14. To visualize the QDA decision boundary, start by creating a dense grid of points covering the <span class="math inline">\((x_1, x_2)\)</span> space:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">GS</span> <span class="op">&lt;-</span> <span class="fl">150</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">GS</span> <span class="op">&lt;-</span> <span class="fl">150</span></span>
 <span><span class="va">new_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html">with</a></span><span class="op">(</span><span class="va">mnist_127</span><span class="op">$</span><span class="va">train</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html">expand.grid</a></span><span class="op">(</span></span>
 <span>    x_1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">min</a></span><span class="op">(</span><span class="va">x_1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html">max</a></span><span class="op">(</span><span class="va">x_1</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="va">GS</span><span class="op">)</span>,</span>
@@ -1263,7 +1270,7 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 <p>18. Earlier, we used logistic regression to predict sex from height. Use kNN to do the same. Use the code described in this chapter to select the <span class="math inline">\(F_1\)</span> measure and plot it against <span class="math inline">\(k\)</span>. Compare to the <span class="math inline">\(F_1\)</span> of about 0.6 we obtained with regression.</p>
 <p>19. Create a simple dataset where the outcome grows 0.75 units on average for every increase in a predictor:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">sigma</span> <span class="op">&lt;-</span> <span class="fl">0.25</span></span>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.75</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="va">sigma</span><span class="op">)</span></span>
@@ -1277,12 +1284,12 @@ R_1(j,s) = \{\mathbf{x} \mid x_j &lt; s\} \mbox{  and  } R_2(j,s) = \{\mathbf{x}
 <p>24. It seems that the default values for the random forest result in an estimate that is too flexible (not smooth). Re-run the random forest, but this time with <code>nodesize</code> set at 50 and <code>maxnodes</code> set at 25. Remake the plot.</p>
 <p>25. This <strong>dslabs</strong> dataset includes the <code>tissue_gene_expression</code> with a matrix <code>x</code>:</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html">dim</a></span><span class="op">(</span><span class="va">tissue_gene_expression</span><span class="op">$</span><span class="va">x</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>with the gene expression measured on 500 genes for 189 biological samples representing seven different tissues. The tissue type is stored in <code>tissue_gene_expression$y</code>.</p>
 <div class="cell" data-layout-align="center">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">tissue_gene_expression</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/table.html">table</a></span><span class="op">(</span><span class="va">tissue_gene_expression</span><span class="op">$</span><span class="va">y</span><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Fit a random forest using the <code>randomForest</code> function in the package <strong>randomForest</strong>. Then use the <code>varImp</code> function to see which are the top 10 most predictive genes. Make a histogram of the reported importance to get an idea of the distribution of the importance values.</p>
 
