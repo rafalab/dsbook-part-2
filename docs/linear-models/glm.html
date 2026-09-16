@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Rafael A. Irizarry">
 <title>18&nbsp; Generalized Linear Models – Introduction to Data Science</title>
@@ -10,10 +10,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -73,10 +76,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-416763588d27101c2483b91fe87266df.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+<link href="../site_libs/bootstrap/bootstrap-d8002c52cf10f5154a4b6aa996d54aff.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
   "collapse-after": 3,
@@ -102,7 +105,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script><script type="text/javascript">
+}</script><script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script><script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script><script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
     // MathJax Typeset
@@ -541,6 +544,7 @@ window.Quarto = {
 <p>The main evidence supporting this conclusion is based on a comparison of the percentages that we can compute using the data presented in the paper:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org">tidyverse</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://broom.tidymodels.org/">broom</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">dslabs</span><span class="op">)</span></span>
 <span><span class="va">totals</span> <span class="op">&lt;-</span> <span class="va">research_funding_rates</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">discipline</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise_all.html">summarize_all</a></span><span class="op">(</span><span class="va">sum</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -574,7 +578,7 @@ window.Quarto = {
 \]</span></p>
 <p>To assess how surprising the result is, we compute the probability of getting <strong>3 or more correct</strong> by chance:</p>
 <p><span class="math display">\[
-\frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{16}{70} \approx 0.24.
+\frac{\binom{4}{3}\binom{4}{1}}{\binom{8}{4}} + \frac{\binom{4}{4}\binom{4}{0}}{\binom{8}{4}} = \frac{17}{70} \approx 0.24.
 \]</span></p>
 <p>This shows that correctly identifying 3 cups could easily occur by chance and does not provide strong evidence for the claimed ability.</p>
 <p>This calculation is exactly what <em>Fisher’s exact test</em> performs. In R, we can compute the corresponding p-value with:</p>
@@ -827,7 +831,7 @@ g(p) = \log\frac{p}{1-p}
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html">log</a></span><span class="op">(</span><span class="va">or</span><span class="op">)</span>,<span class="va">se</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.208  0.104</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">estimate</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, <span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">std.error</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] -0.208  0.104</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-simple callout-warning">
@@ -840,7 +844,7 @@ g(p) = \log\frac{p}{1-p}
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/chisq.test.html">chisq.test</a></span><span class="op">(</span><span class="va">o</span>, correct <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span></span>
 <span><span class="co">#&gt; [1] 0.0451</span></span>
-<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">p.value</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 0.0454</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>differ slightly because they are based on different approximations.</p>
@@ -883,7 +887,7 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <p>We can fit the model using:</p>
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">chd</span> <span class="op">~</span> <span class="va">age</span>, family <span class="op">=</span> <span class="va">binomial</span>, data <span class="op">=</span> <span class="va">SAheart</span><span class="op">)</span></span>
-<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span></span>
 <span><span class="co">#&gt; # A tibble: 1 × 5</span></span>
 <span><span class="co">#&gt;   term  estimate std.error statistic  p.value</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;</span></span>
@@ -924,7 +928,7 @@ g\left(\mathrm{E}[Y_i]\right) = \beta_0 + \sum_{j=1}^J \beta_j x_{ij}
 <div class="cell" data-layout-align="center">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html">relevel</a></span><span class="op">(</span><span class="va">InsectSprays</span><span class="op">$</span><span class="va">spray</span>, ref <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span> </span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html">glm</a></span><span class="op">(</span><span class="va">count</span> <span class="op">~</span> <span class="va">spray</span>, family <span class="op">=</span> <span class="va">poisson</span>, data <span class="op">=</span> <span class="va">InsectSprays</span><span class="op">)</span></span>
-<span><span class="fu">tidy</span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html">tidy</a></span><span class="op">(</span><span class="va">fit</span>, conf.int <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # A tibble: 6 × 7</span></span>
 <span><span class="co">#&gt;   term        estimate std.error statistic  p.value conf.low conf.high</span></span>
 <span><span class="co">#&gt;   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;</span></span>
